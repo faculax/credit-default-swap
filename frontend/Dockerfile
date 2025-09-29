@@ -13,7 +13,7 @@ RUN npm ci
 COPY . .
 
 # Set React environment variables for build time
-ENV REACT_APP_API_BASE_URL=https://fund-smith-gateway.onrender.com/api
+ENV REACT_APP_API_BASE_URL=https://credit-default-swap-gateway.onrender.com/api
 ENV REACT_APP_VERSION=1.0.0
 ENV NODE_ENV=production
 
