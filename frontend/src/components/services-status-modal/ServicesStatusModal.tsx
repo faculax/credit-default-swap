@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
+// Use the same API base URL pattern as other services
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8081/api';
+
 interface ServiceStatus {
   name: string;
   status: 'ONLINE' | 'OFFLINE' | 'UNKNOWN';
@@ -27,7 +30,7 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
   const checkServicesHealth = async () => {
     setIsRefreshing(true);
     try {
-      const response = await fetch('http://localhost:8081/api/health/status');
+      const response = await fetch(`${API_BASE_URL}/health/status`);
       const data = await response.json();
       
       const updatedServices: ServiceStatus[] = [
@@ -45,7 +48,7 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
           status: data.status === 'UP' ? 'ONLINE' : 'OFFLINE',
           responseTime: 15, // Gateway response is usually fast
           lastChecked: new Date().toLocaleTimeString(),
-          url: 'http://localhost:8081',
+          url: API_BASE_URL.replace('/api', ''), // Remove /api suffix for display
           error: data.status !== 'UP' ? 'Gateway unavailable' : undefined
         },
         // Backend Service
@@ -54,7 +57,9 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
           status: data.backendStatus?.status === 'UP' ? 'ONLINE' : 'OFFLINE',
           responseTime: data.backendStatus?.responseTime,
           lastChecked: new Date().toLocaleTimeString(),
-          url: 'http://localhost:8080',
+          url: data.backendStatus?.healthEndpoint ? 
+            `${API_BASE_URL.replace('/api', '')}${data.backendStatus.healthEndpoint}` : 
+            'Backend Service',
           error: data.backendStatus?.error || (data.backendStatus?.status !== 'UP' ? 'Service unavailable' : undefined)
         }
       ];
