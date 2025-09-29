@@ -4,24 +4,33 @@ spring:
   profiles:
     include: actuator
   datasource:
-    url: jdbc:postgresql://localhost:5432/cdsplatform
-    username: cdsuser
-    password: cdspass
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/cdsplatform}
+    username: ${SPRING_DATASOURCE_USERNAME:cdsuser}
+    password: ${SPRING_DATASOURCE_PASSWORD:cdspass}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: none  # Let Flyway handle schema
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:none}  # Let Flyway handle schema
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: ${SPRING_JPA_HIBERNATE_DEFAULT_SCHEMA:public}
   flyway:
-    enabled: true
+    enabled: ${SPRING_FLYWAY_ENABLED:true}
     locations: classpath:db/migration
-    baseline-on-migrate: true
-    out-of-order: true
-    ignore-missing-migrations: true
-    ignore-ignored-migrations: true
-    validate-on-migrate: false  # Disable validation to prevent errors with missing/outdated tables
+    baseline-on-migrate: ${SPRING_FLYWAY_BASELINE_ON_MIGRATE:true}
+    out-of-order: ${SPRING_FLYWAY_OUT_OF_ORDER:true}
+    ignore-missing-migrations: ${SPRING_FLYWAY_IGNORE_MISSING_MIGRATIONS:true}
+    ignore-ignored-migrations: ${SPRING_FLYWAY_IGNORE_IGNORED_MIGRATIONS:true}
+    validate-on-migrate: ${SPRING_FLYWAY_VALIDATE_ON_MIGRATE:false}
+    default-schema: ${SPRING_FLYWAY_DEFAULT_SCHEMA:public}
+    schemas: ${SPRING_FLYWAY_SCHEMAS:public}
 
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
+
+logging:
+  level:
+    org.flywaydb: ${LOGGING_LEVEL_FLYWAY:INFO}
+    org.springframework.jdbc: ${LOGGING_LEVEL_JDBC:INFO}
+    com.creditdefaultswap: ${LOGGING_LEVEL_APP:INFO}
