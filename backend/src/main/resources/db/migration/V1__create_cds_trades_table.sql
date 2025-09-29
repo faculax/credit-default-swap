@@ -1,5 +1,5 @@
--- Create CDS Trades table
-CREATE TABLE cds_trades (
+-- Create CDS Trades table in public schema
+CREATE TABLE IF NOT EXISTS public.cds_trades (
     id BIGSERIAL PRIMARY KEY,
     reference_entity VARCHAR(50) NOT NULL,
     notional_amount DECIMAL(15,2) NOT NULL,
@@ -21,8 +21,8 @@ CREATE TABLE cds_trades (
 );
 
 -- Create indexes for common queries
-CREATE INDEX idx_cds_reference_entity ON cds_trades(reference_entity);
-CREATE INDEX idx_cds_counterparty ON cds_trades(counterparty);
-CREATE INDEX idx_cds_trade_status ON cds_trades(trade_status);
-CREATE INDEX idx_cds_trade_date ON cds_trades(trade_date);
-CREATE INDEX idx_cds_created_at ON cds_trades(created_at);
+CREATE INDEX IF NOT EXISTS idx_cds_reference_entity ON public.cds_trades(reference_entity);
+CREATE INDEX IF NOT EXISTS idx_cds_counterparty ON public.cds_trades(counterparty);
+CREATE INDEX IF NOT EXISTS idx_cds_trade_status ON public.cds_trades(trade_status);
+CREATE INDEX IF NOT EXISTS idx_cds_trade_date ON public.cds_trades(trade_date);
+CREATE INDEX IF NOT EXISTS idx_cds_created_at ON public.cds_trades(created_at);
