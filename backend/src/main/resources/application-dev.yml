@@ -1,0 +1,8 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # Aggressively recreate schema in dev mode
+    show-sql: true
+  flyway:
+    enabled: true  # Enable Flyway even in dev to ensure schema consistency
+    clean-on-validation-error: true  # Clean and recreate on any schema issues

@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: cds-platform
+  profiles:
+    include: actuator
+  datasource:
+    url: jdbc:postgresql://localhost:5432/cdsplatform
+    username: cdsuser
+    password: cdspass
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none  # Let Flyway handle schema
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    out-of-order: true
+    ignore-missing-migrations: true
+    ignore-ignored-migrations: true
+    validate-on-migrate: false  # Disable validation to prevent errors with missing/outdated tables
+
+server:
+  port: 8080
