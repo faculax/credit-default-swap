@@ -1,4 +1,4 @@
-package com.vibe.fundsmith.gateway.controller;
+package com.vibe.gateway.controller;
 
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Value;
@@ -57,9 +57,10 @@ public class HealthController {
             // Try multiple health endpoints in case one is available
             String[] endpoints = {
                 "/actuator/health",
-                "/health",
+                "/health", 
                 "/api/health",
-                "/api/health/status"
+                "/api/health/status",
+                "/api/cds-trades"  // Use existing working endpoint as health check
             };
             
             for (String endpoint : endpoints) {
@@ -67,19 +68,27 @@ public class HealthController {
                     String url = backendUri + endpoint;
                     logger.debug("Trying backend health endpoint: {}", url);
                     
-                    ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+                    ResponseEntity<Object> response = restTemplate.getForEntity(url, Object.class);
                     
-                    if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                    if (response.getStatusCode().is2xxSuccessful()) {
                         logger.debug("Backend health check successful at {}", url);
                         
-                        // Copy status from backend response if available
-                        if (response.getBody().containsKey("status")) {
-                            backendStatus.put("status", response.getBody().get("status"));
+                        // Handle different response types
+                        if (response.getBody() instanceof Map) {
+                            Map<String, Object> body = (Map<String, Object>) response.getBody();
+                            // Copy status from backend response if available
+                            if (body.containsKey("status")) {
+                                backendStatus.put("status", body.get("status"));
+                            } else {
+                                backendStatus.put("status", "UP");
+                            }
                         } else {
+                            // For endpoints like /api/cds-trades that return data instead of health status
                             backendStatus.put("status", "UP");
                         }
                         
                         backendStatus.put("responseTime", System.currentTimeMillis() - startTime);
+                        backendStatus.put("healthEndpoint", endpoint);
                         return backendStatus;
                     }
                 } catch (Exception e) {
