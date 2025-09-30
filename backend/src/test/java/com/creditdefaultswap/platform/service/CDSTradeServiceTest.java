@@ -1,6 +1,7 @@
 package com.creditdefaultswap.platform.service;
 
 import com.creditdefaultswap.platform.model.CDSTrade;
+import com.creditdefaultswap.platform.model.TradeStatus;
 import com.creditdefaultswap.platform.repository.CDSTradeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,7 +46,7 @@ public class CDSTradeServiceTest {
         sampleTrade.setBuySellProtection(CDSTrade.ProtectionDirection.BUY);
         sampleTrade.setPaymentCalendar("NYC");
         sampleTrade.setAccrualStartDate(LocalDate.of(2025, 9, 20));
-        sampleTrade.setTradeStatus("PENDING");
+        sampleTrade.setTradeStatus(TradeStatus.PENDING);
     }
 
     @Test

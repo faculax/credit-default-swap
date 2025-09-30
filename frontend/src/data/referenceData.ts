@@ -71,8 +71,7 @@ export const PAYMENT_CALENDARS = [
 
 export const TRADE_STATUSES = [
   { value: 'PENDING', label: 'Pending' },
-  { value: 'CONFIRMED', label: 'Confirmed' },
-  { value: 'SETTLED', label: 'Settled' },
+  { value: 'ACTIVE', label: 'Active' },
   { value: 'CANCELLED', label: 'Cancelled' }
 ];
 

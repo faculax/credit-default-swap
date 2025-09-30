@@ -108,6 +108,11 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
 
     setIsSubmitting(true);
 
+    // Defensive normalization
+    if (formData.tradeStatus === 'SETTLED' || formData.tradeStatus === 'CONFIRMED') {
+      formData.tradeStatus = 'ACTIVE';
+    }
+
     // Simulate API call delay
     setTimeout(() => {
       onSubmit(formData as CDSTrade);
@@ -186,7 +191,10 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
       paymentCalendar: getRandomItem(PAYMENT_CALENDARS).value,
       tradeStatus: getRandomItem(TRADE_STATUSES).value
     };
-
+    // Normalize any legacy statuses
+    if (randomData.tradeStatus === 'SETTLED' || randomData.tradeStatus === 'CONFIRMED') {
+      randomData.tradeStatus = 'ACTIVE';
+    }
     setFormData(randomData);
     setErrors({}); // Clear any existing errors
   };
