@@ -56,8 +56,9 @@ public class CDSTrade {
     @Column(name = "accrual_start_date", nullable = false)
     private LocalDate accrualStartDate;
     
-    @Column(name = "trade_status", nullable = false, length = 20)
-    private String tradeStatus;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "trade_status", nullable = false)
+    private TradeStatus tradeStatus;
     
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -196,11 +197,11 @@ public class CDSTrade {
         this.accrualStartDate = accrualStartDate;
     }
     
-    public String getTradeStatus() {
+    public TradeStatus getTradeStatus() {
         return tradeStatus;
     }
     
-    public void setTradeStatus(String tradeStatus) {
+    public void setTradeStatus(TradeStatus tradeStatus) {
         this.tradeStatus = tradeStatus;
     }
     
