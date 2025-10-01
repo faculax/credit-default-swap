@@ -1,5 +1,6 @@
 import { CreateCreditEventRequest } from '../components/credit-event-modal/CreditEventModal';
 import { SettlementView } from '../components/settlement-view/SettlementView';
+import { apiUrl } from '../config/api';
 
 export interface CreditEvent {
   id: string;
@@ -35,7 +36,6 @@ export interface PhysicalSettlementInstruction {
   updatedAt?: string;
 }
 
-import { apiUrl } from '../config/api';
 
 class CreditEventService {
   private readonly baseUrl: string = apiUrl('');
