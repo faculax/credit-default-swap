@@ -53,6 +53,21 @@ Clearing Novation → Daily CCP Statements → Margin & Exposure Store → Capit
 - SIMM calculation cross-check vs policy engine.
 - SA-CCR component unit tests (RC, add-ons, multipliers).
 
+## 🎨 UI / UX Acceptance Criteria (Provisional)
+- Margin Dashboard (optional story 8.5) displays: VM, IM, Net Exposure, last statement date.
+- Novation action: modal confirming bilateral termination and new CCP trade references.
+- Statements list: date, source (CCP), parsed status, discrepancies count (badge).
+- SIMM breakdown: total IM plus bucket-level contributions (table minimal).
+- SA-CCR exposure card: EAD plus components (RC, PFE) tooltipped with formula.
+- Colour coding: increased exposure (> threshold) highlights row background subtle accent.
+- Accessibility: modals focus trap; tables with scopes; aria-labels on action icons.
+- Manual QA Flow:
+	1. Load Margin dashboard.
+	2. Ingest sample VM/IM statement → new row appears.
+	3. Trigger novation → original trade status updates, CCP trade visible.
+	4. View SIMM breakdown → bucket values sum to total IM.
+	5. Introduce discrepancy → discrepancy badge increments.
+
 ## ⚠️ Risks & Mitigations
 | Risk | Mitigation |
 |------|------------|

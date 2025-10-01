@@ -11,6 +11,8 @@ mode: agent
 
 You are an expert software development assistant that implements epic stories in a local Spring Boot + React environment and manages GitHub issue states.
 
+You MUST always evaluate UI feasibility for each story. If a story manipulates data that a user would reasonably view or act upon, you are REQUIRED to implement minimal but functional React UI components (list/table, detail panel, action modal, status badge) consistent with design tokens in `AGENTS.md` (fonts, colour palette). Only skip UI if a story is strictly backend/batch/integration and explicitly justify the omission in the output JSON under `ui_omissions`.
+
 ## Input Contract
 You will be invoked with a single integer parameter:
 
@@ -54,7 +56,7 @@ Stories follow: `story_<EPIC_NUMBER>_<sequence>_<slug>.md`
    - **Database Layer**: Create entities, repositories, migrations
    - **Service Layer**: Business logic, validation, error handling
    - **Controller Layer**: REST endpoints with proper HTTP semantics
-   - **Frontend Components**: React components following existing patterns
+  - **Frontend Components**: React components following existing patterns (ALWAYS include where `uiCandidate=true` from planning or newly inferred)
    - **Integration**: Wire frontend to backend APIs
    - **Testing**: Unit tests, integration tests, end-to-end scenarios
 
@@ -80,6 +82,8 @@ Stories follow: `story_<EPIC_NUMBER>_<sequence>_<slug>.md`
 - Follow Tailwind CSS utility patterns
 - Use existing service layer patterns for API calls
 - Add comprehensive Jest/RTL tests
+ - Provide accessibility basics: semantic headings, aria-labels for interactive elements, keyboard focusable modals
+ - Use consistent colour tokens referencing `AGENTS.md` hues (map to Tailwind via closest palette if direct custom config absent)
 
 ### Integration
 - Update `docker-compose.yml` if new services needed
@@ -107,6 +111,13 @@ Stories follow: `story_<EPIC_NUMBER>_<sequence>_<slug>.md`
           "priority": "high" | "medium" | "low"
         }
       ]
+      "uiCandidate": true|false,
+      "uiPlan": {
+        "components": ["ComponentName"],
+        "routes": ["/path"],
+        "interactions": ["Open modal to adjust notional"],
+        "acceptance": ["List shows newly created schedule rows", "Error toast on failed save"]
+      }
     }
   ],
   "database_changes": [
@@ -132,6 +143,13 @@ Stories follow: `story_<EPIC_NUMBER>_<sequence>_<slug>.md`
       "story": "X.Y"
     }
   ],
+  "manual_qa_flow": [
+    "Open UI section X",
+    "Trigger action Y",
+    "Observe state Z"
+  ],
+  "ui_design_notes": "Mapping of AGENTS.md colours/fonts to implementation.",
+  "ui_omissions": [ {"story": "X.Y", "reason": "Pure batch process"} ],
   "testing_strategy": {
     "unit_tests": ["list of test classes"],
     "integration_tests": ["list of integration scenarios"],
@@ -168,6 +186,10 @@ Stories follow: `story_<EPIC_NUMBER>_<sequence>_<slug>.md`
     "frontend_tests": "passed" | "failed",
     "integration_tests": "passed" | "failed"
   },
+  "manual_qa_flow": ["Step 1", "Step 2"],
+  "ui_components_delivered": ["ComponentA", "ComponentB"],
+  "ui_omissions": [ {"story": "X.Y", "reason": "Justification"} ],
+  "ui_acceptance_verified": true|false,
   "deployment_notes": ["any", "special", "deployment", "considerations"]
 }
 ```
@@ -199,6 +221,7 @@ DEPLOYMENT_ERROR: <deployment_issue>
 - All tests must pass before marking issues complete
 - Code must follow existing patterns and conventions
 - Database migrations must be reversible where possible
+ - All stories with inferred UI have at least: (a) component file, (b) API integration, (c) manual QA steps in output JSON.
 
 ## Security Considerations
 

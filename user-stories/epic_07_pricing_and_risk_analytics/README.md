@@ -52,6 +52,20 @@ Market Data → Curve Build → Trade PV & Legs → Measures → Persist Snapsho
 - Numerical tolerance envelope stored alongside results.
 - Continuous integration hook for regressions.
 
+## 🎨 UI / UX Acceptance Criteria (Provisional)
+Initial UI exposure intentionally limited (backend focus), but minimal surfacing expected for validation:
+- Risk Measures panel in Trade Detail: shows PV (clean/dirty), Par Spread, CS01, DV01, JTD, Recovery01.
+- Scenario run modal: select predefined shock set (parallel + custom bp shift) and display results table.
+- Regression status indicator: badge (PASS/FAIL) with tooltip linking last run timestamp.
+- Loading skeleton while measures recompute.
+- Error banner if pricing engine unavailable.
+- Accessibility: table with column headers and aria-live region for updated measures.
+- Manual QA Flow:
+	1. Open trade detail → Risk tab.
+	2. Trigger scenario run (e.g., +10bp) → results table populates.
+	3. Validate CS01 approximates PV difference between base and +1bp scenario (rough check).
+	4. Simulate engine failure (toggle flag) → error banner appears.
+
 ## ⚠️ Risks & Mitigations
 | Risk | Mitigation |
 |------|------------|
