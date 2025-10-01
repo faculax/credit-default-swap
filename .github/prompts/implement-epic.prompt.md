@@ -1,8 +1,10 @@
 ```prompt
 ---
-model: Claude-3-5-Sonnet-20241022
+model: Claude-4-Sonnet-202501
 description: Implement epic stories in local environment and manage GitHub issues
 mode: agent
+# NOTE: If this exact model identifier isn't available in the execution environment,
+# fall back order should be: Claude-4-Sonnet → Claude-3-5-Sonnet-20241022 → any Claude Sonnet stable.
 ---
 
 # Epic Implementation Automation Prompt (Claude Sonnet 4 Target Model)
