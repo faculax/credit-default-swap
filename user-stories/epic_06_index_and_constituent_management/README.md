@@ -52,6 +52,23 @@ ACTIVE_INDEX → (ROLLED | FACTOR_ADJUSTED | PARTIALLY_DEFAULTED)
 - Factor math unit tests (precision & edge weights).
 - Synthetic default scenario regression.
 
+## 🎨 UI / UX Acceptance Criteria (Provisional)
+If surfaced in UI (trade detail, index management console):
+- Index series roll view shows: current series/version, effective date, previous series link.
+- Constituent default event list: timestamp, entity, factor before/after, cash component.
+- Factor history chart/table (basic table minimum).
+- Snapshot viewer: list of constituents with weights; ability to filter by as-of date.
+- Visual cues: status badges (ACTIVE, ROLLED, FACTOR_ADJUSTED, PARTIALLY_DEFAULTED).
+- Colours/fonts align with `AGENTS.md` (use Tailwind approximations).
+- Accessibility: table headers, aria-label on action buttons (e.g., “Apply Series Roll”).
+- Error feedback: toast or inline alert on failed roll/default processing.
+- Manual QA Flow (baseline):
+	1. Open Index Management page.
+	2. Trigger simulated constituent default.
+	3. Observe factor reduction & history row append.
+	4. Perform series roll; verify new series becomes active.
+	5. View snapshot for old series via history link.
+
 ## ⚠️ Risks & Mitigations
 | Risk | Mitigation |
 |------|------------|

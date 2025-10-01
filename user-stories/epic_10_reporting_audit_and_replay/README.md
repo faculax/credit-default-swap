@@ -52,6 +52,20 @@ Lifecycle Event → Persist (Event + Snapshot Refs) → Emit (Reporting) → Aud
 - Replay vs historical PV regression.
 - Simulated NACK retry scenario.
 
+## 🎨 UI / UX Acceptance Criteria (Provisional)
+- Event Stream viewer: paginated list (timestamp, type, correlation ID, status badge ACK/NACK/PENDING).
+- Replay console: input range (from timestamp / correlation ID) + run button; results panel with success count and divergence indicator.
+- Audit detail drawer: raw event JSON + integrity hash + linked snapshot references.
+- Correlation search bar: jump directly to related clustered events.
+- Drift alerts banner if reconciliation detects mismatch (Story 10.5 optional).
+- Accessibility: live region announcing new incoming events when auto-refresh enabled.
+- Manual QA Flow:
+	1. Open Event Stream viewer.
+	2. Trigger sample lifecycle event → appears in list.
+	3. Introduce synthetic NACK → badge updates to NACK (red).
+	4. Run replay for last 5 events → success summary visible.
+	5. Modify one underlying snapshot (simulate divergence) → drift alert displayed.
+
 ## ⚠️ Risks & Mitigations
 | Risk | Mitigation |
 |------|------------|

@@ -66,6 +66,9 @@ public class CDSTrade {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
+    @Column(name = "version", nullable = false)
+    private Integer version = 1;
+    
     // Enum for Buy/Sell Protection
     public enum ProtectionDirection {
         BUY, SELL
@@ -219,6 +222,18 @@ public class CDSTrade {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    public Integer getVersion() {
+        return version;
+    }
+    
+    public void setVersion(Integer version) {
+        this.version = version;
+    }
+    
+    public void setLastUpdated(LocalDateTime lastUpdated) {
+        this.updatedAt = lastUpdated;
     }
     
     @PreUpdate

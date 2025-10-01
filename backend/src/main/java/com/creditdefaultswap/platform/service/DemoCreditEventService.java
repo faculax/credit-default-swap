@@ -74,17 +74,23 @@ public class DemoCreditEventService {
         LocalDate tradeDate = trade.getTradeDate();
         LocalDate currentDate = LocalDate.now();
         
-        // Ensure we have enough time range for events
+        // Ensure we have enough time range for events and all dates are in the past
         if (tradeDate.isAfter(currentDate.minusDays(30))) {
-            // Trade is too recent, generate just one recent event
-            CreditEvent event = generateSingleCreditEvent(trade, tradeDate.plusDays(random.nextInt(5) + 1));
-            if (event != null) {
-                generatedEvents.add(event);
+            // Trade is recent, generate just one past event (between trade date and yesterday)
+            LocalDate maxEventDate = currentDate.minusDays(1); // Ensure it's in the past
+            if (tradeDate.isBefore(maxEventDate)) {
+                LocalDate eventDate = generateRandomDateBetween(tradeDate.plusDays(1), maxEventDate);
+                CreditEvent event = generateSingleCreditEvent(trade, eventDate);
+                if (event != null) {
+                    generatedEvents.add(event);
+                }
             }
+            // If trade is today or yesterday, skip generating events
         } else {
-            // Generate multiple events spread over time
+            // Generate multiple events spread over time (all in the past)
+            LocalDate maxEventDate = currentDate.minusDays(1); // Ensure all events are in the past
             for (int i = 0; i < numEvents; i++) {
-                LocalDate eventDate = generateRandomDateBetween(tradeDate.plusDays(1), currentDate);
+                LocalDate eventDate = generateRandomDateBetween(tradeDate.plusDays(1), maxEventDate);
                 CreditEvent event = generateSingleCreditEvent(trade, eventDate);
                 if (event != null) {
                     generatedEvents.add(event);
@@ -100,11 +106,20 @@ public class DemoCreditEventService {
      */
     private CreditEvent generateSingleCreditEvent(CDSTrade trade, LocalDate eventDate) {
         try {
+            // Validate date is not in the future before proceeding
+            if (eventDate.isAfter(LocalDate.now())) {
+                System.err.println("Skipping credit event generation for trade " + trade.getId() + 
+                                 ": event date " + eventDate + " is in the future");
+                return null;
+            }
+            
             // Choose event type with realistic probabilities
             CreditEventType eventType = chooseRandomEventType();
             
-            // Notice date is typically 1-7 days after event date
-            LocalDate noticeDate = eventDate.plusDays(random.nextInt(7) + 1);
+            // Notice date is typically 1-7 days after event date (but not in the future)
+            LocalDate maxNoticeDate = LocalDate.now(); // Don't allow future notice dates
+            LocalDate tentativeNoticeDate = eventDate.plusDays(random.nextInt(7) + 1);
+            LocalDate noticeDate = tentativeNoticeDate.isAfter(maxNoticeDate) ? maxNoticeDate : tentativeNoticeDate;
             
             // Choose settlement method (70% cash, 30% physical for demo purposes)
             SettlementMethod settlementMethod = random.nextDouble() < 0.7 ? 
@@ -126,6 +141,7 @@ public class DemoCreditEventService {
             
         } catch (Exception e) {
             // Log but don't fail the entire generation process
+            // This prevents transaction rollback when individual event creation fails
             System.err.println("Failed to generate credit event for trade " + trade.getId() + ": " + e.getMessage());
             return null;
         }

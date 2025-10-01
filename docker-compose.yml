@@ -45,11 +45,14 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+      risk-engine:
+        condition: service_started
     environment:
       SERVER_PORT: 8081
       SPRING_CLOUD_GATEWAY_ROUTES_0_URI: http://backend:8080
       SPRING_CLOUD_GATEWAY_ROUTES_1_URI: http://backend:8080
       SPRING_CLOUD_GATEWAY_ROUTES_2_URI: http://backend:8080
+      RISK_ENGINE_BASE_URL: http://risk-engine:8082
 
   frontend:
     build:
@@ -61,6 +64,19 @@ services:
       NODE_ENV: development
     depends_on:
       - gateway
+
+  risk-engine:
+    build:
+      context: ./risk-engine
+    ports:
+      - "8082:8082"
+    environment:
+      SERVER_PORT: 8082
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 volumes:
   postgres_data:

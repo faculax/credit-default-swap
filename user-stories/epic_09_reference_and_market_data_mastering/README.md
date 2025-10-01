@@ -56,6 +56,21 @@ Immutable effective-dated rows; queries specify as-of; replay selects correct sl
 - As-of query regression tests.
 - Successor split scenario test.
 
+## 🎨 UI / UX Acceptance Criteria (Provisional)
+- Reference Entity directory: searchable list (entity name, RED code, sector, currency).
+- Entity detail panel: current SRO, active deliverables count, successor mapping timeline.
+- Deliverables table: obligation ID, effective start/end, seniority, currency.
+- Index constituents view (link if Epic 06 present) with as-of date picker.
+- Calendar service panel: market selection + holiday list.
+- Recovery defaults table: sector, currency, recovery %, last updated.
+- Visual status badges for overlapping effective date errors (red) or missing successor mapping (amber).
+- Manual QA Flow:
+	1. Open Reference directory.
+	2. Search entity by RED code.
+	3. Open detail; verify SRO and deliverables list.
+	4. Add successor mapping (mock) → timeline updates.
+	5. Change as-of date → constituents snapshot adjusts.
+
 ## ⚠️ Risks & Mitigations
 | Risk | Mitigation |
 |------|------------|

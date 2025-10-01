@@ -14,9 +14,8 @@ log() {
 
 log "Starting Fund Smith monitoring service"
 log "Will monitor the following endpoints:"
-log "- https://fund-smith.onrender.com/"
-log "- https://fund-smith-gateway.onrender.com/api/trades"
-log "- https://fund-smith-backend.onrender.com/api/trades"
+log "- https://credit-default-swap-gateway.onrender.com/api/cds-trades"
+log "- https://credit-default-swap-backend.onrender.com/api/cds-trades"
 log "==================================================="
 
 # Main monitoring loop
@@ -26,9 +25,8 @@ while true; do
   
   # Array of URLs to monitor
   urls=(
-    "https://fund-smith.onrender.com/"
-    "https://fund-smith-gateway.onrender.com/api/trades"
-    "https://fund-smith-backend.onrender.com/api/trades"
+    "https://credit-default-swap-gateway.onrender.com/api/cds-trades"
+    "https://credit-default-swap-backend.onrender.com/api/cds-trades"
   )
   
   # Track total request time
