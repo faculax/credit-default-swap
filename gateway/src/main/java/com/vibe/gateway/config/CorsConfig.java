@@ -10,10 +10,14 @@ import org.springframework.core.annotation.Order;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Configuration
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class CorsConfig {
+    
+    private static final Logger logger = LoggerFactory.getLogger(CorsConfig.class);
 
     @Bean
     public CorsWebFilter corsWebFilter() {
@@ -32,6 +36,7 @@ public class CorsConfig {
             corsConfig.addAllowedOrigin(single);
             // Always allow the production frontend URL
             corsConfig.addAllowedOrigin("https://credit-default-swap.onrender.com");
+            logger.info("CORS: Added allowed origins: {} and https://credit-default-swap.onrender.com", single);
         }
 
         // Allow any Render subdomain if explicitly enabled (FRONTEND_ALLOW_RENDER_WILDCARD=true)
@@ -39,7 +44,14 @@ public class CorsConfig {
             corsConfig.addAllowedOriginPattern("https://*.onrender.com");
         }
 
-        corsConfig.addAllowedMethod("*");
+        // Explicitly allow all methods including OPTIONS for preflight
+        corsConfig.addAllowedMethod("GET");
+        corsConfig.addAllowedMethod("POST");
+        corsConfig.addAllowedMethod("PUT");
+        corsConfig.addAllowedMethod("DELETE");
+        corsConfig.addAllowedMethod("OPTIONS");
+        corsConfig.addAllowedMethod("HEAD");
+        
         corsConfig.addAllowedHeader("*");
         corsConfig.setAllowCredentials(false); // keep false for wildcard safety
         corsConfig.setMaxAge(3600L);
