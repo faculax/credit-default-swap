@@ -1,1 +1,4 @@
 com/creditdefaultswap/riskengine/service/RiskCalculationServiceTest.class
+com/creditdefaultswap/riskengine/ore/OreProcessManagerTest.class
+com/creditdefaultswap/riskengine/ore/OreInputBuilderTest.class
+com/creditdefaultswap/riskengine/ore/OreOutputParserTest.class

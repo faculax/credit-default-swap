@@ -35,12 +35,10 @@ export interface PhysicalSettlementInstruction {
   updatedAt?: string;
 }
 
-class CreditEventService {
-  private readonly baseUrl: string;
+import { apiUrl } from '../config/api';
 
-  constructor() {
-    this.baseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080/api';
-  }
+class CreditEventService {
+  private readonly baseUrl: string = apiUrl('');
 
   /**
    * Record a credit event for a trade

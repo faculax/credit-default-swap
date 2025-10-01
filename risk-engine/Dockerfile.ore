@@ -1,0 +1,112 @@
+# Multi-stage Dockerfile for ORE-integrated Risk Engine
+# Stage 1: ORE Build (Optional - can be skipped if ORE_BINARY_PATH points to external binary)
+FROM ubuntu:22.04 AS ore-builder
+
+# Install ORE dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    libboost-all-dev \
+    libeigen3-dev \
+    git \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install QuantLib
+WORKDIR /tmp
+RUN wget https://dl.bintray.com/quantlib/releases/QuantLib-1.31.tar.gz \
+    && tar -xzf QuantLib-1.31.tar.gz \
+    && cd QuantLib-1.31 \
+    && ./configure --prefix=/usr/local \
+    && make -j$(nproc) \
+    && make install \
+    && ldconfig
+
+# Install QuantExt
+RUN git clone https://github.com/OpenSourceRisk/Engine.git /tmp/ore \
+    && cd /tmp/ore/QuantExt \
+    && cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local \
+    && make -j$(nproc) \
+    && make install
+
+# Build ORE
+RUN cd /tmp/ore/OREData \
+    && cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local \
+    && make -j$(nproc) \
+    && make install \
+    && cd /tmp/ore/OREAnalytics \
+    && cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local \
+    && make -j$(nproc) \
+    && make install \
+    && cd /tmp/ore/App \
+    && cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local \
+    && make -j$(nproc) \
+    && make install
+
+# Stage 2: Java Build
+FROM maven:3.9-openjdk-21-slim AS java-builder
+
+WORKDIR /app
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+# Stage 3: Runtime
+FROM openjdk:21-jdk-slim
+
+# Install runtime dependencies for ORE
+RUN apt-get update && apt-get install -y \
+    libboost-filesystem1.74.0 \
+    libboost-serialization1.74.0 \
+    libboost-system1.74.0 \
+    libboost-thread1.74.0 \
+    libboost-timer1.74.0 \
+    libboost-date-time1.74.0 \
+    libboost-regex1.74.0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy ORE binaries from builder stage (if built)
+COPY --from=ore-builder /usr/local/bin/ore* /app/ore/bin/ 2>/dev/null || true
+COPY --from=ore-builder /usr/local/lib/libQuantLib* /usr/local/lib/ 2>/dev/null || true
+COPY --from=ore-builder /usr/local/lib/libOre* /usr/local/lib/ 2>/dev/null || true
+
+# Update library path
+RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/quantlib.conf && ldconfig
+
+# Create app directories
+WORKDIR /app
+RUN mkdir -p /app/ore/config /tmp/ore-work
+
+# Copy Java application
+COPY --from=java-builder /app/target/risk-engine-*.jar app.jar
+
+# Create basic ORE configuration
+COPY <<EOF /app/ore/config/ore.xml
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="logLevel">2</Parameter>
+    <Parameter name="logMask">255</Parameter>
+  </Setup>
+</ORE>
+EOF
+
+# Environment variables
+ENV RISK_IMPL=STUB
+ENV ORE_BINARY_PATH=/app/ore/bin/ore
+ENV ORE_CONFIG_PATH=/app/ore/config/ore.xml
+ENV ORE_WORK_DIR=/tmp/ore-work
+ENV ORE_TIMEOUT=10
+ENV ORE_WARMUP_TIMEOUT=30
+ENV ORE_RESTART_DELAY=5
+ENV ORE_MAX_RESTARTS=3
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:8082/api/risk/health || exit 1
+
+EXPOSE 8082
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

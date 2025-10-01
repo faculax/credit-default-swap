@@ -20,7 +20,6 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/lifecycle")
-@CrossOrigin(origins = "*")
 public class LifecycleController {
 
     @Autowired

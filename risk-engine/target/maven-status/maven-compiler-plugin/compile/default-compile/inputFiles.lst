@@ -1,5 +1,10 @@
+/Users/facundolaxalde/Development/credit-default-swap/risk-engine/src/main/java/com/creditdefaultswap/riskengine/ore/OreAutoStarter.java
+/Users/facundolaxalde/Development/credit-default-swap/risk-engine/src/main/java/com/creditdefaultswap/riskengine/ore/OreProcessManager.java
+/Users/facundolaxalde/Development/credit-default-swap/risk-engine/src/main/java/com/creditdefaultswap/riskengine/ore/OreOutputParser.java
 /Users/facundolaxalde/Development/credit-default-swap/risk-engine/src/main/java/com/creditdefaultswap/riskengine/controller/RiskController.java
 /Users/facundolaxalde/Development/credit-default-swap/risk-engine/src/main/java/com/creditdefaultswap/riskengine/service/RiskCalculationService.java
 /Users/facundolaxalde/Development/credit-default-swap/risk-engine/src/main/java/com/creditdefaultswap/riskengine/model/RiskMeasures.java
 /Users/facundolaxalde/Development/credit-default-swap/risk-engine/src/main/java/com/creditdefaultswap/riskengine/model/ScenarioRequest.java
+/Users/facundolaxalde/Development/credit-default-swap/risk-engine/src/main/java/com/creditdefaultswap/riskengine/config/RiskEngineConfigProperties.java
 /Users/facundolaxalde/Development/credit-default-swap/risk-engine/src/main/java/com/creditdefaultswap/riskengine/RiskEngineApplication.java
+/Users/facundolaxalde/Development/credit-default-swap/risk-engine/src/main/java/com/creditdefaultswap/riskengine/ore/OreInputBuilder.java

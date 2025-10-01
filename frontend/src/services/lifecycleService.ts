@@ -1,7 +1,8 @@
 import { CouponPeriod, AccrualEvent, TradeAmendment, NotionalAdjustment, LifecycleSummary, AmendTradePayload, NotionalAdjustmentPayload } from '../types/lifecycle';
+import { apiUrl } from '../config/api';
 
-// CRA uses process.env.REACT_APP_* variables; provide fallback
-const API_BASE = (process.env.REACT_APP_API_BASE || 'http://localhost:8080') + '/api/lifecycle';
+// Gateway-routed lifecycle base
+const API_BASE = apiUrl('/lifecycle');
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {

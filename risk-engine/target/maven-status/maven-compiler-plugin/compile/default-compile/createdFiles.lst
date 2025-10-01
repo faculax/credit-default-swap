@@ -1,5 +1,13 @@
 com/creditdefaultswap/riskengine/model/RiskMeasures.class
-com/creditdefaultswap/riskengine/service/RiskCalculationService.class
+com/creditdefaultswap/riskengine/ore/OreAutoStarter.class
+com/creditdefaultswap/riskengine/config/RiskEngineConfigProperties.class
 com/creditdefaultswap/riskengine/RiskEngineApplication.class
-com/creditdefaultswap/riskengine/model/ScenarioRequest.class
+com/creditdefaultswap/riskengine/config/RiskEngineConfigProperties$Implementation.class
+com/creditdefaultswap/riskengine/ore/OreProcessManager$ProcessStatus.class
+com/creditdefaultswap/riskengine/ore/OreOutputParser.class
+com/creditdefaultswap/riskengine/ore/OreInputBuilder.class
 com/creditdefaultswap/riskengine/controller/RiskController.class
+com/creditdefaultswap/riskengine/service/RiskCalculationService.class
+com/creditdefaultswap/riskengine/config/RiskEngineConfigProperties$Ore.class
+com/creditdefaultswap/riskengine/model/ScenarioRequest.class
+com/creditdefaultswap/riskengine/ore/OreProcessManager.class

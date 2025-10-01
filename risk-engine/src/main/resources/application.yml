@@ -5,6 +5,18 @@ spring:
   application:
     name: risk-engine
 
+# Risk Engine Configuration
+risk:
+  implementation: ${RISK_IMPL:STUB}  # STUB or ORE
+  ore:
+    binary-path: ${ORE_BINARY_PATH:/app/ore/bin/ore}
+    config-path: ${ORE_CONFIG_PATH:/app/ore/config/ore.xml}
+    work-dir: ${ORE_WORK_DIR:/tmp/ore-work}
+    timeout-seconds: ${ORE_TIMEOUT:10}
+    warmup-timeout-seconds: ${ORE_WARMUP_TIMEOUT:30}
+    restart-delay-seconds: ${ORE_RESTART_DELAY:5}
+    max-restarts: ${ORE_MAX_RESTARTS:3}
+
 logging:
   level:
     com.creditdefaultswap.riskengine: DEBUG

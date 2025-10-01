@@ -16,7 +16,6 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping({"/api/health", "/health"}) // Support both paths
-@CrossOrigin(origins = "*")
 public class HealthController {
 
     private static final Logger logger = LoggerFactory.getLogger(HealthController.class);
