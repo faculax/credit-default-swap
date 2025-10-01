@@ -5,6 +5,9 @@ import { CouponSchedulePanel } from '../lifecycle/CouponSchedulePanel';
 import { AccrualHistoryPanel } from '../lifecycle/AccrualHistoryPanel';
 import { NotionalAdjustmentModal } from '../lifecycle/NotionalAdjustmentModal';
 import { AmendTradeModal } from '../lifecycle/AmendTradeModal';
+import RiskMeasuresPanel from '../risk/RiskMeasuresPanel';
+import ScenarioRunModal from '../risk/ScenarioRunModal';
+import RegressionStatusBadge from '../risk/RegressionStatusBadge';
 
 interface TradeDetailModalProps {
   isOpen: boolean;
@@ -16,9 +19,10 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
   const [creditEvents, setCreditEvents] = useState<CreditEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
   // Lifecycle UI state additions
-  const [activeTab, setActiveTab] = useState<'details' | 'events' | 'lifecycle'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'events' | 'lifecycle' | 'risk'>('details');
   const [showNotionalModal, setShowNotionalModal] = useState(false);
   const [showAmendModal, setShowAmendModal] = useState(false);
+  const [showScenarioModal, setShowScenarioModal] = useState(false);
   const [notionalAdjustmentsVersion, setNotionalAdjustmentsVersion] = useState(0); // trigger re-renders if needed
 
   const loadCreditEvents = useCallback(async () => {
@@ -93,7 +97,8 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
           {[
             { key: 'details', label: 'Details' },
             { key: 'events', label: 'Credit Events' },
-            { key: 'lifecycle', label: 'Lifecycle' }
+            { key: 'lifecycle', label: 'Lifecycle' },
+            { key: 'risk', label: 'Risk' }
           ].map(t => (
             <button
               key={t.key}
@@ -322,7 +327,7 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
             )}
           </div>
         )}
-        {activeTab === 'lifecycle' && trade && (
+  {activeTab === 'lifecycle' && trade && (
           <div className="mt-2 space-y-8">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-fd-text">Lifecycle Management</h3>
@@ -351,6 +356,21 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
             </div>
           </div>
         )}
+        {activeTab === 'risk' && trade && (
+          <div className="mt-4 space-y-6" aria-labelledby="risk-panel-heading">
+            <div className="flex items-center justify-between">
+              <h3 id="risk-panel-heading" className="text-lg font-semibold text-fd-text">Risk Analytics</h3>
+              <div className="flex items-center gap-3">
+                <RegressionStatusBadge status="UNKNOWN" />
+                <button
+                  onClick={() => setShowScenarioModal(true)}
+                  className="px-3 py-1.5 bg-fd-green text-fd-dark rounded text-sm font-medium hover:bg-fd-green-hover"
+                >Run Scenarios</button>
+              </div>
+            </div>
+            <RiskMeasuresPanel tradeId={trade.id} />
+          </div>
+        )}
         <div className="flex justify-end space-x-4 mt-8 pt-4 border-t border-fd-border">
           <button onClick={onClose} className="px-6 py-2 bg-fd-green text-fd-dark font-medium rounded hover:bg-fd-green-hover transition-colors">Close</button>
         </div>
@@ -368,6 +388,11 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
             isOpen={showAmendModal}
             onClose={() => setShowAmendModal(false)}
             onCreated={() => {/* future refresh logic */}}
+          />
+          <ScenarioRunModal
+            tradeId={trade.id}
+            isOpen={showScenarioModal}
+            onClose={() => setShowScenarioModal(false)}
           />
         </>
       )}

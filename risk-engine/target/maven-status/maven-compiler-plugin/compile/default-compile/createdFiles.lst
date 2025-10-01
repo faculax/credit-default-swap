@@ -1,0 +1,5 @@
+com/creditdefaultswap/riskengine/model/RiskMeasures.class
+com/creditdefaultswap/riskengine/service/RiskCalculationService.class
+com/creditdefaultswap/riskengine/RiskEngineApplication.class
+com/creditdefaultswap/riskengine/model/ScenarioRequest.class
+com/creditdefaultswap/riskengine/controller/RiskController.class

@@ -38,6 +38,8 @@ Market Data → Curve Build → Trade PV & Legs → Measures → Persist Snapsho
 - Story 7.2 – Core Risk Measures Engine
 - Story 7.3 – Curve Bucket & Scenario Shock Module
 - Story 7.4 – Benchmark Regression Harness
+- Story 7.5 – ORE Process Supervisor & Adapter (Phase B)
+- Story 7.6 – Batched Scenarios & Bucket CS01 (Phase C)
 
 ## ✅ Acceptance Criteria Mapping (Initial)
 | Story | Theme | Key Acceptance (Draft) |
