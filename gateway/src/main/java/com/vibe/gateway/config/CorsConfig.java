@@ -30,6 +30,8 @@ public class CorsConfig {
         } else {
             String single = System.getenv().getOrDefault("FRONTEND_ORIGIN", "http://localhost:3000");
             corsConfig.addAllowedOrigin(single);
+            // Always allow the production frontend URL
+            corsConfig.addAllowedOrigin("https://credit-default-swap.onrender.com");
         }
 
         // Allow any Render subdomain if explicitly enabled (FRONTEND_ALLOW_RENDER_WILDCARD=true)
