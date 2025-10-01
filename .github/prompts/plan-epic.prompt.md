@@ -22,9 +22,10 @@ You will be invoked with a single integer parameter:
 
 EPIC_NUMBER = <n>
 
-Optionally an override flag may be provided:
+Optionally override flags may be provided:
 
 FORCE = true|false (default false)
+NO_ISSUES = true|false (default false)  # When true, skip GitHub issue creation entirely.
 
 ## Repository Conventions
 Epics live under: `user-stories/`
@@ -61,9 +62,14 @@ Labels to apply: `epic-<EPIC_NUMBER>`, `story` (plus optional domain labels if d
 			 * IF `FORCE=true` leave untouched (do NOT overwrite) and mark status `existing`.
 			 * ELSE (should have exited at step 6) treat as safety no-op.
 	 - ELSE create file with template (see Content Template below) and status `created`.
-9. For each story (created or existing): ensure a GitHub issue exists titled `[Epic <EPIC_NUMBER>] Story <EPIC_NUMBER>.<seq> – <Title>`.
-	 - Search existing issues (by exact title match where possible). If found → link (status `issue-existing`). If not found → create new issue with labels: `epic-<EPIC_NUMBER>`, `story`.
-10. After all side-effects succeed, emit a SINGLE JSON object (no pre/post prose) summarizing outcomes (see Output Schema below).
+9. If `NO_ISSUES=true` skip issue operations; set each story's `issueStatus` = `skipped`.
+10. Else for each story (created or existing): ensure a GitHub issue exists titled `[Epic <EPIC_NUMBER>] Story <EPIC_NUMBER>.<seq> – <Title>`.
+	 - Search existing issues (exact title).
+	 - If found → status `issue-existing`.
+	 - If not found attempt create; on success capture issue number and status `issue-created`.
+	 - After creation attempt, re-fetch by title to VERIFY existence. If verification fails → mark `issueStatus` = `issue-failed` and record error message.
+11. If any story has `issueStatus=issue-failed` and `NO_ISSUES != true` → output token `ISSUE_CREATION_FAILED: <EPIC_NUMBER>` and STOP (still keep already-created files, no rollback).
+12. After all side-effects succeed, emit a SINGLE JSON object (no pre/post prose) summarizing outcomes (see Output Schema below).
 11. All operations MUST be idempotent: a second identical invocation (without FORCE) should produce either the `EPIC_ALREADY_HAS_STORIES` guard OR a JSON where all file statuses are `existing` and issues `issue-existing`.
 12. Constrain contextual reading: only read the epic directory `README.md` plus list existing story markdown files. Do NOT scan wider codebase (avoid expensive repo traversal).
 
@@ -101,7 +107,18 @@ Single JSON object:
 {
 	"epic": <EPIC_NUMBER>,
 	"directory": "<epic_dir>",
+	"repository": "<owner>/<repo>",
 	"epicUiRationale": "<why UI is / is not expected (string)>",
+	"issuesExecution": "performed|skipped-no-issues-flag|skipped-missing-credentials",
+	"summary": {
+		"storiesTotal": <int>,
+		"filesCreated": <int>,
+		"filesExisting": <int>,
+		"issuesCreated": <int>,
+		"issuesExisting": <int>,
+		"issuesFailed": <int>,
+		"issuesSkipped": <int>
+	},
 	"stories": [
 		{
 			"sequence": <int>,
@@ -109,7 +126,9 @@ Single JSON object:
 			"filename": "story_<EPIC_NUMBER>_<seq>_<slug>.md",
 			"fileStatus": "created|existing",
 			"issueTitle": "[Epic <EPIC_NUMBER>] Story <EPIC_NUMBER>.<seq> – <Title>",
-			"issueStatus": "issue-created|issue-existing",
+			"issueStatus": "issue-created|issue-existing|skipped|issue-failed",
+			"issueNumber": <int|null>,
+			"issueError": "<error message if failed>",
 			"labels": ["epic-<EPIC_NUMBER>", "story"],
 			"path": "user-stories/<epic_dir>/story_<EPIC_NUMBER>_<seq>_<slug>.md",
 			"uiCandidate": true|false,
@@ -132,6 +151,7 @@ EPIC_ALREADY_HAS_STORIES: <EPIC_NUMBER>
 MALFORMED_STORY_LINE: <original line>
 NO_STORIES_SECTION: <EPIC_NUMBER>
 MISSING_EPIC_NUMBER
+ISSUE_CREATION_FAILED: <EPIC_NUMBER>
 ```
 
 ## Examples
@@ -173,6 +193,7 @@ EPIC_NOT_FOUND: <EPIC_NUMBER>
 EPIC_ALREADY_HAS_STORIES: <EPIC_NUMBER>
 MALFORMED_STORY_LINE: <original line>
 NO_STORIES_SECTION: <EPIC_NUMBER>
+ISSUE_CREATION_FAILED: <EPIC_NUMBER>
 ```
 
 ## Example Success Output (abridged)
