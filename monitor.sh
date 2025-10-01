@@ -16,6 +16,7 @@ log "Starting Fund Smith monitoring service"
 log "Will monitor the following endpoints:"
 log "- https://credit-default-swap-gateway.onrender.com/api/cds-trades"
 log "- https://credit-default-swap-backend.onrender.com/api/cds-trades"
+log "- https://credit-default-swap-risk-engine.onrender.com/api/risk/status"
 log "==================================================="
 
 # Main monitoring loop
@@ -27,6 +28,7 @@ while true; do
   urls=(
     "https://credit-default-swap-gateway.onrender.com/api/cds-trades"
     "https://credit-default-swap-backend.onrender.com/api/cds-trades"
+    "https://credit-default-swap-risk-engine.onrender.com/api/risk/status"
   )
   
   # Track total request time
