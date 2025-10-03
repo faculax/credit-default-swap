@@ -105,8 +105,8 @@ public class OreInputBuilder {
      */
     private void copyConventionsFile(Path inputDir) throws Exception {
         Path configDir = Paths.get("/app/ore/config");
-        Files.copy(configDir.resolve("conventions.xml"), inputDir.resolve("Conventions.xml"), StandardCopyOption.REPLACE_EXISTING);
-        logger.info("Copied conventions.xml");
+        Files.copy(configDir.resolve("Conventions.xml"), inputDir.resolve("Conventions.xml"), StandardCopyOption.REPLACE_EXISTING);
+        logger.info("Copied Conventions.xml");
         
         Files.copy(configDir.resolve("pricingengine.xml"), inputDir.resolve("pricingengine.xml"), StandardCopyOption.REPLACE_EXISTING);
         logger.info("Copied pricingengine.xml");
