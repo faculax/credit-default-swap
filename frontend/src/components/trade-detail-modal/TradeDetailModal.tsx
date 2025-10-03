@@ -1,10 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { CDSTradeResponse } from '../../services/cdsTradeService';
 import { CreditEvent, creditEventService } from '../../services/creditEventService';
-import { CouponSchedulePanel } from '../lifecycle/CouponSchedulePanel';
-import { AccrualHistoryPanel } from '../lifecycle/AccrualHistoryPanel';
-import { NotionalAdjustmentModal } from '../lifecycle/NotionalAdjustmentModal';
-import { AmendTradeModal } from '../lifecycle/AmendTradeModal';
 import RiskMeasuresPanel from '../risk/RiskMeasuresPanel';
 import ScenarioRunModal from '../risk/ScenarioRunModal';
 import RegressionStatusBadge from '../risk/RegressionStatusBadge';
@@ -18,12 +14,8 @@ interface TradeDetailModalProps {
 const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onClose }) => {
   const [creditEvents, setCreditEvents] = useState<CreditEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
-  // Lifecycle UI state additions
-  const [activeTab, setActiveTab] = useState<'details' | 'events' | 'lifecycle' | 'risk'>('details');
-  const [showNotionalModal, setShowNotionalModal] = useState(false);
-  const [showAmendModal, setShowAmendModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<'details' | 'events' | 'risk'>('details');
   const [showScenarioModal, setShowScenarioModal] = useState(false);
-  const [notionalAdjustmentsVersion, setNotionalAdjustmentsVersion] = useState(0); // trigger re-renders if needed
 
   const loadCreditEvents = useCallback(async () => {
     if (!trade) return;
@@ -97,7 +89,6 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
           {[
             { key: 'details', label: 'Details' },
             { key: 'events', label: 'Credit Events' },
-            { key: 'lifecycle', label: 'Lifecycle' },
             { key: 'risk', label: 'Risk' }
           ].map(t => (
             <button
@@ -327,35 +318,6 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
             )}
           </div>
         )}
-  {activeTab === 'lifecycle' && trade && (
-          <div className="mt-2 space-y-8">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-fd-text">Lifecycle Management</h3>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setShowAmendModal(true)}
-                  className="px-3 py-1.5 text-xs bg-fd-dark border border-fd-border rounded text-fd-text-muted hover:text-fd-text"
-                >Amend Trade</button>
-                <button
-                  onClick={() => setShowNotionalModal(true)}
-                  className="px-3 py-1.5 text-xs bg-fd-green text-fd-dark rounded font-medium hover:bg-fd-green-hover"
-                >Adjust Notional</button>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-              <div className="bg-fd-dark rounded-lg p-4 border border-fd-border">
-                <CouponSchedulePanel tradeId={trade.id} />
-              </div>
-              <div className="bg-fd-dark rounded-lg p-4 border border-fd-border">
-                <AccrualHistoryPanel tradeId={trade.id} />
-              </div>
-            </div>
-            {/* Placeholders for future: Amendments list, Notional adjustments history */}
-            <div className="bg-fd-darker border border-dashed border-fd-border rounded p-4 text-fd-text-muted text-xs">
-              Amendments & Notional history panels can be added here next.
-            </div>
-          </div>
-        )}
         {activeTab === 'risk' && trade && (
           <div className="mt-4 space-y-6" aria-labelledby="risk-panel-heading">
             <div className="flex items-center justify-between">
@@ -376,25 +338,11 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
         </div>
       </div>
       {trade && (
-        <>
-          <NotionalAdjustmentModal
-            tradeId={trade.id}
-            isOpen={showNotionalModal}
-            onClose={() => setShowNotionalModal(false)}
-            onCreated={() => setNotionalAdjustmentsVersion(v => v + 1)}
-          />
-          <AmendTradeModal
-            tradeId={trade.id}
-            isOpen={showAmendModal}
-            onClose={() => setShowAmendModal(false)}
-            onCreated={() => {/* future refresh logic */}}
-          />
-          <ScenarioRunModal
-            tradeId={trade.id}
-            isOpen={showScenarioModal}
-            onClose={() => setShowScenarioModal(false)}
-          />
-        </>
+        <ScenarioRunModal
+          tradeId={trade.id}
+          isOpen={showScenarioModal}
+          onClose={() => setShowScenarioModal(false)}
+        />
       )}
     </div>
   );

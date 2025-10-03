@@ -5,9 +5,8 @@ spring:
   application:
     name: risk-engine
 
-# Risk Engine Configuration
+# Risk Engine Configuration - ORE Only
 risk:
-  implementation: ${RISK_IMPL:STUB}  # STUB or ORE
   ore:
     binary-path: ${ORE_BINARY_PATH:/app/ore/bin/ore}
     config-path: ${ORE_CONFIG_PATH:/app/ore/config/ore.xml}
@@ -16,11 +15,22 @@ risk:
     warmup-timeout-seconds: ${ORE_WARMUP_TIMEOUT:30}
     restart-delay-seconds: ${ORE_RESTART_DELAY:5}
     max-restarts: ${ORE_MAX_RESTARTS:3}
+    debug: ${ORE_DEBUG:false}
+
+# Backend service connection
+backend:
+  base:
+    url: ${BACKEND_BASE_URL:http://localhost:8080}
 
 logging:
   level:
-    com.creditdefaultswap.riskengine: DEBUG
-    org.springframework.web: DEBUG
+    com.creditdefaultswap.riskengine: INFO
+    com.creditdefaultswap.riskengine.ore: DEBUG
+    com.creditdefaultswap.riskengine.controller: INFO
+    org.springframework.web: WARN
+    org.springframework.web.servlet.DispatcherServlet: WARN
+    org.apache.catalina: WARN
+    root: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 

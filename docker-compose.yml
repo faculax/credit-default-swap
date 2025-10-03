@@ -72,6 +72,15 @@ services:
       - "8082:8082"
     environment:
       SERVER_PORT: 8082
+      RISK_IMPL: ORE
+      ORE_BINARY_PATH: /app/ore/bin/ore
+      ORE_CONFIG_PATH: /app/ore/config/ore_cds.xml
+      BACKEND_BASE_URL: http://backend:8080
+    volumes:
+      # Mount your local ORE binary and config
+      - ./ore-setup/bin:/app/ore/bin:ro
+      - ./ore-setup/config:/app/ore/config:ro
+      - ./ore-setup/market-data:/app/ore/market-data:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
       interval: 30s

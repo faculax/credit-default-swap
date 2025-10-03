@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="logLevel">2</Parameter>
+    <Parameter name="outputPath">/tmp/ore-work/output</Parameter>
+    <Parameter name="inputPath">/tmp/ore-work/input</Parameter>
+    <Parameter name="asofDate">2025-01-02</Parameter>
+    <Parameter name="reportNaString">NA</Parameter>
+    <Parameter name="logFile">logs/ore.log</Parameter>
+    <Parameter name="curveConfigFile">CurveConfig.xml</Parameter>
+    <Parameter name="todaysMarketFile">TodaysMarket.xml</Parameter>
+    <Parameter name="conventionsFile">Conventions.xml</Parameter>
+    <Parameter name="portfolioFile">Portfolio.xml</Parameter>
+  </Setup>
+  <Market>
+    <File>Market.xml</File>
+  </Market>
+  <Conventions>
+    <File>Conventions.xml</File>
+  </Conventions>
+  <Curves>
+    <File>Curves.xml</File>
+  </Curves>
+  <Portfolio>
+    <File>Portfolio.xml</File>
+  </Portfolio>
+</ORE>

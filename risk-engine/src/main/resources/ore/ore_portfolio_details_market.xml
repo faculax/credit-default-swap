@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2025-01-02</Parameter>
+    <Parameter name="baseCurrency">USD</Parameter>
+    <Parameter name="inputPath">/app/ore/config</Parameter>
+    <Parameter name="outputPath">/tmp/ore-work/output</Parameter>
+    <Parameter name="logFile">log_pd_market.txt</Parameter>
+    <Parameter name="logMask">31</Parameter>
+    <Parameter name="portfolioFile">Portfolio.xml</Parameter>
+    <Parameter name="curveConfigFile">CurveConfig.xml</Parameter>
+    <Parameter name="todaysMarketFile">TodaysMarket.xml</Parameter>
+    <Parameter name="pricingEngineFile">pricingengine.xml</Parameter>
+    <Parameter name="marketDataFile">market.txt</Parameter>
+    <Parameter name="fixingDataFile">fixings.txt</Parameter>
+    <Parameter name="continueOnError">Y</Parameter>
+    <Parameter name="buildFailedTrades">Y</Parameter>
+  </Setup>
+  <Analytics>
+    <Analytic type="portfolioDetails">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="outputFileName">portfolio_details_market.csv</Parameter>
+    </Analytic>
+  </Analytics>
+</ORE>

@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -27,65 +26,58 @@ public class RiskController {
         this.calcService = calcService;
     }
 
-    // Legacy endpoints for backwards compatibility
+    /**
+     * Calculate risk measures for a single trade using ORE
+     */
     @GetMapping("/cds/{tradeId}")
-    public ResponseEntity<RiskMeasures> getBase(@PathVariable Long tradeId){
-        logger.info("Getting base CDS risk measures for trade: {}", tradeId);
-        return ResponseEntity.ok(calcService.calculateBase(tradeId));
+    public CompletableFuture<ResponseEntity<RiskMeasures>> getSingleTradeRisk(@PathVariable Long tradeId){
+        logger.info("Getting CDS risk measures for trade: {}", tradeId);
+        
+        // Create a single-trade scenario request to use ORE integration
+        ScenarioRequest request = new ScenarioRequest();
+        request.setScenarioId("SINGLE_TRADE_" + tradeId);
+        request.setTradeIds(List.of(tradeId));
+        
+        return calcService.calculateRiskMeasures(request)
+            .handle((riskMeasuresList, throwable) -> {
+                if (throwable != null) {
+                    logger.error("Risk calculation failed for trade: " + tradeId, throwable);
+                    return ResponseEntity.<RiskMeasures>internalServerError().build();
+                }
+                if (riskMeasuresList.isEmpty()) {
+                    return ResponseEntity.<RiskMeasures>notFound().build();
+                }
+                return ResponseEntity.ok(riskMeasuresList.get(0));
+            });
     }
 
-    @PostMapping("/cds/{tradeId}/scenarios")
-    public ResponseEntity<Map<String,Object>> runScenarios(@PathVariable Long tradeId,
-                                                           @RequestBody ScenarioRequest request){
-        logger.info("Running CDS scenarios for trade: {}", tradeId);
-        RiskMeasures base = calcService.calculateBase(tradeId);
-        List<Map<String,Object>> scenarios = new ArrayList<>();
-        if(request.getParallelBpsShifts()!=null){
-            for(BigDecimal shift : request.getParallelBpsShifts()){
-                int bps = shift.intValue();
-                RiskMeasures shifted = calcService.shiftParallel(base, bps);
-                Map<String,Object> entry = new LinkedHashMap<>();
-                entry.put("scenario","PARALLEL_"+bps+"BP");
-                entry.put("measures", shifted);
-                scenarios.add(entry);
-            }
-        }
-        Map<String,Object> response = new LinkedHashMap<>();
-        response.put("base", base);
-        response.put("scenarios", scenarios);
-        return ResponseEntity.ok(response);
-    }
-    
-    // Additional legacy endpoints
+    /**
+     * Calculate risk measures for a single trade (alternative endpoint)
+     */
     @GetMapping("/measures/{tradeId}")
-    public ResponseEntity<RiskMeasures> getRiskMeasures(@PathVariable Long tradeId) {
-        logger.info("Getting base risk measures for trade: {}", tradeId);
-        RiskMeasures measures = calcService.calculateBase(tradeId);
-        return ResponseEntity.ok(measures);
+    public CompletableFuture<ResponseEntity<RiskMeasures>> getRiskMeasures(@PathVariable Long tradeId) {
+        return getSingleTradeRisk(tradeId);
     }
     
-    @PostMapping("/measures/{tradeId}/shift")
-    public ResponseEntity<RiskMeasures> getShiftedRiskMeasures(
-            @PathVariable Long tradeId,
-            @RequestParam int bps) {
-        logger.info("Getting shifted risk measures for trade: {} with shift: {} bps", tradeId, bps);
-        RiskMeasures baseMeasures = calcService.calculateBase(tradeId);
-        RiskMeasures shiftedMeasures = calcService.shiftParallel(baseMeasures, bps);
-        return ResponseEntity.ok(shiftedMeasures);
-    }
-    
-    // New ORE-integrated endpoints
+    /**
+     * Calculate risk measures for multiple trades with scenario analysis
+     */
     @PostMapping("/scenario/calculate")
     public CompletableFuture<ResponseEntity<List<RiskMeasures>>> calculateScenario(
             @RequestBody ScenarioRequest request) {
-        logger.info("Calculating scenario: {} for {} trades", 
-            request.getScenarioId(), request.getTradeIds().size());
+        logger.info("Risk Calculation Request - Scenario: {}, Trades: {}, Valuation Date: {}", 
+            request.getScenarioId(), request.getTradeIds(), request.getValuationDate());
+        if (request.getScenarios() != null && !request.getScenarios().isEmpty()) {
+            logger.info("Market Scenarios: {}", request.getScenarios());
+        }
         
         return calcService.calculateRiskMeasures(request)
-            .thenApply(ResponseEntity::ok)
-            .exceptionally(throwable -> {
-                logger.error("Scenario calculation failed", throwable);
-                return ResponseEntity.internalServerError().build();
+            .handle((riskMeasuresList, throwable) -> {
+                if (throwable != null) {
+                    logger.error("Scenario calculation failed", throwable);
+                    return ResponseEntity.<List<RiskMeasures>>internalServerError().build();
+                }
+                return ResponseEntity.ok(riskMeasuresList);
             });
     }
     
@@ -101,7 +93,8 @@ public class RiskController {
     public ResponseEntity<Map<String,String>> health(){
         Map<String, String> healthInfo = new HashMap<>();
         healthInfo.put("status", "UP");
-        healthInfo.put("engineVersion", "ore-integrated-0.1");
+        healthInfo.put("engineVersion", "ore-only-1.0");
+        healthInfo.put("implementation", "ORE");
         healthInfo.put("timestamp", LocalDateTime.now().toString());
         return ResponseEntity.ok(healthInfo);
     }

@@ -2,80 +2,129 @@ package com.creditdefaultswap.riskengine.model;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 public class RiskMeasures {
-    // Legacy fields for backwards compatibility
     private Long tradeId;
-    private BigDecimal pvClean;
-    private BigDecimal pvDirty;
-    private BigDecimal parSpread;
-    private BigDecimal cs01;
-    private BigDecimal dv01;
-    private BigDecimal jtd;
-    private BigDecimal recovery01;
     private Instant valuationTimestamp;
     
-    // New fields for ORE integration
+    // Core ORE fields
     private BigDecimal npv; // Net Present Value
-    private BigDecimal gamma; // Second-order sensitivity
-    private BigDecimal var95; // Value at Risk 95%
-    private BigDecimal expectedShortfall; // Expected Shortfall
     private String currency; // Currency denomination
-    private Map<String, BigDecimal> greeks; // Greeks (delta, gamma, theta, vega, rho)
-
-    // Constructor for legacy usage
-    public RiskMeasures(Long tradeId) {
-        this.tradeId = tradeId;
-        this.valuationTimestamp = Instant.now();
-    }
     
-    // Default constructor for ORE usage
+    // Real CDS-specific fields from additional_results.csv
+    private BigDecimal fairSpreadClean; // Fair spread (clean)
+    private BigDecimal fairSpreadDirty; // Fair spread (dirty)
+    private BigDecimal protectionLegNPV; // Protection leg NPV
+    private BigDecimal premiumLegNPVClean; // Premium leg NPV (clean)
+    private BigDecimal premiumLegNPVDirty; // Premium leg NPV (dirty)
+    private BigDecimal accruedPremium; // Accrued premium amount
+    private BigDecimal upfrontPremium; // Upfront premium amount
+    private BigDecimal couponLegBPS; // Coupon leg basis point value
+    private BigDecimal currentNotional; // Current notional amount
+    private BigDecimal originalNotional; // Original notional amount
+    
+    // Credit risk arrays
+    private List<BigDecimal> defaultProbabilities; // Default probabilities by period
+    private List<BigDecimal> expectedLosses; // Expected losses by period
+    private List<LocalDate> accrualStartDates; // Accrual start dates by period
+    private List<LocalDate> accrualEndDates; // Accrual end dates by period
+    
+    // Cashflow schedule
+    private List<Cashflow> cashflows; // Complete cashflow schedule
+    
+    // DEPRECATED - These are fake estimates, kept for backwards compatibility but will be removed
+    @Deprecated private BigDecimal dv01;
+    @Deprecated private BigDecimal gamma;
+    @Deprecated private BigDecimal var95;
+    @Deprecated private BigDecimal expectedShortfall;
+    @Deprecated private Map<String, BigDecimal> greeks;
+
+    // Default constructor
     public RiskMeasures() {
         this.valuationTimestamp = Instant.now();
     }
 
-    // Legacy getters
-    public Long getTradeId() { return tradeId; }
-    public BigDecimal getPvClean() { return pvClean; }
-    public BigDecimal getPvDirty() { return pvDirty; }
-    public BigDecimal getParSpread() { return parSpread; }
-    public BigDecimal getCs01() { return cs01; }
-    public BigDecimal getDv01() { return dv01; }
-    public BigDecimal getJtd() { return jtd; }
-    public BigDecimal getRecovery01() { return recovery01; }
-    public Instant getValuationTimestamp() { return valuationTimestamp; }
+    // Constructor with trade ID
+    public RiskMeasures(Long tradeId) {
+        this.tradeId = tradeId;
+        this.valuationTimestamp = Instant.now();
+    }
 
-    // Legacy fluent setters for backwards compatibility
-    public RiskMeasures withPvClean(BigDecimal v){ this.pvClean=v; return this; }
-    public RiskMeasures withPvDirty(BigDecimal v){ this.pvDirty=v; return this; }
-    public RiskMeasures withParSpread(BigDecimal v){ this.parSpread=v; return this; }
-    public RiskMeasures withCs01(BigDecimal v){ this.cs01=v; return this; }
-    public RiskMeasures withDv01(BigDecimal v){ this.dv01=v; return this; }
-    public RiskMeasures withJtd(BigDecimal v){ this.jtd=v; return this; }
-    public RiskMeasures withRecovery01(BigDecimal v){ this.recovery01=v; return this; }
-    
-    // New getters and setters for ORE integration
+    // Getters and setters
+    public Long getTradeId() { return tradeId; }
     public void setTradeId(Long tradeId) { this.tradeId = tradeId; }
+    
+    public Instant getValuationTimestamp() { return valuationTimestamp; }
+    public void setValuationTimestamp(Instant valuationTimestamp) { this.valuationTimestamp = valuationTimestamp; }
     
     public BigDecimal getNpv() { return npv; }
     public void setNpv(BigDecimal npv) { this.npv = npv; }
     
-    public BigDecimal getGamma() { return gamma; }
-    public void setGamma(BigDecimal gamma) { this.gamma = gamma; }
-    
-    public BigDecimal getVar95() { return var95; }
-    public void setVar95(BigDecimal var95) { this.var95 = var95; }
-    
-    public BigDecimal getExpectedShortfall() { return expectedShortfall; }
-    public void setExpectedShortfall(BigDecimal expectedShortfall) { this.expectedShortfall = expectedShortfall; }
-    
     public String getCurrency() { return currency; }
     public void setCurrency(String currency) { this.currency = currency; }
     
-    public Map<String, BigDecimal> getGreeks() { return greeks; }
-    public void setGreeks(Map<String, BigDecimal> greeks) { this.greeks = greeks; }
+    // Real CDS fields
+    public BigDecimal getFairSpreadClean() { return fairSpreadClean; }
+    public void setFairSpreadClean(BigDecimal fairSpreadClean) { this.fairSpreadClean = fairSpreadClean; }
     
-    // Setter for dv01 to support ORE integration
-    public void setDv01(BigDecimal dv01) { this.dv01 = dv01; }
+    public BigDecimal getFairSpreadDirty() { return fairSpreadDirty; }
+    public void setFairSpreadDirty(BigDecimal fairSpreadDirty) { this.fairSpreadDirty = fairSpreadDirty; }
+    
+    public BigDecimal getProtectionLegNPV() { return protectionLegNPV; }
+    public void setProtectionLegNPV(BigDecimal protectionLegNPV) { this.protectionLegNPV = protectionLegNPV; }
+    
+    public BigDecimal getPremiumLegNPVClean() { return premiumLegNPVClean; }
+    public void setPremiumLegNPVClean(BigDecimal premiumLegNPVClean) { this.premiumLegNPVClean = premiumLegNPVClean; }
+    
+    public BigDecimal getPremiumLegNPVDirty() { return premiumLegNPVDirty; }
+    public void setPremiumLegNPVDirty(BigDecimal premiumLegNPVDirty) { this.premiumLegNPVDirty = premiumLegNPVDirty; }
+    
+    public BigDecimal getAccruedPremium() { return accruedPremium; }
+    public void setAccruedPremium(BigDecimal accruedPremium) { this.accruedPremium = accruedPremium; }
+    
+    public BigDecimal getUpfrontPremium() { return upfrontPremium; }
+    public void setUpfrontPremium(BigDecimal upfrontPremium) { this.upfrontPremium = upfrontPremium; }
+    
+    public BigDecimal getCouponLegBPS() { return couponLegBPS; }
+    public void setCouponLegBPS(BigDecimal couponLegBPS) { this.couponLegBPS = couponLegBPS; }
+    
+    public BigDecimal getCurrentNotional() { return currentNotional; }
+    public void setCurrentNotional(BigDecimal currentNotional) { this.currentNotional = currentNotional; }
+    
+    public BigDecimal getOriginalNotional() { return originalNotional; }
+    public void setOriginalNotional(BigDecimal originalNotional) { this.originalNotional = originalNotional; }
+    
+    public List<BigDecimal> getDefaultProbabilities() { return defaultProbabilities; }
+    public void setDefaultProbabilities(List<BigDecimal> defaultProbabilities) { this.defaultProbabilities = defaultProbabilities; }
+    
+    public List<BigDecimal> getExpectedLosses() { return expectedLosses; }
+    public void setExpectedLosses(List<BigDecimal> expectedLosses) { this.expectedLosses = expectedLosses; }
+    
+    public List<LocalDate> getAccrualStartDates() { return accrualStartDates; }
+    public void setAccrualStartDates(List<LocalDate> accrualStartDates) { this.accrualStartDates = accrualStartDates; }
+    
+    public List<LocalDate> getAccrualEndDates() { return accrualEndDates; }
+    public void setAccrualEndDates(List<LocalDate> accrualEndDates) { this.accrualEndDates = accrualEndDates; }
+    
+    public List<Cashflow> getCashflows() { return cashflows; }
+    public void setCashflows(List<Cashflow> cashflows) { this.cashflows = cashflows; }
+    
+    // DEPRECATED getters/setters
+    @Deprecated public BigDecimal getDv01() { return dv01; }
+    @Deprecated public void setDv01(BigDecimal dv01) { this.dv01 = dv01; }
+    
+    @Deprecated public BigDecimal getGamma() { return gamma; }
+    @Deprecated public void setGamma(BigDecimal gamma) { this.gamma = gamma; }
+    
+    @Deprecated public BigDecimal getVar95() { return var95; }
+    @Deprecated public void setVar95(BigDecimal var95) { this.var95 = var95; }
+    
+    @Deprecated public BigDecimal getExpectedShortfall() { return expectedShortfall; }
+    @Deprecated public void setExpectedShortfall(BigDecimal expectedShortfall) { this.expectedShortfall = expectedShortfall; }
+    
+    @Deprecated public Map<String, BigDecimal> getGreeks() { return greeks; }
+    @Deprecated public void setGreeks(Map<String, BigDecimal> greeks) { this.greeks = greeks; }
 }

@@ -7,20 +7,7 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "risk")
 public class RiskEngineConfigProperties {
     
-    public enum Implementation {
-        STUB, ORE
-    }
-    
-    private Implementation implementation = Implementation.STUB;
     private final Ore ore = new Ore();
-    
-    public Implementation getImplementation() {
-        return implementation;
-    }
-    
-    public void setImplementation(Implementation implementation) {
-        this.implementation = implementation;
-    }
     
     public Ore getOre() {
         return ore;
@@ -34,6 +21,7 @@ public class RiskEngineConfigProperties {
         private int warmupTimeoutSeconds = 30;
         private int restartDelaySeconds = 5;
         private int maxRestarts = 3;
+        private boolean debug = false;
         
         public String getBinaryPath() {
             return binaryPath;
@@ -89,6 +77,14 @@ public class RiskEngineConfigProperties {
         
         public void setMaxRestarts(int maxRestarts) {
             this.maxRestarts = maxRestarts;
+        }
+
+        public boolean isDebug() {
+            return debug;
+        }
+
+        public void setDebug(boolean debug) {
+            this.debug = debug;
         }
     }
 }

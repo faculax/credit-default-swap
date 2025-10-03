@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2025-01-02</Parameter>
+    <Parameter name="baseCurrency">USD</Parameter>
+    <Parameter name="inputPath">/app/ore/config</Parameter>
+    <Parameter name="outputPath">/tmp/ore-work/output</Parameter>
+    <Parameter name="logFile">log_legacy_pd_plus.txt</Parameter>
+    <Parameter name="logMask">511</Parameter>
+    <Parameter name="portfolioFile">Portfolio.xml</Parameter>
+    <Parameter name="conventionsFile">Conventions.xml</Parameter>
+    <Parameter name="curveConfigFile">LegacyCurveConfig.xml</Parameter>
+    <Parameter name="todaysMarketFile">LegacyTodaysMarket.xml</Parameter>
+    <Parameter name="pricingEngineFile">pricingengine.xml</Parameter>
+    <Parameter name="marketDataFile">market.txt</Parameter>
+    <Parameter name="fixingDataFile">fixings.txt</Parameter>
+    <Parameter name="continueOnError">Y</Parameter>
+    <Parameter name="buildFailedTrades">N</Parameter>
+  </Setup>
+  <Analytics>
+    <Analytic type="portfolioDetails">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="outputFileName">portfolio_details_legacy_plus.csv</Parameter>
+    </Analytic>
+  </Analytics>
+</ORE>
