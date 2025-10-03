@@ -37,7 +37,8 @@ ENV RISK_IMPL=ORE \
 	ORE_WARMUP_TIMEOUT=30 \
 	ORE_RESTART_DELAY=5 \
 	ORE_MAX_RESTARTS=3 \
-	LD_LIBRARY_PATH=/usr/local/lib
+	LD_LIBRARY_PATH=/usr/local/lib \
+	BACKEND_BASE_URL=https://credit-default-swap-backend.onrender.com
 
  # Copy verification script (optional)
 COPY scripts/verify-ore.sh /app/scripts/verify-ore.sh
