@@ -6,15 +6,19 @@ import com.creditdefaultswap.riskengine.model.ScenarioRequest;
 import com.creditdefaultswap.riskengine.ore.OreInputBuilder;
 import com.creditdefaultswap.riskengine.ore.OreOutputParser;
 import com.creditdefaultswap.riskengine.ore.OreProcessManager;
+import com.creditdefaultswap.riskengine.ore.OrePortfolioGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -36,135 +40,166 @@ public class RiskCalculationServiceTest {
     
     @Mock
     private OreOutputParser oreOutputParser;
+    
+    @Mock
+    private TradeDataService tradeDataService;
 
     private RiskCalculationService service;
 
     @BeforeEach
     void setUp() {
-        service = new RiskCalculationService(config, oreProcessManager, oreInputBuilder, oreOutputParser);
-    }
-
-    // Legacy tests
-    @Test
-    void testBaseCalculationNotNull() {
-        RiskMeasures measures = service.calculateBase(123L);
-        assertNotNull(measures.getPvClean());
-        assertNotNull(measures.getParSpread());
-        assertNotNull(measures.getTradeId());
-        assertEquals(123L, measures.getTradeId());
+        service = new RiskCalculationService(config, oreProcessManager, oreInputBuilder, 
+                                           oreOutputParser, tradeDataService);
     }
 
     @Test
-    void testParallelShiftAdjustsSpread() {
-        RiskMeasures base = service.calculateBase(5L);
-        RiskMeasures shifted = service.shiftParallel(base, 10);
-        assertEquals(base.getParSpread().add(java.math.BigDecimal.valueOf(10)), shifted.getParSpread());
-        assertEquals(5L, shifted.getTradeId());
-    }
-    
-    // New ORE integration tests
-    @Test
-    void testCalculateRiskMeasures_WithStubImplementation() {
-        when(config.getImplementation()).thenReturn(RiskEngineConfigProperties.Implementation.STUB);
-        
+    void testCalculateRiskMeasures_OreSuccess() {
+        // Arrange
         ScenarioRequest request = new ScenarioRequest();
         request.setScenarioId("TEST_SCENARIO");
         request.setTradeIds(List.of(1L, 2L));
         
+        String oreInput = "<ORE>test input</ORE>";
+        String oreOutput = "<ORE>test output</ORE>";
+        
+        when(oreInputBuilder.buildRiskCalculationInput(request)).thenReturn(oreInput);
+        when(oreProcessManager.executeCalculation(oreInput)).thenReturn(CompletableFuture.completedFuture(oreOutput));
+        when(oreOutputParser.isValidOutput(oreOutput)).thenReturn(true);
+        
+        // Mock trade data
+        OrePortfolioGenerator.CDSTradeData tradeData1 = createMockTradeData(1L, "USD");
+        OrePortfolioGenerator.CDSTradeData tradeData2 = createMockTradeData(2L, "EUR");
+        when(tradeDataService.fetchCDSTradeData(1L)).thenReturn(tradeData1);
+        when(tradeDataService.fetchCDSTradeData(2L)).thenReturn(tradeData2);
+        
+        // Mock parsed risk measures
+        RiskMeasures measures1 = createMockRiskMeasures(1L, "USD");
+        RiskMeasures measures2 = createMockRiskMeasures(2L, "EUR");
+        when(oreOutputParser.parseRiskMeasures(oreOutput, 1L, "USD")).thenReturn(measures1);
+        when(oreOutputParser.parseRiskMeasures(oreOutput, 2L, "EUR")).thenReturn(measures2);
+        
+        // Act
         CompletableFuture<List<RiskMeasures>> future = service.calculateRiskMeasures(request);
         List<RiskMeasures> result = future.join();
         
+        // Assert
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals(1L, result.get(0).getTradeId());
         assertEquals(2L, result.get(1).getTradeId());
+        assertEquals("USD", result.get(0).getCurrency());
+        assertEquals("EUR", result.get(1).getCurrency());
         
-        verify(oreProcessManager, never()).ensureProcessReady();
-    }
-    
-    @Test
-    void testCalculateRiskMeasures_WithOreImplementation_Success() {
-        when(config.getImplementation()).thenReturn(RiskEngineConfigProperties.Implementation.ORE);
-        when(oreProcessManager.ensureProcessReady()).thenReturn(CompletableFuture.completedFuture(true));
-        when(oreInputBuilder.buildRiskCalculationInput(any())).thenReturn("<ORE>test input</ORE>");
-        when(oreProcessManager.executeCalculation(anyString())).thenReturn(CompletableFuture.completedFuture("<ORE>test output</ORE>"));
-        when(oreOutputParser.isValidOutput(anyString())).thenReturn(true);
-        
-        RiskMeasures mockMeasures1 = new RiskMeasures();
-        mockMeasures1.setTradeId(1L);
-        RiskMeasures mockMeasures2 = new RiskMeasures();
-        mockMeasures2.setTradeId(2L);
-        
-        when(oreOutputParser.parseRiskMeasures(anyString(), eq(1L))).thenReturn(mockMeasures1);
-        when(oreOutputParser.parseRiskMeasures(anyString(), eq(2L))).thenReturn(mockMeasures2);
-        
-        ScenarioRequest request = new ScenarioRequest();
-        request.setScenarioId("TEST_SCENARIO");
-        request.setTradeIds(List.of(1L, 2L));
-        
-        CompletableFuture<List<RiskMeasures>> future = service.calculateRiskMeasures(request);
-        List<RiskMeasures> result = future.join();
-        
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals(1L, result.get(0).getTradeId());
-        assertEquals(2L, result.get(1).getTradeId());
-        
-        verify(oreProcessManager).ensureProcessReady();
         verify(oreInputBuilder).buildRiskCalculationInput(request);
-        verify(oreProcessManager).executeCalculation("<ORE>test input</ORE>");
-        verify(oreOutputParser).isValidOutput("<ORE>test output</ORE>");
+        verify(oreProcessManager).executeCalculation(oreInput);
+        verify(oreOutputParser).isValidOutput(oreOutput);
+        verify(tradeDataService).fetchCDSTradeData(1L);
+        verify(tradeDataService).fetchCDSTradeData(2L);
     }
     
     @Test
-    void testCalculateRiskMeasures_WithOreImplementation_ProcessNotReady() {
-        when(config.getImplementation()).thenReturn(RiskEngineConfigProperties.Implementation.ORE);
-        when(oreProcessManager.ensureProcessReady()).thenReturn(CompletableFuture.completedFuture(false));
-        
+    void testCalculateRiskMeasures_OreInvalidOutput() {
+        // Arrange
         ScenarioRequest request = new ScenarioRequest();
         request.setScenarioId("TEST_SCENARIO");
         request.setTradeIds(List.of(1L));
         
+        String oreInput = "<ORE>test input</ORE>";
+        String oreOutput = "<ORE>error output</ORE>";
+        String errorMessage = "ORE calculation failed: invalid input";
+        
+        when(oreInputBuilder.buildRiskCalculationInput(request)).thenReturn(oreInput);
+        when(oreProcessManager.executeCalculation(oreInput)).thenReturn(CompletableFuture.completedFuture(oreOutput));
+        when(oreOutputParser.isValidOutput(oreOutput)).thenReturn(false);
+        when(oreOutputParser.extractErrorMessage(oreOutput)).thenReturn(errorMessage);
+        
+        // Act & Assert
         CompletableFuture<List<RiskMeasures>> future = service.calculateRiskMeasures(request);
-        List<RiskMeasures> result = future.join();
         
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals(1L, result.get(0).getTradeId());
+        CompletionException exception = assertThrows(CompletionException.class, future::join);
+        assertTrue(exception.getCause() instanceof RuntimeException);
+        assertTrue(exception.getCause().getMessage().contains("ORE calculation failed"));
         
-        verify(oreProcessManager).ensureProcessReady();
-        verify(oreInputBuilder, never()).buildRiskCalculationInput(any());
+        verify(oreOutputParser).isValidOutput(oreOutput);
+        verify(oreOutputParser).extractErrorMessage(oreOutput);
     }
     
     @Test
-    void testGetEngineStatus_StubImplementation() {
-        when(config.getImplementation()).thenReturn(RiskEngineConfigProperties.Implementation.STUB);
+    void testCalculateRiskMeasures_OreExecutionException() {
+        // Arrange
+        ScenarioRequest request = new ScenarioRequest();
+        request.setScenarioId("TEST_SCENARIO");
+        request.setTradeIds(List.of(1L));
         
-        Map<String, Object> status = service.getEngineStatus();
+        String oreInput = "<ORE>test input</ORE>";
+        RuntimeException oreException = new RuntimeException("ORE process failed");
         
-        assertNotNull(status);
-        assertEquals("STUB", status.get("implementation"));
-        assertFalse(status.containsKey("oreProcess"));
+        when(oreInputBuilder.buildRiskCalculationInput(request)).thenReturn(oreInput);
+        when(oreProcessManager.executeCalculation(oreInput)).thenReturn(CompletableFuture.failedFuture(oreException));
+        
+        // Act & Assert
+        CompletableFuture<List<RiskMeasures>> future = service.calculateRiskMeasures(request);
+        
+        CompletionException exception = assertThrows(CompletionException.class, future::join);
+        assertTrue(exception.getCause() instanceof RuntimeException);
+        assertEquals("ORE calculation failed", exception.getCause().getMessage());
+        
+        verify(oreInputBuilder).buildRiskCalculationInput(request);
+        verify(oreProcessManager).executeCalculation(oreInput);
     }
     
     @Test
-    void testGetEngineStatus_OreImplementation() {
-        when(config.getImplementation()).thenReturn(RiskEngineConfigProperties.Implementation.ORE);
+    void testGetEngineStatus() {
+        // Arrange
+        RiskEngineConfigProperties.Ore oreConfig = new RiskEngineConfigProperties.Ore();
+        oreConfig.setBinaryPath("/test/ore/bin/ore");
+        oreConfig.setConfigPath("/test/ore/config/ore.xml");
+        oreConfig.setTimeoutSeconds(30);
         
-        OreProcessManager.ProcessStatus processStatus = new OreProcessManager.ProcessStatus(true, false, 0);
-        when(oreProcessManager.getStatus()).thenReturn(processStatus);
+        when(config.getOre()).thenReturn(oreConfig);
         
+        // Act
         Map<String, Object> status = service.getEngineStatus();
         
+        // Assert
         assertNotNull(status);
         assertEquals("ORE", status.get("implementation"));
-        assertTrue(status.containsKey("oreProcess"));
+        assertEquals("batch", status.get("mode"));
+        assertTrue(status.containsKey("ore"));
         
         @SuppressWarnings("unchecked")
-        Map<String, Object> oreStatus = (Map<String, Object>) status.get("oreProcess");
-        assertTrue((Boolean) oreStatus.get("alive"));
-        assertTrue((Boolean) oreStatus.get("ready"));
-        assertFalse((Boolean) oreStatus.get("warmingUp"));
-        assertEquals(0, oreStatus.get("restartCount"));
+        Map<String, Object> oreStatus = (Map<String, Object>) status.get("ore");
+        assertEquals("/test/ore/bin/ore", oreStatus.get("binaryPath"));
+        assertEquals("/test/ore/config/ore.xml", oreStatus.get("configPath"));
+        assertEquals(30, oreStatus.get("timeoutSeconds"));
+        assertEquals("batch-execution", oreStatus.get("mode"));
+    }
+    
+    private OrePortfolioGenerator.CDSTradeData createMockTradeData(Long tradeId, String currency) {
+        return new OrePortfolioGenerator.CDSTradeData(
+            tradeId,
+            "TEST_ENTITY_" + tradeId,
+            new BigDecimal("1000000"),
+            new BigDecimal("0.0125"),
+            LocalDate.now().plusYears(5),
+            LocalDate.now(),
+            currency,
+            "QUARTERLY",
+            "ACT/360",
+            "BUY",
+            "TARGET"
+        );
+    }
+    
+    private RiskMeasures createMockRiskMeasures(Long tradeId, String currency) {
+        RiskMeasures measures = new RiskMeasures();
+        measures.setTradeId(tradeId);
+        measures.setCurrency(currency);
+        measures.setNpv(new BigDecimal("50000.00"));
+        measures.setDv01(new BigDecimal("100.50"));
+        measures.setGamma(new BigDecimal("0.001234"));
+        measures.setVar95(new BigDecimal("75000.00"));
+        measures.setExpectedShortfall(new BigDecimal("95000.00"));
+        return measures;
     }
 }

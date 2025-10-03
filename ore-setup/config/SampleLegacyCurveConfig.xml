@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<CurveConfiguration>
+  <Curves>
+    <Curve>
+      <CurveId>USD-Discount</CurveId>
+      <CurveDescription>USD Discount: Deposits + Swaps</CurveDescription>
+      <CurveType>Yield</CurveType>
+      <DayCounter>ACT/365</DayCounter>
+      <Currency>USD</Currency>
+      <DiscountCurve>
+        <Instruments>DEPOSITS,SWAPS</Instruments>
+        <Tenors>1D,1W,1M,1Y,2Y,3Y</Tenors>
+        <Quotes>USD-DEPO-1D,USD-DEPO-1W,USD-DEPO-1M,USD-SWAP-1Y,USD-SWAP-2Y,USD-SWAP-3Y</Quotes>
+        <Interpolation>LogLinear</Interpolation>
+      </DiscountCurve>
+    </Curve>
+  </Curves>
+</CurveConfiguration>

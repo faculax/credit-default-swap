@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2025-01-02</Parameter>
+    <Parameter name="baseCurrency">USD</Parameter>
+    <Parameter name="inputPath">/app/ore/config</Parameter>
+    <Parameter name="outputPath">/tmp/ore-work/output</Parameter>
+    <Parameter name="logFile">log_empty_npv.txt</Parameter>
+    <Parameter name="logMask">511</Parameter>
+    <Parameter name="portfolioFile">Portfolio_empty.xml</Parameter>
+    <!-- Keep curve + market references minimal; for empty portfolio npv should not need curves but parser may expect files -->
+    <Parameter name="curveConfigFile">SampleLegacyCurveConfig.xml</Parameter>
+    <Parameter name="todaysMarketFile">LegacyTodaysMarket.xml</Parameter>
+    <Parameter name="pricingEngineFile">pricingengine.xml</Parameter>
+    <Parameter name="marketDataFile">market.txt</Parameter>
+    <Parameter name="fixingDataFile">fixings.txt</Parameter>
+    <Parameter name="continueOnError">Y</Parameter>
+    <Parameter name="buildFailedTrades">N</Parameter>
+  </Setup>
+  <Analytics>
+    <Analytic type="npv">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="outputFileName">npv_empty.csv</Parameter>
+    </Analytic>
+  </Analytics>
+</ORE>

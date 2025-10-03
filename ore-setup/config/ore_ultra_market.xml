@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2025-01-02</Parameter>
+    <Parameter name="baseCurrency">USD</Parameter>
+    <Parameter name="inputPath">/app/ore/config</Parameter>
+    <Parameter name="outputPath">/tmp/ore-work/output</Parameter>
+    <Parameter name="portfolioFile">Portfolio_empty.xml</Parameter>
+    <Parameter name="curveConfigFile">MiniCurveConfig.xml</Parameter>
+    <Parameter name="todaysMarketFile">MiniTodaysMarket.xml</Parameter>
+    <Parameter name="marketDataFile">mini_marketdata.txt</Parameter>
+  <Parameter name="referenceDataFile">referenceData.xml</Parameter>
+  <Parameter name="pricingEngineFile">pricingengine.xml</Parameter>
+    <Parameter name="analyticsFile">analytics_npv.xml</Parameter>
+    <Parameter name="logFile">log_ultra_market.txt</Parameter>
+    <Parameter name="logMask">511</Parameter>
+    <Parameter name="continueOnError">Y</Parameter>
+    <Parameter name="buildFailedTrades">N</Parameter>
+  </Setup>
+</ORE>

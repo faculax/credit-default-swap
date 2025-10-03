@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<Analytics>
+  <Analytic type="portfolioDetails">
+    <Parameter name="active">Y</Parameter>
+    <Parameter name="outputFileName">portfolio_details_external.csv</Parameter>
+  </Analytic>
+</Analytics>

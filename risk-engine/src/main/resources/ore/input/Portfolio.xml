@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<Portfolio>
+  <Trade id="DUMMY1" tradeType="Swap">
+    <Swap>
+      <Leg id="L1" payer="true" currency="USD">
+        <Schedule>
+          <StartDate>2025-01-01</StartDate>
+          <EndDate>2026-01-01</EndDate>
+          <Tenor>6M</Tenor>
+          <Calendar>TARGET</Calendar>
+          <Convention>Following</Convention>
+        </Schedule>
+        <DayCounter>ACT/360</DayCounter>
+        <Compounding>Simple</Compounding>
+        <Frequency>Semiannual</Frequency>
+        <Notionals>1000000</Notionals>
+        <Rates>0.01</Rates>
+      </Leg>
+      <Leg id="L2" payer="false" currency="USD">
+        <Schedule>
+          <StartDate>2025-01-01</StartDate>
+          <EndDate>2026-01-01</EndDate>
+          <Tenor>6M</Tenor>
+          <Calendar>TARGET</Calendar>
+          <Convention>Following</Convention>
+        </Schedule>
+        <DayCounter>ACT/360</DayCounter>
+        <Compounding>Simple</Compounding>
+        <Frequency>Semiannual</Frequency>
+        <Notionals>1000000</Notionals>
+        <Rates>0.012</Rates>
+      </Leg>
+    </Swap>
+  </Trade>
+</Portfolio>

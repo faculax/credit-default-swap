@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <OutputPath>/tmp/ore-work/output</OutputPath>
+    <InputPath>/tmp/ore-work/input</InputPath>
+    <AsOfDate>2025-01-02</AsOfDate>
+    <LogFile>logs/ore.log</LogFile>
+    <CurveConfigFile>CurveConfig.xml</CurveConfigFile>
+    <TodaysMarketFile>TodaysMarket.xml</TodaysMarketFile>
+    <ConventionsFile>Conventions.xml</ConventionsFile>
+    <PortfolioFile>Portfolio.xml</PortfolioFile>
+  </Setup>
+  <Portfolio>
+    <File>Portfolio.xml</File>
+  </Portfolio>
+</ORE>

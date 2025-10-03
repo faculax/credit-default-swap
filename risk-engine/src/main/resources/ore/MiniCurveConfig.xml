@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<CurveConfiguration>
+  <YieldCurveData>
+    <YieldCurve id="USD-Discount" curveType="Yield" currency="USD">
+      <Segments>
+        <SimpleYieldSegment type="Deposit">
+          <Quotes>
+            <Quote>IR_USD_DEP_1D</Quote>
+          </Quotes>
+          <Tenors>
+            <Tenor>1D</Tenor>
+          </Tenors>
+        </SimpleYieldSegment>
+      </Segments>
+      <Interpolation>LogLinear</Interpolation>
+      <DayCounter>ACT/360</DayCounter>
+      <Compounding>Simple</Compounding>
+    </YieldCurve>
+  </YieldCurveData>
+</CurveConfiguration>

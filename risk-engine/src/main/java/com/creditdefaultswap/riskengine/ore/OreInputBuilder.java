@@ -1,52 +1,234 @@
 package com.creditdefaultswap.riskengine.ore;
 
 import com.creditdefaultswap.riskengine.model.ScenarioRequest;
+import com.creditdefaultswap.riskengine.service.TradeDataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Component
 public class OreInputBuilder {
     
     private static final Logger logger = LoggerFactory.getLogger(OreInputBuilder.class);
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
+    
+    private final OrePortfolioGenerator portfolioGenerator;
+    private final OreMarketDataGenerator marketDataGenerator;
+    private final OreTodaysMarketGenerator todaysMarketGenerator;
+    private final OreCurveConfigGenerator curveConfigGenerator;
+    private final TradeDataService tradeDataService;
+    
+    @Autowired
+    public OreInputBuilder(OrePortfolioGenerator portfolioGenerator, 
+                          OreMarketDataGenerator marketDataGenerator,
+                          OreTodaysMarketGenerator todaysMarketGenerator,
+                          OreCurveConfigGenerator curveConfigGenerator,
+                          TradeDataService tradeDataService) {
+        this.portfolioGenerator = portfolioGenerator;
+        this.marketDataGenerator = marketDataGenerator;
+        this.todaysMarketGenerator = todaysMarketGenerator;
+        this.curveConfigGenerator = curveConfigGenerator;
+        this.tradeDataService = tradeDataService;
+    }
     
     /**
-     * Builds ORE XML input for risk calculation
+     * Builds ORE XML input for risk calculation with dynamic portfolio generation
      */
     public String buildRiskCalculationInput(ScenarioRequest request) {
-        logger.debug("Building ORE input for scenario: {}", request.getScenarioId());
+        logger.info("=== BUILD RISK CALCULATION INPUT START ===");
+        logger.info("Building ORE input for scenario: {}", request.getScenarioId());
         
-        StringBuilder xml = new StringBuilder();
-        xml.append("<?xml version=\"1.0\"?>\n");
-        xml.append("<ORE>\n");
+        try {
+            // Ensure working directories exist
+            Path inputDir = Paths.get("/tmp/ore-work/input");
+            Path outputDir = Paths.get("/tmp/ore-work/output");
+            Files.createDirectories(inputDir);
+            Files.createDirectories(outputDir);
+            logger.info("Created working directories: input={}, output={}", inputDir, outputDir);
+            
+            // Collect all trade data
+            Set<OrePortfolioGenerator.CDSTradeData> allTrades = new HashSet<>();
+            for (Long tradeId : request.getTradeIds()) {
+                OrePortfolioGenerator.CDSTradeData tradeData = tradeDataService.fetchCDSTradeData(tradeId);
+                allTrades.add(tradeData);
+            }
+            
+            // Generate dynamic market data based on trades
+            LocalDate valuationDate = request.getValuationDate() != null ? 
+                request.getValuationDate() : LocalDate.now();
+            String marketData = marketDataGenerator.generateMarketData(allTrades, valuationDate);
+            writeDynamicMarketData(marketData);
+            
+            // Generate dynamic TodaysMarket configuration
+            String todaysMarket = todaysMarketGenerator.generateTodaysMarket(allTrades);
+            writeDynamicTodaysMarket(todaysMarket);
+            
+            // Generate dynamic CurveConfig
+            String curveConfig = curveConfigGenerator.generateCurveConfig(allTrades);
+            writeDynamicCurveConfig(curveConfig);
+            
+            // Copy only conventions file (static)
+            copyConventionsFile(inputDir);
+            
+            // Generate dynamic portfolio for each trade
+            for (OrePortfolioGenerator.CDSTradeData tradeData : allTrades) {
+                String portfolioXml = portfolioGenerator.generatePortfolioXml(tradeData);
+                writeDynamicPortfolio(portfolioXml);
+            }
+            
+            // Write dynamic ORE configuration that points to our working directory
+            writeDynamicOreConfig(request);
+            
+            return "ORE configuration written to working directory";
+            
+        } catch (Exception e) {
+            logger.error("Failed to build ORE input for scenario: {}", request.getScenarioId(), e);
+            throw new RuntimeException("Failed to build ORE input", e);
+        }
+    }
+    
+    /**
+     * Copies static configuration files (conventions and pricingengine)
+     */
+    private void copyConventionsFile(Path inputDir) throws Exception {
+        Path configDir = Paths.get("/app/ore/config");
+        Files.copy(configDir.resolve("conventions.xml"), inputDir.resolve("Conventions.xml"), StandardCopyOption.REPLACE_EXISTING);
+        logger.info("Copied conventions.xml");
         
-        // Add setup section
-        appendSetup(xml, request);
+        Files.copy(configDir.resolve("pricingengine.xml"), inputDir.resolve("pricingengine.xml"), StandardCopyOption.REPLACE_EXISTING);
+        logger.info("Copied pricingengine.xml");
         
-        // Add market data
-        appendMarketData(xml, request);
-        
-        // Add portfolio (trades)
-        appendPortfolio(xml, request);
-        
-        // Add scenario definitions
-        appendScenarios(xml, request);
-        
-        // Add analytics configuration
-        appendAnalytics(xml, request);
-        
-        xml.append("</ORE>\n");
-        
-        String result = xml.toString();
-        logger.debug("Generated ORE XML input, length: {}", result.length());
-        
-        return result;
+        // Create empty fixings file
+        Files.writeString(inputDir.resolve("fixings.txt"), "# Empty fixings file\n");
+        logger.info("Created empty fixings.txt");
+    }
+    
+    /**
+     * Writes dynamic market data to the writable ORE working directory
+     */
+    private void writeDynamicMarketData(String marketData) {
+        try {
+            Path marketDataPath = Paths.get("/tmp/ore-work/input/market.txt");
+            Files.writeString(marketDataPath, marketData);
+            logger.info("Written dynamic market data to ORE working directory: {}", marketDataPath);
+        } catch (Exception e) {
+            logger.error("Failed to write dynamic market data file", e);
+            throw new RuntimeException("Failed to write market data file", e);
+        }
+    }
+    
+    /**
+     * Writes dynamic TodaysMarket configuration
+     */
+    private void writeDynamicTodaysMarket(String todaysMarket) {
+        try {
+            Path todaysMarketPath = Paths.get("/tmp/ore-work/input/todaysmarket.xml");
+            Files.writeString(todaysMarketPath, todaysMarket);
+            logger.info("Written dynamic TodaysMarket to: {}", todaysMarketPath);
+        } catch (Exception e) {
+            logger.error("Failed to write TodaysMarket file", e);
+            throw new RuntimeException("Failed to write TodaysMarket file", e);
+        }
+    }
+    
+    /**
+     * Writes dynamic CurveConfig
+     */
+    private void writeDynamicCurveConfig(String curveConfig) {
+        try {
+            Path curveConfigPath = Paths.get("/tmp/ore-work/input/curveconfig.xml");
+            Files.writeString(curveConfigPath, curveConfig);
+            logger.info("Written dynamic CurveConfig to: {}", curveConfigPath);
+        } catch (Exception e) {
+            logger.error("Failed to write CurveConfig file", e);
+            throw new RuntimeException("Failed to write CurveConfig file", e);
+        }
+    }
+    
+    /**
+     * Writes dynamic ORE configuration file that points to working directory with credit analytics enabled
+     */
+    private void writeDynamicOreConfig(ScenarioRequest request) {
+        try {
+            LocalDate valuationDate = request.getValuationDate() != null ? 
+                request.getValuationDate() : LocalDate.now();
+                
+            StringBuilder xml = new StringBuilder();
+            xml.append("<?xml version=\"1.0\"?>\n");
+            xml.append("<ORE>\n");
+            xml.append("  <Setup>\n");
+            xml.append("    <Parameter name=\"asofDate\">").append(DATE_FORMAT.format(valuationDate)).append("</Parameter>\n");
+            xml.append("    <Parameter name=\"inputPath\">/tmp/ore-work/input</Parameter>\n");
+            xml.append("    <Parameter name=\"outputPath\">/tmp/ore-work/output</Parameter>\n");
+            xml.append("    <Parameter name=\"logFile\">log.txt</Parameter>\n");
+            xml.append("    <Parameter name=\"logMask\">255</Parameter>\n");
+            xml.append("    <Parameter name=\"marketDataFile\">market.txt</Parameter>\n");
+            xml.append("    <Parameter name=\"fixingDataFile\">fixings.txt</Parameter>\n");
+            xml.append("    <Parameter name=\"implyTodaysFixings\">Y</Parameter>\n");
+            xml.append("    <Parameter name=\"curveConfigFile\">curveconfig.xml</Parameter>\n");
+            xml.append("    <Parameter name=\"conventionsFile\">Conventions.xml</Parameter>\n");
+            xml.append("    <Parameter name=\"marketConfigFile\">todaysmarket.xml</Parameter>\n");
+            xml.append("    <Parameter name=\"pricingEnginesFile\">pricingengine.xml</Parameter>\n");
+            xml.append("    <Parameter name=\"portfolioFile\">portfolio.xml</Parameter>\n");
+            xml.append("    <Parameter name=\"observationModel\">Disable</Parameter>\n");
+            xml.append("  </Setup>\n");
+            xml.append("  <Markets>\n");
+            xml.append("    <Parameter name=\"lgmcalibration\">default</Parameter>\n");
+            xml.append("    <Parameter name=\"fxcalibration\">default</Parameter>\n");
+            xml.append("    <Parameter name=\"pricing\">default</Parameter>\n");
+            xml.append("    <Parameter name=\"simulation\">default</Parameter>\n");
+            xml.append("  </Markets>\n");
+            xml.append("  <Analytics>\n");
+            xml.append("    <Analytic type=\"npv\">\n");
+            xml.append("      <Parameter name=\"active\">Y</Parameter>\n");
+            xml.append("      <Parameter name=\"baseCurrency\">USD</Parameter>\n");
+            xml.append("      <Parameter name=\"outputFileName\">npv.csv</Parameter>\n");
+            xml.append("      <Parameter name=\"additionalResults\">Y</Parameter>\n");
+            xml.append("      <Parameter name=\"additionalResultsReportPrecision\">12</Parameter>\n");
+            xml.append("    </Analytic>\n");
+            xml.append("    <Analytic type=\"cashflow\">\n");
+            xml.append("      <Parameter name=\"active\">Y</Parameter>\n");
+            xml.append("      <Parameter name=\"outputFileName\">flows.csv</Parameter>\n");
+            xml.append("    </Analytic>\n");
+            xml.append("  </Analytics>\n");
+            xml.append("</ORE>\n");
+            
+            Path oreConfigPath = Paths.get("/tmp/ore-work/ore.xml");
+            Files.writeString(oreConfigPath, xml.toString());
+            logger.info("Written dynamic ORE config to: {}", oreConfigPath);
+            
+        } catch (Exception e) {
+            logger.error("Failed to write dynamic ORE config", e);
+            throw new RuntimeException("Failed to write ORE config", e);
+        }
+    }
+    
+    /**
+     * Writes dynamic portfolio XML to the writable ORE working directory
+     */
+    private void writeDynamicPortfolio(String portfolioXml) {
+        try {
+            // Write to the writable working directory that ORE can access
+            Path portfolioPath = Paths.get("/tmp/ore-work/input/portfolio.xml");
+            Files.writeString(portfolioPath, portfolioXml);
+            logger.info("Written dynamic CDS portfolio to ORE working directory: {}", portfolioPath);
+        } catch (Exception e) {
+            logger.error("Failed to write dynamic portfolio file", e);
+            throw new RuntimeException("Failed to write portfolio file", e);
+        }
     }
     
     private void appendSetup(StringBuilder xml, ScenarioRequest request) {
@@ -97,75 +279,6 @@ public class OreInputBuilder {
         xml.append("      </Market>\n");
         xml.append("    </Configuration>\n");
         xml.append("  </Markets>\n");
-    }
-    
-    private void appendPortfolio(StringBuilder xml, ScenarioRequest request) {
-        xml.append("  <Portfolio>\n");
-        
-        for (Long tradeId : request.getTradeIds()) {
-            xml.append("    <Trade id=\"").append(tradeId).append("\">\n");
-            xml.append("      <TradeType>Swap</TradeType>\n");
-            xml.append("      <Envelope>\n");
-            xml.append("        <CounterParty>CPTY_").append(tradeId).append("</CounterParty>\n");
-            xml.append("        <NettingSetId>NETTING_").append(tradeId).append("</NettingSetId>\n");
-            xml.append("        <Portfolio>Portfolio</Portfolio>\n");
-            xml.append("      </Envelope>\n");
-            xml.append("      <SwapData>\n");
-            xml.append("        <LegData>\n");
-            xml.append("          <LegType>Fixed</LegType>\n");
-            xml.append("          <Payer>false</Payer>\n");
-            xml.append("          <Currency>USD</Currency>\n");
-            xml.append("          <Notionals>\n");
-            xml.append("            <Notional>1000000</Notional>\n");
-            xml.append("          </Notionals>\n");
-            xml.append("          <DayCounter>30/360</DayCounter>\n");
-            xml.append("          <PaymentConvention>F</PaymentConvention>\n");
-            xml.append("          <FixedLegData>\n");
-            xml.append("            <Rates>\n");
-            xml.append("              <Rate>0.05</Rate>\n");
-            xml.append("            </Rates>\n");
-            xml.append("          </FixedLegData>\n");
-            xml.append("          <ScheduleData>\n");
-            xml.append("            <Rules>\n");
-            xml.append("              <StartDate>2024-01-01</StartDate>\n");
-            xml.append("              <EndDate>2029-01-01</EndDate>\n");
-            xml.append("              <Tenor>6M</Tenor>\n");
-            xml.append("              <Calendar>USD</Calendar>\n");
-            xml.append("              <Convention>MF</Convention>\n");
-            xml.append("              <TermConvention>MF</TermConvention>\n");
-            xml.append("              <Rule>Forward</Rule>\n");
-            xml.append("            </Rules>\n");
-            xml.append("          </ScheduleData>\n");
-            xml.append("        </LegData>\n");
-            xml.append("        <LegData>\n");
-            xml.append("          <LegType>Floating</LegType>\n");
-            xml.append("          <Payer>true</Payer>\n");
-            xml.append("          <Currency>USD</Currency>\n");
-            xml.append("          <Notionals>\n");
-            xml.append("            <Notional>1000000</Notional>\n");
-            xml.append("          </Notionals>\n");
-            xml.append("          <DayCounter>ACT/360</DayCounter>\n");
-            xml.append("          <PaymentConvention>F</PaymentConvention>\n");
-            xml.append("          <FloatingLegData>\n");
-            xml.append("            <Index>USD-LIBOR-3M</Index>\n");
-            xml.append("          </FloatingLegData>\n");
-            xml.append("          <ScheduleData>\n");
-            xml.append("            <Rules>\n");
-            xml.append("              <StartDate>2024-01-01</StartDate>\n");
-            xml.append("              <EndDate>2029-01-01</EndDate>\n");
-            xml.append("              <Tenor>3M</Tenor>\n");
-            xml.append("              <Calendar>USD</Calendar>\n");
-            xml.append("              <Convention>MF</Convention>\n");
-            xml.append("              <TermConvention>MF</TermConvention>\n");
-            xml.append("              <Rule>Forward</Rule>\n");
-            xml.append("            </Rules>\n");
-            xml.append("          </ScheduleData>\n");
-            xml.append("        </LegData>\n");
-            xml.append("      </SwapData>\n");
-            xml.append("    </Trade>\n");
-        }
-        
-        xml.append("  </Portfolio>\n");
     }
     
     private void appendScenarios(StringBuilder xml, ScenarioRequest request) {

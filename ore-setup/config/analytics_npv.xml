@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<Analytics>
+  <Analytic type="npv">
+    <Parameter name="active">Y</Parameter>
+    <Parameter name="outputFileName">npv_external.csv</Parameter>
+  </Analytic>
+</Analytics>

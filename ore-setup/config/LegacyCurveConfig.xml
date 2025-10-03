@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<CurveConfiguration>
+  <Curves>
+    <Curve>
+      <CurveId>USD-Discount</CurveId>
+      <CurveDescription>USD Flat Discount Curve</CurveDescription>
+      <CurveType>Yield</CurveType>
+      <DayCounter>ACT/365</DayCounter>
+      <Currency>USD</Currency>
+      <DiscountCurve>
+        <Tenors>1D</Tenors>
+        <Quotes>USD-OIS-RATE</Quotes>
+        <Interpolation>LogLinear</Interpolation>
+      </DiscountCurve>
+    </Curve>
+    <Curve>
+      <CurveId>USD-LIBOR-3M-FWD</CurveId>
+      <CurveDescription>USD LIBOR 3M Flat Forward Curve</CurveDescription>
+      <CurveType>Yield</CurveType>
+      <DayCounter>ACT/365</DayCounter>
+      <Currency>USD</Currency>
+      <ForwardCurve>
+        <Tenors>1D</Tenors>
+        <Quotes>USD-OIS-RATE</Quotes>
+        <Interpolation>LogLinear</Interpolation>
+      </ForwardCurve>
+    </Curve>
+  </Curves>
+</CurveConfiguration>

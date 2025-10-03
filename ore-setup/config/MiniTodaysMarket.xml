@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<TodaysMarket>
+  <YieldCurves>
+    <Configuration id="default">
+      <YieldCurve id="USD-Discount" curveConfigID="USD-Discount"/>
+    </Configuration>
+  </YieldCurves>
+</TodaysMarket>

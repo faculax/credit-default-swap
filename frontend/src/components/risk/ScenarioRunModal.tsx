@@ -38,16 +38,16 @@ const ScenarioRunModal: React.FC<Props> = ({ tradeId, isOpen, onClose }) => {
             <thead>
               <tr>
                 <th className="text-left py-1">Scenario</th>
-                <th className="text-left py-1">PV Clean</th>
-                <th className="text-left py-1">Par Spread</th>
+                <th className="text-left py-1">NPV</th>
+                <th className="text-left py-1">Fair Spread (bps)</th>
               </tr>
             </thead>
             <tbody>
               {result.scenarios.map(s => (
                 <tr key={s.scenario} className="border-t border-fd-border">
                   <td className="py-1">{s.scenario}</td>
-                  <td className="py-1 font-mono">{s.measures.pvClean}</td>
-                  <td className="py-1 font-mono">{s.measures.parSpread}</td>
+                  <td className="py-1 font-mono">{s.measures.npv?.toLocaleString() ?? 'N/A'}</td>
+                  <td className="py-1 font-mono">{s.measures.fairSpreadClean ? (s.measures.fairSpreadClean * 10000).toFixed(2) : 'N/A'}</td>
                 </tr>
               ))}
             </tbody>
