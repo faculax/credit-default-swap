@@ -31,7 +31,7 @@ COPY --from=build /workspace/target/risk-engine-*.jar risk-engine.jar
 # Updated to use real ORE binaries from the base image
 ENV RISK_IMPL=ORE \
 	ORE_BINARY_PATH=/usr/local/bin/ore \
-	ORE_CONFIG_PATH=/app/ore/config/ore.xml \
+	ORE_CONFIG_PATH=/app/ore/config/ore_cds.xml \
 	ORE_WORK_DIR=/tmp/ore-work \
 	ORE_TIMEOUT=60 \
 	ORE_WARMUP_TIMEOUT=30 \

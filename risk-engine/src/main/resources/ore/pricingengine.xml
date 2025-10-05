@@ -62,4 +62,10 @@
     <Engine>BlackIborCouponPricer</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="CreditDefaultSwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>MidPointCdsEngine</Engine>
+    <EngineParameters/>
+  </Product>
 </PricingEngines>

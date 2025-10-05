@@ -27,39 +27,6 @@ public class RiskController {
     }
 
     /**
-     * Calculate risk measures for a single trade using ORE
-     */
-    @GetMapping("/cds/{tradeId}")
-    public CompletableFuture<ResponseEntity<RiskMeasures>> getSingleTradeRisk(@PathVariable Long tradeId){
-        logger.info("Getting CDS risk measures for trade: {}", tradeId);
-        
-        // Create a single-trade scenario request to use ORE integration
-        ScenarioRequest request = new ScenarioRequest();
-        request.setScenarioId("SINGLE_TRADE_" + tradeId);
-        request.setTradeIds(List.of(tradeId));
-        
-        return calcService.calculateRiskMeasures(request)
-            .handle((riskMeasuresList, throwable) -> {
-                if (throwable != null) {
-                    logger.error("Risk calculation failed for trade: " + tradeId, throwable);
-                    return ResponseEntity.<RiskMeasures>internalServerError().build();
-                }
-                if (riskMeasuresList.isEmpty()) {
-                    return ResponseEntity.<RiskMeasures>notFound().build();
-                }
-                return ResponseEntity.ok(riskMeasuresList.get(0));
-            });
-    }
-
-    /**
-     * Calculate risk measures for a single trade (alternative endpoint)
-     */
-    @GetMapping("/measures/{tradeId}")
-    public CompletableFuture<ResponseEntity<RiskMeasures>> getRiskMeasures(@PathVariable Long tradeId) {
-        return getSingleTradeRisk(tradeId);
-    }
-    
-    /**
      * Calculate risk measures for multiple trades with scenario analysis
      */
     @PostMapping("/scenario/calculate")

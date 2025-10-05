@@ -46,7 +46,7 @@ class OreOutputParserTest {
             </ORE>
             """;
         
-        RiskMeasures result = oreOutputParser.parseRiskMeasures(validOreOutput, 123L);
+        RiskMeasures result = oreOutputParser.parseRiskMeasures(validOreOutput, 123L, "USD");
         
         assertNotNull(result);
         assertEquals(123L, result.getTradeId());
@@ -68,7 +68,7 @@ class OreOutputParserTest {
     void testParseRiskMeasures_InvalidXml() {
         String invalidXml = "not valid xml";
         
-        RiskMeasures result = oreOutputParser.parseRiskMeasures(invalidXml, 123L);
+        RiskMeasures result = oreOutputParser.parseRiskMeasures(invalidXml, 123L, "USD");
         
         assertNotNull(result);
         assertEquals(123L, result.getTradeId());

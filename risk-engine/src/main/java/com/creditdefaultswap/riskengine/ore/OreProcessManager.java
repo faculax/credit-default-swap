@@ -26,14 +26,14 @@ public class OreProcessManager {
     /**
      * Executes a calculation with ORE in batch mode
      */
-    public CompletableFuture<String> executeCalculation(String inputXml) {
+    public CompletableFuture<String> executeCalculation(String workingDirPath) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 logger.info("Executing ORE batch calculation");
                 
                 // Use the dynamic config file written to working directory
-                Path configPath = Paths.get("/tmp/ore-work/ore.xml");
-                Path workingDir = Paths.get("/tmp/ore-work");
+                Path workingDir = Paths.get(workingDirPath);
+                Path configPath = workingDir.resolve("ore.xml");
                 String configFile = configPath.getFileName().toString();
                 
                 ProcessBuilder processBuilder = new ProcessBuilder(
