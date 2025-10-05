@@ -57,11 +57,11 @@ public class RiskCalculationService {
         // Execute ORE in batch mode
         logger.info("Executing ORE batch calculation for scenario: {}", request.getScenarioId());
         
-        // Build ORE input XML
-        String oreInput = oreInputBuilder.buildRiskCalculationInput(request);
+        // Build ORE input XML and get working directory path
+        String workingDirPath = oreInputBuilder.buildRiskCalculationInput(request);
         
         // Execute ORE calculation in batch mode - throw exception on failure
-        return oreProcessManager.executeCalculation(oreInput)
+        return oreProcessManager.executeCalculation(workingDirPath)
             .thenApply(oreOutput -> {
                 if (!oreOutputParser.isValidOutput(oreOutput)) {
                     String errorMsg = oreOutputParser.extractErrorMessage(oreOutput);
@@ -75,7 +75,7 @@ public class RiskCalculationService {
                         // Get trade data to extract currency
                         var tradeData = tradeDataService.fetchCDSTradeData(tradeId);
                         String tradeCurrency = tradeData.getCurrency();
-                        return oreOutputParser.parseRiskMeasures(oreOutput, tradeId, tradeCurrency);
+                        return oreOutputParser.parseRiskMeasures(oreOutput, tradeId, tradeCurrency, workingDirPath);
                     })
                     .toList();
             })

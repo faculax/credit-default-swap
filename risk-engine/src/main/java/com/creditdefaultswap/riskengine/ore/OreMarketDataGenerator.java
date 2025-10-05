@@ -159,6 +159,7 @@ public class OreMarketDataGenerator {
             case "CHF" -> 0.015;  // 1.5%
             case "JPY" -> 0.001;  // 0.1%
             case "AUD" -> 0.040;  // 4.0%
+            case "CAD" -> 0.038;  // 3.8%
             default -> 0.040;     // Default 4%
         };
     }
@@ -173,6 +174,7 @@ public class OreMarketDataGenerator {
             case "CHF" -> 0.87;    // CHF/USD
             case "JPY" -> 149.5;   // JPY/USD
             case "AUD" -> 1.52;    // AUD/USD
+            case "CAD" -> 1.35;    // CAD/USD
             default -> 1.0;
         };
     }

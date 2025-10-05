@@ -30,8 +30,8 @@ public class OreOutputParser {
      * Parses ORE output to extract risk measures from actual output files.
      * Now reads REAL data from additional_results.csv and flows.csv!
      */
-    public RiskMeasures parseRiskMeasures(String oreConsoleOutput, Long tradeId, String tradeCurrency) {
-        logger.debug("Parsing ORE output for trade {} with currency {}", tradeId, tradeCurrency);
+    public RiskMeasures parseRiskMeasures(String oreConsoleOutput, Long tradeId, String tradeCurrency, String workingDirPath) {
+        logger.debug("Parsing ORE output for trade {} with currency {} from working dir {}", tradeId, tradeCurrency, workingDirPath);
         
         try {
             // Check if ORE completed successfully
@@ -48,7 +48,7 @@ public class OreOutputParser {
             riskMeasures.setTradeId(tradeId);
             
             // Read actual NPV from ORE output files
-            BigDecimal npv = readNpvFromFile(tradeId);
+            BigDecimal npv = readNpvFromFile(tradeId, workingDirPath);
             riskMeasures.setNpv(npv);
             riskMeasures.setCurrency(tradeCurrency != null ? tradeCurrency : "USD");
             
@@ -58,10 +58,10 @@ public class OreOutputParser {
             }
             
             // Parse REAL CDS-specific metrics from additional_results.csv
-            parseAdditionalResults(tradeId, riskMeasures);
+            parseAdditionalResults(tradeId, riskMeasures, workingDirPath);
             
             // Parse REAL cashflow schedule from flows.csv
-            List<Cashflow> cashflows = parseCashflows(tradeId);
+            List<Cashflow> cashflows = parseCashflows(tradeId, workingDirPath);
             riskMeasures.setCashflows(cashflows);
             
             logger.info("ORE Risk Calculation - Trade {}: NPV={} {}, Fair Spread Clean={} bps, Protection Leg NPV={}, {} cashflows", 
@@ -79,11 +79,18 @@ public class OreOutputParser {
     }
     
     /**
+     * Backward compatibility method - uses hardcoded path
+     */
+    public RiskMeasures parseRiskMeasures(String oreConsoleOutput, Long tradeId, String tradeCurrency) {
+        return parseRiskMeasures(oreConsoleOutput, tradeId, tradeCurrency, "/tmp/ore-work");
+    }
+    
+    /**
      * Parses REAL CDS metrics from additional_results.csv
      */
-    private void parseAdditionalResults(Long tradeId, RiskMeasures riskMeasures) {
+    private void parseAdditionalResults(Long tradeId, RiskMeasures riskMeasures, String workingDirPath) {
         try {
-            String additionalResultsPath = "/tmp/ore-work/output/additional_results.csv";
+            String additionalResultsPath = workingDirPath + "/output/additional_results.csv";
             java.nio.file.Path filePath = java.nio.file.Paths.get(additionalResultsPath);
             
             if (!java.nio.file.Files.exists(filePath)) {
@@ -144,10 +151,10 @@ public class OreOutputParser {
     /**
      * Parses REAL cashflow schedule from flows.csv
      */
-    private List<Cashflow> parseCashflows(Long tradeId) {
+    private List<Cashflow> parseCashflows(Long tradeId, String workingDirPath) {
         List<Cashflow> cashflows = new ArrayList<>();
         try {
-            String flowsPath = "/tmp/ore-work/output/flows.csv";
+            String flowsPath = workingDirPath + "/output/flows.csv";
             java.nio.file.Path filePath = java.nio.file.Paths.get(flowsPath);
             
             if (!java.nio.file.Files.exists(filePath)) {
@@ -268,9 +275,9 @@ public class OreOutputParser {
     /**
      * Reads NPV from ORE output CSV file for a specific trade
      */
-    private BigDecimal readNpvFromFile(Long tradeId) {
+    private BigDecimal readNpvFromFile(Long tradeId, String workingDirPath) {
         try {
-            String npvFilePath = "/tmp/ore-work/output/npv.csv";
+            String npvFilePath = workingDirPath + "/output/npv.csv";
             java.nio.file.Path filePath = java.nio.file.Paths.get(npvFilePath);
             
             if (!java.nio.file.Files.exists(filePath)) {

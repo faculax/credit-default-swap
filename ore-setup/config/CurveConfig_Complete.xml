@@ -1,0 +1,200 @@
+<?xml version="1.0"?>
+<CurveConfiguration>
+  <YieldCurve id="AUD_DISCOUNT">
+    <Currency>AUD</Currency>
+    <DiscountCurve>AUD_DISCOUNT</DiscountCurve>
+    <Segments>
+      <Simple>
+        <Type>Deposit</Type>
+        <Quotes>AUD_DEPOSIT_1M,AUD_DEPOSIT_3M,AUD_DEPOSIT_6M</Quotes>
+        <Conventions>AUD_DEPOSIT</Conventions>
+      </Simple>
+    </Segments>
+  </YieldCurve>
+  <YieldCurve id="CAD_DISCOUNT">
+    <Currency>CAD</Currency>
+    <DiscountCurve>CAD_DISCOUNT</DiscountCurve>
+    <Segments>
+      <Simple>
+        <Type>Deposit</Type>
+        <Quotes>CAD_DEPOSIT_1M,CAD_DEPOSIT_3M,CAD_DEPOSIT_6M</Quotes>
+        <Conventions>CAD_DEPOSIT</Conventions>
+      </Simple>
+    </Segments>
+  </YieldCurve>
+  <YieldCurve id="CHF_DISCOUNT">
+    <Currency>CHF</Currency>
+    <DiscountCurve>CHF_DISCOUNT</DiscountCurve>
+    <Segments>
+      <Simple>
+        <Type>Deposit</Type>
+        <Quotes>CHF_DEPOSIT_1M,CHF_DEPOSIT_3M,CHF_DEPOSIT_6M</Quotes>
+        <Conventions>CHF_DEPOSIT</Conventions>
+      </Simple>
+    </Segments>
+  </YieldCurve>
+  <YieldCurve id="EUR_DISCOUNT">
+    <Currency>EUR</Currency>
+    <DiscountCurve>EUR_DISCOUNT</DiscountCurve>
+    <Segments>
+      <Simple>
+        <Type>Deposit</Type>
+        <Quotes>EUR_DEPOSIT_1M,EUR_DEPOSIT_3M,EUR_DEPOSIT_6M</Quotes>
+        <Conventions>EUR_DEPOSIT</Conventions>
+      </Simple>
+    </Segments>
+  </YieldCurve>
+  <YieldCurve id="GBP_DISCOUNT">
+    <Currency>GBP</Currency>
+    <DiscountCurve>GBP_DISCOUNT</DiscountCurve>
+    <Segments>
+      <Simple>
+        <Type>Deposit</Type>
+        <Quotes>GBP_DEPOSIT_1M,GBP_DEPOSIT_3M,GBP_DEPOSIT_6M</Quotes>
+        <Conventions>GBP_DEPOSIT</Conventions>
+      </Simple>
+    </Segments>
+  </YieldCurve>
+  <YieldCurve id="JPY_DISCOUNT">
+    <Currency>JPY</Currency>
+    <DiscountCurve>JPY_DISCOUNT</DiscountCurve>
+    <Segments>
+      <Simple>
+        <Type>Deposit</Type>
+        <Quotes>JPY_DEPOSIT_1M,JPY_DEPOSIT_3M,JPY_DEPOSIT_6M</Quotes>
+        <Conventions>JPY_DEPOSIT</Conventions>
+      </Simple>
+    </Segments>
+  </YieldCurve>
+  <YieldCurve id="USD_DISCOUNT">
+    <Currency>USD</Currency>
+    <DiscountCurve>USD_DISCOUNT</DiscountCurve>
+    <Segments>
+      <Simple>
+        <Type>Deposit</Type>
+        <Quotes>USD_DEPOSIT_1M,USD_DEPOSIT_3M,USD_DEPOSIT_6M</Quotes>
+        <Conventions>USD_DEPOSIT</Conventions>
+      </Simple>
+    </Segments>
+  </YieldCurve>
+  <CreditCurve id="AAPL">
+    <CurveId>AAPL</CurveId>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD_DISCOUNT</DiscountCurve>
+    <Conventions>AAPL_CDS</Conventions>
+    <Quotes>AAPL_SPREAD_6M,AAPL_SPREAD_1Y,AAPL_SPREAD_2Y,AAPL_SPREAD_3Y,AAPL_SPREAD_5Y</Quotes>
+  </CreditCurve>
+  <CreditCurve id="AMD">
+    <CurveId>AMD</CurveId>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD_DISCOUNT</DiscountCurve>
+    <Conventions>AMD_CDS</Conventions>
+    <Quotes>AMD_SPREAD_6M,AMD_SPREAD_1Y,AMD_SPREAD_2Y,AMD_SPREAD_3Y,AMD_SPREAD_5Y</Quotes>
+  </CreditCurve>
+  <CreditCurve id="AMZN">
+    <CurveId>AMZN</CurveId>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD_DISCOUNT</DiscountCurve>
+    <Conventions>AMZN_CDS</Conventions>
+    <Quotes>AMZN_SPREAD_6M,AMZN_SPREAD_1Y,AMZN_SPREAD_2Y,AMZN_SPREAD_3Y,AMZN_SPREAD_5Y</Quotes>
+  </CreditCurve>
+  <CreditCurve id="BAC">
+    <CurveId>BAC</CurveId>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD_DISCOUNT</DiscountCurve>
+    <Conventions>BAC_CDS</Conventions>
+    <Quotes>BAC_SPREAD_6M,BAC_SPREAD_1Y,BAC_SPREAD_2Y,BAC_SPREAD_3Y,BAC_SPREAD_5Y</Quotes>
+  </CreditCurve>
+  <CreditCurve id="C">
+    <CurveId>C</CurveId>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD_DISCOUNT</DiscountCurve>
+    <Conventions>C_CDS</Conventions>
+    <Quotes>C_SPREAD_6M,C_SPREAD_1Y,C_SPREAD_2Y,C_SPREAD_3Y,C_SPREAD_5Y</Quotes>
+  </CreditCurve>
+  <CreditCurve id="GOOGL">
+    <CurveId>GOOGL</CurveId>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD_DISCOUNT</DiscountCurve>
+    <Conventions>GOOGL_CDS</Conventions>
+    <Quotes>GOOGL_SPREAD_6M,GOOGL_SPREAD_1Y,GOOGL_SPREAD_2Y,GOOGL_SPREAD_3Y,GOOGL_SPREAD_5Y</Quotes>
+  </CreditCurve>
+  <CreditCurve id="GS">
+    <CurveId>GS</CurveId>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD_DISCOUNT</DiscountCurve>
+    <Conventions>GS_CDS</Conventions>
+    <Quotes>GS_SPREAD_6M,GS_SPREAD_1Y,GS_SPREAD_2Y,GS_SPREAD_3Y,GS_SPREAD_5Y</Quotes>
+  </CreditCurve>
+  <CreditCurve id="JPM">
+    <CurveId>JPM</CurveId>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD_DISCOUNT</DiscountCurve>
+    <Conventions>JPM_CDS</Conventions>
+    <Quotes>JPM_SPREAD_6M,JPM_SPREAD_1Y,JPM_SPREAD_2Y,JPM_SPREAD_3Y,JPM_SPREAD_5Y</Quotes>
+  </CreditCurve>
+  <CreditCurve id="META">
+    <CurveId>META</CurveId>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD_DISCOUNT</DiscountCurve>
+    <Conventions>META_CDS</Conventions>
+    <Quotes>META_SPREAD_6M,META_SPREAD_1Y,META_SPREAD_2Y,META_SPREAD_3Y,META_SPREAD_5Y</Quotes>
+  </CreditCurve>
+  <CreditCurve id="MS">
+    <CurveId>MS</CurveId>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD_DISCOUNT</DiscountCurve>
+    <Conventions>MS_CDS</Conventions>
+    <Quotes>MS_SPREAD_6M,MS_SPREAD_1Y,MS_SPREAD_2Y,MS_SPREAD_3Y,MS_SPREAD_5Y</Quotes>
+  </CreditCurve>
+  <CreditCurve id="MSFT">
+    <CurveId>MSFT</CurveId>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD_DISCOUNT</DiscountCurve>
+    <Conventions>MSFT_CDS</Conventions>
+    <Quotes>MSFT_SPREAD_6M,MSFT_SPREAD_1Y,MSFT_SPREAD_2Y,MSFT_SPREAD_3Y,MSFT_SPREAD_5Y</Quotes>
+  </CreditCurve>
+  <CreditCurve id="NFLX">
+    <CurveId>NFLX</CurveId>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD_DISCOUNT</DiscountCurve>
+    <Conventions>NFLX_CDS</Conventions>
+    <Quotes>NFLX_SPREAD_6M,NFLX_SPREAD_1Y,NFLX_SPREAD_2Y,NFLX_SPREAD_3Y,NFLX_SPREAD_5Y</Quotes>
+  </CreditCurve>
+  <CreditCurve id="NVDA">
+    <CurveId>NVDA</CurveId>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD_DISCOUNT</DiscountCurve>
+    <Conventions>NVDA_CDS</Conventions>
+    <Quotes>NVDA_SPREAD_6M,NVDA_SPREAD_1Y,NVDA_SPREAD_2Y,NVDA_SPREAD_3Y,NVDA_SPREAD_5Y</Quotes>
+  </CreditCurve>
+  <CreditCurve id="TSLA">
+    <CurveId>TSLA</CurveId>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD_DISCOUNT</DiscountCurve>
+    <Conventions>TSLA_CDS</Conventions>
+    <Quotes>TSLA_SPREAD_6M,TSLA_SPREAD_1Y,TSLA_SPREAD_2Y,TSLA_SPREAD_3Y,TSLA_SPREAD_5Y</Quotes>
+  </CreditCurve>
+  <CreditCurve id="WFC">
+    <CurveId>WFC</CurveId>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD_DISCOUNT</DiscountCurve>
+    <Conventions>WFC_CDS</Conventions>
+    <Quotes>WFC_SPREAD_6M,WFC_SPREAD_1Y,WFC_SPREAD_2Y,WFC_SPREAD_3Y,WFC_SPREAD_5Y</Quotes>
+  </CreditCurve>
+</CurveConfiguration>

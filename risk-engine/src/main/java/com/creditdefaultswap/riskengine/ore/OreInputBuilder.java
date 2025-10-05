@@ -52,12 +52,14 @@ public class OreInputBuilder {
         logger.info("Building ORE input for scenario: {}", request.getScenarioId());
         
         try {
-            // Ensure working directories exist
-            Path inputDir = Paths.get("/tmp/ore-work/input");
-            Path outputDir = Paths.get("/tmp/ore-work/output");
+            // Create unique working directories per request to avoid concurrency issues
+            String uniqueId = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+            String workDirName = "ore-work-" + request.getScenarioId() + "-" + uniqueId;
+            Path inputDir = Paths.get("/tmp", workDirName, "input");
+            Path outputDir = Paths.get("/tmp", workDirName, "output");
             Files.createDirectories(inputDir);
             Files.createDirectories(outputDir);
-            logger.info("Created working directories: input={}, output={}", inputDir, outputDir);
+            logger.info("Created unique working directories: input={}, output={}", inputDir, outputDir);
             
             // Collect all trade data
             Set<OrePortfolioGenerator.CDSTradeData> allTrades = new HashSet<>();
@@ -70,15 +72,15 @@ public class OreInputBuilder {
             LocalDate valuationDate = request.getValuationDate() != null ? 
                 request.getValuationDate() : LocalDate.now();
             String marketData = marketDataGenerator.generateMarketData(allTrades, valuationDate);
-            writeDynamicMarketData(marketData);
+            writeDynamicMarketData(marketData, inputDir);
             
             // Generate dynamic TodaysMarket configuration
             String todaysMarket = todaysMarketGenerator.generateTodaysMarket(allTrades);
-            writeDynamicTodaysMarket(todaysMarket);
+            writeDynamicTodaysMarket(todaysMarket, inputDir);
             
             // Generate dynamic CurveConfig
             String curveConfig = curveConfigGenerator.generateCurveConfig(allTrades);
-            writeDynamicCurveConfig(curveConfig);
+            writeDynamicCurveConfig(curveConfig, inputDir);
             
             // Copy only conventions file (static)
             copyConventionsFile(inputDir);
@@ -86,13 +88,13 @@ public class OreInputBuilder {
             // Generate dynamic portfolio for each trade
             for (OrePortfolioGenerator.CDSTradeData tradeData : allTrades) {
                 String portfolioXml = portfolioGenerator.generatePortfolioXml(tradeData);
-                writeDynamicPortfolio(portfolioXml);
+                writeDynamicPortfolio(portfolioXml, inputDir);
             }
             
             // Write dynamic ORE configuration that points to our working directory
-            writeDynamicOreConfig(request);
+            writeDynamicOreConfig(request, inputDir.getParent());
             
-            return "ORE configuration written to working directory";
+            return inputDir.getParent().toString(); // Return the working directory path
             
         } catch (Exception e) {
             logger.error("Failed to build ORE input for scenario: {}", request.getScenarioId(), e);
@@ -119,9 +121,9 @@ public class OreInputBuilder {
     /**
      * Writes dynamic market data to the writable ORE working directory
      */
-    private void writeDynamicMarketData(String marketData) {
+    private void writeDynamicMarketData(String marketData, Path inputDir) {
         try {
-            Path marketDataPath = Paths.get("/tmp/ore-work/input/market.txt");
+            Path marketDataPath = inputDir.resolve("market.txt");
             Files.writeString(marketDataPath, marketData);
             logger.info("Written dynamic market data to ORE working directory: {}", marketDataPath);
         } catch (Exception e) {
@@ -133,9 +135,9 @@ public class OreInputBuilder {
     /**
      * Writes dynamic TodaysMarket configuration
      */
-    private void writeDynamicTodaysMarket(String todaysMarket) {
+    private void writeDynamicTodaysMarket(String todaysMarket, Path inputDir) {
         try {
-            Path todaysMarketPath = Paths.get("/tmp/ore-work/input/todaysmarket.xml");
+            Path todaysMarketPath = inputDir.resolve("todaysmarket.xml");
             Files.writeString(todaysMarketPath, todaysMarket);
             logger.info("Written dynamic TodaysMarket to: {}", todaysMarketPath);
         } catch (Exception e) {
@@ -147,9 +149,9 @@ public class OreInputBuilder {
     /**
      * Writes dynamic CurveConfig
      */
-    private void writeDynamicCurveConfig(String curveConfig) {
+    private void writeDynamicCurveConfig(String curveConfig, Path inputDir) {
         try {
-            Path curveConfigPath = Paths.get("/tmp/ore-work/input/curveconfig.xml");
+            Path curveConfigPath = inputDir.resolve("curveconfig.xml");
             Files.writeString(curveConfigPath, curveConfig);
             logger.info("Written dynamic CurveConfig to: {}", curveConfigPath);
         } catch (Exception e) {
@@ -161,7 +163,7 @@ public class OreInputBuilder {
     /**
      * Writes dynamic ORE configuration file that points to working directory with credit analytics enabled
      */
-    private void writeDynamicOreConfig(ScenarioRequest request) {
+    private void writeDynamicOreConfig(ScenarioRequest request, Path workDir) {
         try {
             LocalDate valuationDate = request.getValuationDate() != null ? 
                 request.getValuationDate() : LocalDate.now();
@@ -171,8 +173,8 @@ public class OreInputBuilder {
             xml.append("<ORE>\n");
             xml.append("  <Setup>\n");
             xml.append("    <Parameter name=\"asofDate\">").append(DATE_FORMAT.format(valuationDate)).append("</Parameter>\n");
-            xml.append("    <Parameter name=\"inputPath\">/tmp/ore-work/input</Parameter>\n");
-            xml.append("    <Parameter name=\"outputPath\">/tmp/ore-work/output</Parameter>\n");
+            xml.append("    <Parameter name=\"inputPath\">").append(workDir.resolve("input")).append("</Parameter>\n");
+            xml.append("    <Parameter name=\"outputPath\">").append(workDir.resolve("output")).append("</Parameter>\n");
             xml.append("    <Parameter name=\"logFile\">log.txt</Parameter>\n");
             xml.append("    <Parameter name=\"logMask\">255</Parameter>\n");
             xml.append("    <Parameter name=\"marketDataFile\">market.txt</Parameter>\n");
@@ -206,7 +208,7 @@ public class OreInputBuilder {
             xml.append("  </Analytics>\n");
             xml.append("</ORE>\n");
             
-            Path oreConfigPath = Paths.get("/tmp/ore-work/ore.xml");
+            Path oreConfigPath = workDir.resolve("ore.xml");
             Files.writeString(oreConfigPath, xml.toString());
             logger.info("Written dynamic ORE config to: {}", oreConfigPath);
             
@@ -219,10 +221,10 @@ public class OreInputBuilder {
     /**
      * Writes dynamic portfolio XML to the writable ORE working directory
      */
-    private void writeDynamicPortfolio(String portfolioXml) {
+    private void writeDynamicPortfolio(String portfolioXml, Path inputDir) {
         try {
             // Write to the writable working directory that ORE can access
-            Path portfolioPath = Paths.get("/tmp/ore-work/input/portfolio.xml");
+            Path portfolioPath = inputDir.resolve("portfolio.xml");
             Files.writeString(portfolioPath, portfolioXml);
             logger.info("Written dynamic CDS portfolio to ORE working directory: {}", portfolioPath);
         } catch (Exception e) {

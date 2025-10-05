@@ -1,22 +1,68 @@
 package com.creditdefaultswap.riskengine.ore;
 
 import com.creditdefaultswap.riskengine.model.ScenarioRequest;
+import com.creditdefaultswap.riskengine.service.TradeDataService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 class OreInputBuilderTest {
     
     private OreInputBuilder oreInputBuilder;
     
+    @Mock
+    private OrePortfolioGenerator portfolioGenerator;
+    
+    @Mock
+    private OreMarketDataGenerator marketDataGenerator;
+    
+    @Mock
+    private OreTodaysMarketGenerator todaysMarketGenerator;
+    
+    @Mock
+    private OreCurveConfigGenerator curveConfigGenerator;
+    
+    @Mock
+    private TradeDataService tradeDataService;
+    
     @BeforeEach
     void setUp() {
-        oreInputBuilder = new OreInputBuilder();
+        MockitoAnnotations.openMocks(this);
+        oreInputBuilder = new OreInputBuilder(portfolioGenerator, marketDataGenerator, 
+            todaysMarketGenerator, curveConfigGenerator, tradeDataService);
+        
+        // Set up default mock behaviors
+        when(marketDataGenerator.generateMarketData(any(), any())).thenReturn("mock market data");
+        when(todaysMarketGenerator.generateTodaysMarket(any())).thenReturn("mock todays market");
+        when(curveConfigGenerator.generateCurveConfig(any())).thenReturn("mock curve config");
+        when(portfolioGenerator.generatePortfolioXml(any())).thenReturn("mock portfolio");
+        when(tradeDataService.fetchCDSTradeData(any())).thenReturn(createMockTradeData());
+    }
+    
+    private OrePortfolioGenerator.CDSTradeData createMockTradeData() {
+        return new OrePortfolioGenerator.CDSTradeData(
+            1L,
+            "TEST_ENTITY",
+            new BigDecimal("1000000"),
+            new BigDecimal("0.01"),
+            LocalDate.of(2025, 12, 31),
+            LocalDate.now(),
+            "USD",
+            "QUARTERLY",
+            "ACT/360",
+            "BUY",
+            "US"
+        );
     }
     
     @Test

@@ -1,0 +1,136 @@
+<?xml version="1.0"?>
+<TodaysMarket>
+  
+  <!-- Base pricing date -->
+  <asof>2025-01-21</asof>
+  
+  <!-- =============================================== -->
+  <!-- DISCOUNT CURVES                                 -->
+  <!-- =============================================== -->
+  <DiscountingCurves>
+    <DiscountingCurve currency="USD">
+      <CurveId>USD-DISCOUNT</CurveId>
+    </DiscountingCurve>
+    <DiscountingCurve currency="EUR">
+      <CurveId>EUR-DISCOUNT</CurveId>
+    </DiscountingCurve>
+    <DiscountingCurve currency="GBP">
+      <CurveId>GBP-DISCOUNT</CurveId>
+    </DiscountingCurve>
+    <DiscountingCurve currency="JPY">
+      <CurveId>JPY-DISCOUNT</CurveId>
+    </DiscountingCurve>
+    <DiscountingCurve currency="CHF">
+      <CurveId>CHF-DISCOUNT</CurveId>
+    </DiscountingCurve>
+    <DiscountingCurve currency="CAD">
+      <CurveId>CAD-DISCOUNT</CurveId>
+    </DiscountingCurve>
+  </DiscountingCurves>
+  
+  <!-- =============================================== -->
+  <!-- DEFAULT (CREDIT) CURVES                         -->
+  <!-- =============================================== -->
+  <DefaultCurves>
+    <DefaultCurve name="AAPL">
+      <CurveId>AAPL</CurveId>
+    </DefaultCurve>
+    <DefaultCurve name="AMD">
+      <CurveId>AMD</CurveId>
+    </DefaultCurve>
+    <DefaultCurve name="AMZN">
+      <CurveId>AMZN</CurveId>
+    </DefaultCurve>
+    <DefaultCurve name="BAC">
+      <CurveId>BAC</CurveId>
+    </DefaultCurve>
+    <DefaultCurve name="C">
+      <CurveId>C</CurveId>
+    </DefaultCurve>
+    <DefaultCurve name="GS">
+      <CurveId>GS</CurveId>
+    </DefaultCurve>
+    <DefaultCurve name="JPM">
+      <CurveId>JPM</CurveId>
+    </DefaultCurve>
+    <DefaultCurve name="META">
+      <CurveId>META</CurveId>
+    </DefaultCurve>
+    <DefaultCurve name="MS">
+      <CurveId>MS</CurveId>
+    </DefaultCurve>
+    <DefaultCurve name="MSFT">
+      <CurveId>MSFT</CurveId>
+    </DefaultCurve>
+    <DefaultCurve name="NVDA">
+      <CurveId>NVDA</CurveId>
+    </DefaultCurve>
+    <DefaultCurve name="GOOGL">
+      <CurveId>GOOGL</CurveId>
+    </DefaultCurve>
+  </DefaultCurves>
+  
+  <!-- =============================================== -->
+  <!-- FX SPOTS                                        -->
+  <!-- =============================================== -->
+  <FxSpots>
+    <FxSpot pair="EURUSD">
+      <Quote>FX/RATE/EUR/USD</Quote>
+    </FxSpot>
+    <FxSpot pair="GBPUSD">
+      <Quote>FX/RATE/GBP/USD</Quote>
+    </FxSpot>
+    <FxSpot pair="JPYUSD">
+      <Quote>FX/RATE/JPY/USD</Quote>
+    </FxSpot>
+    <FxSpot pair="CHFUSD">
+      <Quote>FX/RATE/CHF/USD</Quote>
+    </FxSpot>
+    <FxSpot pair="CADUSD">
+      <Quote>FX/RATE/CAD/USD</Quote>
+    </FxSpot>
+  </FxSpots>
+  
+  <!-- =============================================== -->
+  <!-- RECOVERY RATES                                  -->
+  <!-- =============================================== -->
+  <RecoveryRates>
+    <RecoveryRate name="AAPL">
+      <Quote>RECOVERY_RATE/AAPL</Quote>
+    </RecoveryRate>
+    <RecoveryRate name="AMD">
+      <Quote>RECOVERY_RATE/AMD</Quote>
+    </RecoveryRate>
+    <RecoveryRate name="AMZN">
+      <Quote>RECOVERY_RATE/AMZN</Quote>
+    </RecoveryRate>
+    <RecoveryRate name="BAC">
+      <Quote>RECOVERY_RATE/BAC</Quote>
+    </RecoveryRate>
+    <RecoveryRate name="C">
+      <Quote>RECOVERY_RATE/C</Quote>
+    </RecoveryRate>
+    <RecoveryRate name="GS">
+      <Quote>RECOVERY_RATE/GS</Quote>
+    </RecoveryRate>
+    <RecoveryRate name="JPM">
+      <Quote>RECOVERY_RATE/JPM</Quote>
+    </RecoveryRate>
+    <RecoveryRate name="META">
+      <Quote>RECOVERY_RATE/META</Quote>
+    </RecoveryRate>
+    <RecoveryRate name="MS">
+      <Quote>RECOVERY_RATE/MS</Quote>
+    </RecoveryRate>
+    <RecoveryRate name="MSFT">
+      <Quote>RECOVERY_RATE/MSFT</Quote>
+    </RecoveryRate>
+    <RecoveryRate name="NVDA">
+      <Quote>RECOVERY_RATE/NVDA</Quote>
+    </RecoveryRate>
+    <RecoveryRate name="GOOGL">
+      <Quote>RECOVERY_RATE/GOOGL</Quote>
+    </RecoveryRate>
+  </RecoveryRates>
+  
+</TodaysMarket>

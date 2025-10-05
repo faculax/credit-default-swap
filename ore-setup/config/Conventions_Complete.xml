@@ -1,0 +1,191 @@
+<?xml version="1.0"?>
+<Conventions>
+  <Deposit id="AUD_DEPOSIT">
+    <Currency>AUD</Currency>
+    <DayCounter>ACT/365</DayCounter>
+    <SettlementDays>2</SettlementDays>
+    <Calendar>SYD</Calendar>
+  </Deposit>
+  <Swap id="AUD_SWAP">
+    <Currency>AUD</Currency>
+    <FixedDayCounter>ACT/365</FixedDayCounter>
+    <FixedFrequency>6M</FixedFrequency>
+    <FloatFrequency>6M</FloatFrequency>
+    <SettlementDays>2</SettlementDays>
+    <Calendar>SYD</Calendar>
+  </Swap>
+  <Deposit id="CAD_DEPOSIT">
+    <Currency>CAD</Currency>
+    <DayCounter>ACT/365</DayCounter>
+    <SettlementDays>2</SettlementDays>
+    <Calendar>TOR</Calendar>
+  </Deposit>
+  <Swap id="CAD_SWAP">
+    <Currency>CAD</Currency>
+    <FixedDayCounter>ACT/365</FixedDayCounter>
+    <FixedFrequency>6M</FixedFrequency>
+    <FloatFrequency>6M</FloatFrequency>
+    <SettlementDays>2</SettlementDays>
+    <Calendar>TOR</Calendar>
+  </Swap>
+  <Deposit id="CHF_DEPOSIT">
+    <Currency>CHF</Currency>
+    <DayCounter>ACT/360</DayCounter>
+    <SettlementDays>2</SettlementDays>
+    <Calendar>ZUR</Calendar>
+  </Deposit>
+  <Swap id="CHF_SWAP">
+    <Currency>CHF</Currency>
+    <FixedDayCounter>ACT/360</FixedDayCounter>
+    <FixedFrequency>6M</FixedFrequency>
+    <FloatFrequency>6M</FloatFrequency>
+    <SettlementDays>2</SettlementDays>
+    <Calendar>ZUR</Calendar>
+  </Swap>
+  <Deposit id="EUR_DEPOSIT">
+    <Currency>EUR</Currency>
+    <DayCounter>ACT/360</DayCounter>
+    <SettlementDays>2</SettlementDays>
+    <Calendar>TAR</Calendar>
+  </Deposit>
+  <Swap id="EUR_SWAP">
+    <Currency>EUR</Currency>
+    <FixedDayCounter>ACT/360</FixedDayCounter>
+    <FixedFrequency>6M</FixedFrequency>
+    <FloatFrequency>6M</FloatFrequency>
+    <SettlementDays>2</SettlementDays>
+    <Calendar>TAR</Calendar>
+  </Swap>
+  <Deposit id="GBP_DEPOSIT">
+    <Currency>GBP</Currency>
+    <DayCounter>ACT/365</DayCounter>
+    <SettlementDays>2</SettlementDays>
+    <Calendar>LON</Calendar>
+  </Deposit>
+  <Swap id="GBP_SWAP">
+    <Currency>GBP</Currency>
+    <FixedDayCounter>ACT/365</FixedDayCounter>
+    <FixedFrequency>6M</FixedFrequency>
+    <FloatFrequency>6M</FloatFrequency>
+    <SettlementDays>2</SettlementDays>
+    <Calendar>LON</Calendar>
+  </Swap>
+  <Deposit id="JPY_DEPOSIT">
+    <Currency>JPY</Currency>
+    <DayCounter>ACT/365</DayCounter>
+    <SettlementDays>2</SettlementDays>
+    <Calendar>TOK</Calendar>
+  </Deposit>
+  <Swap id="JPY_SWAP">
+    <Currency>JPY</Currency>
+    <FixedDayCounter>ACT/365</FixedDayCounter>
+    <FixedFrequency>6M</FixedFrequency>
+    <FloatFrequency>6M</FloatFrequency>
+    <SettlementDays>2</SettlementDays>
+    <Calendar>TOK</Calendar>
+  </Swap>
+  <Deposit id="USD_DEPOSIT">
+    <Currency>USD</Currency>
+    <DayCounter>ACT/360</DayCounter>
+    <SettlementDays>2</SettlementDays>
+    <Calendar>NYC</Calendar>
+  </Deposit>
+  <Swap id="USD_SWAP">
+    <Currency>USD</Currency>
+    <FixedDayCounter>ACT/360</FixedDayCounter>
+    <FixedFrequency>6M</FixedFrequency>
+    <FloatFrequency>6M</FloatFrequency>
+    <SettlementDays>2</SettlementDays>
+    <Calendar>NYC</Calendar>
+  </Swap>
+  <CDS id="AAPL_CDS">
+    <SettlementDays>3</SettlementDays>
+    <Calendar>NYC</Calendar>
+    <Frequency>3M</Frequency>
+    <DayCounter>ACT/360</DayCounter>
+  </CDS>
+  <CDS id="AMD_CDS">
+    <SettlementDays>3</SettlementDays>
+    <Calendar>NYC</Calendar>
+    <Frequency>3M</Frequency>
+    <DayCounter>ACT/360</DayCounter>
+  </CDS>
+  <CDS id="AMZN_CDS">
+    <SettlementDays>3</SettlementDays>
+    <Calendar>NYC</Calendar>
+    <Frequency>3M</Frequency>
+    <DayCounter>ACT/360</DayCounter>
+  </CDS>
+  <CDS id="BAC_CDS">
+    <SettlementDays>3</SettlementDays>
+    <Calendar>NYC</Calendar>
+    <Frequency>3M</Frequency>
+    <DayCounter>ACT/360</DayCounter>
+  </CDS>
+  <CDS id="C_CDS">
+    <SettlementDays>3</SettlementDays>
+    <Calendar>NYC</Calendar>
+    <Frequency>3M</Frequency>
+    <DayCounter>ACT/360</DayCounter>
+  </CDS>
+  <CDS id="GOOGL_CDS">
+    <SettlementDays>3</SettlementDays>
+    <Calendar>NYC</Calendar>
+    <Frequency>3M</Frequency>
+    <DayCounter>ACT/360</DayCounter>
+  </CDS>
+  <CDS id="GS_CDS">
+    <SettlementDays>3</SettlementDays>
+    <Calendar>NYC</Calendar>
+    <Frequency>3M</Frequency>
+    <DayCounter>ACT/360</DayCounter>
+  </CDS>
+  <CDS id="JPM_CDS">
+    <SettlementDays>3</SettlementDays>
+    <Calendar>NYC</Calendar>
+    <Frequency>3M</Frequency>
+    <DayCounter>ACT/360</DayCounter>
+  </CDS>
+  <CDS id="META_CDS">
+    <SettlementDays>3</SettlementDays>
+    <Calendar>NYC</Calendar>
+    <Frequency>3M</Frequency>
+    <DayCounter>ACT/360</DayCounter>
+  </CDS>
+  <CDS id="MS_CDS">
+    <SettlementDays>3</SettlementDays>
+    <Calendar>NYC</Calendar>
+    <Frequency>3M</Frequency>
+    <DayCounter>ACT/360</DayCounter>
+  </CDS>
+  <CDS id="MSFT_CDS">
+    <SettlementDays>3</SettlementDays>
+    <Calendar>NYC</Calendar>
+    <Frequency>3M</Frequency>
+    <DayCounter>ACT/360</DayCounter>
+  </CDS>
+  <CDS id="NFLX_CDS">
+    <SettlementDays>3</SettlementDays>
+    <Calendar>NYC</Calendar>
+    <Frequency>3M</Frequency>
+    <DayCounter>ACT/360</DayCounter>
+  </CDS>
+  <CDS id="NVDA_CDS">
+    <SettlementDays>3</SettlementDays>
+    <Calendar>NYC</Calendar>
+    <Frequency>3M</Frequency>
+    <DayCounter>ACT/360</DayCounter>
+  </CDS>
+  <CDS id="TSLA_CDS">
+    <SettlementDays>3</SettlementDays>
+    <Calendar>NYC</Calendar>
+    <Frequency>3M</Frequency>
+    <DayCounter>ACT/360</DayCounter>
+  </CDS>
+  <CDS id="WFC_CDS">
+    <SettlementDays>3</SettlementDays>
+    <Calendar>NYC</Calendar>
+    <Frequency>3M</Frequency>
+    <DayCounter>ACT/360</DayCounter>
+  </CDS>
+</Conventions>

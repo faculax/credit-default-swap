@@ -1,0 +1,456 @@
+<?xml version="1.0"?>
+<CurveConfiguration>
+  
+  <!-- =============================================== -->
+  <!-- DISCOUNT CURVES (One per currency)              -->
+  <!-- =============================================== -->
+  
+  <!-- USD Discount Curve -->
+  <YieldCurve>
+    <CurveId>USD-DISCOUNT</CurveId>
+    <CurveDescription>USD Discount Curve</CurveDescription>
+    <Currency>USD</Currency>
+    <DiscountCurve>USD-DISCOUNT</DiscountCurve>
+    <Segments>
+      <Direct>
+        <Type>Zero</Type>
+        <Quotes>
+          <Quote>DISCOUNT/USD/0/1M</Quote>
+          <Quote>DISCOUNT/USD/0/3M</Quote>
+          <Quote>DISCOUNT/USD/0/6M</Quote>
+          <Quote>DISCOUNT/USD/0/1Y</Quote>
+          <Quote>DISCOUNT/USD/0/2Y</Quote>
+          <Quote>DISCOUNT/USD/0/3Y</Quote>
+          <Quote>DISCOUNT/USD/0/5Y</Quote>
+          <Quote>DISCOUNT/USD/0/7Y</Quote>
+          <Quote>DISCOUNT/USD/0/10Y</Quote>
+          <Quote>DISCOUNT/USD/0/15Y</Quote>
+          <Quote>DISCOUNT/USD/0/20Y</Quote>
+          <Quote>DISCOUNT/USD/0/30Y</Quote>
+        </Quotes>
+        <Conventions>USD-ZERO-CONVENTIONS</Conventions>
+      </Direct>
+    </Segments>
+    <InterpolationVariable>Zero</InterpolationVariable>
+    <InterpolationMethod>LogLinear</InterpolationMethod>
+    <YieldCurveDayCounter>ACT/365</YieldCurveDayCounter>
+    <Tolerance>0.000001</Tolerance>
+  </YieldCurve>
+
+  <!-- EUR Discount Curve -->
+  <YieldCurve>
+    <CurveId>EUR-DISCOUNT</CurveId>
+    <CurveDescription>EUR Discount Curve</CurveDescription>
+    <Currency>EUR</Currency>
+    <DiscountCurve>EUR-DISCOUNT</DiscountCurve>
+    <Segments>
+      <Direct>
+        <Type>Zero</Type>
+        <Quotes>
+          <Quote>DISCOUNT/EUR/0/1M</Quote>
+          <Quote>DISCOUNT/EUR/0/3M</Quote>
+          <Quote>DISCOUNT/EUR/0/6M</Quote>
+          <Quote>DISCOUNT/EUR/0/1Y</Quote>
+          <Quote>DISCOUNT/EUR/0/2Y</Quote>
+          <Quote>DISCOUNT/EUR/0/3Y</Quote>
+          <Quote>DISCOUNT/EUR/0/5Y</Quote>
+          <Quote>DISCOUNT/EUR/0/7Y</Quote>
+          <Quote>DISCOUNT/EUR/0/10Y</Quote>
+          <Quote>DISCOUNT/EUR/0/15Y</Quote>
+          <Quote>DISCOUNT/EUR/0/20Y</Quote>
+          <Quote>DISCOUNT/EUR/0/30Y</Quote>
+        </Quotes>
+        <Conventions>EUR-ZERO-CONVENTIONS</Conventions>
+      </Direct>
+    </Segments>
+    <InterpolationVariable>Zero</InterpolationVariable>
+    <InterpolationMethod>LogLinear</InterpolationMethod>
+    <YieldCurveDayCounter>ACT/365</YieldCurveDayCounter>
+    <Tolerance>0.000001</Tolerance>
+  </YieldCurve>
+
+  <!-- GBP Discount Curve -->
+  <YieldCurve>
+    <CurveId>GBP-DISCOUNT</CurveId>
+    <CurveDescription>GBP Discount Curve</CurveDescription>
+    <Currency>GBP</Currency>
+    <DiscountCurve>GBP-DISCOUNT</DiscountCurve>
+    <Segments>
+      <Direct>
+        <Type>Zero</Type>
+        <Quotes>
+          <Quote>DISCOUNT/GBP/0/1M</Quote>
+          <Quote>DISCOUNT/GBP/0/3M</Quote>
+          <Quote>DISCOUNT/GBP/0/6M</Quote>
+          <Quote>DISCOUNT/GBP/0/1Y</Quote>
+          <Quote>DISCOUNT/GBP/0/2Y</Quote>
+          <Quote>DISCOUNT/GBP/0/3Y</Quote>
+          <Quote>DISCOUNT/GBP/0/5Y</Quote>
+          <Quote>DISCOUNT/GBP/0/7Y</Quote>
+          <Quote>DISCOUNT/GBP/0/10Y</Quote>
+          <Quote>DISCOUNT/GBP/0/15Y</Quote>
+          <Quote>DISCOUNT/GBP/0/20Y</Quote>
+          <Quote>DISCOUNT/GBP/0/30Y</Quote>
+        </Quotes>
+        <Conventions>GBP-ZERO-CONVENTIONS</Conventions>
+      </Direct>
+    </Segments>
+    <InterpolationVariable>Zero</InterpolationVariable>
+    <InterpolationMethod>LogLinear</InterpolationMethod>
+    <YieldCurveDayCounter>ACT/365</YieldCurveDayCounter>
+    <Tolerance>0.000001</Tolerance>
+  </YieldCurve>
+
+  <!-- JPY Discount Curve -->
+  <YieldCurve>
+    <CurveId>JPY-DISCOUNT</CurveId>
+    <CurveDescription>JPY Discount Curve</CurveDescription>
+    <Currency>JPY</Currency>
+    <DiscountCurve>JPY-DISCOUNT</DiscountCurve>
+    <Segments>
+      <Direct>
+        <Type>Zero</Type>
+        <Quotes>
+          <Quote>DISCOUNT/JPY/0/1M</Quote>
+          <Quote>DISCOUNT/JPY/0/3M</Quote>
+          <Quote>DISCOUNT/JPY/0/6M</Quote>
+          <Quote>DISCOUNT/JPY/0/1Y</Quote>
+          <Quote>DISCOUNT/JPY/0/2Y</Quote>
+          <Quote>DISCOUNT/JPY/0/3Y</Quote>
+          <Quote>DISCOUNT/JPY/0/5Y</Quote>
+          <Quote>DISCOUNT/JPY/0/7Y</Quote>
+          <Quote>DISCOUNT/JPY/0/10Y</Quote>
+          <Quote>DISCOUNT/JPY/0/15Y</Quote>
+          <Quote>DISCOUNT/JPY/0/20Y</Quote>
+          <Quote>DISCOUNT/JPY/0/30Y</Quote>
+        </Quotes>
+        <Conventions>JPY-ZERO-CONVENTIONS</Conventions>
+      </Direct>
+    </Segments>
+    <InterpolationVariable>Zero</InterpolationVariable>
+    <InterpolationMethod>LogLinear</InterpolationMethod>
+    <YieldCurveDayCounter>ACT/365</YieldCurveDayCounter>
+    <Tolerance>0.000001</Tolerance>
+  </YieldCurve>
+
+  <!-- CHF Discount Curve -->
+  <YieldCurve>
+    <CurveId>CHF-DISCOUNT</CurveId>
+    <CurveDescription>CHF Discount Curve</CurveDescription>
+    <Currency>CHF</Currency>
+    <DiscountCurve>CHF-DISCOUNT</DiscountCurve>
+    <Segments>
+      <Direct>
+        <Type>Zero</Type>
+        <Quotes>
+          <Quote>DISCOUNT/CHF/0/1M</Quote>
+          <Quote>DISCOUNT/CHF/0/3M</Quote>
+          <Quote>DISCOUNT/CHF/0/6M</Quote>
+          <Quote>DISCOUNT/CHF/0/1Y</Quote>
+          <Quote>DISCOUNT/CHF/0/2Y</Quote>
+          <Quote>DISCOUNT/CHF/0/3Y</Quote>
+          <Quote>DISCOUNT/CHF/0/5Y</Quote>
+          <Quote>DISCOUNT/CHF/0/7Y</Quote>
+          <Quote>DISCOUNT/CHF/0/10Y</Quote>
+          <Quote>DISCOUNT/CHF/0/15Y</Quote>
+          <Quote>DISCOUNT/CHF/0/20Y</Quote>
+          <Quote>DISCOUNT/CHF/0/30Y</Quote>
+        </Quotes>
+        <Conventions>CHF-ZERO-CONVENTIONS</Conventions>
+      </Direct>
+    </Segments>
+    <InterpolationVariable>Zero</InterpolationVariable>
+    <InterpolationMethod>LogLinear</InterpolationMethod>
+    <YieldCurveDayCounter>ACT/365</YieldCurveDayCounter>
+    <Tolerance>0.000001</Tolerance>
+  </YieldCurve>
+
+  <!-- CAD Discount Curve -->
+  <YieldCurve>
+    <CurveId>CAD-DISCOUNT</CurveId>
+    <CurveDescription>CAD Discount Curve</CurveDescription>
+    <Currency>CAD</Currency>
+    <DiscountCurve>CAD-DISCOUNT</DiscountCurve>
+    <Segments>
+      <Direct>
+        <Type>Zero</Type>
+        <Quotes>
+          <Quote>DISCOUNT/CAD/0/1M</Quote>
+          <Quote>DISCOUNT/CAD/0/3M</Quote>
+          <Quote>DISCOUNT/CAD/0/6M</Quote>
+          <Quote>DISCOUNT/CAD/0/1Y</Quote>
+          <Quote>DISCOUNT/CAD/0/2Y</Quote>
+          <Quote>DISCOUNT/CAD/0/3Y</Quote>
+          <Quote>DISCOUNT/CAD/0/5Y</Quote>
+          <Quote>DISCOUNT/CAD/0/7Y</Quote>
+          <Quote>DISCOUNT/CAD/0/10Y</Quote>
+          <Quote>DISCOUNT/CAD/0/15Y</Quote>
+          <Quote>DISCOUNT/CAD/0/20Y</Quote>
+          <Quote>DISCOUNT/CAD/0/30Y</Quote>
+        </Quotes>
+        <Conventions>CAD-DEPOSIT</Conventions>
+      </Direct>
+    </Segments>
+    <InterpolationVariable>Zero</InterpolationVariable>
+    <InterpolationMethod>LogLinear</InterpolationMethod>
+    <YieldCurveDayCounter>ACT/365</YieldCurveDayCounter>
+    <Tolerance>0.000001</Tolerance>
+  </YieldCurve>
+
+  <!-- =============================================== -->
+  <!-- DEFAULT (CREDIT) CURVES - All Reference Entities -->
+  <!-- =============================================== -->
+
+  <!-- AAPL Credit Curve -->
+  <DefaultCurve>
+    <CurveId>AAPL</CurveId>
+    <CurveDescription>AAPL Credit Curve</CurveDescription>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD-DISCOUNT</DiscountCurve>
+    <DayCounter>ACT/365</DayCounter>
+    <RecoveryRate>RECOVERY_RATE/AAPL</RecoveryRate>
+    <Quotes>
+      <Quote>CDS/CREDIT_SPREAD/AAPL/SR/USD/6M</Quote>
+      <Quote>CDS/CREDIT_SPREAD/AAPL/SR/USD/1Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/AAPL/SR/USD/2Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/AAPL/SR/USD/3Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/AAPL/SR/USD/5Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/AAPL/SR/USD/7Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/AAPL/SR/USD/10Y</Quote>
+    </Quotes>
+    <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+  </DefaultCurve>
+
+  <!-- AMD Credit Curve -->
+  <DefaultCurve>
+    <CurveId>AMD</CurveId>
+    <CurveDescription>AMD Credit Curve</CurveDescription>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD-DISCOUNT</DiscountCurve>
+    <DayCounter>ACT/365</DayCounter>
+    <RecoveryRate>RECOVERY_RATE/AMD</RecoveryRate>
+    <Quotes>
+      <Quote>CDS/CREDIT_SPREAD/AMD/SR/USD/6M</Quote>
+      <Quote>CDS/CREDIT_SPREAD/AMD/SR/USD/1Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/AMD/SR/USD/2Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/AMD/SR/USD/3Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/AMD/SR/USD/5Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/AMD/SR/USD/7Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/AMD/SR/USD/10Y</Quote>
+    </Quotes>
+    <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+  </DefaultCurve>
+
+  <!-- AMZN Credit Curve -->
+  <DefaultCurve>
+    <CurveId>AMZN</CurveId>
+    <CurveDescription>AMZN Credit Curve</CurveDescription>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD-DISCOUNT</DiscountCurve>
+    <DayCounter>ACT/365</DayCounter>
+    <RecoveryRate>RECOVERY_RATE/AMZN</RecoveryRate>
+    <Quotes>
+      <Quote>CDS/CREDIT_SPREAD/AMZN/SR/USD/6M</Quote>
+      <Quote>CDS/CREDIT_SPREAD/AMZN/SR/USD/1Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/AMZN/SR/USD/2Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/AMZN/SR/USD/3Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/AMZN/SR/USD/5Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/AMZN/SR/USD/7Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/AMZN/SR/USD/10Y</Quote>
+    </Quotes>
+    <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+  </DefaultCurve>
+
+  <!-- BAC Credit Curve -->
+  <DefaultCurve>
+    <CurveId>BAC</CurveId>
+    <CurveDescription>BAC Credit Curve</CurveDescription>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD-DISCOUNT</DiscountCurve>
+    <DayCounter>ACT/365</DayCounter>
+    <RecoveryRate>RECOVERY_RATE/BAC</RecoveryRate>
+    <Quotes>
+      <Quote>CDS/CREDIT_SPREAD/BAC/SR/USD/6M</Quote>
+      <Quote>CDS/CREDIT_SPREAD/BAC/SR/USD/1Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/BAC/SR/USD/2Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/BAC/SR/USD/3Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/BAC/SR/USD/5Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/BAC/SR/USD/7Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/BAC/SR/USD/10Y</Quote>
+    </Quotes>
+    <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+  </DefaultCurve>
+
+  <!-- C (Citigroup) Credit Curve -->
+  <DefaultCurve>
+    <CurveId>C</CurveId>
+    <CurveDescription>C Credit Curve</CurveDescription>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD-DISCOUNT</DiscountCurve>
+    <DayCounter>ACT/365</DayCounter>
+    <RecoveryRate>RECOVERY_RATE/C</RecoveryRate>
+    <Quotes>
+      <Quote>CDS/CREDIT_SPREAD/C/SR/USD/6M</Quote>
+      <Quote>CDS/CREDIT_SPREAD/C/SR/USD/1Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/C/SR/USD/2Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/C/SR/USD/3Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/C/SR/USD/5Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/C/SR/USD/7Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/C/SR/USD/10Y</Quote>
+    </Quotes>
+    <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+  </DefaultCurve>
+
+  <!-- GS (Goldman Sachs) Credit Curve -->
+  <DefaultCurve>
+    <CurveId>GS</CurveId>
+    <CurveDescription>GS Credit Curve</CurveDescription>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD-DISCOUNT</DiscountCurve>
+    <DayCounter>ACT/365</DayCounter>
+    <RecoveryRate>RECOVERY_RATE/GS</RecoveryRate>
+    <Quotes>
+      <Quote>CDS/CREDIT_SPREAD/GS/SR/USD/6M</Quote>
+      <Quote>CDS/CREDIT_SPREAD/GS/SR/USD/1Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/GS/SR/USD/2Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/GS/SR/USD/3Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/GS/SR/USD/5Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/GS/SR/USD/7Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/GS/SR/USD/10Y</Quote>
+    </Quotes>
+    <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+  </DefaultCurve>
+
+  <!-- JPM (JPMorgan) Credit Curve -->
+  <DefaultCurve>
+    <CurveId>JPM</CurveId>
+    <CurveDescription>JPM Credit Curve</CurveDescription>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD-DISCOUNT</DiscountCurve>
+    <DayCounter>ACT/365</DayCounter>
+    <RecoveryRate>RECOVERY_RATE/JPM</RecoveryRate>
+    <Quotes>
+      <Quote>CDS/CREDIT_SPREAD/JPM/SR/USD/6M</Quote>
+      <Quote>CDS/CREDIT_SPREAD/JPM/SR/USD/1Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/JPM/SR/USD/2Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/JPM/SR/USD/3Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/JPM/SR/USD/5Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/JPM/SR/USD/7Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/JPM/SR/USD/10Y</Quote>
+    </Quotes>
+    <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+  </DefaultCurve>
+
+  <!-- META Credit Curve -->
+  <DefaultCurve>
+    <CurveId>META</CurveId>
+    <CurveDescription>META Credit Curve</CurveDescription>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD-DISCOUNT</DiscountCurve>
+    <DayCounter>ACT/365</DayCounter>
+    <RecoveryRate>RECOVERY_RATE/META</RecoveryRate>
+    <Quotes>
+      <Quote>CDS/CREDIT_SPREAD/META/SR/USD/6M</Quote>
+      <Quote>CDS/CREDIT_SPREAD/META/SR/USD/1Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/META/SR/USD/2Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/META/SR/USD/3Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/META/SR/USD/5Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/META/SR/USD/7Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/META/SR/USD/10Y</Quote>
+    </Quotes>
+    <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+  </DefaultCurve>
+
+  <!-- MS (Morgan Stanley) Credit Curve -->
+  <DefaultCurve>
+    <CurveId>MS</CurveId>
+    <CurveDescription>MS Credit Curve</CurveDescription>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD-DISCOUNT</DiscountCurve>
+    <DayCounter>ACT/365</DayCounter>
+    <RecoveryRate>RECOVERY_RATE/MS</RecoveryRate>
+    <Quotes>
+      <Quote>CDS/CREDIT_SPREAD/MS/SR/USD/6M</Quote>
+      <Quote>CDS/CREDIT_SPREAD/MS/SR/USD/1Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/MS/SR/USD/2Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/MS/SR/USD/3Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/MS/SR/USD/5Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/MS/SR/USD/7Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/MS/SR/USD/10Y</Quote>
+    </Quotes>
+    <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+  </DefaultCurve>
+
+  <!-- MSFT Credit Curve -->
+  <DefaultCurve>
+    <CurveId>MSFT</CurveId>
+    <CurveDescription>MSFT Credit Curve</CurveDescription>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD-DISCOUNT</DiscountCurve>
+    <DayCounter>ACT/365</DayCounter>
+    <RecoveryRate>RECOVERY_RATE/MSFT</RecoveryRate>
+    <Quotes>
+      <Quote>CDS/CREDIT_SPREAD/MSFT/SR/USD/6M</Quote>
+      <Quote>CDS/CREDIT_SPREAD/MSFT/SR/USD/1Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/MSFT/SR/USD/2Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/MSFT/SR/USD/3Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/MSFT/SR/USD/5Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/MSFT/SR/USD/7Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/MSFT/SR/USD/10Y</Quote>
+    </Quotes>
+    <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+  </DefaultCurve>
+
+  <!-- NVDA Credit Curve -->
+  <DefaultCurve>
+    <CurveId>NVDA</CurveId>
+    <CurveDescription>NVDA Credit Curve</CurveDescription>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD-DISCOUNT</DiscountCurve>
+    <DayCounter>ACT/365</DayCounter>
+    <RecoveryRate>RECOVERY_RATE/NVDA</RecoveryRate>
+    <Quotes>
+      <Quote>CDS/CREDIT_SPREAD/NVDA/SR/USD/6M</Quote>
+      <Quote>CDS/CREDIT_SPREAD/NVDA/SR/USD/1Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/NVDA/SR/USD/2Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/NVDA/SR/USD/3Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/NVDA/SR/USD/5Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/NVDA/SR/USD/7Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/NVDA/SR/USD/10Y</Quote>
+    </Quotes>
+    <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+  </DefaultCurve>
+
+  <!-- GOOGL Credit Curve (if needed) -->
+  <DefaultCurve>
+    <CurveId>GOOGL</CurveId>
+    <CurveDescription>GOOGL Credit Curve</CurveDescription>
+    <Currency>USD</Currency>
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>USD-DISCOUNT</DiscountCurve>
+    <DayCounter>ACT/365</DayCounter>
+    <RecoveryRate>RECOVERY_RATE/GOOGL</RecoveryRate>
+    <Quotes>
+      <Quote>CDS/CREDIT_SPREAD/GOOGL/SR/USD/6M</Quote>
+      <Quote>CDS/CREDIT_SPREAD/GOOGL/SR/USD/1Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/GOOGL/SR/USD/2Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/GOOGL/SR/USD/3Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/GOOGL/SR/USD/5Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/GOOGL/SR/USD/7Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/GOOGL/SR/USD/10Y</Quote>
+    </Quotes>
+    <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+  </DefaultCurve>
+
+</CurveConfiguration>
