@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2025-01-02</Parameter>
+    <Parameter name="baseCurrency">USD</Parameter>
+    <Parameter name="inputPath">/app/ore/config</Parameter>
+    <Parameter name="outputPath">/tmp/ore-work/output</Parameter>
+    <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logMask">31</Parameter>
+    <Parameter name="portfolioFile">Portfolio.xml</Parameter>
+    <Parameter name="continueOnError">Y</Parameter>
+    <Parameter name="buildFailedTrades">Y</Parameter>
+  </Setup>
+  <Analytics>
+    <Analytic type="portfolioDetails">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="outputFileName">portfolio_details.csv</Parameter>
+    </Analytic>
+  </Analytics>
+</ORE>

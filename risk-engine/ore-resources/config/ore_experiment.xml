@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<ORE>
+  <Parameters>
+    <Parameter group="setup" name="outputPath" value="/tmp/ore-work/output"/>
+    <Parameter group="setup" name="inputPath" value="/tmp/ore-work/input"/>
+    <Parameter group="setup" name="asofDate" value="2025-01-02"/>
+    <Parameter group="setup" name="portfolioFile" value="Portfolio.xml"/>
+    <Parameter group="setup" name="logLevel" value="2"/>
+  </Parameters>
+</ORE>

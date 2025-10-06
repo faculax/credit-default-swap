@@ -1,0 +1,463 @@
+<?xml version="1.0"?>
+<Curves>
+  <Curve id="AUD_DISCOUNT" type="Discount">
+    <Currency>AUD</Currency>
+    <Data>
+      <Point tenor="1M">0.04</Point>
+      <Point tenor="3M">0.041</Point>
+      <Point tenor="6M">0.042</Point>
+      <Point tenor="1Y">0.044</Point>
+      <Point tenor="2Y">0.046</Point>
+      <Point tenor="3Y">0.048</Point>
+      <Point tenor="5Y">0.05</Point>
+      <Point tenor="7Y">0.052</Point>
+      <Point tenor="10Y">0.054</Point>
+      <Point tenor="15Y">0.055</Point>
+      <Point tenor="20Y">0.056</Point>
+      <Point tenor="30Y">0.057</Point>
+    </Data>
+  </Curve>
+  <Curve id="AUD_FORWARD" type="Forward">
+    <Currency>AUD</Currency>
+    <Data>
+      <Point tenor="1M">0.041</Point>
+      <Point tenor="3M">0.042</Point>
+      <Point tenor="6M">0.043000000000000003</Point>
+      <Point tenor="1Y">0.045</Point>
+      <Point tenor="2Y">0.047</Point>
+      <Point tenor="3Y">0.049</Point>
+      <Point tenor="5Y">0.051000000000000004</Point>
+      <Point tenor="7Y">0.053</Point>
+      <Point tenor="10Y">0.055</Point>
+      <Point tenor="15Y">0.056</Point>
+      <Point tenor="20Y">0.057</Point>
+      <Point tenor="30Y">0.058</Point>
+    </Data>
+  </Curve>
+  <Curve id="CAD_DISCOUNT" type="Discount">
+    <Currency>CAD</Currency>
+    <Data>
+      <Point tenor="1M">0.045</Point>
+      <Point tenor="3M">0.046</Point>
+      <Point tenor="6M">0.047</Point>
+      <Point tenor="1Y">0.049</Point>
+      <Point tenor="2Y">0.051</Point>
+      <Point tenor="3Y">0.053</Point>
+      <Point tenor="5Y">0.055</Point>
+      <Point tenor="7Y">0.057</Point>
+      <Point tenor="10Y">0.059</Point>
+      <Point tenor="15Y">0.06</Point>
+      <Point tenor="20Y">0.061</Point>
+      <Point tenor="30Y">0.062</Point>
+    </Data>
+  </Curve>
+  <Curve id="CAD_FORWARD" type="Forward">
+    <Currency>CAD</Currency>
+    <Data>
+      <Point tenor="1M">0.046</Point>
+      <Point tenor="3M">0.047</Point>
+      <Point tenor="6M">0.048</Point>
+      <Point tenor="1Y">0.05</Point>
+      <Point tenor="2Y">0.052</Point>
+      <Point tenor="3Y">0.054</Point>
+      <Point tenor="5Y">0.056</Point>
+      <Point tenor="7Y">0.058</Point>
+      <Point tenor="10Y">0.06</Point>
+      <Point tenor="15Y">0.061</Point>
+      <Point tenor="20Y">0.062</Point>
+      <Point tenor="30Y">0.063</Point>
+    </Data>
+  </Curve>
+  <Curve id="CHF_DISCOUNT" type="Discount">
+    <Currency>CHF</Currency>
+    <Data>
+      <Point tenor="1M">0.02</Point>
+      <Point tenor="3M">0.021</Point>
+      <Point tenor="6M">0.022</Point>
+      <Point tenor="1Y">0.024</Point>
+      <Point tenor="2Y">0.026</Point>
+      <Point tenor="3Y">0.028</Point>
+      <Point tenor="5Y">0.03</Point>
+      <Point tenor="7Y">0.032</Point>
+      <Point tenor="10Y">0.034</Point>
+      <Point tenor="15Y">0.035</Point>
+      <Point tenor="20Y">0.036</Point>
+      <Point tenor="30Y">0.037</Point>
+    </Data>
+  </Curve>
+  <Curve id="CHF_FORWARD" type="Forward">
+    <Currency>CHF</Currency>
+    <Data>
+      <Point tenor="1M">0.021</Point>
+      <Point tenor="3M">0.022000000000000002</Point>
+      <Point tenor="6M">0.023</Point>
+      <Point tenor="1Y">0.025</Point>
+      <Point tenor="2Y">0.027</Point>
+      <Point tenor="3Y">0.029</Point>
+      <Point tenor="5Y">0.031</Point>
+      <Point tenor="7Y">0.033</Point>
+      <Point tenor="10Y">0.035</Point>
+      <Point tenor="15Y">0.036000000000000004</Point>
+      <Point tenor="20Y">0.037</Point>
+      <Point tenor="30Y">0.038</Point>
+    </Data>
+  </Curve>
+  <Curve id="EUR_DISCOUNT" type="Discount">
+    <Currency>EUR</Currency>
+    <Data>
+      <Point tenor="1M">0.03</Point>
+      <Point tenor="3M">0.031</Point>
+      <Point tenor="6M">0.032</Point>
+      <Point tenor="1Y">0.034</Point>
+      <Point tenor="2Y">0.036</Point>
+      <Point tenor="3Y">0.038</Point>
+      <Point tenor="5Y">0.04</Point>
+      <Point tenor="7Y">0.042</Point>
+      <Point tenor="10Y">0.044</Point>
+      <Point tenor="15Y">0.045</Point>
+      <Point tenor="20Y">0.046</Point>
+      <Point tenor="30Y">0.047</Point>
+    </Data>
+  </Curve>
+  <Curve id="EUR_FORWARD" type="Forward">
+    <Currency>EUR</Currency>
+    <Data>
+      <Point tenor="1M">0.031</Point>
+      <Point tenor="3M">0.032</Point>
+      <Point tenor="6M">0.033</Point>
+      <Point tenor="1Y">0.035</Point>
+      <Point tenor="2Y">0.037</Point>
+      <Point tenor="3Y">0.039</Point>
+      <Point tenor="5Y">0.041</Point>
+      <Point tenor="7Y">0.043000000000000003</Point>
+      <Point tenor="10Y">0.045</Point>
+      <Point tenor="15Y">0.046</Point>
+      <Point tenor="20Y">0.047</Point>
+      <Point tenor="30Y">0.048</Point>
+    </Data>
+  </Curve>
+  <Curve id="GBP_DISCOUNT" type="Discount">
+    <Currency>GBP</Currency>
+    <Data>
+      <Point tenor="1M">0.045</Point>
+      <Point tenor="3M">0.046</Point>
+      <Point tenor="6M">0.047</Point>
+      <Point tenor="1Y">0.049</Point>
+      <Point tenor="2Y">0.051</Point>
+      <Point tenor="3Y">0.053</Point>
+      <Point tenor="5Y">0.055</Point>
+      <Point tenor="7Y">0.057</Point>
+      <Point tenor="10Y">0.059</Point>
+      <Point tenor="15Y">0.06</Point>
+      <Point tenor="20Y">0.061</Point>
+      <Point tenor="30Y">0.062</Point>
+    </Data>
+  </Curve>
+  <Curve id="GBP_FORWARD" type="Forward">
+    <Currency>GBP</Currency>
+    <Data>
+      <Point tenor="1M">0.046</Point>
+      <Point tenor="3M">0.047</Point>
+      <Point tenor="6M">0.048</Point>
+      <Point tenor="1Y">0.05</Point>
+      <Point tenor="2Y">0.052</Point>
+      <Point tenor="3Y">0.054</Point>
+      <Point tenor="5Y">0.056</Point>
+      <Point tenor="7Y">0.058</Point>
+      <Point tenor="10Y">0.06</Point>
+      <Point tenor="15Y">0.061</Point>
+      <Point tenor="20Y">0.062</Point>
+      <Point tenor="30Y">0.063</Point>
+    </Data>
+  </Curve>
+  <Curve id="JPY_DISCOUNT" type="Discount">
+    <Currency>JPY</Currency>
+    <Data>
+      <Point tenor="1M">0.001</Point>
+      <Point tenor="3M">0.002</Point>
+      <Point tenor="6M">0.003</Point>
+      <Point tenor="1Y">0.005</Point>
+      <Point tenor="2Y">0.007</Point>
+      <Point tenor="3Y">0.009</Point>
+      <Point tenor="5Y">0.011</Point>
+      <Point tenor="7Y">0.013</Point>
+      <Point tenor="10Y">0.015</Point>
+      <Point tenor="15Y">0.016</Point>
+      <Point tenor="20Y">0.017</Point>
+      <Point tenor="30Y">0.018</Point>
+    </Data>
+  </Curve>
+  <Curve id="JPY_FORWARD" type="Forward">
+    <Currency>JPY</Currency>
+    <Data>
+      <Point tenor="1M">0.002</Point>
+      <Point tenor="3M">0.003</Point>
+      <Point tenor="6M">0.004</Point>
+      <Point tenor="1Y">0.006</Point>
+      <Point tenor="2Y">0.008</Point>
+      <Point tenor="3Y">0.009999999999999998</Point>
+      <Point tenor="5Y">0.012</Point>
+      <Point tenor="7Y">0.013999999999999999</Point>
+      <Point tenor="10Y">0.016</Point>
+      <Point tenor="15Y">0.017</Point>
+      <Point tenor="20Y">0.018000000000000002</Point>
+      <Point tenor="30Y">0.019</Point>
+    </Data>
+  </Curve>
+  <Curve id="USD_DISCOUNT" type="Discount">
+    <Currency>USD</Currency>
+    <Data>
+      <Point tenor="1M">0.05</Point>
+      <Point tenor="3M">0.051</Point>
+      <Point tenor="6M">0.052</Point>
+      <Point tenor="1Y">0.054</Point>
+      <Point tenor="2Y">0.056</Point>
+      <Point tenor="3Y">0.058</Point>
+      <Point tenor="5Y">0.06</Point>
+      <Point tenor="7Y">0.062</Point>
+      <Point tenor="10Y">0.064</Point>
+      <Point tenor="15Y">0.065</Point>
+      <Point tenor="20Y">0.066</Point>
+      <Point tenor="30Y">0.067</Point>
+    </Data>
+  </Curve>
+  <Curve id="USD_FORWARD" type="Forward">
+    <Currency>USD</Currency>
+    <Data>
+      <Point tenor="1M">0.051000000000000004</Point>
+      <Point tenor="3M">0.052</Point>
+      <Point tenor="6M">0.053</Point>
+      <Point tenor="1Y">0.055</Point>
+      <Point tenor="2Y">0.057</Point>
+      <Point tenor="3Y">0.059000000000000004</Point>
+      <Point tenor="5Y">0.061</Point>
+      <Point tenor="7Y">0.063</Point>
+      <Point tenor="10Y">0.065</Point>
+      <Point tenor="15Y">0.066</Point>
+      <Point tenor="20Y">0.067</Point>
+      <Point tenor="30Y">0.068</Point>
+    </Data>
+  </Curve>
+  <Curve id="AAPL_SPREAD" type="CreditSpread">
+    <CreditCurveId>AAPL</CreditCurveId>
+    <Data>
+      <Point tenor="6M">50</Point>
+      <Point tenor="1Y">55</Point>
+      <Point tenor="2Y">65</Point>
+      <Point tenor="3Y">75</Point>
+      <Point tenor="5Y">85</Point>
+      <Point tenor="7Y">95</Point>
+      <Point tenor="10Y">110</Point>
+    </Data>
+  </Curve>
+  <Curve id="AMD_SPREAD" type="CreditSpread">
+    <CreditCurveId>AMD</CreditCurveId>
+    <Data>
+      <Point tenor="6M">100</Point>
+      <Point tenor="1Y">105</Point>
+      <Point tenor="2Y">115</Point>
+      <Point tenor="3Y">125</Point>
+      <Point tenor="5Y">135</Point>
+      <Point tenor="7Y">145</Point>
+      <Point tenor="10Y">160</Point>
+    </Data>
+  </Curve>
+  <Curve id="AMZN_SPREAD" type="CreditSpread">
+    <CreditCurveId>AMZN</CreditCurveId>
+    <Data>
+      <Point tenor="6M">70</Point>
+      <Point tenor="1Y">75</Point>
+      <Point tenor="2Y">85</Point>
+      <Point tenor="3Y">95</Point>
+      <Point tenor="5Y">105</Point>
+      <Point tenor="7Y">115</Point>
+      <Point tenor="10Y">130</Point>
+    </Data>
+  </Curve>
+  <Curve id="BAC_SPREAD" type="CreditSpread">
+    <CreditCurveId>BAC</CreditCurveId>
+    <Data>
+      <Point tenor="6M">90</Point>
+      <Point tenor="1Y">95</Point>
+      <Point tenor="2Y">105</Point>
+      <Point tenor="3Y">115</Point>
+      <Point tenor="5Y">125</Point>
+      <Point tenor="7Y">135</Point>
+      <Point tenor="10Y">150</Point>
+    </Data>
+  </Curve>
+  <Curve id="C_SPREAD" type="CreditSpread">
+    <CreditCurveId>C</CreditCurveId>
+    <Data>
+      <Point tenor="6M">100</Point>
+      <Point tenor="1Y">105</Point>
+      <Point tenor="2Y">115</Point>
+      <Point tenor="3Y">125</Point>
+      <Point tenor="5Y">135</Point>
+      <Point tenor="7Y">145</Point>
+      <Point tenor="10Y">160</Point>
+    </Data>
+  </Curve>
+  <Curve id="GOOGL_SPREAD" type="CreditSpread">
+    <CreditCurveId>GOOGL</CreditCurveId>
+    <Data>
+      <Point tenor="6M">55</Point>
+      <Point tenor="1Y">60</Point>
+      <Point tenor="2Y">70</Point>
+      <Point tenor="3Y">80</Point>
+      <Point tenor="5Y">90</Point>
+      <Point tenor="7Y">100</Point>
+      <Point tenor="10Y">115</Point>
+    </Data>
+  </Curve>
+  <Curve id="GS_SPREAD" type="CreditSpread">
+    <CreditCurveId>GS</CreditCurveId>
+    <Data>
+      <Point tenor="6M">85</Point>
+      <Point tenor="1Y">90</Point>
+      <Point tenor="2Y">100</Point>
+      <Point tenor="3Y">110</Point>
+      <Point tenor="5Y">120</Point>
+      <Point tenor="7Y">130</Point>
+      <Point tenor="10Y">145</Point>
+    </Data>
+  </Curve>
+  <Curve id="JPM_SPREAD" type="CreditSpread">
+    <CreditCurveId>JPM</CreditCurveId>
+    <Data>
+      <Point tenor="6M">80</Point>
+      <Point tenor="1Y">85</Point>
+      <Point tenor="2Y">95</Point>
+      <Point tenor="3Y">105</Point>
+      <Point tenor="5Y">115</Point>
+      <Point tenor="7Y">125</Point>
+      <Point tenor="10Y">140</Point>
+    </Data>
+  </Curve>
+  <Curve id="META_SPREAD" type="CreditSpread">
+    <CreditCurveId>META</CreditCurveId>
+    <Data>
+      <Point tenor="6M">80</Point>
+      <Point tenor="1Y">85</Point>
+      <Point tenor="2Y">95</Point>
+      <Point tenor="3Y">105</Point>
+      <Point tenor="5Y">115</Point>
+      <Point tenor="7Y">125</Point>
+      <Point tenor="10Y">140</Point>
+    </Data>
+  </Curve>
+  <Curve id="MS_SPREAD" type="CreditSpread">
+    <CreditCurveId>MS</CreditCurveId>
+    <Data>
+      <Point tenor="6M">90</Point>
+      <Point tenor="1Y">95</Point>
+      <Point tenor="2Y">105</Point>
+      <Point tenor="3Y">115</Point>
+      <Point tenor="5Y">125</Point>
+      <Point tenor="7Y">135</Point>
+      <Point tenor="10Y">150</Point>
+    </Data>
+  </Curve>
+  <Curve id="MSFT_SPREAD" type="CreditSpread">
+    <CreditCurveId>MSFT</CreditCurveId>
+    <Data>
+      <Point tenor="6M">45</Point>
+      <Point tenor="1Y">50</Point>
+      <Point tenor="2Y">60</Point>
+      <Point tenor="3Y">70</Point>
+      <Point tenor="5Y">80</Point>
+      <Point tenor="7Y">90</Point>
+      <Point tenor="10Y">105</Point>
+    </Data>
+  </Curve>
+  <Curve id="NFLX_SPREAD" type="CreditSpread">
+    <CreditCurveId>NFLX</CreditCurveId>
+    <Data>
+      <Point tenor="6M">120</Point>
+      <Point tenor="1Y">125</Point>
+      <Point tenor="2Y">135</Point>
+      <Point tenor="3Y">145</Point>
+      <Point tenor="5Y">155</Point>
+      <Point tenor="7Y">165</Point>
+      <Point tenor="10Y">180</Point>
+    </Data>
+  </Curve>
+  <Curve id="NVDA_SPREAD" type="CreditSpread">
+    <CreditCurveId>NVDA</CreditCurveId>
+    <Data>
+      <Point tenor="6M">90</Point>
+      <Point tenor="1Y">95</Point>
+      <Point tenor="2Y">105</Point>
+      <Point tenor="3Y">115</Point>
+      <Point tenor="5Y">125</Point>
+      <Point tenor="7Y">135</Point>
+      <Point tenor="10Y">150</Point>
+    </Data>
+  </Curve>
+  <Curve id="TSLA_SPREAD" type="CreditSpread">
+    <CreditCurveId>TSLA</CreditCurveId>
+    <Data>
+      <Point tenor="6M">150</Point>
+      <Point tenor="1Y">155</Point>
+      <Point tenor="2Y">165</Point>
+      <Point tenor="3Y">175</Point>
+      <Point tenor="5Y">185</Point>
+      <Point tenor="7Y">195</Point>
+      <Point tenor="10Y">210</Point>
+    </Data>
+  </Curve>
+  <Curve id="WFC_SPREAD" type="CreditSpread">
+    <CreditCurveId>WFC</CreditCurveId>
+    <Data>
+      <Point tenor="6M">95</Point>
+      <Point tenor="1Y">100</Point>
+      <Point tenor="2Y">110</Point>
+      <Point tenor="3Y">120</Point>
+      <Point tenor="5Y">130</Point>
+      <Point tenor="7Y">140</Point>
+      <Point tenor="10Y">155</Point>
+    </Data>
+  </Curve>
+  <Curve id="USD_AUD_FX" type="FX">
+    <BaseCurrency>USD</BaseCurrency>
+    <TermCurrency>AUD</TermCurrency>
+    <Data>
+      <Point tenor="0D">1.55</Point>
+    </Data>
+  </Curve>
+  <Curve id="USD_CAD_FX" type="FX">
+    <BaseCurrency>USD</BaseCurrency>
+    <TermCurrency>CAD</TermCurrency>
+    <Data>
+      <Point tenor="0D">1.35</Point>
+    </Data>
+  </Curve>
+  <Curve id="USD_CHF_FX" type="FX">
+    <BaseCurrency>USD</BaseCurrency>
+    <TermCurrency>CHF</TermCurrency>
+    <Data>
+      <Point tenor="0D">0.9</Point>
+    </Data>
+  </Curve>
+  <Curve id="USD_EUR_FX" type="FX">
+    <BaseCurrency>USD</BaseCurrency>
+    <TermCurrency>EUR</TermCurrency>
+    <Data>
+      <Point tenor="0D">0.85</Point>
+    </Data>
+  </Curve>
+  <Curve id="USD_GBP_FX" type="FX">
+    <BaseCurrency>USD</BaseCurrency>
+    <TermCurrency>GBP</TermCurrency>
+    <Data>
+      <Point tenor="0D">0.75</Point>
+    </Data>
+  </Curve>
+  <Curve id="USD_JPY_FX" type="FX">
+    <BaseCurrency>USD</BaseCurrency>
+    <TermCurrency>JPY</TermCurrency>
+    <Data>
+      <Point tenor="0D">150.0</Point>
+    </Data>
+  </Curve>
+</Curves>
