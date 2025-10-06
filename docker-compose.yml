@@ -49,10 +49,8 @@ services:
         condition: service_started
     environment:
       SERVER_PORT: 8081
-      SPRING_CLOUD_GATEWAY_ROUTES_0_URI: http://backend:8080
-      SPRING_CLOUD_GATEWAY_ROUTES_1_URI: http://backend:8080
-      SPRING_CLOUD_GATEWAY_ROUTES_2_URI: http://backend:8080
-      RISK_ENGINE_BASE_URL: http://risk-engine:8082
+      BACKEND_URI: http://backend:8080
+      RISK_ENGINE_URI: http://risk-engine:8082
 
   frontend:
     build:

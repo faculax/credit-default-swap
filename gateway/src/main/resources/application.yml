@@ -30,7 +30,7 @@ spring:
       routes:
         # Route market data requests to the market data service
         - id: market-data-service
-          uri: http://localhost:8082
+          uri: ${RISK_ENGINE_URI:http://localhost:8082}
           predicates:
             - Path=/api/rates/**
           filters:
@@ -38,7 +38,7 @@ spring:
         
         # Route risk engine requests
         - id: risk-engine-service
-          uri: http://localhost:8082
+          uri: ${RISK_ENGINE_URI:http://localhost:8082}
           predicates:
             - Path=/api/risk/**
           filters:

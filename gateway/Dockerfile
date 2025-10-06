@@ -27,6 +27,7 @@ EXPOSE 8081
 # SERVER_PORT is not set to use the default from application.yml
 ENV MARKET_DATA_URI=
 ENV BACKEND_URI=https://credit-default-swap-backend.onrender.com
+ENV RISK_ENGINE_URI=https://credit-default-swap-risk-engine.onrender.com
 
 # Run the app
 ENTRYPOINT ["java", "-Xmx512m", "-Xms256m", "-jar", "app.jar"]
