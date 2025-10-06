@@ -9,6 +9,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 public class TradeDataService {
@@ -41,19 +43,55 @@ public class TradeDataService {
                 throw new RuntimeException("Trade not found: " + tradeId);
             }
             
+            // Fetch paid coupons to determine if we need to adjust the effective date
+            // When coupons have been paid, we want to value only remaining cashflows
+            LocalDate adjustedEffectiveDate = response.getEffectiveDate();
+            try {
+                String couponUrl = backendBaseUrl + "/api/lifecycle/trades/" + tradeId + "/coupon-schedule";
+                CouponPeriod[] coupons = restTemplate.getForObject(couponUrl, CouponPeriod[].class);
+                
+                if (coupons != null && coupons.length > 0) {
+                    // Check if any coupons have been paid
+                    boolean hasPaidCoupons = false;
+                    LocalDate lastPaidEndDate = null;
+                    
+                    for (CouponPeriod coupon : coupons) {
+                        if (Boolean.TRUE.equals(coupon.getPaid())) {
+                            hasPaidCoupons = true;
+                            if (lastPaidEndDate == null || coupon.getPeriodEndDate().isAfter(lastPaidEndDate)) {
+                                lastPaidEndDate = coupon.getPeriodEndDate();
+                            }
+                        }
+                    }
+                    
+                    // If coupons have been paid, adjust effective date to the end of last paid period
+                    // This ensures the schedule only includes future cashflows
+                    if (hasPaidCoupons && lastPaidEndDate != null) {
+                        adjustedEffectiveDate = lastPaidEndDate;
+                        logger.info("Adjusted effective date to {} (end of last paid coupon) for trade {}", 
+                            adjustedEffectiveDate, tradeId);
+                    }
+                }
+            } catch (Exception e) {
+                logger.warn("Could not fetch coupon schedule for trade {}: {}", tradeId, e.getMessage());
+                // Continue without adjustment
+            }
+            
             OrePortfolioGenerator.CDSTradeData tradeData = new OrePortfolioGenerator.CDSTradeData(
                 response.getId(),
                 response.getReferenceEntity(),
                 response.getNotionalAmount(),
                 response.getSpread(),
                 response.getMaturityDate(),
-                response.getEffectiveDate(),
+                adjustedEffectiveDate,  // Use adjusted effective date
                 response.getCurrency(),
                 response.getPremiumFrequency(),
                 response.getDayCountConvention(),
                 response.getBuySellProtection(),
                 response.getPaymentCalendar()
             );
+            
+            // Don't set firstCouponDate - let ORE generate the schedule from the adjusted effective date
             
             logger.info("Successfully fetched CDS trade data: {} - {}", tradeId, response.getReferenceEntity());
             return tradeData;
@@ -62,6 +100,32 @@ public class TradeDataService {
             logger.error("Failed to fetch trade data for trade ID: {}", tradeId, e);
             throw new RuntimeException("Unable to fetch trade data for trade ID: " + tradeId, e);
         }
+    }
+    
+    /**
+     * Response DTO for coupon periods
+     */
+    public static class CouponPeriod {
+        private Long id;
+        private LocalDate periodStartDate;
+        private LocalDate periodEndDate;
+        private LocalDate paymentDate;
+        private Boolean paid;
+        
+        public Long getId() { return id; }
+        public void setId(Long id) { this.id = id; }
+        
+        public LocalDate getPeriodStartDate() { return periodStartDate; }
+        public void setPeriodStartDate(LocalDate periodStartDate) { this.periodStartDate = periodStartDate; }
+        
+        public LocalDate getPeriodEndDate() { return periodEndDate; }
+        public void setPeriodEndDate(LocalDate periodEndDate) { this.periodEndDate = periodEndDate; }
+        
+        public LocalDate getPaymentDate() { return paymentDate; }
+        public void setPaymentDate(LocalDate paymentDate) { this.paymentDate = paymentDate; }
+        
+        public Boolean getPaid() { return paid; }
+        public void setPaid(Boolean paid) { this.paid = paid; }
     }
     
     /**

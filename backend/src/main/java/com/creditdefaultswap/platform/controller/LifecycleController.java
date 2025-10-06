@@ -57,6 +57,14 @@ public class LifecycleController {
         return ResponseEntity.ok(schedule);
     }
 
+    @PostMapping("/trades/{tradeId}/coupon-periods/{periodId}/pay")
+    public ResponseEntity<CouponPeriod> payCoupon(
+            @PathVariable Long tradeId,
+            @PathVariable Long periodId) {
+        CouponPeriod paidPeriod = couponScheduleService.payCoupon(periodId);
+        return ResponseEntity.ok(paidPeriod);
+    }
+
     // Accrual Endpoints
 
     @PostMapping("/trades/{tradeId}/accruals/daily")

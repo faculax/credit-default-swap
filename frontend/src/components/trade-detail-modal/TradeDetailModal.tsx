@@ -330,7 +330,7 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
                 >Run Scenarios</button>
               </div>
             </div>
-            <RiskMeasuresPanel tradeId={trade.id} />
+            <RiskMeasuresPanel tradeId={trade.id} trade={trade} />
           </div>
         )}
         <div className="flex justify-end space-x-4 mt-8 pt-4 border-t border-fd-border">

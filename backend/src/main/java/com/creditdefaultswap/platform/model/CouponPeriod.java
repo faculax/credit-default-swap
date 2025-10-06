@@ -48,6 +48,15 @@ public class CouponPeriod {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(name = "paid", nullable = false)
+    private Boolean paid = false;
+
+    @Column(name = "paid_at")
+    private LocalDateTime paidAt;
+
+    @Transient
+    private BigDecimal couponAmount;  // Calculated field: notional × spread × (days/360)
+
     // Constructors
     public CouponPeriod() {}
 
@@ -91,6 +100,34 @@ public class CouponPeriod {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public Boolean getPaid() { return paid; }
+    public void setPaid(Boolean paid) { this.paid = paid; }
+
+    public LocalDateTime getPaidAt() { return paidAt; }
+    public void setPaidAt(LocalDateTime paidAt) { this.paidAt = paidAt; }
+
+    public BigDecimal getCouponAmount() { return couponAmount; }
+    public void setCouponAmount(BigDecimal couponAmount) { this.couponAmount = couponAmount; }
+
+    /**
+     * Calculate coupon amount: notional × spread × (accrualDays / 360)
+     * 
+     * @param spread The CDS spread (in decimal, e.g., 0.05 for 500bps)
+     * @return The coupon amount
+     */
+    public BigDecimal calculateCouponAmount(BigDecimal spread) {
+        if (notionalAmount == null || spread == null || accrualDays == null) {
+            return BigDecimal.ZERO;
+        }
+        
+        // For ACT/360: coupon = notional × spread × (days / 360)
+        BigDecimal dayCountFactor = new BigDecimal(accrualDays).divide(new BigDecimal("360"), 10, java.math.RoundingMode.HALF_UP);
+        BigDecimal amount = notionalAmount.multiply(spread).multiply(dayCountFactor);
+        
+        this.couponAmount = amount.setScale(2, java.math.RoundingMode.HALF_UP);
+        return this.couponAmount;
+    }
 
     public enum DayCountConvention {
         ACT_360, ACT_365, THIRTY_360

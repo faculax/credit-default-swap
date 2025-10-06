@@ -2,21 +2,85 @@ import React, { useEffect, useState } from 'react';
 import { fetchRiskMeasures } from '../../services/risk/riskService';
 import { RiskMeasures } from '../../services/risk/riskTypes';
 import CashflowScheduleTable from './CashflowScheduleTable';
+import { lifecycleService } from '../../services/lifecycleService';
+import { CouponPeriod } from '../../types/lifecycle';
+import { CDSTrade } from '../../data/referenceData';
 
-interface Props { tradeId: number; }
+interface Props { 
+  tradeId: number;
+  trade?: CDSTrade; // Optional trade object for richer display
+}
 
-const RiskMeasuresPanel: React.FC<Props> = ({ tradeId }) => {
+const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
   const [data, setData] = useState<RiskMeasures | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [couponPeriods, setCouponPeriods] = useState<CouponPeriod[]>([]);
+  const [payingPeriodId, setPayingPeriodId] = useState<number | null>(null);
+  const [recalculating, setRecalculating] = useState(false);
+  const [generatingSchedule, setGeneratingSchedule] = useState(false);
 
-  useEffect(() => {
+  const loadRiskMeasures = async () => {
     if(!tradeId) return;
     setLoading(true);
-    fetchRiskMeasures(tradeId)
-      .then(setData)
-      .catch(e => setError(e.message))
-      .finally(()=> setLoading(false));
+    try {
+      const measures = await fetchRiskMeasures(tradeId);
+      setData(measures);
+      setError(null);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadCouponPeriods = async () => {
+    if(!tradeId) return;
+    try {
+      console.log('Loading coupon periods for trade:', tradeId);
+      const periods = await lifecycleService.getCouponSchedule(tradeId);
+      console.log('Loaded coupon periods:', periods.length, periods);
+      setCouponPeriods(periods);
+    } catch (e: any) {
+      console.error('Failed to load coupon periods:', e);
+      setCouponPeriods([]); // Ensure it's set to empty array on error
+    }
+  };
+
+  const handlePayCoupon = async (periodId: number) => {
+    setPayingPeriodId(periodId);
+    try {
+      await lifecycleService.payCoupon(tradeId, periodId);
+      // Reload coupon periods to reflect payment
+      await loadCouponPeriods();
+      // Trigger risk recalculation
+      setRecalculating(true);
+      await loadRiskMeasures();
+      setRecalculating(false);
+    } catch (e: any) {
+      alert('Failed to pay coupon: ' + e.message);
+      setRecalculating(false);
+    } finally {
+      setPayingPeriodId(null);
+    }
+  };
+
+  const handleGenerateSchedule = async () => {
+    setGeneratingSchedule(true);
+    try {
+      await lifecycleService.generateCouponSchedule(tradeId);
+      // Reload the schedule
+      await loadCouponPeriods();
+    } catch (e: any) {
+      alert('Failed to generate coupon schedule: ' + e.message);
+    } finally {
+      setGeneratingSchedule(false);
+    }
+  };
+
+  useEffect(() => {
+    loadRiskMeasures();
+    loadCouponPeriods();
   }, [tradeId]);
 
   if(!tradeId) return <div className="text-fd-text">No trade selected</div>;
@@ -50,6 +114,70 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId }) => {
   const formatBasisPoints = (value: number | null | undefined): string => {
     if (value === null || value === undefined) return '-';
     return (value * 10000).toFixed(2) + ' bps';
+  };
+
+  // Find the next unpaid coupon (earliest payment date among unpaid)
+  const getNextUnpaidCoupon = (): CouponPeriod | null => {
+    const unpaidCoupons = couponPeriods
+      .filter(p => !p.paid)
+      .sort((a, b) => new Date(a.paymentDate).getTime() - new Date(b.paymentDate).getTime());
+    return unpaidCoupons.length > 0 ? unpaidCoupons[0] : null;
+  };
+
+  const nextUnpaidCoupon = getNextUnpaidCoupon();
+  const canPayCoupon = (period: CouponPeriod): boolean => {
+    if (period.paid) return false;
+    if (!nextUnpaidCoupon) return false;
+    return period.id === nextUnpaidCoupon.id;
+  };
+
+  // Calculate coupon statistics
+  const totalCoupons = couponPeriods.length;
+  const paidCoupons = couponPeriods.filter(p => p.paid).length;
+  const unpaidCoupons = totalCoupons - paidCoupons;
+  const totalPaidAmount = couponPeriods
+    .filter(p => p.paid && p.couponAmount)
+    .reduce((sum, p) => sum + (p.couponAmount || 0), 0);
+
+  // Derive frequency and maturity from coupon periods
+  const getScheduleDescription = () => {
+    if (couponPeriods.length === 0) return '';
+    
+    // Get maturity from last period
+    const lastPeriod = couponPeriods[couponPeriods.length - 1];
+    const maturityDate = new Date(lastPeriod.periodEndDate);
+    const maturityYear = maturityDate.getFullYear();
+    const maturityMonth = maturityDate.toLocaleDateString('en-US', { month: 'short' });
+    
+    // Use trade's premium frequency if available
+    let frequency = 'Periodic';
+    if (trade?.premiumFrequency) {
+      // Map the database values to display names
+      const frequencyMap: Record<string, string> = {
+        'MONTHLY': 'Monthly',
+        'QUARTERLY': 'Quarterly',
+        'SEMI_ANNUAL': 'Semi-annual',
+        'ANNUAL': 'Annual'
+      };
+      frequency = frequencyMap[trade.premiumFrequency] || trade.premiumFrequency;
+    } else if (couponPeriods.length > 1) {
+      // Fall back to calculating from payment date intervals if trade data not available
+      const firstPayment = new Date(couponPeriods[0].paymentDate);
+      const secondPayment = new Date(couponPeriods[1].paymentDate);
+      const daysDiff = Math.round((secondPayment.getTime() - firstPayment.getTime()) / (1000 * 60 * 60 * 24));
+      
+      // More lenient ranges for CDS IMM schedules
+      // Quarterly: ~91 days (3 months)
+      // Semi-annual: ~182 days (6 months)
+      // Monthly: ~30 days
+      // Annual: ~365 days
+      if (daysDiff >= 25 && daysDiff <= 35) frequency = 'Monthly';
+      else if (daysDiff >= 80 && daysDiff <= 100) frequency = 'Quarterly';
+      else if (daysDiff >= 170 && daysDiff <= 195) frequency = 'Semi-annual';
+      else if (daysDiff >= 350 && daysDiff <= 375) frequency = 'Annual';
+    }
+    
+    return `${frequency} until ${maturityMonth} ${maturityYear}`;
   };
 
   const hasCashflows = data.cashflows && data.cashflows.length > 0;
@@ -129,6 +257,12 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId }) => {
               <span className="text-fd-text-muted">Current Notional:</span>
               <div className="font-mono text-fd-text">{formatCurrency(data.currentNotional, data.currency)}</div>
             </div>
+            {paidCoupons > 0 && (
+              <div>
+                <span className="text-fd-text-muted">Total Paid Coupons:</span>
+                <div className="font-mono text-fd-green font-semibold">{formatCurrency(totalPaidAmount, data.currency)}</div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -173,8 +307,145 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId }) => {
         </div>
       )}
 
-      {/* Cashflow Schedule */}
-      {hasCashflows && (
+      {/* Coupon Payment Schedule */}
+      {couponPeriods.length > 0 && (
+        <div className="bg-fd-darker p-4 rounded-md border border-fd-border">
+          <h3 className="text-fd-green font-semibold mb-3 flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            Coupon Payment Schedule
+            <span className="ml-auto text-sm font-normal text-fd-text-muted">
+              {paidCoupons} of {totalCoupons} paid
+            </span>
+            {recalculating && (
+              <span className="ml-2 text-sm font-normal text-fd-text-muted flex items-center gap-1">
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-fd-green"></div>
+                Recalculating risk...
+              </span>
+            )}
+          </h3>
+          
+          {/* Schedule description */}
+          <div className="mb-3 text-sm text-fd-text-muted italic">
+            {getScheduleDescription()}
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-fd-text">
+              <thead>
+                <tr className="text-left border-b-2 border-fd-border bg-fd-dark">
+                  <th className="py-2 px-3 font-medium">Payment Date</th>
+                  <th className="py-2 px-3 font-medium">Period</th>
+                  <th className="py-2 px-3 font-medium text-right">Days</th>
+                  <th className="py-2 px-3 font-medium text-right">Notional</th>
+                  <th className="py-2 px-3 font-medium text-right">Coupon Amount</th>
+                  <th className="py-2 px-3 font-medium">Status</th>
+                  <th className="py-2 px-3 font-medium text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {couponPeriods.map((period) => (
+                  <tr 
+                    key={period.id} 
+                    className={`border-b border-fd-border hover:bg-fd-dark transition-colors ${period.paid ? 'opacity-60' : ''}`}
+                  >
+                    <td className="py-2 px-3 font-mono">{new Date(period.paymentDate).toLocaleDateString()}</td>
+                    <td className="py-2 px-3 text-fd-text-muted">
+                      {new Date(period.periodStartDate).toLocaleDateString()} → {new Date(period.periodEndDate).toLocaleDateString()}
+                    </td>
+                    <td className="py-2 px-3 font-mono text-right">{period.accrualDays}</td>
+                    <td className="py-2 px-3 font-mono text-right">{formatCurrency(period.notionalAmount, data?.currency)}</td>
+                    <td className="py-2 px-3 font-mono text-right">
+                      {period.couponAmount ? formatCurrency(period.couponAmount, data?.currency) : '-'}
+                    </td>
+                    <td className="py-2 px-3">
+                      {period.paid ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-500/20 text-green-400">
+                          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          Paid
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-500/20 text-yellow-400">
+                          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                          </svg>
+                          Unpaid
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-2 px-3 text-center">
+                      {!period.paid && (
+                        <button
+                          onClick={() => handlePayCoupon(period.id)}
+                          disabled={!canPayCoupon(period) || payingPeriodId === period.id || recalculating}
+                          title={!canPayCoupon(period) ? 'You must pay earlier coupons first' : 'Pay this coupon'}
+                          className="px-3 py-1 text-xs bg-fd-green text-fd-dark rounded font-medium hover:bg-fd-green-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {payingPeriodId === period.id ? (
+                            <span className="flex items-center gap-1">
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-fd-dark"></div>
+                              Paying...
+                            </span>
+                          ) : canPayCoupon(period) ? (
+                            'Pay'
+                          ) : (
+                            '🔒 Locked'
+                          )}
+                        </button>
+                      )}
+                      {period.paid && period.paidAt && (
+                        <span className="text-xs text-fd-text-muted">
+                          {new Date(period.paidAt).toLocaleString()}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="mt-3 text-xs text-fd-text-muted">
+            <p>
+              💡 <strong>Tip:</strong> Coupons must be paid sequentially by payment date. 
+              Only the next unpaid coupon can be paid — earlier coupons must be settled before later ones.
+              Paying a coupon will trigger a risk recalculation.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* No coupon schedule message */}
+      {couponPeriods.length === 0 && data && !loading && (
+        <div className="bg-fd-darker p-4 rounded-md border border-dashed border-fd-border text-center">
+          <svg className="w-12 h-12 text-fd-text-muted mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          <p className="text-fd-text-muted mb-4">
+            No coupon schedule generated for this trade yet.
+          </p>
+          <button
+            onClick={handleGenerateSchedule}
+            disabled={generatingSchedule}
+            className="px-4 py-2 bg-fd-green text-fd-dark rounded font-medium hover:bg-fd-green-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {generatingSchedule ? (
+              <span className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-fd-dark"></div>
+                Generating Schedule...
+              </span>
+            ) : (
+              'Generate Coupon Schedule'
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Cashflow Schedule - Hidden: Merged with Coupon Payment Schedule above */}
+      {/* hasCashflows && (
         <div className="bg-fd-darker p-4 rounded-md border border-fd-border">
           <h3 className="text-fd-green font-semibold mb-3 flex items-center gap-2">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -188,7 +459,7 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId }) => {
           
           <CashflowScheduleTable cashflows={data.cashflows!} />
         </div>
-      )}
+      ) */}
 
       {/* No data message */}
       {!hasCashflows && !hasCDSMetrics && (
