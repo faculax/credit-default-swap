@@ -76,20 +76,14 @@ public class TradeDataService {
                     }
                     
                     // If coupons have been paid, adjust effective date to the end of last paid period
-                    // But ensure we don't go backwards in time - use max(lastPaidEndDate, valuationDate)
+                    // This ensures we only value remaining (unpaid) cashflows
+                    // NOTE: We should NOT adjust the effective date based on the valuation date,
+                    // as that would change the trade's contractual cashflow schedule.
+                    // The valuation date (asofDate in ORE) controls the discount factors, not the schedule.
                     if (hasPaidCoupons && lastPaidEndDate != null) {
                         adjustedEffectiveDate = lastPaidEndDate;
-                        
-                        // If valuation date is provided and is after the last paid date,
-                        // use valuation date to ensure we don't value expired cashflows
-                        if (valuationDate != null && valuationDate.isAfter(lastPaidEndDate)) {
-                            adjustedEffectiveDate = valuationDate;
-                            logger.info("Adjusted effective date to {} (valuation date, as it's after last paid coupon {}) for trade {}", 
-                                adjustedEffectiveDate, lastPaidEndDate, tradeId);
-                        } else {
-                            logger.info("Adjusted effective date to {} (end of last paid coupon) for trade {}", 
-                                adjustedEffectiveDate, tradeId);
-                        }
+                        logger.info("Adjusted effective date to {} (end of last paid coupon) for trade {}", 
+                            adjustedEffectiveDate, tradeId);
                     }
                 }
             } catch (Exception e) {

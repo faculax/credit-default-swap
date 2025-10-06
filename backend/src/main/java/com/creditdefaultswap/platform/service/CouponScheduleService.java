@@ -163,6 +163,43 @@ public class CouponScheduleService {
     }
 
     /**
+     * Unpay/cancel a coupon payment (for demo purposes).
+     * Only allows unpaying the most recently paid coupon.
+     * 
+     * @param periodId The coupon period ID to unpay
+     * @return The updated coupon period
+     */
+    public CouponPeriod unpayCoupon(Long periodId) {
+        CouponPeriod period = couponPeriodRepository.findById(periodId)
+                .orElseThrow(() -> new IllegalArgumentException("Coupon period not found: " + periodId));
+        
+        if (!Boolean.TRUE.equals(period.getPaid())) {
+            throw new IllegalStateException("Coupon period " + periodId + " is not paid");
+        }
+        
+        // Find all paid coupons for this trade
+        List<CouponPeriod> paidCoupons = couponPeriodRepository.findByTradeIdAndPaid(period.getTradeId(), true);
+        
+        // Find the most recently paid coupon by payment date (not paidAt timestamp)
+        // This ensures we unpay the last coupon in the schedule, not the last one clicked
+        CouponPeriod mostRecentlyPaid = paidCoupons.stream()
+                .max((a, b) -> a.getPaymentDate().compareTo(b.getPaymentDate()))
+                .orElse(null);
+        
+        if (mostRecentlyPaid == null || !mostRecentlyPaid.getId().equals(periodId)) {
+            throw new IllegalStateException(
+                "Can only unpay the most recently paid coupon (by payment date). Period " + periodId + 
+                " is not the most recent payment."
+            );
+        }
+        
+        period.setPaid(false);
+        period.setPaidAt(null);
+        
+        return couponPeriodRepository.save(period);
+    }
+
+    /**
      * Find the next payment date based on the premium frequency.
      * For CDS, uses IMM dates (20th of month) for standard frequencies.
      * 

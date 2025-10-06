@@ -19,16 +19,32 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
   const [payingPeriodId, setPayingPeriodId] = useState<number | null>(null);
   const [recalculating, setRecalculating] = useState(false);
   const [generatingSchedule, setGeneratingSchedule] = useState(false);
-  const [valuationDate, setValuationDate] = useState<string>(''); // Empty means "today"
+  const [valuationDate, setValuationDate] = useState<string | undefined>(undefined); // undefined means "today"
+  const [refreshKey, setRefreshKey] = useState(0); // Used to force refresh when clicking same button
 
-  const loadRiskMeasures = async (customValuationDate?: string) => {
+  const loadRiskMeasures = async (customValuationDate?: string, forceRefresh: boolean = false) => {
     if(!tradeId) return;
     setLoading(true);
     try {
-      const dateToUse = customValuationDate || valuationDate || undefined;
+      // When forceRefresh is true, use customValuationDate directly (even if undefined)
+      // Otherwise fall back to state's valuationDate
+      const dateToUse = forceRefresh ? customValuationDate : (customValuationDate || valuationDate);
+      console.log(`🔍 DEBUG loadRiskMeasures called with:`, {
+        customValuationDate,
+        valuationDate,
+        forceRefresh,
+        dateToUse,
+        tradeId,
+        timestamp: new Date().toISOString()
+      });
       console.log(`Loading risk measures for trade ${tradeId} with valuation date: ${dateToUse || 'today'}...`);
       const measures = await fetchRiskMeasures(tradeId, dateToUse);
-      console.log('Risk measures loaded:', { npv: measures.npv, currency: measures.currency, timestamp: measures.valuationTimestamp });
+      console.log('Risk measures loaded:', { 
+        npv: measures.npv, 
+        currency: measures.currency, 
+        timestamp: measures.valuationTimestamp,
+        loadedAt: new Date().toISOString() 
+      });
       setData(measures);
       setError(null);
     } catch (e: any) {
@@ -79,6 +95,32 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
     }
   };
 
+  const handleUnpayCoupon = async (periodId: number) => {
+    setPayingPeriodId(periodId);
+    try {
+      await lifecycleService.unpayCoupon(tradeId, periodId);
+      console.log('Coupon payment cancelled successfully, reloading data...');
+      
+      // Reload coupon periods to reflect cancellation
+      await loadCouponPeriods();
+      
+      // Trigger risk recalculation
+      setRecalculating(true);
+      setData(null);
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      await loadRiskMeasures();
+      console.log('Risk measures reloaded after coupon cancellation');
+      setRecalculating(false);
+    } catch (e: any) {
+      alert('Failed to cancel coupon payment: ' + e.message);
+      setRecalculating(false);
+    } finally {
+      setPayingPeriodId(null);
+    }
+  };
+
   const handleGenerateSchedule = async () => {
     setGeneratingSchedule(true);
     try {
@@ -113,26 +155,39 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
     return target.toISOString().split('T')[0];
   };
 
-  const handleQuickValuationDate = async (option: 'today' | 't+1' | 't+30' | 't+90') => {
-    let newDate = '';
+  const handleQuickValuationDate = async (option: 'today' | 't+1' | 't+7' | 't+45') => {
+    let newDate: string | undefined = undefined;
     
     switch(option) {
       case 'today':
-        newDate = '';
+        newDate = undefined; // undefined means use backend's "today"
         break;
       case 't+1':
         newDate = getBusinessDaysFromToday(1);
         break;
-      case 't+30':
-        newDate = getBusinessDaysFromToday(30);
+      case 't+7':
+        newDate = getBusinessDaysFromToday(7);
         break;
-      case 't+90':
-        newDate = getBusinessDaysFromToday(90);
+      case 't+45':
+        newDate = getBusinessDaysFromToday(45);
         break;
     }
     
+    console.log(`🔍 DEBUG handleQuickValuationDate:`, { option, newDate, currentValuationDate: valuationDate });
+    
+    // Update state first
     setValuationDate(newDate);
-    await loadRiskMeasures(newDate);
+    
+    // Force a fresh fetch by clearing data first
+    setData(null);
+    setLoading(true);
+    setError(null);
+    
+    // Small delay to ensure state updates propagate
+    await new Promise(resolve => setTimeout(resolve, 10));
+    
+    // Now fetch with the new date, passing forceRefresh=true to use newDate directly
+    await loadRiskMeasures(newDate, true);
   };
 
   useEffect(() => {
@@ -181,11 +236,27 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
     return unpaidCoupons.length > 0 ? unpaidCoupons[0] : null;
   };
 
+  // Find the most recently paid coupon (latest payment date among paid coupons)
+  const getMostRecentlyPaidCoupon = (): CouponPeriod | null => {
+    const paidCoupons = couponPeriods
+      .filter(p => p.paid)
+      .sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
+    return paidCoupons.length > 0 ? paidCoupons[0] : null;
+  };
+
   const nextUnpaidCoupon = getNextUnpaidCoupon();
+  const mostRecentlyPaidCoupon = getMostRecentlyPaidCoupon();
+  
   const canPayCoupon = (period: CouponPeriod): boolean => {
     if (period.paid) return false;
     if (!nextUnpaidCoupon) return false;
     return period.id === nextUnpaidCoupon.id;
+  };
+
+  const canUnpayCoupon = (period: CouponPeriod): boolean => {
+    if (!period.paid) return false;
+    if (!mostRecentlyPaidCoupon) return false;
+    return period.id === mostRecentlyPaidCoupon.id;
   };
 
   // Calculate coupon statistics
@@ -260,7 +331,7 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
                 onClick={() => handleQuickValuationDate('today')}
                 disabled={loading || recalculating}
                 className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
-                  valuationDate === '' 
+                  valuationDate === undefined || valuationDate === ''
                     ? 'bg-fd-green text-fd-dark' 
                     : 'bg-fd-dark text-fd-text hover:bg-fd-border'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -279,26 +350,26 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
                 T+1
               </button>
               <button
-                onClick={() => handleQuickValuationDate('t+30')}
+                onClick={() => handleQuickValuationDate('t+7')}
                 disabled={loading || recalculating}
                 className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
-                  valuationDate === getBusinessDaysFromToday(30) 
+                  valuationDate === getBusinessDaysFromToday(7) 
                     ? 'bg-fd-green text-fd-dark' 
                     : 'bg-fd-dark text-fd-text hover:bg-fd-border'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                T+30
+                T+7
               </button>
               <button
-                onClick={() => handleQuickValuationDate('t+90')}
+                onClick={() => handleQuickValuationDate('t+45')}
                 disabled={loading || recalculating}
                 className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
-                  valuationDate === getBusinessDaysFromToday(90) 
+                  valuationDate === getBusinessDaysFromToday(45) 
                     ? 'bg-fd-green text-fd-dark' 
                     : 'bg-fd-dark text-fd-text hover:bg-fd-border'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                T+90
+                T+45
               </button>
             </div>
           </div>
@@ -487,6 +558,37 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
                       )}
                     </td>
                     <td className="py-2 px-3 text-center">
+                      {/* Show Cancel button for the most recently paid coupon */}
+                      {period.paid && canUnpayCoupon(period) && (
+                        <div className="flex flex-col gap-1 items-center">
+                          <button
+                            onClick={() => handleUnpayCoupon(period.id)}
+                            disabled={payingPeriodId === period.id || recalculating}
+                            title="Cancel this payment (for demo)"
+                            className="px-2 py-1 text-xs bg-red-600 text-white rounded font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors w-full"
+                          >
+                            {payingPeriodId === period.id ? (
+                              <span className="flex items-center gap-1 justify-center">
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                              </span>
+                            ) : (
+                              '↩ Cancel Payment'
+                            )}
+                          </button>
+                          <span className="text-xs text-fd-text-muted">
+                            {new Date(period.paidAt!).toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* Show payment timestamp for other paid coupons */}
+                      {period.paid && !canUnpayCoupon(period) && period.paidAt && (
+                        <span className="text-xs text-fd-text-muted">
+                          {new Date(period.paidAt).toLocaleString()}
+                        </span>
+                      )}
+                      
+                      {/* Show payment buttons for unpaid coupons */}
                       {!period.paid && (
                         <div className="flex gap-1 justify-center">
                           <button
@@ -515,11 +617,6 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
                           </button>
                         </div>
                       )}
-                      {period.paid && period.paidAt && (
-                        <span className="text-xs text-fd-text-muted">
-                          {new Date(period.paidAt).toLocaleString()}
-                        </span>
-                      )}
                     </td>
                   </tr>
                 ))}
@@ -536,7 +633,9 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
               <br />
               • <strong>Pay Now:</strong> Marks the coupon as paid today (shows accrued premium if applicable).
               <br />
-              Paying a coupon will trigger a risk recalculation.
+              • <strong>Cancel:</strong> Reverts the most recently paid coupon (for demo purposes only).
+              <br />
+              Paying or canceling a coupon will trigger a risk recalculation.
             </p>
           </div>
         </div>

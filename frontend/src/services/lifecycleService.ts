@@ -49,6 +49,12 @@ export const lifecycleService = {
     });
     return handleResponse<CouponPeriod>(res);
   },
+  async unpayCoupon(tradeId: number, periodId: number): Promise<CouponPeriod> {
+    const res = await fetch(`${API_BASE}/trades/${tradeId}/coupon-periods/${periodId}/unpay`, { 
+      method: 'POST'
+    });
+    return handleResponse<CouponPeriod>(res);
+  },
 
   // Accruals
   async postDailyAccrual(tradeId: number, accrualDate: string): Promise<AccrualEvent> {
