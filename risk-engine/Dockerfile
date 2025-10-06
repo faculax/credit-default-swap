@@ -45,11 +45,14 @@ COPY scripts/verify-ore.sh /app/scripts/verify-ore.sh
 RUN chmod +x /app/scripts/verify-ore.sh || true
 
 # Create ORE configuration directory and working directory
-RUN mkdir -p /app/ore/config /tmp/ore-work/input /tmp/ore-work/output/logs
+RUN mkdir -p /app/ore/config /app/ore/market-data /tmp/ore-work/input /tmp/ore-work/output/logs
 
-# Copy all ORE config files (XML and TXT)
-COPY src/main/resources/ore/*.xml /app/ore/config/
-COPY src/main/resources/ore/*.txt /app/ore/config/
+# Copy ORE config files from ore-setup (same as docker-compose volumes)
+COPY ../ore-setup/config/*.xml /app/ore/config/
+COPY ../ore-setup/config/*.txt /app/ore/config/
+COPY ../ore-setup/market-data/*.txt /app/ore/market-data/
+
+# Fallback: copy src/main/resources if needed for additional files
 COPY src/main/resources/ore/input /tmp/ore-work/input
 
 # Verify ORE installation and find the correct binary path (non-fatal)
