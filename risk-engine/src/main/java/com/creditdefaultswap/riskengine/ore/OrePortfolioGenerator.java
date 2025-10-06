@@ -128,6 +128,7 @@ public class OrePortfolioGenerator {
         private BigDecimal spread;
         private LocalDate maturityDate;
         private LocalDate effectiveDate;
+        private LocalDate firstCouponDate;  // Optional: first unpaid coupon date
         private String currency;
         private String premiumFrequency;
         private String dayCountConvention;
@@ -185,5 +186,8 @@ public class OrePortfolioGenerator {
         
         public String getPaymentCalendar() { return paymentCalendar; }
         public void setPaymentCalendar(String paymentCalendar) { this.paymentCalendar = paymentCalendar; }
+        
+        public LocalDate getFirstCouponDate() { return firstCouponDate; }
+        public void setFirstCouponDate(LocalDate firstCouponDate) { this.firstCouponDate = firstCouponDate; }
     }
 }

@@ -7,7 +7,20 @@ const API_BASE = apiUrl('/lifecycle');
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(`Lifecycle API error ${response.status}: ${text}`);
+    
+    // Try to parse JSON error response for better error messages
+    try {
+      const errorJson = JSON.parse(text);
+      // If there's a detail field (Spring Boot error format), use that
+      if (errorJson.detail) {
+        throw new Error(errorJson.detail);
+      }
+      // Otherwise use the title or fallback to raw text
+      throw new Error(errorJson.title || errorJson.message || text);
+    } catch (parseError) {
+      // If not JSON or parsing fails, use the raw text
+      throw new Error(`Lifecycle API error ${response.status}: ${text}`);
+    }
   }
   return response.json();
 }
@@ -26,6 +39,21 @@ export const lifecycleService = {
     const params = new URLSearchParams({ startDate, endDate });
     const res = await fetch(`${API_BASE}/trades/${tradeId}/coupon-schedule/range?${params.toString()}`);
     return handleResponse<CouponPeriod[]>(res);
+  },
+  async payCoupon(tradeId: number, periodId: number, payOnTime?: boolean): Promise<CouponPeriod> {
+    const requestBody = payOnTime !== undefined ? { payOnTime } : undefined;
+    const res = await fetch(`${API_BASE}/trades/${tradeId}/coupon-periods/${periodId}/pay`, { 
+      method: 'POST',
+      headers: requestBody ? { 'Content-Type': 'application/json' } : {},
+      body: requestBody ? JSON.stringify(requestBody) : undefined
+    });
+    return handleResponse<CouponPeriod>(res);
+  },
+  async unpayCoupon(tradeId: number, periodId: number): Promise<CouponPeriod> {
+    const res = await fetch(`${API_BASE}/trades/${tradeId}/coupon-periods/${periodId}/unpay`, { 
+      method: 'POST'
+    });
+    return handleResponse<CouponPeriod>(res);
   },
 
   // Accruals

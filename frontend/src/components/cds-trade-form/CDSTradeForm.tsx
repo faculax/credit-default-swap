@@ -151,7 +151,7 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
     // Helper function to get random item from array
     const getRandomItem = (array: any[]) => array[Math.floor(Math.random() * array.length)];
     
-    // Helper function to get random date within a range
+    // Helper function to get random date within a range (days offset from today)
     const getRandomDate = (startDays: number, endDays: number) => {
       const start = new Date();
       start.setDate(start.getDate() + startDays);
@@ -162,17 +162,24 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
       return new Date(randomTime).toISOString().split('T')[0];
     };
     
-    // Generate random trade date (today or up to 5 days ago)
-    const tradeDate = getRandomDate(-5, 0);
+    // Generate trades that started in the PAST for demo purposes
+    // This allows demonstrating coupon payments immediately
     
-    // Generate random effective date (1-10 days after trade date)
-    const effectiveDate = getRandomDate(1, 10);
+    // Trade date: 24-48 months ago (2-4 years in the past) for more coupons
+    const tradeDate = getRandomDate(-365 * 4, -365 * 2);
     
-    // Generate random maturity date (1-5 years after effective date)
-    const maturityDate = getRandomDate(365, 365 * 5);
+    // Effective date: 1-7 days after trade date (still in the past)
+    const tradeDateObj = new Date(tradeDate);
+    const effectiveDaysOffset = Math.floor(Math.random() * 7) + 1;
+    const effectiveDateObj = new Date(tradeDateObj);
+    effectiveDateObj.setDate(effectiveDateObj.getDate() + effectiveDaysOffset);
+    const effectiveDate = effectiveDateObj.toISOString().split('T')[0];
     
-    // Generate random accrual start date (same as effective date or 1-2 days after)
-    const accrualStartDate = getRandomDate(1, 3);
+    // Maturity date: 2-5 years from TODAY (in the future)
+    const maturityDate = getRandomDate(365 * 2, 365 * 5);
+    
+    // Accrual start date: same as effective date
+    const accrualStartDate = effectiveDate;
     
     const randomData: Partial<CDSTrade> = {
       referenceEntity: getRandomItem(REFERENCE_ENTITIES).code,
@@ -189,12 +196,8 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
       dayCountConvention: getRandomItem(DAY_COUNT_CONVENTIONS).value,
       restructuringClause: Math.random() > 0.3 ? getRandomItem(RESTRUCTURING_CLAUSES).value : '', // 70% chance of having a clause
       paymentCalendar: getRandomItem(PAYMENT_CALENDARS).value,
-      tradeStatus: getRandomItem(TRADE_STATUSES).value
+      tradeStatus: 'ACTIVE' // Always generate ACTIVE trades for demo purposes
     };
-    // Normalize any legacy statuses
-    if (randomData.tradeStatus === 'SETTLED' || randomData.tradeStatus === 'CONFIRMED') {
-      randomData.tradeStatus = 'ACTIVE';
-    }
     setFormData(randomData);
     setErrors({}); // Clear any existing errors
   };

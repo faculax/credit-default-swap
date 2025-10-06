@@ -62,15 +62,21 @@ public class OreInputBuilder {
             logger.info("Created unique working directories: input={}, output={}", inputDir, outputDir);
             
             // Collect all trade data
+            // Get valuation date first to pass to trade data fetching
+            LocalDate valuationDate = request.getValuationDate() != null ? 
+                request.getValuationDate() : LocalDate.now();
+            
+            logger.info("🔍 DEBUG: Valuation date for ORE calculation: {} (from request: {})", 
+                valuationDate, request.getValuationDate());
+            
             Set<OrePortfolioGenerator.CDSTradeData> allTrades = new HashSet<>();
             for (Long tradeId : request.getTradeIds()) {
-                OrePortfolioGenerator.CDSTradeData tradeData = tradeDataService.fetchCDSTradeData(tradeId);
+                // Pass valuation date to ensure effective date adjustment considers valuation date
+                OrePortfolioGenerator.CDSTradeData tradeData = tradeDataService.fetchCDSTradeData(tradeId, valuationDate);
                 allTrades.add(tradeData);
             }
             
             // Generate dynamic market data based on trades
-            LocalDate valuationDate = request.getValuationDate() != null ? 
-                request.getValuationDate() : LocalDate.now();
             String marketData = marketDataGenerator.generateMarketData(allTrades, valuationDate);
             writeDynamicMarketData(marketData, inputDir);
             
@@ -173,6 +179,8 @@ public class OreInputBuilder {
             xml.append("<ORE>\n");
             xml.append("  <Setup>\n");
             xml.append("    <Parameter name=\"asofDate\">").append(DATE_FORMAT.format(valuationDate)).append("</Parameter>\n");
+            logger.info("🔍 DEBUG: Setting ORE asofDate to: {} (formatted: {})", 
+                valuationDate, DATE_FORMAT.format(valuationDate));
             xml.append("    <Parameter name=\"inputPath\">").append(workDir.resolve("input")).append("</Parameter>\n");
             xml.append("    <Parameter name=\"outputPath\">").append(workDir.resolve("output")).append("</Parameter>\n");
             xml.append("    <Parameter name=\"logFile\">log.txt</Parameter>\n");

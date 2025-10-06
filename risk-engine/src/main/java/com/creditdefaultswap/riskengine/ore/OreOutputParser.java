@@ -136,6 +136,19 @@ public class OreOutputParser {
             riskMeasures.setAccruedPremium(parseBigDecimal(results.get("accruedPremium")));
             riskMeasures.setUpfrontPremium(parseBigDecimal(results.get("upfrontPremium")));
             
+            // Coupon rate (this is the spread/coupon in decimal form on leg 2)
+            logger.debug("Looking for rate[2] in results map. Available keys with 'rate': {}", 
+                results.keySet().stream().filter(k -> k.contains("rate")).collect(java.util.stream.Collectors.toList()));
+            BigDecimal couponRate = parseBigDecimal(results.get("rate[2]"));
+            if (couponRate != null) {
+                // Convert to basis points for display (multiply by 10000)
+                BigDecimal couponBPS = couponRate.multiply(BigDecimal.valueOf(10000));
+                riskMeasures.setCouponLegBPS(couponBPS);
+                logger.info("✅ Parsed Coupon Leg BPS: {} bps (from rate[2]: {})", couponBPS, couponRate);
+            } else {
+                logger.warn("❌ Could not parse rate[2] for coupon leg BPS. Value in map: '{}'", results.get("rate[2]"));
+            }
+            
             // Notional amounts
             riskMeasures.setCurrentNotional(parseBigDecimal(results.get("currentNotional[1]")));
             riskMeasures.setOriginalNotional(parseBigDecimal(results.get("originalNotional[1]")));

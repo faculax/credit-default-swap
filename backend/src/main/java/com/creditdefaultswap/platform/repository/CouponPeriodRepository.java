@@ -13,6 +13,10 @@ public interface CouponPeriodRepository extends JpaRepository<CouponPeriod, Long
     
     List<CouponPeriod> findByTradeIdOrderByPeriodStartDate(Long tradeId);
     
+    List<CouponPeriod> findByTradeIdOrderByPaymentDateAsc(Long tradeId);
+    
+    List<CouponPeriod> findByTradeIdAndPaid(Long tradeId, Boolean paid);
+    
     List<CouponPeriod> findByTradeIdAndPeriodStartDateGreaterThanEqualOrderByPeriodStartDate(
             Long tradeId, LocalDate startDate);
     
