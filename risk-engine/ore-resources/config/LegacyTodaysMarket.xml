@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<TodaysMarket asof="2025-01-02">
+  <Configuration id="default">
+    <Curves>
+      <Curve>
+        <CurveId>USD-Discount</CurveId>
+        <CurveType>Yield</CurveType>
+      </Curve>
+    </Curves>
+    <Loaders>
+      <Loader name="default">
+        <Parameter name="marketFile">market.txt</Parameter>
+        <Parameter name="fixingFile">fixings.txt</Parameter>
+      </Loader>
+    </Loaders>
+  </Configuration>
+</TodaysMarket>

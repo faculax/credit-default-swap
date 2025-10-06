@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2025-01-02</Parameter>
+    <Parameter name="baseCurrency">USD</Parameter>
+    <Parameter name="inputPath">/app/ore/config</Parameter>
+    <Parameter name="outputPath">/tmp/ore-work/output</Parameter>
+    <Parameter name="portfolioFile">Portfolio_empty.xml</Parameter>
+    <Parameter name="logFile">log_ultra_caps.txt</Parameter>
+    <Parameter name="logMask">511</Parameter>
+  </Setup>
+  <Analytics>
+    <Analytic type="NPV">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="outputFileName">npv_ultra_caps.csv</Parameter>
+    </Analytic>
+  </Analytics>
+</ORE>

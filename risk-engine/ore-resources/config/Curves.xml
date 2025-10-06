@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<Curves>
+  <Curve id="ACME_CORP_SPREAD" type="CreditSpread">
+    <CreditCurveId>ACME_CORP</CreditCurveId>
+    <Data>
+      <Point tenor="6M">100</Point>
+      <Point tenor="1Y">110</Point>
+      <Point tenor="2Y">120</Point>
+      <Point tenor="3Y">130</Point>
+      <Point tenor="5Y">140</Point>
+    </Data>
+  </Curve>
+</Curves>

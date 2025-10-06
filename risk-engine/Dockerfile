@@ -47,10 +47,10 @@ RUN chmod +x /app/scripts/verify-ore.sh || true
 # Create ORE configuration directory and working directory
 RUN mkdir -p /app/ore/config /app/ore/market-data /tmp/ore-work/input /tmp/ore-work/output/logs
 
-# Copy ORE config files from ore-setup (same as docker-compose volumes)
-COPY ../ore-setup/config/*.xml /app/ore/config/
-COPY ../ore-setup/config/*.txt /app/ore/config/
-COPY ../ore-setup/market-data/*.txt /app/ore/market-data/
+# Copy ORE config files (these should be in ore-resources directory within risk-engine)
+COPY ore-resources/config/*.xml /app/ore/config/
+COPY ore-resources/config/*.txt /app/ore/config/
+COPY ore-resources/market-data/*.txt /app/ore/market-data/
 
 # Fallback: copy src/main/resources if needed for additional files
 COPY src/main/resources/ore/input /tmp/ore-work/input

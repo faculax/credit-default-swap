@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">20160205</Parameter>
+    <Parameter name="inputPath">/tmp/ore-work/input</Parameter>
+    <Parameter name="outputPath">/tmp/ore-work/output</Parameter>
+    <Parameter name="logFile">/tmp/ore-work/output/logs/log.txt</Parameter>
+    <Parameter name="logMask">31</Parameter>
+    <Parameter name="marketDataFile">/app/ore/config/market_complete.txt</Parameter>
+    <Parameter name="fixingDataFile">/app/ore/market-data/fixings_20160205.txt</Parameter>
+    <Parameter name="implyTodaysFixings">Y</Parameter>
+    <Parameter name="curveConfigFile">/app/ore/config/CurveConfig_complete.xml</Parameter>
+    <Parameter name="conventionsFile">/app/ore/config/Conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">/app/ore/config/Market_complete.xml</Parameter>
+    <Parameter name="pricingEnginesFile">/app/ore/config/pricingengine.xml</Parameter>
+    <Parameter name="portfolioFile">/tmp/ore-work/input/portfolio.xml</Parameter>
+    <Parameter name="observationModel">None</Parameter>
+  </Setup>
+  <Markets>
+    <Parameter name="lgmcalibration">default</Parameter>
+    <Parameter name="fxcalibration">default</Parameter>
+    <Parameter name="pricing">default</Parameter>
+    <Parameter name="simulation">default</Parameter>
+  </Markets>
+  <Analytics>
+    <Analytic type="npv">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="baseCurrency">USD</Parameter>
+      <Parameter name="outputFileName">npv.csv</Parameter>
+    </Analytic>
+    <Analytic type="cashflow">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="outputFileName">flows.csv</Parameter>
+    </Analytic>
+    <Analytic type="curves">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="configuration">default</Parameter>
+      <Parameter name="grid">240,1M</Parameter>
+      <Parameter name="outputFileName">curves.csv</Parameter>
+    </Analytic>
+  </Analytics>
+</ORE>
