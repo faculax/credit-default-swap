@@ -47,10 +47,10 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
     }
   };
 
-  const handlePayCoupon = async (periodId: number) => {
+  const handlePayCoupon = async (periodId: number, payOnTime: boolean = false) => {
     setPayingPeriodId(periodId);
     try {
-      await lifecycleService.payCoupon(tradeId, periodId);
+      await lifecycleService.payCoupon(tradeId, periodId, payOnTime);
       // Reload coupon periods to reflect payment
       await loadCouponPeriods();
       // Trigger risk recalculation
@@ -378,23 +378,32 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
                     </td>
                     <td className="py-2 px-3 text-center">
                       {!period.paid && (
-                        <button
-                          onClick={() => handlePayCoupon(period.id)}
-                          disabled={!canPayCoupon(period) || payingPeriodId === period.id || recalculating}
-                          title={!canPayCoupon(period) ? 'You must pay earlier coupons first' : 'Pay this coupon'}
-                          className="px-3 py-1 text-xs bg-fd-green text-fd-dark rounded font-medium hover:bg-fd-green-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                          {payingPeriodId === period.id ? (
-                            <span className="flex items-center gap-1">
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-fd-dark"></div>
-                              Paying...
-                            </span>
-                          ) : canPayCoupon(period) ? (
-                            'Pay'
-                          ) : (
-                            '🔒 Locked'
-                          )}
-                        </button>
+                        <div className="flex gap-1 justify-center">
+                          <button
+                            onClick={() => handlePayCoupon(period.id, true)}
+                            disabled={!canPayCoupon(period) || payingPeriodId === period.id || recalculating}
+                            title={!canPayCoupon(period) ? 'You must pay earlier coupons first' : 'Pay on the scheduled payment date'}
+                            className="px-2 py-1 text-xs bg-fd-green text-fd-dark rounded font-medium hover:bg-fd-green-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            {payingPeriodId === period.id ? (
+                              <span className="flex items-center gap-1">
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-fd-dark"></div>
+                              </span>
+                            ) : canPayCoupon(period) ? (
+                              'Pay On Time'
+                            ) : (
+                              '🔒 Locked'
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handlePayCoupon(period.id, false)}
+                            disabled={!canPayCoupon(period) || payingPeriodId === period.id || recalculating}
+                            title={!canPayCoupon(period) ? 'You must pay earlier coupons first' : 'Pay now (backdated)'}
+                            className="px-2 py-1 text-xs bg-blue-600 text-white rounded font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            {canPayCoupon(period) ? 'Pay Now' : '🔒'}
+                          </button>
+                        </div>
                       )}
                       {period.paid && period.paidAt && (
                         <span className="text-xs text-fd-text-muted">
@@ -412,6 +421,11 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
             <p>
               💡 <strong>Tip:</strong> Coupons must be paid sequentially by payment date. 
               Only the next unpaid coupon can be paid — earlier coupons must be settled before later ones.
+              <br />
+              • <strong>Pay On Time:</strong> Marks the coupon as paid on its scheduled payment date (no accrued premium).
+              <br />
+              • <strong>Pay Now:</strong> Marks the coupon as paid today (shows accrued premium if applicable).
+              <br />
               Paying a coupon will trigger a risk recalculation.
             </p>
           </div>

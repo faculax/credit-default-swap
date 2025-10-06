@@ -40,8 +40,13 @@ export const lifecycleService = {
     const res = await fetch(`${API_BASE}/trades/${tradeId}/coupon-schedule/range?${params.toString()}`);
     return handleResponse<CouponPeriod[]>(res);
   },
-  async payCoupon(tradeId: number, periodId: number): Promise<CouponPeriod> {
-    const res = await fetch(`${API_BASE}/trades/${tradeId}/coupon-periods/${periodId}/pay`, { method: 'POST' });
+  async payCoupon(tradeId: number, periodId: number, payOnTime?: boolean): Promise<CouponPeriod> {
+    const requestBody = payOnTime !== undefined ? { payOnTime } : undefined;
+    const res = await fetch(`${API_BASE}/trades/${tradeId}/coupon-periods/${periodId}/pay`, { 
+      method: 'POST',
+      headers: requestBody ? { 'Content-Type': 'application/json' } : {},
+      body: requestBody ? JSON.stringify(requestBody) : undefined
+    });
     return handleResponse<CouponPeriod>(res);
   },
 

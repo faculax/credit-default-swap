@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -124,6 +125,17 @@ public class CouponScheduleService {
      * @return The updated coupon period
      */
     public CouponPeriod payCoupon(Long periodId) {
+        return payCoupon(periodId, LocalDateTime.now());
+    }
+
+    /**
+     * Mark a coupon period as paid with a specific payment timestamp.
+     * 
+     * @param periodId The coupon period ID
+     * @param paidAtTimestamp The timestamp when the payment was made
+     * @return The updated coupon period
+     */
+    public CouponPeriod payCoupon(Long periodId, LocalDateTime paidAtTimestamp) {
         CouponPeriod period = couponPeriodRepository.findById(periodId)
                 .orElseThrow(() -> new IllegalArgumentException("Coupon period not found: " + periodId));
         
@@ -131,15 +143,21 @@ public class CouponScheduleService {
             throw new IllegalStateException("Coupon period " + periodId + " has already been paid");
         }
         
-        // Validate that the payment date has passed
-        LocalDate today = LocalDate.now();
-        if (period.getPaymentDate().isAfter(today)) {
+        // Validate that the payment timestamp is not in the future
+        LocalDateTime now = LocalDateTime.now();
+        if (paidAtTimestamp.isAfter(now)) {
+            throw new IllegalStateException("Cannot pay coupon with future timestamp: " + paidAtTimestamp);
+        }
+        
+        // For "pay on time" scenario, validate we're not before the scheduled payment date
+        LocalDate paidAtDate = paidAtTimestamp.toLocalDate();
+        if (paidAtDate.isBefore(period.getPaymentDate())) {
             throw new IllegalStateException("Cannot pay coupon period " + periodId + 
-                " - payment date " + period.getPaymentDate() + " is in the future (today: " + today + ")");
+                " before its payment date " + period.getPaymentDate() + " (paid at: " + paidAtDate + ")");
         }
         
         period.setPaid(true);
-        period.setPaidAt(LocalDateTime.now());
+        period.setPaidAt(paidAtTimestamp);
         
         return couponPeriodRepository.save(period);
     }
@@ -295,5 +313,54 @@ public class CouponScheduleService {
             date = date.plusDays(1);
         }
         return date;
+    }
+
+    /**
+     * Calculate the current accrued premium for a trade.
+     * This is the premium that has accrued from the last paid coupon date (or trade start) to today.
+     *  
+     * @param tradeId The trade ID
+     * @return The accrued premium amount, or zero if no accrual
+     */
+    public BigDecimal calculateCurrentAccruedPremium(Long tradeId) {
+        CDSTrade trade = cdsTradeRepository.findById(tradeId)
+                .orElseThrow(() -> new IllegalArgumentException("Trade not found: " + tradeId));
+        
+        LocalDate today = LocalDate.now();
+        
+        // Find the last paid coupon
+        List<CouponPeriod> allPeriods = couponPeriodRepository.findByTradeIdOrderByPaymentDateAsc(tradeId);
+        
+        LocalDate accrualStartDate = trade.getTradeDate(); // Default to trade start
+        
+        // Find the most recent paid coupon
+        for (int i = allPeriods.size() - 1; i >= 0; i--) {
+            CouponPeriod period = allPeriods.get(i);
+            if (Boolean.TRUE.equals(period.getPaid())) {
+                accrualStartDate = period.getPaymentDate();
+                break;
+            }
+        }
+        
+        // If today is before or on the accrual start, no accrual
+        if (!today.isAfter(accrualStartDate)) {
+            return BigDecimal.ZERO;
+        }
+        
+        // Calculate accrued days using ACT/360
+        long accrualDays = ChronoUnit.DAYS.between(accrualStartDate, today);
+        
+        // Calculate accrued premium
+        // Formula: Notional * Spread * (Days / 360)
+        BigDecimal notional = trade.getNotionalAmount();
+        BigDecimal spread = trade.getSpread().divide(new BigDecimal("10000"), 10, RoundingMode.HALF_UP); // Convert bps to decimal
+        BigDecimal dayCountFraction = new BigDecimal(accrualDays).divide(new BigDecimal("360"), 10, RoundingMode.HALF_UP);
+        
+        BigDecimal accruedPremium = notional
+                .multiply(spread)
+                .multiply(dayCountFraction)
+                .setScale(2, RoundingMode.HALF_UP);
+        
+        return accruedPremium;
     }
 }

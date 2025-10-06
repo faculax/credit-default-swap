@@ -2,7 +2,9 @@ package com.creditdefaultswap.platform.controller;
 
 import com.creditdefaultswap.platform.dto.AmendTradeRequest;
 import com.creditdefaultswap.platform.dto.NotionalAdjustmentRequest;
+import com.creditdefaultswap.platform.dto.PayCouponRequest;
 import com.creditdefaultswap.platform.model.*;
+import com.creditdefaultswap.platform.repository.CouponPeriodRepository;
 import com.creditdefaultswap.platform.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -11,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +28,9 @@ public class LifecycleController {
 
     @Autowired
     private CouponScheduleService couponScheduleService;
+
+    @Autowired
+    private CouponPeriodRepository couponPeriodRepository;
 
     @Autowired
     private AccrualService accrualService;
@@ -60,8 +67,25 @@ public class LifecycleController {
     @PostMapping("/trades/{tradeId}/coupon-periods/{periodId}/pay")
     public ResponseEntity<CouponPeriod> payCoupon(
             @PathVariable Long tradeId,
-            @PathVariable Long periodId) {
-        CouponPeriod paidPeriod = couponScheduleService.payCoupon(periodId);
+            @PathVariable Long periodId,
+            @RequestBody(required = false) PayCouponRequest request) {
+        
+        LocalDateTime paymentTimestamp;
+        
+        if (request != null && Boolean.TRUE.equals(request.getPayOnTime())) {
+            // Pay "on time" - use the scheduled payment date at noon
+            CouponPeriod period = couponPeriodRepository.findById(periodId)
+                    .orElseThrow(() -> new IllegalArgumentException("Coupon period not found: " + periodId));
+            paymentTimestamp = LocalDateTime.of(period.getPaymentDate(), LocalTime.NOON);
+        } else if (request != null && request.getCustomPaymentTimestamp() != null) {
+            // Custom payment timestamp (for backdating)
+            paymentTimestamp = request.getCustomPaymentTimestamp();
+        } else {
+            // Default: pay "now"
+            paymentTimestamp = LocalDateTime.now();
+        }
+        
+        CouponPeriod paidPeriod = couponScheduleService.payCoupon(periodId, paymentTimestamp);
         return ResponseEntity.ok(paidPeriod);
     }
 
@@ -186,5 +210,23 @@ public class LifecycleController {
                 "notionalAdjustments", notionalAdjustmentService.getNotionalAdjustments(tradeId).size()
         );
         return ResponseEntity.ok(summary);
+    }
+
+    /**
+     * Enrichment endpoint for risk-engine to call and get platform-specific metrics
+     * like accrued premium based on actual payment history
+     */
+    @GetMapping("/trades/{tradeId}/enrichment")
+    public ResponseEntity<Map<String, Object>> getEnrichmentData(@PathVariable Long tradeId) {
+        BigDecimal accruedPremium = couponScheduleService.calculateCurrentAccruedPremium(tradeId);
+        
+        // Count paid coupons
+        long totalPaidCoupons = couponPeriodRepository.findByTradeIdAndPaid(tradeId, true).size();
+        
+        Map<String, Object> enrichmentData = Map.of(
+                "accruedPremium", accruedPremium,
+                "totalPaidCoupons", totalPaidCoupons
+        );
+        return ResponseEntity.ok(enrichmentData);
     }
 }

@@ -44,5 +44,9 @@ nav:
 cds:
   default-recovery-rate: 0.40 # 40% default recovery rate for cash settlements
 
+risk:
+  engine:
+    url: http://risk-engine:8082
+
 server:
   port: 8080
