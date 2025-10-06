@@ -19,15 +19,20 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
   const [payingPeriodId, setPayingPeriodId] = useState<number | null>(null);
   const [recalculating, setRecalculating] = useState(false);
   const [generatingSchedule, setGeneratingSchedule] = useState(false);
+  const [valuationDate, setValuationDate] = useState<string>(''); // Empty means "today"
 
-  const loadRiskMeasures = async () => {
+  const loadRiskMeasures = async (customValuationDate?: string) => {
     if(!tradeId) return;
     setLoading(true);
     try {
-      const measures = await fetchRiskMeasures(tradeId);
+      const dateToUse = customValuationDate || valuationDate || undefined;
+      console.log(`Loading risk measures for trade ${tradeId} with valuation date: ${dateToUse || 'today'}...`);
+      const measures = await fetchRiskMeasures(tradeId, dateToUse);
+      console.log('Risk measures loaded:', { npv: measures.npv, currency: measures.currency, timestamp: measures.valuationTimestamp });
       setData(measures);
       setError(null);
     } catch (e: any) {
+      console.error('Failed to load risk measures:', e);
       setError(e.message);
     } finally {
       setLoading(false);
@@ -51,11 +56,20 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
     setPayingPeriodId(periodId);
     try {
       await lifecycleService.payCoupon(tradeId, periodId, payOnTime);
+      console.log('Coupon paid successfully, reloading data...');
+      
       // Reload coupon periods to reflect payment
       await loadCouponPeriods();
-      // Trigger risk recalculation
+      
+      // Trigger risk recalculation - CRITICAL: Clear old data first to force re-render
       setRecalculating(true);
+      setData(null); // Force clear to ensure React detects the change
+      
+      // Wait a bit to ensure backend has processed the payment
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       await loadRiskMeasures();
+      console.log('Risk measures reloaded after coupon payment');
       setRecalculating(false);
     } catch (e: any) {
       alert('Failed to pay coupon: ' + e.message);
@@ -76,6 +90,49 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
     } finally {
       setGeneratingSchedule(false);
     }
+  };
+
+  // Helper function to calculate business days offset (simplified - assumes no holidays)
+  const getBusinessDaysFromToday = (days: number): string => {
+    const today = new Date();
+    const target = new Date(today);
+    
+    let addedDays = 0;
+    let daysToAdd = days;
+    
+    while (daysToAdd > 0) {
+      target.setDate(target.getDate() + 1);
+      const dayOfWeek = target.getDay();
+      // Skip weekends (0 = Sunday, 6 = Saturday)
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        addedDays++;
+        daysToAdd--;
+      }
+    }
+    
+    return target.toISOString().split('T')[0];
+  };
+
+  const handleQuickValuationDate = async (option: 'today' | 't+1' | 't+30' | 't+90') => {
+    let newDate = '';
+    
+    switch(option) {
+      case 'today':
+        newDate = '';
+        break;
+      case 't+1':
+        newDate = getBusinessDaysFromToday(1);
+        break;
+      case 't+30':
+        newDate = getBusinessDaysFromToday(30);
+        break;
+      case 't+90':
+        newDate = getBusinessDaysFromToday(90);
+        break;
+    }
+    
+    setValuationDate(newDate);
+    await loadRiskMeasures(newDate);
   };
 
   useEffect(() => {
@@ -187,12 +244,65 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
     <div className="space-y-6">
       {/* Core ORE Valuation */}
       <div className="bg-fd-darker p-4 rounded-md border border-fd-border">
-        <h3 className="text-fd-green font-semibold mb-3 flex items-center gap-2">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-          </svg>
-          ORE Valuation
-        </h3>
+        <div className="flex justify-between items-start mb-3">
+          <h3 className="text-fd-green font-semibold flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+            </svg>
+            ORE Valuation
+          </h3>
+          
+          {/* Valuation Date Quick Selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-fd-text-muted">Valuation Date:</span>
+            <div className="flex gap-1">
+              <button
+                onClick={() => handleQuickValuationDate('today')}
+                disabled={loading || recalculating}
+                className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
+                  valuationDate === '' 
+                    ? 'bg-fd-green text-fd-dark' 
+                    : 'bg-fd-dark text-fd-text hover:bg-fd-border'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                Today
+              </button>
+              <button
+                onClick={() => handleQuickValuationDate('t+1')}
+                disabled={loading || recalculating}
+                className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
+                  valuationDate === getBusinessDaysFromToday(1) 
+                    ? 'bg-fd-green text-fd-dark' 
+                    : 'bg-fd-dark text-fd-text hover:bg-fd-border'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                T+1
+              </button>
+              <button
+                onClick={() => handleQuickValuationDate('t+30')}
+                disabled={loading || recalculating}
+                className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
+                  valuationDate === getBusinessDaysFromToday(30) 
+                    ? 'bg-fd-green text-fd-dark' 
+                    : 'bg-fd-dark text-fd-text hover:bg-fd-border'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                T+30
+              </button>
+              <button
+                onClick={() => handleQuickValuationDate('t+90')}
+                disabled={loading || recalculating}
+                className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
+                  valuationDate === getBusinessDaysFromToday(90) 
+                    ? 'bg-fd-green text-fd-dark' 
+                    : 'bg-fd-dark text-fd-text hover:bg-fd-border'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                T+90
+              </button>
+            </div>
+          </div>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-fd-dark rounded p-3">

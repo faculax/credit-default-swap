@@ -31,7 +31,18 @@ public class TradeDataService {
      * Throws exception if trade data cannot be retrieved
      */
     public OrePortfolioGenerator.CDSTradeData fetchCDSTradeData(Long tradeId) {
-        logger.debug("Fetching CDS trade data for trade ID: {}", tradeId);
+        return fetchCDSTradeData(tradeId, null);
+    }
+    
+    /**
+     * Fetches CDS trade data from the backend service with valuation date awareness
+     * Throws exception if trade data cannot be retrieved
+     * 
+     * @param tradeId The trade ID to fetch
+     * @param valuationDate The valuation date (used to ensure effective date doesn't go backwards in time)
+     */
+    public OrePortfolioGenerator.CDSTradeData fetchCDSTradeData(Long tradeId, LocalDate valuationDate) {
+        logger.debug("Fetching CDS trade data for trade ID: {} with valuation date: {}", tradeId, valuationDate);
         
         String url = backendBaseUrl + "/api/cds-trades/" + tradeId;
         
@@ -65,11 +76,20 @@ public class TradeDataService {
                     }
                     
                     // If coupons have been paid, adjust effective date to the end of last paid period
-                    // This ensures the schedule only includes future cashflows
+                    // But ensure we don't go backwards in time - use max(lastPaidEndDate, valuationDate)
                     if (hasPaidCoupons && lastPaidEndDate != null) {
                         adjustedEffectiveDate = lastPaidEndDate;
-                        logger.info("Adjusted effective date to {} (end of last paid coupon) for trade {}", 
-                            adjustedEffectiveDate, tradeId);
+                        
+                        // If valuation date is provided and is after the last paid date,
+                        // use valuation date to ensure we don't value expired cashflows
+                        if (valuationDate != null && valuationDate.isAfter(lastPaidEndDate)) {
+                            adjustedEffectiveDate = valuationDate;
+                            logger.info("Adjusted effective date to {} (valuation date, as it's after last paid coupon {}) for trade {}", 
+                                adjustedEffectiveDate, lastPaidEndDate, tradeId);
+                        } else {
+                            logger.info("Adjusted effective date to {} (end of last paid coupon) for trade {}", 
+                                adjustedEffectiveDate, tradeId);
+                        }
                     }
                 }
             } catch (Exception e) {

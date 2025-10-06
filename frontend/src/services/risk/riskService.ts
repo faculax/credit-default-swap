@@ -2,12 +2,12 @@ import { RiskMeasures, ScenarioResponse } from './riskTypes';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8081/api';
 
-export async function fetchRiskMeasures(tradeId: number): Promise<RiskMeasures> {
+export async function fetchRiskMeasures(tradeId: number, valuationDate?: string): Promise<RiskMeasures> {
   // Use the ORE calculation endpoint instead of legacy endpoint
   const scenarioRequest = {
     scenarioId: `cds-${tradeId}-base`,
     tradeIds: [tradeId],
-    valuationDate: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
+    valuationDate: valuationDate || new Date().toISOString().split('T')[0], // Custom date or today's date in YYYY-MM-DD format
     scenarios: {} // Empty scenarios for base calculation
   };
 

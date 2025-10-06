@@ -60,6 +60,10 @@ public class RiskCalculationService {
         // Build ORE input XML and get working directory path
         String workingDirPath = oreInputBuilder.buildRiskCalculationInput(request);
         
+        // Get valuation date from request (defaults to today if not provided)
+        java.time.LocalDate valuationDate = request.getValuationDate() != null ? 
+            request.getValuationDate() : java.time.LocalDate.now();
+        
         // Execute ORE calculation in batch mode - throw exception on failure
         return oreProcessManager.executeCalculation(workingDirPath)
             .thenApply(oreOutput -> {
@@ -72,8 +76,8 @@ public class RiskCalculationService {
                 // Parse ORE output for each trade with correct currency
                 return request.getTradeIds().stream()
                     .map(tradeId -> {
-                        // Get trade data to extract currency
-                        var tradeData = tradeDataService.fetchCDSTradeData(tradeId);
+                        // Get trade data to extract currency, passing valuation date for proper effective date adjustment
+                        var tradeData = tradeDataService.fetchCDSTradeData(tradeId, valuationDate);
                         String tradeCurrency = tradeData.getCurrency();
                         return oreOutputParser.parseRiskMeasures(oreOutput, tradeId, tradeCurrency, workingDirPath);
                     })
