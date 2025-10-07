@@ -14,6 +14,9 @@ public interface CdsPortfolioConstituentRepository extends JpaRepository<CdsPort
     @Query("SELECT c FROM CdsPortfolioConstituent c WHERE c.portfolio.id = ?1 AND c.active = true")
     List<CdsPortfolioConstituent> findActiveByPortfolioId(Long portfolioId);
     
+    @Query("SELECT c FROM CdsPortfolioConstituent c WHERE c.portfolio.id = ?1 AND c.active = true")
+    List<CdsPortfolioConstituent> findByPortfolioIdAndActiveTrue(Long portfolioId);
+    
     @Query("SELECT c FROM CdsPortfolioConstituent c WHERE c.portfolio.id = ?1 AND c.trade.id = ?2")
     Optional<CdsPortfolioConstituent> findByPortfolioIdAndTradeId(Long portfolioId, Long tradeId);
     

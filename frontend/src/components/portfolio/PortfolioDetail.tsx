@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { portfolioService, CdsPortfolio, CdsPortfolioConstituent, PortfolioPricingResponse } from '../../services/portfolioService';
 import { cdsTradeService, CDSTradeResponse } from '../../services/cdsTradeService';
 import AttachTradesModal from './AttachTradesModal';
+import SimulationPanel from './simulation/SimulationPanel';
 
 interface PortfolioDetailProps {
   portfolioId: number;
@@ -15,7 +16,7 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
   const [loading, setLoading] = useState(true);
   const [pricingLoading, setPricingLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'constituents' | 'concentration'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'constituents' | 'concentration' | 'simulation'>('overview');
   const [showAttachModal, setShowAttachModal] = useState(false);
   const [valuationDate, setValuationDate] = useState<string>('');
 
@@ -299,6 +300,16 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
             >
               Concentration
             </button>
+            <button
+              onClick={() => setActiveTab('simulation')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'simulation'
+                  ? 'border-fd-green text-fd-green'
+                  : 'border-transparent text-fd-text-muted hover:text-fd-text hover:border-fd-border'
+              }`}
+            >
+              Monte Carlo Simulation
+            </button>
           </nav>
         </div>
 
@@ -498,6 +509,10 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
               </div>
             )}
           </div>
+        )}
+
+        {activeTab === 'simulation' && (
+          <SimulationPanel portfolioId={portfolioId} />
         )}
       </div>
       </div>
