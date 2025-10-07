@@ -5,3 +5,4 @@ backend/target/
 gateway/target/
 risk-engine/target/
 .vscode/
+.DS_Store
