@@ -113,7 +113,7 @@ public class CouponPeriod {
     /**
      * Calculate coupon amount: notional × spread × (accrualDays / 360)
      * 
-     * @param spread The CDS spread (in decimal, e.g., 0.05 for 500bps)
+     * @param spread The CDS spread (in basis points, e.g., 500 for 500bps or 5%)
      * @return The coupon amount
      */
     public BigDecimal calculateCouponAmount(BigDecimal spread) {
@@ -121,9 +121,14 @@ public class CouponPeriod {
             return BigDecimal.ZERO;
         }
         
+        // Convert spread from basis points to decimal (e.g., 500 bps -> 0.05)
+        BigDecimal spreadDecimal = spread.compareTo(BigDecimal.ONE) > 0 
+            ? spread.divide(new BigDecimal("10000"), 10, java.math.RoundingMode.HALF_UP)
+            : spread;
+        
         // For ACT/360: coupon = notional × spread × (days / 360)
         BigDecimal dayCountFactor = new BigDecimal(accrualDays).divide(new BigDecimal("360"), 10, java.math.RoundingMode.HALF_UP);
-        BigDecimal amount = notionalAmount.multiply(spread).multiply(dayCountFactor);
+        BigDecimal amount = notionalAmount.multiply(spreadDecimal).multiply(dayCountFactor);
         
         this.couponAmount = amount.setScale(2, java.math.RoundingMode.HALF_UP);
         return this.couponAmount;
