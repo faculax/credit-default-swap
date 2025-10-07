@@ -19,6 +19,183 @@ Current risk outputs are linear sums. They ignore:
 | 4 | Add recovery scenario & stochastic recovery option (phase B) | Wider tail modeling optional toggle |
 | 5 | Expose simulation via REST & UI | User-triggered run with progress & downloadable results |
 
+## 3.1 User Stories (Backlog)
+
+### Phase A – Core Correlated Simulation
+
+**US-13-01 Run Correlated Simulation**  
+As a Risk Analyst, I want to trigger a correlated Monte Carlo simulation for a selected portfolio with configurable paths, horizons, and correlation model so that I can see joint default risk metrics.  
+Acceptance Criteria:
+- POST `/api/credit-simulation/portfolio/{id}` accepts payload schema 6.1.
+- Returns runId immediately (202 Accepted or 200 with status=QUEUED).
+- Run status retrievable via GET endpoint until COMPLETE or FAILED.
+
+**US-13-02 View Run Progress**  
+As a Risk Analyst, I want to see simulation status (queued, running, complete, failed, canceled) so that I know when results are ready.  
+Acceptance Criteria:
+- Status transitions exposed in GET response.
+- UI auto-polls until terminal state.
+- Failed state includes error message (non-stacktrace user safe).
+
+**US-13-03 Retrieve Portfolio Metrics**  
+As a Risk Analyst, I want per-horizon EL, VaR95, VaR99, ES97.5, pAnyDefault, expected defaults so that I can assess tail risk.  
+Acceptance Criteria:
+- Metrics present for every requested horizon.
+- pAnyDefault and EL are non-decreasing with tenor (allow minor MC noise tolerance).
+- VaR and ES computed from empirical distribution (no parametric assumption).
+
+**US-13-04 Diversification Benefit**  
+As a Risk Analyst, I want to see diversification benefit percentage so that I can quantify correlation impact on expected loss.  
+Acceptance Criteria:
+- `benefitPct = (Σ standalone EL - portfolio EL)/Σ standalone EL` rounded to 0.1%.
+- If single name, benefitPct = 0.0%.
+- With β=0 for all names benefitPct within ±1% of 0 (MC noise).
+
+**US-13-05 Contributors Table**  
+As a Risk Analyst, I want a contributors table listing each entity’s marginal EL% and β so that I can identify main drivers.  
+Acceptance Criteria:
+- `marginalELPct` sums to 100% ±1%.
+- β shown matches input (after overrides).
+- Sorted descending by `marginalELPct`.
+
+**US-13-06 Deterministic Recovery Support**  
+As a Quant, I want constant recovery applied in loss generation so that Phase A results align with existing assumptions.  
+Acceptance Criteria:
+- Recovery taken from trade static (or default config).
+- `LGD = 1 - recovery`.
+- Recovery uniform across paths in Phase A.
+
+**US-13-07 JSON Download**  
+As a Risk Analyst, I want to download the full simulation results JSON so that I can archive and audit runs.  
+Acceptance Criteria:
+- Download button provides exact GET payload.
+- Includes original request parameters snapshot.
+
+**US-13-08 Reproducibility via Seed**  
+As a Quant, I want to supply a random seed so that runs are reproducible for validation.  
+Acceptance Criteria:
+- Same seed + identical inputs ⇒ identical aggregated metrics (bit-for-bit within float rounding).
+- Omitted seed generates random seed returned in results.
+
+**US-13-09 Input Validation**  
+As a User, I want validation errors before a run starts so that I avoid long failed jobs.  
+Acceptance Criteria:
+- Reject paths <=0 or > configured max.
+- Reject empty horizons.
+- Reject invalid β overrides (<0 or >0.95).
+- Return 400 with field-level messages.
+
+**US-13-10 Performance Baseline**  
+As a Platform Engineer, I want a 20k-path simulation (10 names, 3 horizons) to finish under target latency so that UI remains responsive.  
+Acceptance Criteria:
+- Document measured median runtime (target placeholder baseline).
+- Parallelization flag enabled without changing numeric results.
+
+**US-13-11 Metrics Glossary Modal**  
+As a New User, I want a glossary explaining EL, VaR, ES, diversification so that I can interpret metrics.  
+Acceptance Criteria:
+- Modal accessible from simulation tab.
+- Content matches section 20 glossary terms.
+
+**US-13-12 Cancel Running Simulation**  
+As a Risk Analyst, I want to cancel an in-progress simulation so that I can free resources after changing my mind.  
+Acceptance Criteria:
+- DELETE endpoint sets status=CANCELED.
+- Partial data not returned once canceled.
+
+### Phase B – Stochastic Recovery
+
+**US-13-13 Enable Stochastic Recovery**  
+As a Risk Analyst, I want to toggle stochastic recovery so that I can assess tail sensitivity.  
+Acceptance Criteria:
+- Toggle adds `stochasticRecovery.enabled=true` to request.
+- When false behavior identical to Phase A.
+
+**US-13-14 Configure Recovery Distribution**  
+As a Quant, I want to choose Beta recovery parameters so that loss tails reflect variability.  
+Acceptance Criteria:
+- `distribution.type=BETA` requires alpha,beta >0.
+- Mean & stdev of sampled recoveries reported per horizon (or portfolio-level) in response.
+
+**US-13-15 Factor-Recovery Correlation**  
+As a Quant, I want to set correlation between systemic factor and recovery so that stress dependence is modeled.  
+Acceptance Criteria:
+- `corrWithFactor` in [-0.5, 0.5].
+- Negative correlation increases ES (statistically verifiable in test with fixed seed).
+
+**US-13-16 Extended Contributors (Recovery Stats)**  
+As a Risk Analyst, I want per-name mean recovery when stochastic recovery is enabled so that I can explain LGD shifts.  
+Acceptance Criteria:
+- `contributors[]` includes `recovery.mean`, `recovery.stdev` when enabled.
+- Not present (or null) when disabled.
+
+### Cross-Cutting
+
+**US-13-17 Error Handling**  
+As a User, I want clear error messages for invalid model config so that I can correct inputs quickly.  
+Acceptance Criteria:
+- JSON: `{ "errorCode": "...", "message": "...", "fields": {...} }`.
+
+**US-13-18 Audit Trail (Optional Phase A+)**  
+As a Compliance Officer, I want persisted run metadata so that I can reconstruct risk reports.  
+Acceptance Criteria:
+- Persist request payload, runtime stats, version hash.
+- Retrieval endpoint lists past runs filtered by date.
+
+**US-13-19 Security & Resource Limits**  
+As a Platform Engineer, I want guardrails on simulation size so that infrastructure remains stable.  
+Acceptance Criteria:
+- Max paths configurable (reject above threshold with 400).
+- Per-path raw outputs disabled unless `includePerPath=true`.
+- Hard timeout yields FAILED with errorCode=TIMEOUT.
+
+**US-13-20 Determinism Test Harness**  
+As a Quant, I want a harness to compare two seeds or configs so that I can validate stability across releases.  
+Acceptance Criteria:
+- CLI or test logs relative drift of EL & VaR (< specified tolerance) across code changes.
+- Fails build if drift exceeds threshold.
+
+**US-13-21 Monotonicity & Consistency Checks**  
+As a Quant, I want automatic checks (EL, pAnyDefault non-decreasing with horizon) so that I catch data or interpolation regressions.  
+Acceptance Criteria:
+- Post-run validation block sets status=FAILED if violated beyond tolerance.
+
+**US-13-22 Observability / Metrics**  
+As an SRE, I want runtime metrics (paths/sec, queue wait) so that I can tune performance.  
+Acceptance Criteria:
+- Expose Prometheus counters & histograms (if infra ready) or log structured metrics.
+
+**US-13-23 UI Parameter Persistence**  
+As a User, I want my last simulation parameters pre-filled so that I can iterate faster.  
+Acceptance Criteria:
+- Local storage (frontend) remembers last successful run config.
+
+**US-13-24 Accessibility & Responsiveness**  
+As a User, I want the simulation tab to be keyboard navigable and responsive so that it’s usable across devices.  
+Acceptance Criteria:
+- Tab order logical; charts have ARIA labels.
+- Layout adapts to 1280px and 1920px without overflow.
+
+**US-13-25 Documentation & Glossary Sync**  
+As a New Team Member, I want README stories and glossary aligned with UI help modal so that terminology is consistent.  
+Acceptance Criteria:
+- Glossary modal content sourced from a single markdown snippet or JSON to avoid drift.
+
+**US-13-26 Cancellation Robustness**  
+As a Platform Engineer, I want cancellation to free memory promptly so that large abandoned runs don’t degrade throughput.  
+Acceptance Criteria:
+- Cancellation interrupts path loop batch boundary (< 1s average delay).
+- Memory footprint returns near baseline (monitored in test harness).
+
+**US-13-27 Scaling to Multi-Portfolio (Future)**  
+As a Risk Analyst, I want (future) ability to queue multiple portfolio runs so that I can batch daily risk.  
+Acceptance Criteria:
+- Placeholder story; out of scope Phase A/B (tracked for dependency planning).
+
+---
+
+> NOTE: Story numbering continues sequentially; future Phase C (structured products) will begin at US-13-30+ to avoid renumbering.
+
 ## 4. Phasing
 | Phase | Scope |
 |-------|-------|
