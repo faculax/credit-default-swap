@@ -46,6 +46,24 @@ public class PortfolioRiskCache {
     @Column(name = "jtd", precision = 18, scale = 4)
     private BigDecimal jtd;
     
+    @Column(name = "total_notional", precision = 20, scale = 4)
+    private BigDecimal totalNotional;
+    
+    @Column(name = "upfront_premium", precision = 18, scale = 4)
+    private BigDecimal upfrontPremium;
+    
+    @Column(name = "total_paid_coupons", precision = 18, scale = 4)
+    private BigDecimal totalPaidCoupons;
+    
+    @Column(name = "trade_count")
+    private Integer tradeCount;
+    
+    @Column(name = "net_protection_bought", precision = 20, scale = 4)
+    private BigDecimal netProtectionBought;
+    
+    @Column(name = "average_maturity_years", length = 20)
+    private String averageMaturityYears;
+    
     @Column(name = "top_5_pct_cs01", precision = 10, scale = 4)
     private BigDecimal top5PctCs01;
     
@@ -206,5 +224,53 @@ public class PortfolioRiskCache {
     
     public void setCalculatedAt(LocalDateTime calculatedAt) {
         this.calculatedAt = calculatedAt;
+    }
+    
+    public BigDecimal getTotalNotional() {
+        return totalNotional;
+    }
+    
+    public void setTotalNotional(BigDecimal totalNotional) {
+        this.totalNotional = totalNotional;
+    }
+    
+    public BigDecimal getUpfrontPremium() {
+        return upfrontPremium;
+    }
+    
+    public void setUpfrontPremium(BigDecimal upfrontPremium) {
+        this.upfrontPremium = upfrontPremium;
+    }
+    
+    public BigDecimal getTotalPaidCoupons() {
+        return totalPaidCoupons;
+    }
+    
+    public void setTotalPaidCoupons(BigDecimal totalPaidCoupons) {
+        this.totalPaidCoupons = totalPaidCoupons;
+    }
+    
+    public Integer getTradeCount() {
+        return tradeCount;
+    }
+    
+    public void setTradeCount(Integer tradeCount) {
+        this.tradeCount = tradeCount;
+    }
+    
+    public BigDecimal getNetProtectionBought() {
+        return netProtectionBought;
+    }
+    
+    public void setNetProtectionBought(BigDecimal netProtectionBought) {
+        this.netProtectionBought = netProtectionBought;
+    }
+    
+    public String getAverageMaturityYears() {
+        return averageMaturityYears;
+    }
+    
+    public void setAverageMaturityYears(String averageMaturityYears) {
+        this.averageMaturityYears = averageMaturityYears;
     }
 }

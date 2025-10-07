@@ -17,6 +17,7 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'constituents' | 'concentration'>('overview');
   const [showAttachModal, setShowAttachModal] = useState(false);
+  const [valuationDate, setValuationDate] = useState<string>('');
 
   useEffect(() => {
     loadPortfolioData();
@@ -39,6 +40,7 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
       try {
         const cachedRisk = await portfolioService.getRiskSummary(portfolioId);
         setRiskSummary(cachedRisk);
+        setValuationDate(cachedRisk.valuationDate);
       } catch (err) {
         // No cached risk available, that's okay
         console.log('No cached risk summary available');
@@ -52,12 +54,49 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
     }
   };
 
-  const handlePriceNow = async () => {
+  const getBusinessDaysFromToday = (days: number): string => {
+    const today = new Date();
+    const target = new Date(today);
+    let addedDays = 0;
+    
+    while (addedDays < days) {
+      target.setDate(target.getDate() + 1);
+      const dayOfWeek = target.getDay();
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        addedDays++;
+      }
+    }
+    
+    return target.toISOString().split('T')[0];
+  };
+
+  const handleQuickValuationDate = async (option: 'today' | 't+1' | 't+7' | 't+45') => {
+    let newDate: string;
+    
+    switch(option) {
+      case 'today':
+        newDate = new Date().toISOString().split('T')[0];
+        break;
+      case 't+1':
+        newDate = getBusinessDaysFromToday(1);
+        break;
+      case 't+7':
+        newDate = getBusinessDaysFromToday(7);
+        break;
+      case 't+45':
+        newDate = getBusinessDaysFromToday(45);
+        break;
+    }
+    
+    setValuationDate(newDate);
+    await handlePriceWithDate(newDate);
+  };
+
+  const handlePriceWithDate = async (date: string) => {
     try {
       setPricingLoading(true);
       setError(null);
-      const today = new Date().toISOString().split('T')[0];
-      const result = await portfolioService.pricePortfolio(portfolioId, today);
+      const result = await portfolioService.pricePortfolio(portfolioId, date);
       setRiskSummary(result);
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || err.message || 'Failed to price portfolio';
@@ -66,6 +105,12 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
     } finally {
       setPricingLoading(false);
     }
+  };
+
+  const handlePriceNow = async () => {
+    const today = new Date().toISOString().split('T')[0];
+    setValuationDate(today);
+    await handlePriceWithDate(today);
   };
 
   const handleDetachConstituent = async (constituentId: number) => {
@@ -151,7 +196,58 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
               )}
             </div>
           </div>
-          <div className="flex space-x-3">
+          <div className="flex items-center space-x-3">
+            {/* Valuation Date Quick Selector */}
+            <div className="flex items-center space-x-2">
+              <span className="text-xs text-fd-text-muted">Valuation:</span>
+              <div className="flex space-x-1">
+                <button
+                  onClick={() => handleQuickValuationDate('today')}
+                  disabled={pricingLoading}
+                  className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
+                    valuationDate === new Date().toISOString().split('T')[0]
+                      ? 'bg-fd-green text-fd-dark' 
+                      : 'bg-fd-dark text-fd-text hover:bg-fd-border'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  Today
+                </button>
+                <button
+                  onClick={() => handleQuickValuationDate('t+1')}
+                  disabled={pricingLoading}
+                  className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
+                    valuationDate === getBusinessDaysFromToday(1) 
+                      ? 'bg-fd-green text-fd-dark' 
+                      : 'bg-fd-dark text-fd-text hover:bg-fd-border'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  T+1
+                </button>
+                <button
+                  onClick={() => handleQuickValuationDate('t+7')}
+                  disabled={pricingLoading}
+                  className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
+                    valuationDate === getBusinessDaysFromToday(7) 
+                      ? 'bg-fd-green text-fd-dark' 
+                      : 'bg-fd-dark text-fd-text hover:bg-fd-border'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  T+7
+                </button>
+                <button
+                  onClick={() => handleQuickValuationDate('t+45')}
+                  disabled={pricingLoading}
+                  className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
+                    valuationDate === getBusinessDaysFromToday(45) 
+                      ? 'bg-fd-green text-fd-dark' 
+                      : 'bg-fd-dark text-fd-text hover:bg-fd-border'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  T+45
+                </button>
+              </div>
+            </div>
+
             <button
               onClick={() => setShowAttachModal(true)}
               className="bg-fd-green hover:bg-fd-green-hover text-fd-dark font-medium py-2 px-4 rounded transition-colors"
@@ -209,25 +305,66 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
       {/* Tab Content */}
       <div className="p-6">
         {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-6">
             {riskSummary ? (
               <>
-                <MetricCard label="Portfolio PV" value={formatCurrency(riskSummary.aggregate.pv)} />
-                <MetricCard label="Accrued" value={formatCurrency(riskSummary.aggregate.accrued)} />
-                <MetricCard label="CS01" value={formatCurrency(riskSummary.aggregate.cs01)} />
-                <MetricCard label="REC01" value={formatCurrency(riskSummary.aggregate.rec01)} />
-                <MetricCard label="JTD" value={formatCurrency(riskSummary.aggregate.jtd)} />
-                <MetricCard label="Fair Spread (Weighted)" value={`${formatNumber(riskSummary.aggregate.fairSpreadBpsWeighted, 2)} bps`} />
-                <div className="col-span-full mt-4">
+                {/* Core Valuation Metrics */}
+                <div>
+                  <h3 className="text-sm font-semibold text-fd-text uppercase tracking-wide mb-3">Core Valuation</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <MetricCard label="Portfolio PV" value={formatCurrency(riskSummary.aggregate.pv)} />
+                    <MetricCard label="Accrued Premium" value={formatCurrency(riskSummary.aggregate.accrued)} />
+                    <MetricCard label="Premium Leg PV" value={formatCurrency(riskSummary.aggregate.premiumLegPv)} />
+                    <MetricCard label="Protection Leg PV" value={formatCurrency(riskSummary.aggregate.protectionLegPv)} />
+                  </div>
+                </div>
+
+                {/* Risk Sensitivities */}
+                <div>
+                  <h3 className="text-sm font-semibold text-fd-text uppercase tracking-wide mb-3">Risk Sensitivities</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <MetricCard label="CS01" value={formatCurrency(riskSummary.aggregate.cs01)} />
+                    <MetricCard label="REC01" value={formatCurrency(riskSummary.aggregate.rec01)} />
+                    <MetricCard label="Jump to Default" value={formatCurrency(riskSummary.aggregate.jtd)} />
+                    <MetricCard label="Fair Spread (Weighted)" value={`${formatNumber(riskSummary.aggregate.fairSpreadBpsWeighted, 2)} bps`} />
+                  </div>
+                </div>
+
+                {/* Position Metrics */}
+                <div>
+                  <h3 className="text-sm font-semibold text-fd-text uppercase tracking-wide mb-3">Position Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <MetricCard label="Total Notional" value={formatCurrency(riskSummary.aggregate.totalNotional)} />
+                    <MetricCard label="Trade Count" value={riskSummary.aggregate.tradeCount?.toString() || '-'} />
+                    <MetricCard 
+                      label="Net Protection" 
+                      value={formatCurrency(riskSummary.aggregate.netProtectionBought)} 
+                    />
+                    <MetricCard label="Avg Maturity" value={`${riskSummary.aggregate.averageMaturityYears || '0'} years`} />
+                  </div>
+                </div>
+
+                {/* Premium Metrics */}
+                <div>
+                  <h3 className="text-sm font-semibold text-fd-text uppercase tracking-wide mb-3">Premium & Cashflows</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <MetricCard label="Upfront Premium" value={formatCurrency(riskSummary.aggregate.upfrontPremium)} />
+                    <MetricCard label="Total Paid Coupons" value={formatCurrency(riskSummary.aggregate.totalPaidCoupons)} />
+                    <MetricCard 
+                      label="Completeness" 
+                      value={`${riskSummary.completeness.priced}/${riskSummary.completeness.constituents}`} 
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-fd-border">
                   <p className="text-xs text-fd-text-muted">
                     Last calculated: {new Date(riskSummary.valuationDate).toLocaleString()}
-                    {' • '}
-                    {riskSummary.completeness.priced} of {riskSummary.completeness.constituents} trades priced
                   </p>
                 </div>
               </>
             ) : (
-              <div className="col-span-full bg-fd-dark p-6 rounded-lg text-center">
+              <div className="bg-fd-dark p-6 rounded-lg text-center">
                 <p className="text-fd-text-muted">No risk metrics available. Click "Reprice Now" to calculate.</p>
               </div>
             )}

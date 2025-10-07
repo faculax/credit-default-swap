@@ -15,14 +15,27 @@ public class PortfolioPricingResponse {
     
     // Nested classes
     public static class AggregateMetrics {
+        // Core PV metrics
         private BigDecimal pv;
         private BigDecimal accrued;
         private BigDecimal premiumLegPv;
         private BigDecimal protectionLegPv;
+        
+        // Spread and sensitivity metrics
         private BigDecimal fairSpreadBpsWeighted;
-        private BigDecimal cs01;
-        private BigDecimal rec01;
-        private BigDecimal jtd;
+        private BigDecimal cs01;  // Credit spread 01 (sensitivity to 1bp credit spread move)
+        private BigDecimal rec01; // Recovery rate 01 (sensitivity to 1% recovery move)
+        private BigDecimal jtd;   // Jump to default
+        
+        // Notional and premium metrics
+        private BigDecimal totalNotional;
+        private BigDecimal upfrontPremium;
+        private BigDecimal totalPaidCoupons;
+        
+        // Position metrics
+        private Integer tradeCount;
+        private BigDecimal netProtectionBought; // Positive = net protection buyer
+        private String averageMaturityYears;
         
         // Getters and Setters
         public BigDecimal getPv() { return pv; }
@@ -50,6 +63,28 @@ public class PortfolioPricingResponse {
         
         public BigDecimal getJtd() { return jtd; }
         public void setJtd(BigDecimal jtd) { this.jtd = jtd; }
+        
+        public BigDecimal getTotalNotional() { return totalNotional; }
+        public void setTotalNotional(BigDecimal totalNotional) { this.totalNotional = totalNotional; }
+        
+        public BigDecimal getUpfrontPremium() { return upfrontPremium; }
+        public void setUpfrontPremium(BigDecimal upfrontPremium) { this.upfrontPremium = upfrontPremium; }
+        
+        public BigDecimal getTotalPaidCoupons() { return totalPaidCoupons; }
+        public void setTotalPaidCoupons(BigDecimal totalPaidCoupons) { this.totalPaidCoupons = totalPaidCoupons; }
+        
+        public Integer getTradeCount() { return tradeCount; }
+        public void setTradeCount(Integer tradeCount) { this.tradeCount = tradeCount; }
+        
+        public BigDecimal getNetProtectionBought() { return netProtectionBought; }
+        public void setNetProtectionBought(BigDecimal netProtectionBought) { 
+            this.netProtectionBought = netProtectionBought; 
+        }
+        
+        public String getAverageMaturityYears() { return averageMaturityYears; }
+        public void setAverageMaturityYears(String averageMaturityYears) { 
+            this.averageMaturityYears = averageMaturityYears; 
+        }
     }
     
     public static class TradeBreakdown {

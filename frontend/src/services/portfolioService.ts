@@ -41,14 +41,27 @@ export interface PortfolioPricingResponse {
   portfolioId: number;
   valuationDate: string;
   aggregate: {
+    // Core PV metrics
     pv: number;
     accrued: number;
     premiumLegPv: number;
     protectionLegPv: number;
+    
+    // Spread and sensitivity metrics
     fairSpreadBpsWeighted: number;
     cs01: number;
     rec01: number;
     jtd: number;
+    
+    // Notional and premium metrics
+    totalNotional?: number;
+    upfrontPremium?: number;
+    totalPaidCoupons?: number;
+    
+    // Position metrics
+    tradeCount?: number;
+    netProtectionBought?: number;
+    averageMaturityYears?: string;
   };
   byTrade: {
     tradeId: number;

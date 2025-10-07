@@ -5,6 +5,7 @@ import com.creditdefaultswap.platform.dto.PortfolioPricingResponse.*;
 import com.creditdefaultswap.platform.model.*;
 import com.creditdefaultswap.platform.repository.CdsPortfolioConstituentRepository;
 import com.creditdefaultswap.platform.repository.CdsPortfolioRepository;
+import com.creditdefaultswap.platform.repository.CouponPeriodRepository;
 import com.creditdefaultswap.platform.repository.PortfolioRiskCacheRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,6 +37,7 @@ public class PortfolioPricingService {
     private final CdsPortfolioRepository portfolioRepository;
     private final CdsPortfolioConstituentRepository constituentRepository;
     private final PortfolioRiskCacheRepository riskCacheRepository;
+    private final CouponPeriodRepository couponPeriodRepository;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     
@@ -47,11 +49,13 @@ public class PortfolioPricingService {
             CdsPortfolioRepository portfolioRepository,
             CdsPortfolioConstituentRepository constituentRepository,
             PortfolioRiskCacheRepository riskCacheRepository,
+            CouponPeriodRepository couponPeriodRepository,
             RestTemplate restTemplate,
             ObjectMapper objectMapper) {
         this.portfolioRepository = portfolioRepository;
         this.constituentRepository = constituentRepository;
         this.riskCacheRepository = riskCacheRepository;
+        this.couponPeriodRepository = couponPeriodRepository;
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
     }
@@ -97,15 +101,23 @@ public class PortfolioPricingService {
         BigDecimal totalRec01 = BigDecimal.ZERO;
         BigDecimal totalJtd = BigDecimal.ZERO;
         BigDecimal weightedFairSpread = BigDecimal.ZERO;
+        BigDecimal totalNotional = BigDecimal.ZERO;
+        BigDecimal totalUpfrontPremium = BigDecimal.ZERO;
+        BigDecimal netProtectionBought = BigDecimal.ZERO;
+        long totalMaturityDays = 0;
         
         for (int i = 0; i < constituents.size(); i++) {
             CdsPortfolioConstituent constituent = constituents.get(i);
             Map<String, Object> measures = riskMeasures.get(i);
+            CDSTrade trade = constituent.getTrade();
             
             BigDecimal pv = new BigDecimal(measures.getOrDefault("npv", "0").toString());
             BigDecimal accrued = new BigDecimal(measures.getOrDefault("accruedPremium", "0").toString());
             BigDecimal protectionLegPv = new BigDecimal(measures.getOrDefault("protectionLegNPV", "0").toString());
             BigDecimal premiumLegPv = new BigDecimal(measures.getOrDefault("premiumLegNPVClean", "0").toString());
+            BigDecimal upfrontPremium = new BigDecimal(measures.getOrDefault("upfrontPremium", "0").toString());
+            BigDecimal currentNotional = new BigDecimal(measures.getOrDefault("currentNotional", 
+                    trade.getNotionalAmount().toString()).toString());
             
             // Use fairSpreadClean and convert to basis points (* 10000)
             BigDecimal fairSpreadClean = new BigDecimal(measures.getOrDefault("fairSpreadClean", "0").toString());
@@ -114,11 +126,27 @@ public class PortfolioPricingService {
             // CS01: Use couponLegBPS if available, otherwise estimate from notional
             BigDecimal cs01 = measures.containsKey("couponLegBPS") 
                 ? new BigDecimal(measures.get("couponLegBPS").toString())
-                : constituent.getTrade().getNotionalAmount().multiply(new BigDecimal("0.0001"));
+                : currentNotional.multiply(new BigDecimal("0.0001"));
             
-            // REC01 and JTD: Not available from ORE, set to zero for now
-            BigDecimal rec01 = BigDecimal.ZERO;
-            BigDecimal jtd = BigDecimal.ZERO;
+            // REC01: Estimate as protectionLeg sensitivity (notional * 0.01)
+            // More accurate would require repricing with recovery rate +/- 1%
+            BigDecimal rec01 = protectionLegPv.abs().multiply(new BigDecimal("0.01"));
+            
+            // JTD (Jump to Default): Loss if entity defaults now
+            // = Notional * (1 - RecoveryRate) - ProtectionLegPV
+            // Using standard 40% recovery assumption
+            BigDecimal recoveryRate = new BigDecimal("0.40");
+            BigDecimal defaultLoss = currentNotional.multiply(BigDecimal.ONE.subtract(recoveryRate));
+            BigDecimal jtd = defaultLoss.subtract(protectionLegPv.abs());
+            
+            // Calculate net protection position (BUY = +notional, SELL = -notional)
+            BigDecimal notionalSigned = trade.getBuySellProtection().equals("BUY") 
+                ? currentNotional 
+                : currentNotional.negate();
+            
+            // Calculate maturity in days from valuation date
+            long daysToMaturity = java.time.temporal.ChronoUnit.DAYS.between(
+                valuationDate, trade.getMaturityDate());
             
             totalPv = totalPv.add(pv);
             totalAccrued = totalAccrued.add(accrued);
@@ -127,6 +155,10 @@ public class PortfolioPricingService {
             totalCs01 = totalCs01.add(cs01);
             totalRec01 = totalRec01.add(rec01);
             totalJtd = totalJtd.add(jtd);
+            totalNotional = totalNotional.add(currentNotional);
+            totalUpfrontPremium = totalUpfrontPremium.add(upfrontPremium);
+            netProtectionBought = netProtectionBought.add(notionalSigned);
+            totalMaturityDays += daysToMaturity * currentNotional.longValue();
             
             BigDecimal weight = normalizedWeights.get(constituent.getTrade().getId());
             weightedFairSpread = weightedFairSpread.add(fairSpread.multiply(weight));
@@ -144,6 +176,12 @@ public class PortfolioPricingService {
             tradeBreakdowns.add(breakdown);
         }
         
+        // Calculate average maturity in years
+        BigDecimal avgMaturityYears = totalNotional.compareTo(BigDecimal.ZERO) > 0
+                ? new BigDecimal(totalMaturityDays).divide(totalNotional, 2, RoundingMode.HALF_UP)
+                    .divide(new BigDecimal("365.25"), 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+        
         aggregate.setPv(totalPv);
         aggregate.setAccrued(totalAccrued);
         aggregate.setPremiumLegPv(totalPremiumLegPv);
@@ -152,6 +190,30 @@ public class PortfolioPricingService {
         aggregate.setCs01(totalCs01);
         aggregate.setRec01(totalRec01);
         aggregate.setJtd(totalJtd);
+        aggregate.setTotalNotional(totalNotional);
+        aggregate.setUpfrontPremium(totalUpfrontPremium);
+        
+        // Calculate total paid coupons from coupon_periods table
+        BigDecimal totalPaidCoupons = constituents.stream()
+                .map(c -> {
+                    List<CouponPeriod> paidPeriods = couponPeriodRepository
+                            .findByTradeIdAndPaid(c.getTrade().getId(), true);
+                    return paidPeriods.stream()
+                            .map(cp -> {
+                                // Calculate coupon payment: notional * spread * accrualDays / 360
+                                BigDecimal spread = c.getTrade().getSpread();
+                                BigDecimal accrualFraction = new BigDecimal(cp.getAccrualDays())
+                                        .divide(new BigDecimal("360"), 10, RoundingMode.HALF_UP);
+                                return cp.getNotionalAmount().multiply(spread).multiply(accrualFraction);
+                            })
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        aggregate.setTotalPaidCoupons(totalPaidCoupons);
+        aggregate.setTradeCount(constituents.size());
+        aggregate.setNetProtectionBought(netProtectionBought);
+        aggregate.setAverageMaturityYears(avgMaturityYears.toString());
         
         response.setAggregate(aggregate);
         response.setByTrade(tradeBreakdowns);
@@ -296,6 +358,12 @@ public class PortfolioPricingService {
             cache.setCs01(response.getAggregate().getCs01());
             cache.setRec01(response.getAggregate().getRec01());
             cache.setJtd(response.getAggregate().getJtd());
+            cache.setTotalNotional(response.getAggregate().getTotalNotional());
+            cache.setUpfrontPremium(response.getAggregate().getUpfrontPremium());
+            cache.setTotalPaidCoupons(response.getAggregate().getTotalPaidCoupons());
+            cache.setTradeCount(response.getAggregate().getTradeCount());
+            cache.setNetProtectionBought(response.getAggregate().getNetProtectionBought());
+            cache.setAverageMaturityYears(response.getAggregate().getAverageMaturityYears());
             cache.setTop5PctCs01(response.getConcentration().getTop5PctCs01());
             cache.setSectorBreakdown(objectMapper.writeValueAsString(response.getConcentration().getSectorBreakdown()));
             cache.setByTradeBreakdown(objectMapper.writeValueAsString(response.getByTrade()));
@@ -323,6 +391,12 @@ public class PortfolioPricingService {
         aggregate.setCs01(cache.getCs01());
         aggregate.setRec01(cache.getRec01());
         aggregate.setJtd(cache.getJtd());
+        aggregate.setTotalNotional(cache.getTotalNotional());
+        aggregate.setUpfrontPremium(cache.getUpfrontPremium());
+        aggregate.setTotalPaidCoupons(cache.getTotalPaidCoupons());
+        aggregate.setTradeCount(cache.getTradeCount());
+        aggregate.setNetProtectionBought(cache.getNetProtectionBought());
+        aggregate.setAverageMaturityYears(cache.getAverageMaturityYears());
         response.setAggregate(aggregate);
         
         try {
