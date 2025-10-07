@@ -5,10 +5,11 @@ import CDSTradeForm from './components/cds-trade-form/CDSTradeForm';
 import ConfirmationModal from './components/confirmation-modal/ConfirmationModal';
 import CDSBlotter from './components/cds-blotter/CDSBlotter';
 import TradeDetailModal from './components/trade-detail-modal/TradeDetailModal';
+import PortfolioPage from './components/portfolio/PortfolioPage';
 import { CDSTrade } from './data/referenceData';
 import { cdsTradeService, CDSTradeRequest, CDSTradeResponse } from './services/cdsTradeService';
 
-type ViewMode = 'form' | 'blotter';
+type ViewMode = 'form' | 'blotter' | 'portfolios';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewMode>('form');
@@ -99,6 +100,16 @@ function App() {
             >
               CDS Trade Blotter
             </button>
+            <button
+              onClick={() => setCurrentView('portfolios')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                currentView === 'portfolios'
+                  ? 'bg-fd-green text-fd-dark'
+                  : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
+              }`}
+            >
+              Portfolios
+            </button>
           </div>
         </div>
       </div>
@@ -108,8 +119,10 @@ function App() {
         {/* Content based on current view */}
         {currentView === 'form' ? (
           <CDSTradeForm onSubmit={handleTradeSubmit} />
-        ) : (
+        ) : currentView === 'blotter' ? (
           <CDSBlotter onTradeSelect={handleTradeSelect} />
+        ) : (
+          <PortfolioPage />
         )}
         
         <ConfirmationModal

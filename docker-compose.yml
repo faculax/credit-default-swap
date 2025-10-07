@@ -73,7 +73,8 @@ services:
       RISK_IMPL: ORE
       ORE_BINARY_PATH: /app/ore/bin/ore
       ORE_CONFIG_PATH: /app/ore/config/ore_cds.xml
-      BACKEND_BASE_URL: http://backend:8080
+      # Use host.docker.internal to reach services on host machine
+      BACKEND_BASE_URL: http://host.docker.internal:8080
     volumes:
       # Mount your local ORE binary and config
       - ./ore-setup/bin:/app/ore/bin:ro
@@ -84,6 +85,9 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    # Enable host networking for macOS/Linux
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 volumes:
   postgres_data:

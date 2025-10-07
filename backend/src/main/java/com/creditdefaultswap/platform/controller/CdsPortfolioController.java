@@ -1,0 +1,217 @@
+package com.creditdefaultswap.platform.controller;
+
+import com.creditdefaultswap.platform.dto.AttachTradesRequest;
+import com.creditdefaultswap.platform.dto.PortfolioPricingResponse;
+import com.creditdefaultswap.platform.model.CdsPortfolio;
+import com.creditdefaultswap.platform.model.CdsPortfolioConstituent;
+import com.creditdefaultswap.platform.service.CdsPortfolioService;
+import com.creditdefaultswap.platform.service.PortfolioPricingService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/cds-portfolios")
+public class CdsPortfolioController {
+    
+    private static final Logger logger = LoggerFactory.getLogger(CdsPortfolioController.class);
+    
+    private final CdsPortfolioService portfolioService;
+    private final PortfolioPricingService pricingService;
+    
+    @Autowired
+    public CdsPortfolioController(
+            CdsPortfolioService portfolioService,
+            PortfolioPricingService pricingService) {
+        this.portfolioService = portfolioService;
+        this.pricingService = pricingService;
+    }
+    
+    /**
+     * POST /api/cds-portfolios - Create a new portfolio
+     */
+    @PostMapping
+    public ResponseEntity<?> createPortfolio(@RequestBody Map<String, String> request) {
+        try {
+            String name = request.get("name");
+            String description = request.get("description");
+            
+            if (name == null || name.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Portfolio name is required"));
+            }
+            
+            CdsPortfolio portfolio = portfolioService.createPortfolio(name, description);
+            return new ResponseEntity<>(portfolio, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Error creating portfolio", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to create portfolio"));
+        }
+    }
+    
+    /**
+     * GET /api/cds-portfolios - Get all portfolios
+     */
+    @GetMapping
+    public ResponseEntity<List<CdsPortfolio>> getAllPortfolios() {
+        try {
+            List<CdsPortfolio> portfolios = portfolioService.getAllPortfolios();
+            return ResponseEntity.ok(portfolios);
+        } catch (Exception e) {
+            logger.error("Error fetching portfolios", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    /**
+     * GET /api/cds-portfolios/{id} - Get a specific portfolio
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getPortfolio(@PathVariable Long id) {
+        try {
+            return portfolioService.getPortfolioById(id)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            logger.error("Error fetching portfolio {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    /**
+     * PUT /api/cds-portfolios/{id} - Update a portfolio
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updatePortfolio(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request) {
+        try {
+            String name = request.get("name");
+            String description = request.get("description");
+            
+            if (name == null || name.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Portfolio name is required"));
+            }
+            
+            CdsPortfolio portfolio = portfolioService.updatePortfolio(id, name, description);
+            return ResponseEntity.ok(portfolio);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Error updating portfolio {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to update portfolio"));
+        }
+    }
+    
+    /**
+     * DELETE /api/cds-portfolios/{id} - Delete a portfolio
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deletePortfolio(@PathVariable Long id) {
+        try {
+            portfolioService.deletePortfolio(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            logger.error("Error deleting portfolio {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to delete portfolio"));
+        }
+    }
+    
+    /**
+     * POST /api/cds-portfolios/{id}/constituents - Attach trades to portfolio
+     */
+    @PostMapping("/{id}/constituents")
+    public ResponseEntity<?> attachTrades(
+            @PathVariable Long id,
+            @RequestBody AttachTradesRequest request) {
+        try {
+            List<CdsPortfolioConstituent> constituents = portfolioService.attachTrades(id, request);
+            return new ResponseEntity<>(constituents, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Error attaching trades to portfolio {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to attach trades"));
+        }
+    }
+    
+    /**
+     * DELETE /api/cds-portfolios/{id}/constituents/{constituentId} - Detach a constituent
+     */
+    @DeleteMapping("/{id}/constituents/{constituentId}")
+    public ResponseEntity<?> detachConstituent(
+            @PathVariable Long id,
+            @PathVariable Long constituentId) {
+        try {
+            portfolioService.detachConstituent(id, constituentId);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Error detaching constituent {} from portfolio {}", constituentId, id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to detach constituent"));
+        }
+    }
+    
+    /**
+     * GET /api/cds-portfolios/{id}/constituents - Get active constituents
+     */
+    @GetMapping("/{id}/constituents")
+    public ResponseEntity<?> getConstituents(@PathVariable Long id) {
+        try {
+            List<CdsPortfolioConstituent> constituents = portfolioService.getActiveConstituents(id);
+            return ResponseEntity.ok(constituents);
+        } catch (Exception e) {
+            logger.error("Error fetching constituents for portfolio {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    /**
+     * POST /api/cds-portfolios/{id}/price - Price portfolio for a valuation date
+     */
+    @PostMapping("/{id}/price")
+    public ResponseEntity<?> pricePortfolio(
+            @PathVariable Long id,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate valuationDate) {
+        try {
+            PortfolioPricingResponse response = pricingService.pricePortfolio(id, valuationDate);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Error pricing portfolio {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to price portfolio: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * GET /api/cds-portfolios/{id}/risk-summary - Get cached risk summary
+     */
+    @GetMapping("/{id}/risk-summary")
+    public ResponseEntity<?> getRiskSummary(@PathVariable Long id) {
+        try {
+            return pricingService.getCachedRiskSummary(id)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            logger.error("Error fetching risk summary for portfolio {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+}
