@@ -1,0 +1,49 @@
+version: '3.8'
+
+# Docker Compose for local development
+# Run only DB and Risk Engine in Docker
+# Backend, Gateway, Frontend run locally via npm/mvn
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: cdsplatform
+      POSTGRES_USER: cdsuser
+      POSTGRES_PASSWORD: cdspass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cdsuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  risk-engine:
+    build:
+      context: ./risk-engine
+    ports:
+      - "8082:8082"
+    environment:
+      SERVER_PORT: 8082
+      RISK_IMPL: ORE
+      ORE_BINARY_PATH: /app/ore/bin/ore
+      ORE_CONFIG_PATH: /app/ore/config/ore_cds.xml
+      # Point to backend running on host machine
+      BACKEND_BASE_URL: http://host.docker.internal:8080
+    volumes:
+      - ./ore-setup/bin:/app/ore/bin:ro
+      - ./ore-setup/config:/app/ore/config:ro
+      - ./ore-setup/market-data:/app/ore/market-data:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  postgres_data:
