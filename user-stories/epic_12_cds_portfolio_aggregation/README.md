@@ -19,6 +19,21 @@ Currently each CDS trade is valued in isolation. Users lack:
 | 4 | Enable multi-trade ORE generation | Combined portfolio XML output or per-trade consolidation |
 | 5 | Prepare simulation stubs | Endpoint shape compatible with future correlation MC engine |
 
+## Stories
+
+- Story 12.1 – Introduce Portfolio Domain Model & Persistence
+- Story 12.2 – Portfolio CRUD REST Endpoints
+- Story 12.3 – Attach & Detach CDS Trades to Portfolio
+- Story 12.4 – Aggregate Portfolio Valuation & Risk Metrics
+- Story 12.5 – Concentration & Attribution Breakdown (Top Contributors / Sector)
+- Story 12.6 – Multi-Trade ORE Portfolio Generation & Parsing
+- Story 12.7 – Portfolio Pricing Endpoint & Cached Risk Summary
+- Story 12.8 – Portfolio List View UI
+- Story 12.9 – Portfolio Detail & Risk Panel UI
+- Story 12.10 – Export & Visualization (Concentration Charts & CSV Attribution)
+- Story 12.11 – Weight Handling & Normalization Logic (Percent vs Notional)
+- Story 12.12 – Simulation Stub Endpoint (Correlation Placeholder for Epic 13)
+
 ## 4. In Scope
 - Portfolio entities & REST API
 - Aggregated pricing endpoint
