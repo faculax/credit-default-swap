@@ -26,6 +26,9 @@ EXPOSE 80
 # Set environment variable to override Spring Boot server port to 80
 ENV SERVER_PORT=80
 
+# Set Risk Engine URL for Render deployment (routes via gateway or direct to risk-engine)
+ENV RISK_ENGINE_URL=https://credit-default-swap-risk-engine.onrender.com
+
 # Set environment variables for Render deployment
 ENV SPRING_DATASOURCE_URL='jdbc:postgresql://dpg-d38q7j7fte5s73canqjg-a:5432/fund_smith_postgres?sslmode=require'
 ENV SPRING_DATASOURCE_USERNAME=fund_smith_postgres_user
