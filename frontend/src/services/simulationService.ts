@@ -1,4 +1,5 @@
 // Simulation service for Monte Carlo correlated credit simulation
+import { API_BASE_URL } from '../config/api';
 
 export interface SimulationRequest {
   valuationDate: string;
@@ -59,7 +60,7 @@ export interface SimulationResponse {
 }
 
 class SimulationService {
-  private readonly baseUrl = '/api/credit-simulation';
+  private readonly baseUrl = `${API_BASE_URL}/credit-simulation`;
 
   /**
    * Submit a new simulation run
