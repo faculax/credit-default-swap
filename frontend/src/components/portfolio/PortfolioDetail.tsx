@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { portfolioService, CdsPortfolio, CdsPortfolioConstituent, PortfolioPricingResponse } from '../../services/portfolioService';
+import { portfolioService, CdsPortfolio, CdsPortfolioConstituent, BondPortfolioConstituent, PortfolioPricingResponse } from '../../services/portfolioService';
 import { cdsTradeService, CDSTradeResponse } from '../../services/cdsTradeService';
-import AttachTradesModal from './AttachTradesModal';
+import AttachInstrumentsModal from './AttachInstrumentsModal';
 import SimulationPanel from './simulation/SimulationPanel';
+import EnhancedOverview from './EnhancedOverview';
 
 interface PortfolioDetailProps {
   portfolioId: number;
@@ -12,6 +13,7 @@ interface PortfolioDetailProps {
 const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }) => {
   const [portfolio, setPortfolio] = useState<CdsPortfolio | null>(null);
   const [constituents, setConstituents] = useState<CdsPortfolioConstituent[]>([]);
+  const [bondConstituents, setBondConstituents] = useState<BondPortfolioConstituent[]>([]);
   const [riskSummary, setRiskSummary] = useState<PortfolioPricingResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [pricingLoading, setPricingLoading] = useState(false);
@@ -29,13 +31,15 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
       setLoading(true);
       setError(null);
       
-      const [portfolioData, constituentsData] = await Promise.all([
+      const [portfolioData, constituentsData, bondsData] = await Promise.all([
         portfolioService.getPortfolioById(portfolioId),
-        portfolioService.getConstituents(portfolioId)
+        portfolioService.getConstituents(portfolioId),
+        portfolioService.getPortfolioBonds(portfolioId)
       ]);
       
       setPortfolio(portfolioData);
       setConstituents(constituentsData);
+      setBondConstituents(bondsData);
       
       // Try to load cached risk summary
       try {
@@ -124,6 +128,20 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
       loadPortfolioData();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to detach constituent';
+      alert(errorMessage);
+    }
+  };
+
+  const handleDetachBond = async (bondId: number) => {
+    if (!window.confirm('Are you sure you want to remove this bond from the portfolio?')) {
+      return;
+    }
+
+    try {
+      await portfolioService.removeBond(portfolioId, bondId);
+      loadPortfolioData();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to remove bond';
       alert(errorMessage);
     }
   };
@@ -253,7 +271,7 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
               onClick={() => setShowAttachModal(true)}
               className="bg-fd-green hover:bg-fd-green-hover text-fd-dark font-medium py-2 px-4 rounded transition-colors"
             >
-              + Add Trades
+              + Add Instruments
             </button>
             <button
               onClick={handlePriceNow}
@@ -288,7 +306,7 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
                   : 'border-transparent text-fd-text-muted hover:text-fd-text hover:border-fd-border'
               }`}
             >
-              Constituents ({constituents.length})
+              Constituents ({constituents.length + bondConstituents.length})
             </button>
             <button
               onClick={() => setActiveTab('concentration')}
@@ -316,75 +334,17 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
       {/* Tab Content */}
       <div className="p-6">
         {activeTab === 'overview' && (
-          <div className="space-y-6">
-            {riskSummary ? (
-              <>
-                {/* Core Valuation Metrics */}
-                <div>
-                  <h3 className="text-sm font-semibold text-fd-text uppercase tracking-wide mb-3">Core Valuation</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <MetricCard label="Portfolio PV" value={formatCurrency(riskSummary.aggregate.pv)} />
-                    <MetricCard label="Accrued Premium" value={formatCurrency(riskSummary.aggregate.accrued)} />
-                    <MetricCard label="Premium Leg PV" value={formatCurrency(riskSummary.aggregate.premiumLegPv)} />
-                    <MetricCard label="Protection Leg PV" value={formatCurrency(riskSummary.aggregate.protectionLegPv)} />
-                  </div>
-                </div>
-
-                {/* Risk Sensitivities */}
-                <div>
-                  <h3 className="text-sm font-semibold text-fd-text uppercase tracking-wide mb-3">Risk Sensitivities</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <MetricCard label="CS01" value={formatCurrency(riskSummary.aggregate.cs01)} />
-                    <MetricCard label="REC01" value={formatCurrency(riskSummary.aggregate.rec01)} />
-                    <MetricCard label="Jump to Default" value={formatCurrency(riskSummary.aggregate.jtd)} />
-                    <MetricCard label="Fair Spread (Weighted)" value={`${formatNumber(riskSummary.aggregate.fairSpreadBpsWeighted, 2)} bps`} />
-                  </div>
-                </div>
-
-                {/* Position Metrics */}
-                <div>
-                  <h3 className="text-sm font-semibold text-fd-text uppercase tracking-wide mb-3">Position Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <MetricCard label="Total Notional" value={formatCurrency(riskSummary.aggregate.totalNotional)} />
-                    <MetricCard label="Trade Count" value={riskSummary.aggregate.tradeCount?.toString() || '-'} />
-                    <MetricCard 
-                      label="Net Protection" 
-                      value={formatCurrency(riskSummary.aggregate.netProtectionBought)} 
-                    />
-                    <MetricCard label="Avg Maturity" value={`${riskSummary.aggregate.averageMaturityYears || '0'} years`} />
-                  </div>
-                </div>
-
-                {/* Premium Metrics */}
-                <div>
-                  <h3 className="text-sm font-semibold text-fd-text uppercase tracking-wide mb-3">Premium & Cashflows</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <MetricCard label="Upfront Premium" value={formatCurrency(riskSummary.aggregate.upfrontPremium)} />
-                    <MetricCard label="Total Paid Coupons" value={formatCurrency(riskSummary.aggregate.totalPaidCoupons)} />
-                    <MetricCard 
-                      label="Completeness" 
-                      value={`${riskSummary.completeness.priced}/${riskSummary.completeness.constituents}`} 
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-6 pt-4 border-t border-fd-border">
-                  <p className="text-xs text-fd-text-muted">
-                    Last calculated: {new Date(riskSummary.valuationDate).toLocaleString()}
-                  </p>
-                </div>
-              </>
-            ) : (
-              <div className="bg-fd-dark p-6 rounded-lg text-center">
-                <p className="text-fd-text-muted">No risk metrics available. Click "Reprice Now" to calculate.</p>
-              </div>
-            )}
-          </div>
+          <EnhancedOverview 
+            portfolioId={portfolioId}
+            cdsConstituents={constituents}
+            bondConstituents={bondConstituents}
+            pricingData={riskSummary}
+          />
         )}
 
         {activeTab === 'constituents' && (
           <>
-            {constituents.length === 0 ? (
+            {constituents.length === 0 && bondConstituents.length === 0 ? (
               <div className="text-center py-12">
                 <svg
                   className="mx-auto h-12 w-12 text-fd-text-muted"
@@ -400,8 +360,8 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                <h3 className="mt-2 text-sm font-medium text-fd-text">No trades in portfolio</h3>
-                <p className="mt-1 text-sm text-fd-text-muted">Add trades to get started.</p>
+                <h3 className="mt-2 text-sm font-medium text-fd-text">No instruments in portfolio</h3>
+                <p className="mt-1 text-sm text-fd-text-muted">Add CDS trades or bonds to get started.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -409,10 +369,13 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
                   <thead className="bg-fd-dark">
                     <tr>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
-                        Trade ID
+                        Type
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
-                        Reference Entity
+                        ID
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
+                        Reference / Issuer
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
                         Notional
@@ -430,7 +393,12 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
                   </thead>
                   <tbody className="bg-fd-darker divide-y divide-fd-border">
                     {constituents.map((constituent) => (
-                      <tr key={constituent.id} className="hover:bg-fd-dark transition-colors">
+                      <tr key={`cds-${constituent.id}`} className="hover:bg-fd-dark transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-900 text-blue-200">
+                            🛡️ CDS
+                          </span>
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-fd-text">
                           CDS-{constituent.trade.id}
                         </td>
@@ -451,6 +419,38 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <button
                             onClick={() => handleDetachConstituent(constituent.id)}
+                            className="text-red-400 hover:text-red-300 font-medium"
+                          >
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {bondConstituents.map((bondConstituent) => (
+                      <tr key={`bond-${bondConstituent.id}`} className="hover:bg-fd-dark transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-900 text-green-200">
+                            📜 Bond
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-fd-text">
+                          {bondConstituent.bond.isin}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-fd-text">
+                          {bondConstituent.bond.issuer}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-fd-text">
+                          {formatCurrency(bondConstituent.bond.notional)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-fd-text-muted">
+                          {bondConstituent.weightType}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-fd-text">
+                          {formatCurrency(bondConstituent.weightValue)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <button
+                            onClick={() => handleDetachBond(bondConstituent.bond.id)}
                             className="text-red-400 hover:text-red-300 font-medium"
                           >
                             Remove
@@ -518,7 +518,7 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
       </div>
 
       {showAttachModal && (
-        <AttachTradesModal
+        <AttachInstrumentsModal
           portfolioId={portfolioId}
           onClose={() => setShowAttachModal(false)}
           onSuccess={handleAttachSuccess}

@@ -30,6 +30,10 @@ public class CdsPortfolio {
     @JsonManagedReference
     private List<CdsPortfolioConstituent> constituents = new ArrayList<>();
     
+    @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<BondPortfolioConstituent> bondConstituents = new ArrayList<>();
+    
     // Constructors
     public CdsPortfolio() {
         this.createdAt = LocalDateTime.now();
@@ -90,6 +94,14 @@ public class CdsPortfolio {
         this.constituents = constituents;
     }
     
+    public List<BondPortfolioConstituent> getBondConstituents() {
+        return bondConstituents;
+    }
+    
+    public void setBondConstituents(List<BondPortfolioConstituent> bondConstituents) {
+        this.bondConstituents = bondConstituents;
+    }
+    
     // Helper methods
     public void addConstituent(CdsPortfolioConstituent constituent) {
         constituents.add(constituent);
@@ -99,6 +111,20 @@ public class CdsPortfolio {
     public void removeConstituent(CdsPortfolioConstituent constituent) {
         constituents.remove(constituent);
         constituent.setPortfolio(null);
+    }
+    
+    public void addBondConstituent(BondPortfolioConstituent constituent) {
+        bondConstituents.add(constituent);
+        constituent.setPortfolio(this);
+    }
+    
+    public void removeBondConstituent(BondPortfolioConstituent constituent) {
+        bondConstituents.remove(constituent);
+        constituent.setPortfolio(null);
+    }
+    
+    public int getTotalConstituentCount() {
+        return constituents.size() + bondConstituents.size();
     }
     
     @PreUpdate

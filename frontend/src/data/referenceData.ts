@@ -1,21 +1,32 @@
 // Reference data for CDS trade form dropdowns
 
+export const SECTORS = [
+  { code: 'TECH', name: 'Technology' },
+  { code: 'FINANCIALS', name: 'Financials' },
+  { code: 'ENERGY', name: 'Energy' },
+  { code: 'HEALTHCARE', name: 'Healthcare' },
+  { code: 'CONSUMER', name: 'Consumer Discretionary' },
+  { code: 'INDUSTRIALS', name: 'Industrials' },
+  { code: 'UTILITIES', name: 'Utilities' },
+  { code: 'MATERIALS', name: 'Materials' }
+];
+
 export const REFERENCE_ENTITIES = [
-  { code: 'AAPL', name: 'Apple Inc.' },
-  { code: 'MSFT', name: 'Microsoft Corporation' },
-  { code: 'JPM', name: 'JPMorgan Chase & Co.' },
-  { code: 'BAC', name: 'Bank of America Corp.' },
-  { code: 'WFC', name: 'Wells Fargo & Company' },
-  { code: 'GS', name: 'Goldman Sachs Group Inc.' },
-  { code: 'MS', name: 'Morgan Stanley' },
-  { code: 'C', name: 'Citigroup Inc.' },
-  { code: 'AMZN', name: 'Amazon.com Inc.' },
-  { code: 'GOOGL', name: 'Alphabet Inc.' },
-  { code: 'TSLA', name: 'Tesla Inc.' },
-  { code: 'NFLX', name: 'Netflix Inc.' },
-  { code: 'META', name: 'Meta Platforms Inc.' },
-  { code: 'NVDA', name: 'NVIDIA Corporation' },
-  { code: 'AMD', name: 'Advanced Micro Devices Inc.' }
+  { code: 'AAPL', name: 'Apple Inc.', sector: 'TECH' },
+  { code: 'MSFT', name: 'Microsoft Corporation', sector: 'TECH' },
+  { code: 'JPM', name: 'JPMorgan Chase & Co.', sector: 'FINANCIALS' },
+  { code: 'BAC', name: 'Bank of America Corp.', sector: 'FINANCIALS' },
+  { code: 'WFC', name: 'Wells Fargo & Company', sector: 'FINANCIALS' },
+  { code: 'GS', name: 'Goldman Sachs Group Inc.', sector: 'FINANCIALS' },
+  { code: 'MS', name: 'Morgan Stanley', sector: 'FINANCIALS' },
+  { code: 'C', name: 'Citigroup Inc.', sector: 'FINANCIALS' },
+  { code: 'AMZN', name: 'Amazon.com Inc.', sector: 'TECH' },
+  { code: 'GOOGL', name: 'Alphabet Inc.', sector: 'TECH' },
+  { code: 'TSLA', name: 'Tesla Inc.', sector: 'TECH' },
+  { code: 'NFLX', name: 'Netflix Inc.', sector: 'TECH' },
+  { code: 'META', name: 'Meta Platforms Inc.', sector: 'TECH' },
+  { code: 'NVDA', name: 'NVIDIA Corporation', sector: 'TECH' },
+  { code: 'AMD', name: 'Advanced Micro Devices Inc.', sector: 'TECH' }
 ];
 
 export const COUNTERPARTIES = [
