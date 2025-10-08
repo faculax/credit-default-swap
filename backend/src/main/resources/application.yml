@@ -46,7 +46,7 @@ cds:
 
 risk:
   engine:
-    url: http://risk-engine:8082
+    url: ${RISK_ENGINE_URL:http://risk-engine:8082}
 
 server:
   port: 8080
