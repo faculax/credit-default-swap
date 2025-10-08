@@ -6,10 +6,11 @@ import ConfirmationModal from './components/confirmation-modal/ConfirmationModal
 import CDSBlotter from './components/cds-blotter/CDSBlotter';
 import TradeDetailModal from './components/trade-detail-modal/TradeDetailModal';
 import PortfolioPage from './components/portfolio/PortfolioPage';
+import BondPage from './components/bond/BondPage';
 import { CDSTrade } from './data/referenceData';
 import { cdsTradeService, CDSTradeRequest, CDSTradeResponse } from './services/cdsTradeService';
 
-type ViewMode = 'form' | 'blotter' | 'portfolios';
+type ViewMode = 'form' | 'blotter' | 'portfolios' | 'bonds';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewMode>('form');
@@ -88,7 +89,7 @@ function App() {
                   : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
               }`}
             >
-              New CDS Trade
+              New Single-Name CDS
             </button>
             <button
               onClick={() => setCurrentView('blotter')}
@@ -98,7 +99,17 @@ function App() {
                   : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
               }`}
             >
-              CDS Trade Blotter
+              Single-Name CDS Blotter
+            </button>
+            <button
+              onClick={() => setCurrentView('bonds')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                currentView === 'bonds'
+                  ? 'bg-fd-green text-fd-dark'
+                  : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
+              }`}
+            >
+              Corporate Bonds
             </button>
             <button
               onClick={() => setCurrentView('portfolios')}
@@ -108,7 +119,7 @@ function App() {
                   : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
               }`}
             >
-              Portfolios
+              CDS Portfolios
             </button>
           </div>
         </div>
@@ -121,8 +132,10 @@ function App() {
           <CDSTradeForm onSubmit={handleTradeSubmit} />
         ) : currentView === 'blotter' ? (
           <CDSBlotter onTradeSelect={handleTradeSelect} />
-        ) : (
+        ) : currentView === 'portfolios' ? (
           <PortfolioPage />
+        ) : (
+          <BondPage />
         )}
         
         <ConfirmationModal

@@ -28,6 +28,25 @@ export interface CdsPortfolioConstituent {
   addedAt: string;
 }
 
+export interface BondPortfolioConstituent {
+  id: number;
+  portfolio?: CdsPortfolio;
+  bond: {
+    id: number;
+    isin: string;
+    issuer: string;
+    couponRate: number;
+    maturityDate: string;
+    seniority: string;
+    notional: number;
+    currency: string;
+  };
+  weightType: 'NOTIONAL' | 'EQUAL' | 'MARKET_VALUE';
+  weightValue: number;
+  active: boolean;
+  addedAt: string;
+}
+
 export interface ConstituentRequest {
   tradeId: number;
   weightType: 'NOTIONAL' | 'PERCENT';
@@ -238,5 +257,53 @@ export const portfolioService = {
     }
     
     return response.json();
+  },
+
+  // Bond management
+  async attachBond(portfolioId: number, bondId: number, weightType: string = 'NOTIONAL', weightValue: number = 1.0): Promise<BondPortfolioConstituent> {
+    const response = await fetch(`${PORTFOLIO_BASE_URL}/${portfolioId}/bonds`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bondId, weightType, weightValue })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to attach bond');
+    }
+    
+    return response.json();
+  },
+
+  async removeBond(portfolioId: number, bondId: number): Promise<void> {
+    const response = await fetch(`${PORTFOLIO_BASE_URL}/${portfolioId}/bonds/${bondId}`, {
+      method: 'DELETE'
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to remove bond');
+    }
+  },
+
+  async getPortfolioBonds(portfolioId: number): Promise<BondPortfolioConstituent[]> {
+    const response = await fetch(`${PORTFOLIO_BASE_URL}/${portfolioId}/bonds`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch portfolio bonds');
+    }
+    
+    const text = await response.text();
+    
+    if (!text || text.trim() === '') {
+      return [];
+    }
+    
+    try {
+      return JSON.parse(text);
+    } catch (error) {
+      console.error('Failed to parse bonds response:', text.substring(0, 500));
+      throw new Error('Invalid response format from server');
+    }
   }
 };
