@@ -1,4 +1,5 @@
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8081/api';
+import { API_BASE_URL } from '../config/api';
+// Base URL for portfolio-related endpoints served via gateway routing to backend
 const PORTFOLIO_BASE_URL = `${API_BASE_URL}/cds-portfolios`;
 
 export interface CdsPortfolio {

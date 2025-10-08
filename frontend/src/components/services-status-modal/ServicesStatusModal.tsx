@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 // Use the same API base URL pattern as other services
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8081/api';
+import { API_BASE_URL } from '../../config/api';
 
 interface ServiceStatus {
   name: string;

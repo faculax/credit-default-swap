@@ -1,6 +1,5 @@
 import { RiskMeasures, ScenarioResponse } from './riskTypes';
-
-const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8081/api';
+import { API_BASE_URL as API_BASE } from '../../config/api';
 
 export async function fetchRiskMeasures(tradeId: number, valuationDate?: string): Promise<RiskMeasures> {
   // Use the ORE calculation endpoint instead of legacy endpoint  

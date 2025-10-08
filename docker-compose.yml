@@ -58,6 +58,7 @@ services:
     ports:
       - "3000:80"
     environment:
+      # All UI API calls MUST go through the gateway; never call backend or risk-engine directly
       REACT_APP_API_BASE_URL: http://localhost:8081/api
       NODE_ENV: development
     depends_on:
