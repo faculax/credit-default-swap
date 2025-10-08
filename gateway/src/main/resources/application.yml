@@ -14,6 +14,7 @@ spring:
             allowed-origins: 
               - "http://localhost:3000"
               - "https://fund-smith.onrender.com"
+              - "https://credit-default-swap.onrender.com"
             # Cannot use "*" with allow-credentials: true
             allowed-methods: 
               - GET
