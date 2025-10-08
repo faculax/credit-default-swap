@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/credit-simulation")
-@CrossOrigin(origins = "*")
 public class SimulationController {
     
     private static final Logger log = LoggerFactory.getLogger(SimulationController.class);
