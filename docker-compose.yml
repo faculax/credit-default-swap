@@ -32,7 +32,7 @@ services:
     ports:
       - "8080:8080"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -59,7 +59,7 @@ services:
       - "3000:80"
     environment:
       # All UI API calls MUST go through the gateway; never call backend or risk-engine directly
-      REACT_APP_API_BASE_URL: http://localhost:8081/api
+      REACT_APP_API_BASE_URL: "http://localhost:8081/api"
       NODE_ENV: development
     depends_on:
       - gateway

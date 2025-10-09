@@ -6,10 +6,12 @@ import ConfirmationModal from './components/confirmation-modal/ConfirmationModal
 import CDSBlotter from './components/cds-blotter/CDSBlotter';
 import TradeDetailModal from './components/trade-detail-modal/TradeDetailModal';
 import PortfolioPage from './components/portfolio/PortfolioPage';
+import MarginStatementsPage from './components/margin/MarginStatementsPage';
+import SimmDashboard from './components/SimmDashboard';
 import { CDSTrade } from './data/referenceData';
 import { cdsTradeService, CDSTradeRequest, CDSTradeResponse } from './services/cdsTradeService';
 
-type ViewMode = 'form' | 'blotter' | 'portfolios';
+type ViewMode = 'form' | 'blotter' | 'portfolios' | 'margin-statements' | 'simm';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewMode>('form');
@@ -72,6 +74,12 @@ function App() {
     setSelectedTrade(null);
   };
 
+  const handleTradeUpdate = () => {
+    // Force a re-render of the blotter to refresh trade data
+    // The CDSBlotter will handle its own refresh
+    setCurrentView('blotter');
+  };
+
   return (
     <div className="min-h-screen bg-fd-dark">
       <TopBar />
@@ -110,6 +118,26 @@ function App() {
             >
               Portfolios
             </button>
+            <button
+              onClick={() => setCurrentView('margin-statements')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                currentView === 'margin-statements'
+                  ? 'bg-fd-green text-fd-dark'
+                  : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
+              }`}
+            >
+              Margin Statements
+            </button>
+            <button
+              onClick={() => setCurrentView('simm')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                currentView === 'simm'
+                  ? 'bg-fd-green text-fd-dark'
+                  : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
+              }`}
+            >
+              SIMM Calculator
+            </button>
           </div>
         </div>
       </div>
@@ -121,9 +149,13 @@ function App() {
           <CDSTradeForm onSubmit={handleTradeSubmit} />
         ) : currentView === 'blotter' ? (
           <CDSBlotter onTradeSelect={handleTradeSelect} />
-        ) : (
+        ) : currentView === 'portfolios' ? (
           <PortfolioPage />
-        )}
+        ) : currentView === 'margin-statements' ? (
+          <MarginStatementsPage />
+        ) : currentView === 'simm' ? (
+          <SimmDashboard />
+        ) : null}
         
         <ConfirmationModal
           isOpen={isConfirmationOpen}
@@ -135,6 +167,7 @@ function App() {
           isOpen={isTradeDetailOpen}
           trade={selectedTrade}
           onClose={handleCloseTradeDetail}
+          onTradeUpdate={handleTradeUpdate}
         />
       </div>
     </div>

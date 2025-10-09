@@ -42,6 +42,17 @@ public class AuditService {
     }
     
     /**
+     * Log an audit entry with explicit correlation ID
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void logAudit(AuditLog.EntityType entityType, String entityId, AuditLog.AuditAction action, 
+                        String actor, String summary, UUID correlationId) {
+        AuditLog auditLog = new AuditLog(entityType, entityId, action, actor, summary);
+        auditLog.setCorrelationId(correlationId);
+        auditLogRepository.save(auditLog);
+    }
+    
+    /**
      * Log credit event creation
      */
     public void logCreditEventCreation(UUID eventId, String actor, String tradeReferenceEntity) {

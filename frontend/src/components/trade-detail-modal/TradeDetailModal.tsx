@@ -1,21 +1,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { CDSTradeResponse } from '../../services/cdsTradeService';
 import { CreditEvent, creditEventService } from '../../services/creditEventService';
+import { novationService } from '../../services/novationService';
 import RiskMeasuresPanel from '../risk/RiskMeasuresPanel';
 import ScenarioRunModal from '../risk/ScenarioRunModal';
 import RegressionStatusBadge from '../risk/RegressionStatusBadge';
+import NovationModal from '../novation/NovationModal';
 
 interface TradeDetailModalProps {
   isOpen: boolean;
   trade: CDSTradeResponse | null;
   onClose: () => void;
+  onTradeUpdate?: () => void; // Callback for when trade is updated (e.g., novated)
 }
 
-const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onClose }) => {
+const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onClose, onTradeUpdate }) => {
   const [creditEvents, setCreditEvents] = useState<CreditEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [activeTab, setActiveTab] = useState<'details' | 'events' | 'risk'>('details');
   const [showScenarioModal, setShowScenarioModal] = useState(false);
+  const [showNovationModal, setShowNovationModal] = useState(false);
 
   const loadCreditEvents = useCallback(async () => {
     if (!trade) return;
@@ -37,6 +41,35 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
       loadCreditEvents();
     }
   }, [isOpen, trade, loadCreditEvents]);
+
+  const handleNovationConfirm = async (tradeId: number, ccpName: string, memberFirm: string) => {
+    try {
+      await novationService.executeNovation({
+        tradeId,
+        ccpName,
+        memberFirm,
+        actor: 'operations_user' // TODO: Get from user context
+      });
+      
+      // Close modals and notify parent
+      setShowNovationModal(false);
+      onClose();
+      
+      if (onTradeUpdate) {
+        onTradeUpdate();
+      }
+      
+      alert(`Successfully novated trade CDS-${tradeId} to ${ccpName}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Novation failed';
+      alert(`Error: ${errorMessage}`);
+      console.error('Novation failed:', error);
+    }
+  };
+
+  const isTradeEligibleForNovation = (trade: CDSTradeResponse): boolean => {
+    return trade.tradeStatus === 'ACTIVE' || trade.tradeStatus === 'PENDING';
+  };
 
   if (!isOpen || !trade) return null;
 
@@ -333,8 +366,23 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
             <RiskMeasuresPanel tradeId={trade.id} trade={trade} />
           </div>
         )}
-        <div className="flex justify-end space-x-4 mt-8 pt-4 border-t border-fd-border">
-          <button onClick={onClose} className="px-6 py-2 bg-fd-green text-fd-dark font-medium rounded hover:bg-fd-green-hover transition-colors">Close</button>
+        <div className="flex justify-between space-x-4 mt-8 pt-4 border-t border-fd-border">
+          <div className="flex space-x-3">
+            {isTradeEligibleForNovation(trade) && (
+              <button 
+                onClick={() => setShowNovationModal(true)}
+                className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                </svg>
+                <span>Novate to CCP</span>
+              </button>
+            )}
+          </div>
+          <button onClick={onClose} className="px-6 py-2 bg-fd-green text-fd-dark font-medium rounded hover:bg-fd-green-hover transition-colors">
+            Close
+          </button>
         </div>
       </div>
       {trade && (
@@ -344,6 +392,14 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
           onClose={() => setShowScenarioModal(false)}
         />
       )}
+      
+      {/* Novation Modal */}
+      <NovationModal
+        isOpen={showNovationModal}
+        trade={trade}
+        onClose={() => setShowNovationModal(false)}
+        onConfirm={handleNovationConfirm}
+      />
     </div>
   );
 };

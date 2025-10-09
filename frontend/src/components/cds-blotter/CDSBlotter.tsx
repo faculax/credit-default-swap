@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { cdsTradeService, CDSTradeResponse } from '../../services/cdsTradeService';
 import { creditEventService } from '../../services/creditEventService';
+import { novationService } from '../../services/novationService';
+import NovationModal from '../novation/NovationModal';
 
 interface CDSBlotterProps {
   onTradeSelect?: (trade: CDSTradeResponse) => void;
@@ -12,6 +14,8 @@ const CDSBlotter: React.FC<CDSBlotterProps> = ({ onTradeSelect }) => {
   const [error, setError] = useState<string | null>(null);
   const [selectedTradeId, setSelectedTradeId] = useState<number | null>(null);
   const [generatingEvents, setGeneratingEvents] = useState<number | null>(null);
+  const [showNovationModal, setShowNovationModal] = useState(false);
+  const [selectedTradeForNovation, setSelectedTradeForNovation] = useState<CDSTradeResponse | null>(null);
 
   useEffect(() => {
     loadTrades();
@@ -63,6 +67,38 @@ const CDSBlotter: React.FC<CDSBlotterProps> = ({ onTradeSelect }) => {
     } finally {
       setGeneratingEvents(null);
     }
+  };
+
+  const handleNovateClick = (trade: CDSTradeResponse, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent triggering the row click
+    setSelectedTradeForNovation(trade);
+    setShowNovationModal(true);
+  };
+
+  const handleNovationConfirm = async (tradeId: number, ccpName: string, memberFirm: string) => {
+    try {
+      await novationService.executeNovation({
+        tradeId,
+        ccpName,
+        memberFirm,
+        actor: 'operations_user' // TODO: Get from user context
+      });
+      
+      // Close modal and refresh trades
+      setShowNovationModal(false);
+      setSelectedTradeForNovation(null);
+      await loadTrades();
+      
+      alert(`Successfully novated trade CDS-${tradeId} to ${ccpName}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Novation failed';
+      alert(`Error: ${errorMessage}`);
+      console.error('Novation failed:', error);
+    }
+  };
+
+  const isTradeEligibleForNovation = (trade: CDSTradeResponse): boolean => {
+    return trade.tradeStatus === 'ACTIVE' || trade.tradeStatus === 'PENDING';
   };
 
   const formatCurrency = (amount: number, currency: string) => {
@@ -253,45 +289,77 @@ const CDSBlotter: React.FC<CDSBlotterProps> = ({ onTradeSelect }) => {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <button
-                    onClick={(e) => handleGenerateDemoEvents(trade, e)}
-                    disabled={generatingEvents === trade.id || trade.tradeStatus !== 'ACTIVE'}
-                    className={`inline-flex items-center justify-center w-8 h-8 rounded transition-colors ${
-                      trade.tradeStatus === 'ACTIVE' 
-                        ? 'text-fd-text-muted hover:text-fd-green hover:bg-fd-green/10' 
-                        : 'text-fd-text-muted/50 cursor-not-allowed'
-                    }`}
-                    title={
-                      trade.tradeStatus === 'ACTIVE' 
-                        ? 'Generate demo credit events' 
-                        : 'Only available for ACTIVE trades'
-                    }
-                  >
-                    {generatingEvents === trade.id ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-fd-green"></div>
-                    ) : (
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={(e) => handleGenerateDemoEvents(trade, e)}
+                      disabled={generatingEvents === trade.id || trade.tradeStatus !== 'ACTIVE'}
+                      className={`inline-flex items-center justify-center w-8 h-8 rounded transition-colors ${
+                        trade.tradeStatus === 'ACTIVE' 
+                          ? 'text-fd-text-muted hover:text-fd-green hover:bg-fd-green/10' 
+                          : 'text-fd-text-muted/50 cursor-not-allowed'
+                      }`}
+                      title={
+                        trade.tradeStatus === 'ACTIVE' 
+                          ? 'Generate demo credit events' 
+                          : 'Only available for ACTIVE trades'
+                      }
+                    >
+                      {generatingEvents === trade.id ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-fd-green"></div>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth={2} 
+                            d="M8 6h8V4a2 2 0 00-2-2H10a2 2 0 00-2 2v2zm8 0v2H8V6h8zm0 2v8a2 2 0 01-2 2H10a2 2 0 01-2-2V8h8z"
+                          />
+                          <circle cx="10" cy="10" r="1" fill="currentColor"/>
+                          <circle cx="14" cy="10" r="1" fill="currentColor"/>
+                          <circle cx="10" cy="14" r="1" fill="currentColor"/>
+                          <circle cx="14" cy="14" r="1" fill="currentColor"/>
+                          <circle cx="12" cy="12" r="1" fill="currentColor"/>
+                          <circle cx="12" cy="16" r="1" fill="currentColor"/>
+                        </svg>
+                      )}
+                    </button>
+                    
+                    <button
+                      onClick={(e) => handleNovateClick(trade, e)}
+                      disabled={!isTradeEligibleForNovation(trade)}
+                      className={`inline-flex items-center justify-center w-8 h-8 rounded transition-colors ${
+                        isTradeEligibleForNovation(trade)
+                          ? 'text-fd-text-muted hover:text-blue-400 hover:bg-blue-400/10' 
+                          : 'text-fd-text-muted/50 cursor-not-allowed'
+                      }`}
+                      title={
+                        isTradeEligibleForNovation(trade)
+                          ? 'Novate trade to CCP' 
+                          : 'Only available for ACTIVE or PENDING trades'
+                      }
+                    >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
-                          strokeWidth={2} 
-                          d="M8 6h8V4a2 2 0 00-2-2H10a2 2 0 00-2 2v2zm8 0v2H8V6h8zm0 2v8a2 2 0 01-2 2H10a2 2 0 01-2-2V8h8z"
-                        />
-                        <circle cx="10" cy="10" r="1" fill="currentColor"/>
-                        <circle cx="14" cy="10" r="1" fill="currentColor"/>
-                        <circle cx="10" cy="14" r="1" fill="currentColor"/>
-                        <circle cx="14" cy="14" r="1" fill="currentColor"/>
-                        <circle cx="12" cy="12" r="1" fill="currentColor"/>
-                        <circle cx="12" cy="16" r="1" fill="currentColor"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
                       </svg>
-                    )}
-                  </button>
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      
+      {/* Novation Modal */}
+      <NovationModal
+        isOpen={showNovationModal}
+        trade={selectedTradeForNovation}
+        onClose={() => {
+          setShowNovationModal(false);
+          setSelectedTradeForNovation(null);
+        }}
+        onConfirm={handleNovationConfirm}
+      />
     </div>
   );
 };
