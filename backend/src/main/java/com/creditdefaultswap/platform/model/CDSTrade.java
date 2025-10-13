@@ -100,6 +100,12 @@ public class CDSTrade {
     @Column(name = "is_cleared", nullable = false)
     private Boolean isCleared = false;
     
+    @Column(name = "upfront_amount", precision = 15, scale = 2)
+    private BigDecimal upfrontAmount = BigDecimal.ZERO;
+    
+    @Column(name = "mark_to_market_value", precision = 15, scale = 2)
+    private BigDecimal markToMarketValue = BigDecimal.ZERO;
+    
     // Enum for Buy/Sell Protection
     public enum ProtectionDirection {
         BUY, SELL
@@ -341,6 +347,22 @@ public class CDSTrade {
     
     public void setIsCleared(Boolean isCleared) {
         this.isCleared = isCleared;
+    }
+    
+    public BigDecimal getUpfrontAmount() {
+        return upfrontAmount;
+    }
+    
+    public void setUpfrontAmount(BigDecimal upfrontAmount) {
+        this.upfrontAmount = upfrontAmount;
+    }
+    
+    public BigDecimal getMarkToMarketValue() {
+        return markToMarketValue;
+    }
+    
+    public void setMarkToMarketValue(BigDecimal markToMarketValue) {
+        this.markToMarketValue = markToMarketValue;
     }
     
     public void setLastUpdated(LocalDateTime lastUpdated) {

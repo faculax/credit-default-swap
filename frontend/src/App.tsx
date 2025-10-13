@@ -8,10 +8,11 @@ import TradeDetailModal from './components/trade-detail-modal/TradeDetailModal';
 import PortfolioPage from './components/portfolio/PortfolioPage';
 import MarginStatementsPage from './components/margin/MarginStatementsPage';
 import SimmDashboard from './components/SimmDashboard';
+import SaCcrDashboard from './components/SaCcrDashboard';
 import { CDSTrade } from './data/referenceData';
 import { cdsTradeService, CDSTradeRequest, CDSTradeResponse } from './services/cdsTradeService';
 
-type ViewMode = 'form' | 'blotter' | 'portfolios' | 'margin-statements' | 'simm';
+type ViewMode = 'form' | 'blotter' | 'portfolios' | 'margin-statements' | 'simm' | 'sa-ccr';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewMode>('form');
@@ -138,6 +139,16 @@ function App() {
             >
               SIMM Calculator
             </button>
+            <button
+              onClick={() => setCurrentView('sa-ccr')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                currentView === 'sa-ccr'
+                  ? 'bg-fd-green text-fd-dark'
+                  : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
+              }`}
+            >
+              SA-CCR Exposure
+            </button>
           </div>
         </div>
       </div>
@@ -155,6 +166,8 @@ function App() {
           <MarginStatementsPage />
         ) : currentView === 'simm' ? (
           <SimmDashboard />
+        ) : currentView === 'sa-ccr' ? (
+          <SaCcrDashboard />
         ) : null}
         
         <ConfirmationModal

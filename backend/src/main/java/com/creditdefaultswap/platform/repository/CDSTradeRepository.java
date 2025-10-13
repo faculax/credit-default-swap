@@ -1,6 +1,7 @@
 package com.creditdefaultswap.platform.repository;
 
 import com.creditdefaultswap.platform.model.CDSTrade;
+import com.creditdefaultswap.platform.model.TradeStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,6 +15,8 @@ public interface CDSTradeRepository extends JpaRepository<CDSTrade, Long> {
     List<CDSTrade> findByCounterpartyOrderByCreatedAtDesc(String counterparty);
     
     List<CDSTrade> findByTradeStatusOrderByCreatedAtDesc(String tradeStatus);
+    
+    List<CDSTrade> findByCounterpartyAndTradeStatus(String counterparty, TradeStatus tradeStatus);
     
     List<CDSTrade> findAllByOrderByCreatedAtDesc();
     
