@@ -47,6 +47,26 @@ export interface BondPortfolioConstituent {
   addedAt: string;
 }
 
+export interface BasketPortfolioConstituent {
+  id: number;
+  portfolio?: CdsPortfolio;
+  basket: {
+    id: number;
+    name: string;
+    basketType: string;
+    triggerType?: string;
+    kthToDefault?: number;
+    numberOfConstituents: number;
+    notional: number;  // Backend returns 'notional', not 'totalNotional'
+    maturityDate: string;
+    currency: string;
+  };
+  weightType: 'NOTIONAL' | 'EQUAL' | 'MARKET_VALUE';
+  weightValue: number;
+  active: boolean;
+  addedAt: string;
+}
+
 export interface ConstituentRequest {
   tradeId: number;
   weightType: 'NOTIONAL' | 'PERCENT';
@@ -303,6 +323,54 @@ export const portfolioService = {
       return JSON.parse(text);
     } catch (error) {
       console.error('Failed to parse bonds response:', text.substring(0, 500));
+      throw new Error('Invalid response format from server');
+    }
+  },
+
+  // Basket management
+  async attachBasket(portfolioId: number, basketId: number, weightType: string = 'NOTIONAL', weightValue: number = 1.0): Promise<BasketPortfolioConstituent> {
+    const response = await fetch(`${PORTFOLIO_BASE_URL}/${portfolioId}/baskets`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ basketId, weightType, weightValue })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to attach basket');
+    }
+    
+    return response.json();
+  },
+
+  async removeBasket(portfolioId: number, basketId: number): Promise<void> {
+    const response = await fetch(`${PORTFOLIO_BASE_URL}/${portfolioId}/baskets/${basketId}`, {
+      method: 'DELETE'
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to remove basket');
+    }
+  },
+
+  async getPortfolioBaskets(portfolioId: number): Promise<BasketPortfolioConstituent[]> {
+    const response = await fetch(`${PORTFOLIO_BASE_URL}/${portfolioId}/baskets`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch portfolio baskets');
+    }
+    
+    const text = await response.text();
+    
+    if (!text || text.trim() === '') {
+      return [];
+    }
+    
+    try {
+      return JSON.parse(text);
+    } catch (error) {
+      console.error('Failed to parse baskets response:', text.substring(0, 500));
       throw new Error('Invalid response format from server');
     }
   }

@@ -7,10 +7,11 @@ import CDSBlotter from './components/cds-blotter/CDSBlotter';
 import TradeDetailModal from './components/trade-detail-modal/TradeDetailModal';
 import PortfolioPage from './components/portfolio/PortfolioPage';
 import BondPage from './components/bond/BondPage';
+import BasketPage from './components/basket/BasketPage';
 import { CDSTrade } from './data/referenceData';
 import { cdsTradeService, CDSTradeRequest, CDSTradeResponse } from './services/cdsTradeService';
 
-type ViewMode = 'form' | 'blotter' | 'portfolios' | 'bonds';
+type ViewMode = 'form' | 'blotter' | 'portfolios' | 'bonds' | 'baskets';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewMode>('form');
@@ -112,6 +113,16 @@ function App() {
               Corporate Bonds
             </button>
             <button
+              onClick={() => setCurrentView('baskets')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                currentView === 'baskets'
+                  ? 'bg-fd-green text-fd-dark'
+                  : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
+              }`}
+            >
+              Basket Derivatives
+            </button>
+            <button
               onClick={() => setCurrentView('portfolios')}
               className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                 currentView === 'portfolios'
@@ -134,6 +145,8 @@ function App() {
           <CDSBlotter onTradeSelect={handleTradeSelect} />
         ) : currentView === 'portfolios' ? (
           <PortfolioPage />
+        ) : currentView === 'baskets' ? (
+          <BasketPage />
         ) : (
           <BondPage />
         )}

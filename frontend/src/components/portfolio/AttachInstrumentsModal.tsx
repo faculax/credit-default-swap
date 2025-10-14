@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { portfolioService, ConstituentRequest } from '../../services/portfolioService';
 import { cdsTradeService, CDSTradeResponse } from '../../services/cdsTradeService';
 import { bondService, Bond } from '../../services/bondService';
+import { basketService } from '../../services/basketService';
+import { Basket } from '../../types/basket';
 
 interface AttachInstrumentsModalProps {
   portfolioId: number;
@@ -9,14 +11,16 @@ interface AttachInstrumentsModalProps {
   onSuccess: () => void;
 }
 
-type InstrumentType = 'CDS' | 'BOND';
+type InstrumentType = 'CDS' | 'BOND' | 'BASKET';
 
 const AttachInstrumentsModal: React.FC<AttachInstrumentsModalProps> = ({ portfolioId, onClose, onSuccess }) => {
   const [instrumentType, setInstrumentType] = useState<InstrumentType>('CDS');
   const [availableTrades, setAvailableTrades] = useState<CDSTradeResponse[]>([]);
   const [availableBonds, setAvailableBonds] = useState<Bond[]>([]);
+  const [availableBaskets, setAvailableBaskets] = useState<Basket[]>([]);
   const [selectedTrades, setSelectedTrades] = useState<Map<number, ConstituentRequest>>(new Map());
   const [selectedBonds, setSelectedBonds] = useState<Set<number>>(new Set());
+  const [selectedBaskets, setSelectedBaskets] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,8 +29,10 @@ const AttachInstrumentsModal: React.FC<AttachInstrumentsModalProps> = ({ portfol
   useEffect(() => {
     if (instrumentType === 'CDS') {
       loadAvailableTrades();
-    } else {
+    } else if (instrumentType === 'BOND') {
       loadAvailableBonds();
+    } else {
+      loadAvailableBaskets();
     }
   }, [instrumentType]);
 
@@ -51,6 +57,19 @@ const AttachInstrumentsModal: React.FC<AttachInstrumentsModalProps> = ({ portfol
     } catch (err) {
       console.error('Error loading bonds:', err);
       setError('Failed to load available bonds');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadAvailableBaskets = async () => {
+    try {
+      setLoading(true);
+      const baskets = await basketService.getAllBaskets();
+      setAvailableBaskets(baskets);
+    } catch (err) {
+      console.error('Error loading baskets:', err);
+      setError('Failed to load available baskets');
     } finally {
       setLoading(false);
     }
@@ -86,6 +105,18 @@ const AttachInstrumentsModal: React.FC<AttachInstrumentsModalProps> = ({ portfol
     }
     
     setSelectedBonds(newSelected);
+  };
+
+  const handleBasketToggle = (basketId: number) => {
+    const newSelected = new Set(selectedBaskets);
+    
+    if (newSelected.has(basketId)) {
+      newSelected.delete(basketId);
+    } else {
+      newSelected.add(basketId);
+    }
+    
+    setSelectedBaskets(newSelected);
   };
 
   const handleWeightChange = (tradeId: number, value: number) => {
@@ -152,7 +183,7 @@ const AttachInstrumentsModal: React.FC<AttachInstrumentsModalProps> = ({ portfol
       } finally {
         setSubmitting(false);
       }
-    } else {
+    } else if (instrumentType === 'BOND') {
       // Attach bonds
       if (selectedBonds.size === 0) {
         setError('Please select at least one bond');
@@ -174,6 +205,32 @@ const AttachInstrumentsModal: React.FC<AttachInstrumentsModalProps> = ({ portfol
         onSuccess();
       } catch (err: any) {
         const errorMessage = err.response?.data?.error || err.message || 'Failed to attach bonds';
+        setError(errorMessage);
+      } finally {
+        setSubmitting(false);
+      }
+    } else {
+      // Attach baskets
+      if (selectedBaskets.size === 0) {
+        setError('Please select at least one basket');
+        return;
+      }
+
+      try {
+        setSubmitting(true);
+        setError(null);
+        
+        // Attach each basket individually
+        for (const basketId of selectedBaskets) {
+          const basket = availableBaskets.find(b => b.id === basketId);
+          if (basket) {
+            await portfolioService.attachBasket(portfolioId, basketId, 'NOTIONAL', basket.notional);
+          }
+        }
+        
+        onSuccess();
+      } catch (err: any) {
+        const errorMessage = err.response?.data?.error || err.message || 'Failed to attach baskets';
         setError(errorMessage);
       } finally {
         setSubmitting(false);
@@ -228,11 +285,23 @@ const AttachInstrumentsModal: React.FC<AttachInstrumentsModalProps> = ({ portfol
               >
                 📜 Corporate Bonds
               </button>
+              <button
+                onClick={() => setInstrumentType('BASKET')}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  instrumentType === 'BASKET'
+                    ? 'bg-fd-green text-fd-dark'
+                    : 'bg-fd-dark text-fd-text border border-fd-border hover:bg-fd-darker'
+                }`}
+              >
+                🗂️ Credit Baskets
+              </button>
             </div>
             <div className="ml-auto text-sm text-fd-text-muted">
               {instrumentType === 'CDS' 
                 ? `${selectedTrades.size} trade(s) selected`
-                : `${selectedBonds.size} bond(s) selected`
+                : instrumentType === 'BOND'
+                ? `${selectedBonds.size} bond(s) selected`
+                : `${selectedBaskets.size} basket(s) selected`
               }
             </div>
           </div>
@@ -329,7 +398,7 @@ const AttachInstrumentsModal: React.FC<AttachInstrumentsModalProps> = ({ portfol
                 })}
               </tbody>
             </table>
-          ) : (
+          ) : instrumentType === 'BOND' ? (
             <table className="min-w-full divide-y divide-fd-border">
               <thead className="bg-fd-dark">
                 <tr>
@@ -368,6 +437,47 @@ const AttachInstrumentsModal: React.FC<AttachInstrumentsModalProps> = ({ portfol
                 })}
               </tbody>
             </table>
+          ) : (
+            <table className="min-w-full divide-y divide-fd-border">
+              <thead className="bg-fd-dark">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">Select</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">Basket Name</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">Type</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">Constituents</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">Notional</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">Maturity</th>
+                </tr>
+              </thead>
+              <tbody className="bg-fd-darker divide-y divide-fd-border">
+                {availableBaskets.map((basket) => {
+                  if (!basket.id) return null;
+                  const isSelected = selectedBaskets.has(basket.id);
+                  
+                  return (
+                    <tr key={basket.id} className={`transition-colors ${isSelected ? 'bg-fd-dark ring-2 ring-fd-green' : 'hover:bg-fd-dark'}`}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleBasketToggle(basket.id!)}
+                          className="h-4 w-4 accent-fd-green border-fd-border rounded cursor-pointer"
+                        />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-fd-text">{basket.name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-fd-green/20 text-fd-green border border-fd-green/30">
+                          {basket.type === 'FIRST_TO_DEFAULT' ? 'FTD' : basket.type === 'NTH_TO_DEFAULT' ? `${basket.nth}th-to-Default` : 'Tranchette'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-fd-text">{basket.constituentCount || basket.constituents?.length || 0}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-fd-text">{formatCurrency(basket.notional)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-fd-text">{formatDate(basket.maturityDate)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           )}
         </div>
 
@@ -384,13 +494,15 @@ const AttachInstrumentsModal: React.FC<AttachInstrumentsModalProps> = ({ portfol
             type="button"
             onClick={handleSubmit}
             className="px-4 py-2 text-sm font-medium text-fd-dark bg-fd-green border border-transparent rounded-md hover:bg-fd-green-hover focus:outline-none focus:ring-2 focus:ring-fd-green disabled:bg-fd-green/50 disabled:cursor-not-allowed"
-            disabled={submitting || (instrumentType === 'CDS' ? selectedTrades.size === 0 : selectedBonds.size === 0)}
+            disabled={submitting || (instrumentType === 'CDS' ? selectedTrades.size === 0 : instrumentType === 'BOND' ? selectedBonds.size === 0 : selectedBaskets.size === 0)}
           >
             {submitting 
               ? 'Attaching...' 
               : instrumentType === 'CDS'
                 ? `Attach ${selectedTrades.size} Trade(s)`
-                : `Attach ${selectedBonds.size} Bond(s)`
+                : instrumentType === 'BOND'
+                ? `Attach ${selectedBonds.size} Bond(s)`
+                : `Attach ${selectedBaskets.size} Basket(s)`
             }
           </button>
         </div>
