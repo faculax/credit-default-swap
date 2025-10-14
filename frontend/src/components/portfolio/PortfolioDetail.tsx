@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { portfolioService, CdsPortfolio, CdsPortfolioConstituent, BondPortfolioConstituent, PortfolioPricingResponse } from '../../services/portfolioService';
+import { portfolioService, CdsPortfolio, CdsPortfolioConstituent, BondPortfolioConstituent, BasketPortfolioConstituent, PortfolioPricingResponse } from '../../services/portfolioService';
 import { cdsTradeService, CDSTradeResponse } from '../../services/cdsTradeService';
 import AttachInstrumentsModal from './AttachInstrumentsModal';
 import SimulationPanel from './simulation/SimulationPanel';
@@ -14,6 +14,7 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
   const [portfolio, setPortfolio] = useState<CdsPortfolio | null>(null);
   const [constituents, setConstituents] = useState<CdsPortfolioConstituent[]>([]);
   const [bondConstituents, setBondConstituents] = useState<BondPortfolioConstituent[]>([]);
+  const [basketConstituents, setBasketConstituents] = useState<BasketPortfolioConstituent[]>([]);
   const [riskSummary, setRiskSummary] = useState<PortfolioPricingResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [pricingLoading, setPricingLoading] = useState(false);
@@ -31,15 +32,17 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
       setLoading(true);
       setError(null);
       
-      const [portfolioData, constituentsData, bondsData] = await Promise.all([
+      const [portfolioData, constituentsData, bondsData, basketsData] = await Promise.all([
         portfolioService.getPortfolioById(portfolioId),
         portfolioService.getConstituents(portfolioId),
-        portfolioService.getPortfolioBonds(portfolioId)
+        portfolioService.getPortfolioBonds(portfolioId),
+        portfolioService.getPortfolioBaskets(portfolioId)
       ]);
       
       setPortfolio(portfolioData);
       setConstituents(constituentsData);
       setBondConstituents(bondsData);
+      setBasketConstituents(basketsData);
       
       // Try to load cached risk summary
       try {
@@ -142,6 +145,20 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
       loadPortfolioData();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to remove bond';
+      alert(errorMessage);
+    }
+  };
+
+  const handleDetachBasket = async (basketId: number) => {
+    if (!window.confirm('Are you sure you want to remove this basket from the portfolio?')) {
+      return;
+    }
+
+    try {
+      await portfolioService.removeBasket(portfolioId, basketId);
+      loadPortfolioData();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to remove basket';
       alert(errorMessage);
     }
   };
@@ -306,7 +323,7 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
                   : 'border-transparent text-fd-text-muted hover:text-fd-text hover:border-fd-border'
               }`}
             >
-              Constituents ({constituents.length + bondConstituents.length})
+              Constituents ({constituents.length + bondConstituents.length + basketConstituents.length})
             </button>
             <button
               onClick={() => setActiveTab('concentration')}
@@ -338,13 +355,14 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
             portfolioId={portfolioId}
             cdsConstituents={constituents}
             bondConstituents={bondConstituents}
+            basketConstituents={basketConstituents}
             pricingData={riskSummary}
           />
         )}
 
         {activeTab === 'constituents' && (
           <>
-            {constituents.length === 0 && bondConstituents.length === 0 ? (
+            {constituents.length === 0 && bondConstituents.length === 0 && basketConstituents.length === 0 ? (
               <div className="text-center py-12">
                 <svg
                   className="mx-auto h-12 w-12 text-fd-text-muted"
@@ -451,6 +469,43 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <button
                             onClick={() => handleDetachBond(bondConstituent.bond.id)}
+                            className="text-red-400 hover:text-red-300 font-medium"
+                          >
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {basketConstituents.map((basketConstituent) => (
+                      <tr key={`basket-${basketConstituent.id}`} className="hover:bg-fd-dark transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-900 text-purple-200">
+                            🗂️ Basket
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-fd-text">
+                          {basketConstituent.basket.name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-fd-text">
+                          {basketConstituent.basket.basketType === 'FIRST_TO_DEFAULT' 
+                            ? 'FTD' 
+                            : basketConstituent.basket.basketType === 'NTH_TO_DEFAULT'
+                            ? `${basketConstituent.basket.kthToDefault}th-to-Default`
+                            : 'Tranchette'
+                          } ({basketConstituent.basket.numberOfConstituents} names)
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-fd-text">
+                          {formatCurrency(basketConstituent.basket.notional)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-fd-text-muted">
+                          {basketConstituent.weightType}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-fd-text">
+                          {formatCurrency(basketConstituent.weightValue)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <button
+                            onClick={() => handleDetachBasket(basketConstituent.basket.id)}
                             className="text-red-400 hover:text-red-300 font-medium"
                           >
                             Remove

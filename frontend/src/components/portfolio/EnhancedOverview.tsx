@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { BondPortfolioConstituent, CdsPortfolioConstituent } from '../../services/portfolioService';
+import { BondPortfolioConstituent, BasketPortfolioConstituent, CdsPortfolioConstituent } from '../../services/portfolioService';
 
 interface EnhancedOverviewProps {
   portfolioId: number;
   cdsConstituents: CdsPortfolioConstituent[];
   bondConstituents: BondPortfolioConstituent[];
+  basketConstituents: BasketPortfolioConstituent[];
   pricingData: any;
 }
 
@@ -31,6 +32,7 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
   portfolioId, 
   cdsConstituents, 
   bondConstituents,
+  basketConstituents,
   pricingData 
 }) => {
   const [issuerExposures, setIssuerExposures] = useState<IssuerExposure[]>([]);
@@ -39,7 +41,7 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
   useEffect(() => {
     calculateExposures();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cdsConstituents, bondConstituents]);
+  }, [cdsConstituents, bondConstituents, basketConstituents]);
 
   const calculateExposures = useCallback(() => {
     // Map to aggregate by issuer
@@ -142,6 +144,20 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
       sectorData.count++;
     });
 
+    // Add baskets as "BASKET" sector for now
+    // TODO: In future, unwind basket constituents to their actual sectors
+    basketConstituents.forEach(bc => {
+      const sector = 'BASKET';
+      if (!sectorMap.has(sector)) {
+        sectorMap.set(sector, { notional: 0, count: 0 });
+      }
+      const sectorData = sectorMap.get(sector)!;
+      // Use basket.notional (backend field name)
+      const notional = bc.basket?.notional || bc.weightValue || 0;
+      sectorData.notional += notional;
+      sectorData.count++;
+    });
+
     const totalNotional = Array.from(sectorMap.values()).reduce((sum, s) => sum + s.notional, 0);
     const sectors: SectorExposure[] = [];
     
@@ -149,7 +165,7 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
       sectors.push({
         sector,
         notional: data.notional,
-        percentage: (data.notional / totalNotional) * 100,
+        percentage: totalNotional > 0 ? (data.notional / totalNotional) * 100 : 0,
         instrumentCount: data.count
       });
     });
@@ -206,7 +222,12 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
 
   const totalCdsNotional = cdsConstituents.reduce((sum, c) => sum + c.trade.notionalAmount, 0);
   const totalBondNotional = bondConstituents.reduce((sum, c) => sum + c.bond.notional, 0);
-  const totalNotional = totalCdsNotional + totalBondNotional;
+  const totalBasketNotional = basketConstituents.reduce((sum, c) => {
+    // Use basket.notional (backend field name)
+    const notional = c.basket?.notional || c.weightValue || 0;
+    return sum + notional;
+  }, 0);
+  const totalNotional = totalCdsNotional + totalBondNotional + totalBasketNotional;
 
   return (
     <div className="space-y-6">
@@ -251,6 +272,25 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
               <div 
                 className="bg-blue-500 h-2 rounded-full transition-all"
                 style={{ width: `${totalNotional > 0 ? (totalBondNotional / totalNotional) * 100 : 0}%` }}
+              ></div>
+            </div>
+
+            <div className="flex items-center justify-between mt-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-4 h-4 bg-purple-500 rounded"></div>
+                <span className="text-fd-text">🗂️ Credit Baskets</span>
+              </div>
+              <div className="text-right">
+                <div className="text-fd-text font-medium">{formatCurrency(totalBasketNotional)}</div>
+                <div className="text-sm text-fd-text-muted">
+                  {totalNotional > 0 ? ((totalBasketNotional / totalNotional) * 100).toFixed(1) : 0}% • {basketConstituents.length} positions
+                </div>
+              </div>
+            </div>
+            <div className="w-full bg-fd-dark rounded-full h-2">
+              <div 
+                className="bg-purple-500 h-2 rounded-full transition-all"
+                style={{ width: `${totalNotional > 0 ? (totalBasketNotional / totalNotional) * 100 : 0}%` }}
               ></div>
             </div>
           </div>
@@ -352,10 +392,10 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
         <div className="bg-fd-darker border border-fd-border rounded-lg p-4">
           <div className="text-sm text-fd-text-muted mb-1">Total Instruments</div>
           <div className="text-2xl font-semibold text-fd-text">
-            {cdsConstituents.length + bondConstituents.length}
+            {cdsConstituents.length + bondConstituents.length + basketConstituents.length}
           </div>
           <div className="text-xs text-fd-text-muted mt-1">
-            {cdsConstituents.length} CDS • {bondConstituents.length} Bonds
+            {cdsConstituents.length} CDS • {bondConstituents.length} Bonds • {basketConstituents.length} Baskets
           </div>
         </div>
 
