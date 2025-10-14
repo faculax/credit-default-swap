@@ -26,6 +26,11 @@ public interface MarginStatementRepository extends JpaRepository<MarginStatement
             String ccpName, LocalDate startDate, LocalDate endDate);
     
     /**
+     * Find statements by date range
+     */
+    List<MarginStatement> findByStatementDateBetween(LocalDate startDate, LocalDate endDate);
+    
+    /**
      * Find statements by status
      */
     List<MarginStatement> findByStatus(MarginStatement.StatementStatus status);

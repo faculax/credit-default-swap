@@ -168,11 +168,7 @@ public class MarginStatementController {
                     .map(this::createPositionResponse)
                     .toList();
             
-            return ResponseEntity.ok(Map.of(
-                    "statementId", statementId,
-                    "positions", response,
-                    "count", positions.size()
-            ));
+            return ResponseEntity.ok(response);
             
         } catch (Exception e) {
             logger.error("Error retrieving positions for statement {}: {}", statementId, e.getMessage());
@@ -240,21 +236,50 @@ public class MarginStatementController {
         response.put("processedAt", statement.getProcessedAt());
         response.put("errorMessage", statement.getErrorMessage() != null ? statement.getErrorMessage() : "");
         response.put("retryCount", statement.getRetryCount() != null ? statement.getRetryCount() : 0);
+        
+        // Add margin amounts if available
+        if (statement.getVariationMargin() != null) {
+            response.put("variationMargin", statement.getVariationMargin());
+        }
+        if (statement.getInitialMargin() != null) {
+            response.put("initialMargin", statement.getInitialMargin());
+        }
+        
+        // Add position count if statement is processed
+        if (statement.getStatus() == MarginStatement.StatementStatus.PROCESSED) {
+            try {
+                List<MarginPosition> positions = statementService.getPositions(statement.getId());
+                response.put("totalPositions", positions.size());
+            } catch (Exception e) {
+                logger.debug("Could not get position count for statement {}: {}", statement.getId(), e.getMessage());
+                response.put("totalPositions", 0);
+            }
+        }
+        
         return response;
     }
     
     private Map<String, Object> createPositionResponse(MarginPosition position) {
         Map<String, Object> response = new java.util.HashMap<>();
         response.put("id", position.getId());
-        response.put("positionType", position.getPositionType().toString());
-        response.put("amount", position.getAmount());
+        response.put("positionId", position.getPositionType().toString() + "-" + position.getId());
+        response.put("ccpAccount", position.getAccountNumber());
+        response.put("product", position.getProductClass() != null ? position.getProductClass() : "CDS");
         response.put("currency", position.getCurrency());
-        response.put("effectiveDate", position.getEffectiveDate());
-        response.put("accountNumber", position.getAccountNumber());
-        response.put("portfolioCode", position.getPortfolioCode() != null ? position.getPortfolioCode() : "");
-        response.put("productClass", position.getProductClass() != null ? position.getProductClass() : "");
-        response.put("nettingSetId", position.getNettingSetId() != null ? position.getNettingSetId() : "");
-        response.put("createdAt", position.getCreatedAt());
+        
+        // Map position type to VM/IM amounts
+        if (position.getPositionType() == MarginPosition.PositionType.VARIATION_MARGIN) {
+            response.put("variationMargin", position.getAmount());
+            response.put("initialMargin", 0);
+        } else if (position.getPositionType() == MarginPosition.PositionType.INITIAL_MARGIN) {
+            response.put("variationMargin", 0);
+            response.put("initialMargin", position.getAmount());
+        } else {
+            // For other types (EXCESS_COLLATERAL, etc.), show as VM
+            response.put("variationMargin", position.getAmount());
+            response.put("initialMargin", 0);
+        }
+        
         return response;
     }
 }

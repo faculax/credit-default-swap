@@ -40,5 +40,7 @@ public interface SaCcrCalculationRepository extends JpaRepository<SaCcrCalculati
     
     long countByCalculationDate(LocalDate calculationDate);
     
+    List<SaCcrCalculation> findByCalculationDateOrderByCreatedAtDesc(LocalDate calculationDate);
+    
     void deleteByCalculationDateBefore(LocalDate cutoffDate);
 }

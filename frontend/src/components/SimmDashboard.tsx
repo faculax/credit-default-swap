@@ -5,8 +5,12 @@ interface CrifUpload {
   fileName: string;
   status?: string;
   recordsTotal: number;
-  recordsProcessed: number;
-  recordsFailed: number;
+  recordsValid: number;
+  recordsError: number;
+  uploadDate: string;
+  portfolioId?: string;
+  valuationDate?: string;
+  currency?: string;
   errorMessage?: string;
 }
 
@@ -53,6 +57,7 @@ const SimmDashboard: React.FC = () => {
 
   useEffect(() => {
     loadCalculations();
+    loadCrifUploads();
   }, []);
 
   const loadCalculations = async () => {
@@ -64,6 +69,18 @@ const SimmDashboard: React.FC = () => {
       }
     } catch (err) {
       console.error('Failed to load calculations:', err);
+    }
+  };
+
+  const loadCrifUploads = async () => {
+    try {
+      const response = await fetch('/api/simm/crif/uploads');
+      if (response.ok) {
+        const data = await response.json();
+        setUploads(data);
+      }
+    } catch (err) {
+      console.error('Failed to load CRIF uploads:', err);
     }
   };
 
@@ -92,17 +109,8 @@ const SimmDashboard: React.FC = () => {
 
       if (response.ok) {
         setSuccess(`File uploaded successfully. Upload ID: ${data.uploadId || 'Generated'}`);
-        // Create a safe upload object with default values
-        const uploadRecord = {
-          uploadId: data.uploadId || `upload-${Date.now()}`,
-          fileName: data.filename || uploadFile.name,
-          status: data.status || 'PENDING',
-          recordsTotal: data.totalRecords || 0,
-          recordsProcessed: data.validRecords || 0,
-          recordsFailed: data.errorRecords || 0,
-          errorMessage: data.errorMessage
-        };
-        setUploads(prev => [uploadRecord, ...prev]);
+        // Refresh the uploads list from server
+        loadCrifUploads();
         setUploadFile(null);
         setPortfolioId('');
       } else {
@@ -140,9 +148,12 @@ const SimmDashboard: React.FC = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess(`Calculation started. ID: ${data.calculationId || 'Generated'}`);
+        setSuccess(`✅ Calculation completed successfully! ID: ${data.calculationId || 'Generated'} | Total IM: ${data.totalInitialMargin ? '$' + (data.totalInitialMargin / 1000000).toFixed(1) + 'M' : 'N/A'}`);
         loadCalculations();
         setCalculationPortfolio('');
+        
+        // Clear success message after 10 seconds
+        setTimeout(() => setSuccess(null), 10000);
       } else {
         setError(data.error || 'Calculation failed');
       }
@@ -372,10 +383,22 @@ const SimmDashboard: React.FC = () => {
               <div className="space-y-3">
                 {uploads.map((upload) => (
                   <div key={upload.uploadId} className="flex items-center justify-between p-3 bg-fd-dark rounded-md border border-fd-border">
-                    <div>
-                      <p className="font-medium text-fd-text">{upload.fileName}</p>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-1">
+                        <p className="font-medium text-fd-text">{upload.fileName}</p>
+                        {upload.portfolioId && (
+                          <span className="px-2 py-1 text-xs font-medium bg-fd-green/20 text-fd-green rounded-md">
+                            {upload.portfolioId}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-fd-text-muted">
-                        {upload.recordsProcessed} processed, {upload.recordsFailed} failed
+                        {upload.recordsValid} valid, {upload.recordsError} errors ({upload.recordsTotal} total)
+                        {upload.uploadDate && (
+                          <span className="ml-3">
+                            • Uploaded: {new Date(upload.uploadDate).toLocaleDateString()}
+                          </span>
+                        )}
                       </p>
                     </div>
                     <div className="flex items-center">

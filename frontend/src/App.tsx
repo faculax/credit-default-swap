@@ -9,10 +9,11 @@ import PortfolioPage from './components/portfolio/PortfolioPage';
 import MarginStatementsPage from './components/margin/MarginStatementsPage';
 import SimmDashboard from './components/SimmDashboard';
 import SaCcrDashboard from './components/SaCcrDashboard';
+import ReconciliationDashboard from './components/dashboard/ReconciliationDashboard';
 import { CDSTrade } from './data/referenceData';
 import { cdsTradeService, CDSTradeRequest, CDSTradeResponse } from './services/cdsTradeService';
 
-type ViewMode = 'form' | 'blotter' | 'portfolios' | 'margin-statements' | 'simm' | 'sa-ccr';
+type ViewMode = 'form' | 'blotter' | 'portfolios' | 'margin-statements' | 'simm' | 'sa-ccr' | 'reconciliation';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewMode>('form');
@@ -149,6 +150,16 @@ function App() {
             >
               SA-CCR Exposure
             </button>
+            <button
+              onClick={() => setCurrentView('reconciliation')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                currentView === 'reconciliation'
+                  ? 'bg-fd-green text-fd-dark'
+                  : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
+              }`}
+            >
+              Reconciliation Dashboard
+            </button>
           </div>
         </div>
       </div>
@@ -168,6 +179,8 @@ function App() {
           <SimmDashboard />
         ) : currentView === 'sa-ccr' ? (
           <SaCcrDashboard />
+        ) : currentView === 'reconciliation' ? (
+          <ReconciliationDashboard />
         ) : null}
         
         <ConfirmationModal

@@ -1,6 +1,12 @@
 package com.creditdefaultswap.platform.controller;
 
 import com.creditdefaultswap.platform.service.simm.CrifParserService;
+import com.creditdefaultswap.platform.model.simm.CrifUpload;
+import com.creditdefaultswap.platform.model.simm.SimmCalculation;
+import com.creditdefaultswap.platform.model.simm.SimmParameterSet;
+import com.creditdefaultswap.platform.repository.CrifUploadRepository;
+import com.creditdefaultswap.platform.repository.simm.SimmCalculationRepository;
+import com.creditdefaultswap.platform.repository.simm.SimmParameterSetRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,12 +15,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * REST API Controller for SIMM (Standard Initial Margin Model) functionality.
@@ -34,6 +43,15 @@ public class SimmController {
     
     @Autowired
     private CrifParserService crifParserService;
+    
+    @Autowired
+    private CrifUploadRepository crifUploadRepository;
+    
+    @Autowired
+    private SimmCalculationRepository simmCalculationRepository;
+    
+    @Autowired
+    private SimmParameterSetRepository simmParameterSetRepository;
     
     /**
      * Upload and process a CRIF file
@@ -72,6 +90,7 @@ public class SimmController {
                 file, portfolioId, valuationDate, currency);
             
             Map<String, Object> response = new HashMap<>();
+            response.put("uploadId", result.getUploadId());
             response.put("filename", result.getFilename());
             response.put("portfolioId", result.getPortfolioId());
             response.put("valuationDate", result.getValuationDate().toString());
@@ -81,6 +100,109 @@ public class SimmController {
             response.put("errorRecords", result.getErrorRecords());
             response.put("successRate", result.getSuccessRate());
             response.put("hasErrors", result.hasErrors());
+            response.put("status", result.hasErrors() && result.getValidRecords() == 0 ? "FAILED" : "COMPLETED");
+            
+            if (result.hasErrors()) {
+                response.put("errors", result.getErrors().stream()
+                    .map(error -> Map.of(
+                        "lineNumber", error.getLineNumber(),
+                        "message", error.getMessage()
+                    ))
+                    .limit(10) // Limit to first 10 errors
+                    .toList());
+            }
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            logger.error("CRIF file upload failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Upload failed: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * Get all CRIF uploads
+     */
+    @GetMapping("/crif/uploads")
+    public ResponseEntity<?> getCrifUploads() {
+        try {
+            logger.info("Retrieving all CRIF uploads");
+            
+            List<CrifUpload> uploads = crifUploadRepository.findAllByOrderByUploadTimestampDesc();
+            
+            List<Map<String, Object>> response = uploads.stream()
+                .map(upload -> {
+                    Map<String, Object> uploadData = new HashMap<>();
+                    uploadData.put("uploadId", upload.getUploadId());
+                    uploadData.put("fileName", upload.getFilename());
+                    uploadData.put("portfolioId", upload.getPortfolioId());
+                    uploadData.put("status", upload.getProcessingStatus().toString());
+                    uploadData.put("uploadDate", upload.getUploadTimestamp().toString());
+                    uploadData.put("valuationDate", upload.getValuationDate().toString());
+                    uploadData.put("currency", upload.getCurrency());
+                    uploadData.put("recordsTotal", upload.getTotalRecords());
+                    uploadData.put("recordsValid", upload.getValidRecords());
+                    uploadData.put("recordsError", upload.getErrorRecords());
+                    return uploadData;
+                })
+                .toList();
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            logger.error("Failed to retrieve CRIF uploads", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to retrieve uploads: " + e.getMessage()));
+        }
+    }
+    
+    public ResponseEntity<?> uploadCrifFileOLD(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "portfolioId", required = false) String portfolioId,
+            @RequestParam(value = "valuationDate", required = false) String valuationDateStr,
+            @RequestParam(value = "currency", defaultValue = "USD") String currency) {
+        
+        try {
+            if (file.isEmpty()) {
+                logger.error("File is empty!");
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "File is empty"));
+            }
+            
+            if (portfolioId == null || portfolioId.trim().isEmpty()) {
+                portfolioId = "DEFAULT_PORTFOLIO";
+            }
+            
+            LocalDate valuationDate = LocalDate.now();
+            if (valuationDateStr != null && !valuationDateStr.trim().isEmpty()) {
+                try {
+                    valuationDate = LocalDate.parse(valuationDateStr, DateTimeFormatter.ISO_LOCAL_DATE);
+                } catch (Exception e) {
+                    return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Invalid valuation date format. Use YYYY-MM-DD"));
+                }
+            }
+            
+            // Parse CRIF file
+            logger.info("DEBUG: About to call crifParserService.parseCrifFile...");
+            CrifParserService.CrifParsingResult result = crifParserService.parseCrifFile(
+                file, portfolioId, valuationDate, currency);
+            logger.info("DEBUG: CrifParserService returned result: uploadId={}, hasErrors={}", 
+                       result.getUploadId(), result.hasErrors());
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("uploadId", result.getUploadId());
+            response.put("filename", result.getFilename());
+            response.put("portfolioId", result.getPortfolioId());
+            response.put("valuationDate", result.getValuationDate().toString());
+            response.put("currency", result.getCurrency());
+            response.put("totalRecords", result.getTotalRecords());
+            response.put("validRecords", result.getValidRecords());
+            response.put("errorRecords", result.getErrorRecords());
+            response.put("successRate", result.getSuccessRate());
+            response.put("hasErrors", result.hasErrors());
+            response.put("status", result.hasErrors() && result.getValidRecords() == 0 ? "FAILED" : "COMPLETED");
             
             if (result.hasErrors()) {
                 response.put("errors", result.getErrors().stream()
@@ -109,19 +231,57 @@ public class SimmController {
         try {
             logger.info("Executing SIMM calculation for portfolio: {}", request.getPortfolioId());
             
-            // For now, return a mock calculation result
-            // TODO: Implement actual SIMM calculation once calculation engine is integrated
+            // Find CRIF upload for the portfolio
+            List<CrifUpload> uploads = crifUploadRepository.findByPortfolioIdOrderByUploadTimestampDesc(request.getPortfolioId());
+            if (uploads.isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "No CRIF upload found for portfolio: " + request.getPortfolioId()));
+            }
             
+            // Use the most recent upload
+            CrifUpload upload = uploads.get(0);
+            
+            // Find active parameter set
+            Optional<SimmParameterSet> parameterSetOpt = simmParameterSetRepository.findDefaultActiveParameterSet();
+            if (parameterSetOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "No active SIMM parameter set found"));
+            }
+            
+            SimmParameterSet parameterSet = parameterSetOpt.get();
+            
+            // Create calculation record
+            String calculationId = "CALC-" + System.currentTimeMillis();
+            LocalDate calculationDate = request.getCalculationDate() != null ? 
+                request.getCalculationDate() : LocalDate.now();
+                
+            SimmCalculation calculation = new SimmCalculation(calculationId, upload, parameterSet, calculationDate);
+            calculation.setCalculationStatus(SimmCalculation.CalculationStatus.PROCESSING);
+            
+            // Save initial calculation record
+            calculation = simmCalculationRepository.save(calculation);
+            
+            // Simulate calculation processing (in real implementation, this would call the calculation engine)
+            // For now, generate mock results
+            BigDecimal totalIm = new BigDecimal("15750000.00");
+            calculation.setTotalIm(totalIm);
+            calculation.setTotalImUsd(totalIm);
+            calculation.setCalculationStatus(SimmCalculation.CalculationStatus.COMPLETED);
+            calculation.setCalculationTimeMs(150L); // Mock calculation time
+            
+            // Update calculation record
+            calculation = simmCalculationRepository.save(calculation);
+            
+            // Prepare response
             Map<String, Object> response = new HashMap<>();
-            response.put("calculationId", "CALC-" + System.currentTimeMillis());
-            response.put("portfolioId", request.getPortfolioId());
-            response.put("status", "COMPLETED");
-            response.put("totalInitialMargin", 15750000.00);
-            response.put("calculationDate", request.getCalculationDate() != null ? 
-                request.getCalculationDate() : LocalDate.now());
+            response.put("calculationId", calculation.getCalculationId());
+            response.put("portfolioId", calculation.getPortfolioId());
+            response.put("status", calculation.getCalculationStatus().name());
+            response.put("totalInitialMargin", calculation.getTotalIm().doubleValue());
+            response.put("calculationDate", calculation.getCalculationDate());
             response.put("completedAt", LocalDate.now());
             
-            // Mock breakdown by product class
+            // Mock breakdown by product class (in real implementation, this would come from detailed results)
             Map<String, Object> breakdown = new HashMap<>();
             breakdown.put("Credit", 8500000.00);
             breakdown.put("RatesFX", 4750000.00);
@@ -129,6 +289,7 @@ public class SimmController {
             breakdown.put("Commodity", 500000.00);
             response.put("marginByProductClass", breakdown);
             
+            logger.info("SIMM calculation completed successfully: {}", calculationId);
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
@@ -146,33 +307,36 @@ public class SimmController {
         try {
             logger.info("Getting SIMM calculations for portfolio: {}", portfolioId);
             
-            // For now, return mock calculation history
-            // TODO: Implement actual calculation retrieval from database
+            List<SimmCalculation> calculations;
             
-            List<Map<String, Object>> calculations = new ArrayList<>();
-            
-            // Add some mock calculation history
-            if ("ALL".equals(portfolioId) || "TEST_PORTFOLIO".equals(portfolioId)) {
-                Map<String, Object> calc1 = new HashMap<>();
-                calc1.put("calculationId", "CALC-" + (System.currentTimeMillis() - 86400000)); // Yesterday
-                calc1.put("portfolioId", "TEST_PORTFOLIO");
-                calc1.put("status", "COMPLETED");
-                calc1.put("totalInitialMargin", 15750000.00);
-                calc1.put("calculationDate", "2024-10-08");
-                calc1.put("completedAt", "2024-10-08T10:30:00");
-                calculations.add(calc1);
-                
-                Map<String, Object> calc2 = new HashMap<>();
-                calc2.put("calculationId", "CALC-" + (System.currentTimeMillis() - 172800000)); // 2 days ago
-                calc2.put("portfolioId", "PORTFOLIO_001");
-                calc2.put("status", "COMPLETED");
-                calc2.put("totalInitialMargin", 8250000.00);
-                calc2.put("calculationDate", "2024-10-07");
-                calc2.put("completedAt", "2024-10-07T15:45:00");
-                calculations.add(calc2);
+            if ("ALL".equals(portfolioId)) {
+                // Get all calculations, ordered by creation date descending
+                calculations = simmCalculationRepository.findAll();
+                calculations.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
+            } else {
+                // Get calculations for specific portfolio
+                calculations = simmCalculationRepository.findAll()
+                    .stream()
+                    .filter(calc -> portfolioId.equals(calc.getPortfolioId()))
+                    .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                    .toList();
             }
             
-            return ResponseEntity.ok(calculations);
+            // Convert to response format
+            List<Map<String, Object>> response = new ArrayList<>();
+            for (SimmCalculation calc : calculations) {
+                Map<String, Object> calcMap = new HashMap<>();
+                calcMap.put("calculationId", calc.getCalculationId());
+                calcMap.put("portfolioId", calc.getPortfolioId());
+                calcMap.put("status", calc.getCalculationStatus().name());
+                calcMap.put("totalInitialMargin", calc.getTotalIm() != null ? calc.getTotalIm().doubleValue() : null);
+                calcMap.put("calculationDate", calc.getCalculationDate());
+                calcMap.put("completedAt", calc.getUpdatedAt() != null ? calc.getUpdatedAt() : calc.getCreatedAt());
+                response.add(calcMap);
+            }
+            
+            logger.info("Found {} calculations for portfolio: {}", response.size(), portfolioId);
+            return ResponseEntity.ok(response);
             
         } catch (Exception e) {
             logger.error("Failed to get calculations for portfolio: " + portfolioId, e);

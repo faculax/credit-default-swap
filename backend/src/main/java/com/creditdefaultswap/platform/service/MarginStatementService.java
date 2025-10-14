@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -127,6 +128,9 @@ public class MarginStatementService {
                 positionRepository.save(position);
             }
             
+            // Calculate and update statement summary fields
+            calculateStatementSummary(statement, positions);
+            
             // Mark as processed
             statement.setStatus(MarginStatement.StatementStatus.PROCESSED);
             statement.setProcessedAt(LocalDateTime.now());
@@ -141,6 +145,35 @@ public class MarginStatementService {
         } catch (Exception e) {
             handleProcessingError(statement, e);
         }
+    }
+    
+    /**
+     * Calculate and update statement summary fields from positions
+     */
+    private void calculateStatementSummary(MarginStatement statement, List<MarginPosition> positions) {
+        BigDecimal totalVariationMargin = BigDecimal.ZERO;
+        BigDecimal totalInitialMargin = BigDecimal.ZERO;
+        
+        for (MarginPosition position : positions) {
+            switch (position.getPositionType()) {
+                case VARIATION_MARGIN:
+                    totalVariationMargin = totalVariationMargin.add(position.getAmount());
+                    break;
+                case INITIAL_MARGIN:
+                    totalInitialMargin = totalInitialMargin.add(position.getAmount());
+                    break;
+                case EXCESS_COLLATERAL:
+                    // Excess collateral can be included in VM for dashboard purposes
+                    totalVariationMargin = totalVariationMargin.add(position.getAmount());
+                    break;
+            }
+        }
+        
+        statement.setVariationMargin(totalVariationMargin);
+        statement.setInitialMargin(totalInitialMargin);
+        
+        logger.debug("Calculated statement summary for {}: VM={}, IM={}", 
+                statement.getStatementId(), totalVariationMargin, totalInitialMargin);
     }
     
     /**

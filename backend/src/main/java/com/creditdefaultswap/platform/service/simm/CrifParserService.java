@@ -2,7 +2,13 @@ package com.creditdefaultswap.platform.service.simm;
 
 import com.creditdefaultswap.platform.model.simm.CrifSensitivity;
 import com.creditdefaultswap.platform.model.simm.CrifUpload;
+import com.creditdefaultswap.platform.repository.CrifUploadRepository;
+import com.creditdefaultswap.platform.repository.CrifSensitivityRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
@@ -21,6 +27,14 @@ import java.util.regex.Pattern;
  */
 @Service
 public class CrifParserService {
+    
+    private static final Logger logger = LoggerFactory.getLogger(CrifParserService.class);
+    
+    @Autowired
+    private CrifUploadRepository crifUploadRepository;
+    
+    @Autowired
+    private CrifSensitivityRepository crifSensitivityRepository;
     
     // CRIF file format constants
     private static final String[] EXPECTED_HEADERS = {
@@ -56,13 +70,25 @@ public class CrifParserService {
     /**
      * Parse CRIF file and return processing result
      */
+    @Transactional
     public CrifParsingResult parseCrifFile(MultipartFile file, String portfolioId, 
                                           LocalDate valuationDate, String currency) {
+        logger.info("Starting CRIF file processing: {} for portfolio: {}", 
+                   file.getOriginalFilename(), portfolioId);
+        
+        // Create upload record
+        String uploadId = "CRIF_" + System.currentTimeMillis();
+        CrifUpload upload = new CrifUpload(uploadId, file.getOriginalFilename(), 
+                                          portfolioId, valuationDate, currency);
+        upload.setProcessingStatus(CrifUpload.ProcessingStatus.PROCESSING);
+        upload = crifUploadRepository.save(upload);
+        
         CrifParsingResult result = new CrifParsingResult();
         result.setFilename(file.getOriginalFilename());
         result.setPortfolioId(portfolioId);
         result.setValuationDate(valuationDate);
         result.setCurrency(currency);
+        result.setUploadId(uploadId);
         
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(file.getInputStream()))) {
@@ -71,17 +97,21 @@ public class CrifParserService {
             String headerLine = reader.readLine();
             if (headerLine == null) {
                 result.addError(1, "File is empty");
+                updateUploadStatus(upload, result);
                 return result;
             }
             
             String[] headers = parseHeaderLine(headerLine);
             if (!validateHeaders(headers, result)) {
+                updateUploadStatus(upload, result);
                 return result;
             }
             
             // Parse data rows
             String line;
             int lineNumber = 2;
+            List<CrifSensitivity> sensitivities = new ArrayList<>();
+            
             while ((line = reader.readLine()) != null) {
                 if (line.trim().isEmpty()) {
                     lineNumber++;
@@ -91,6 +121,8 @@ public class CrifParserService {
                 try {
                     CrifSensitivity sensitivity = parseDataLine(line, headers, lineNumber);
                     if (sensitivity != null) {
+                        sensitivity.setUpload(upload);
+                        sensitivities.add(sensitivity);
                         result.addValidSensitivity(sensitivity);
                     }
                 } catch (CrifParsingException e) {
@@ -100,8 +132,22 @@ public class CrifParserService {
                 lineNumber++;
             }
             
+            // Save sensitivities in batch
+            if (!sensitivities.isEmpty()) {
+                crifSensitivityRepository.saveAll(sensitivities);
+                logger.info("Saved {} CRIF sensitivities for upload {}", sensitivities.size(), uploadId);
+            }
+            
+            // Update upload status
+            updateUploadStatus(upload, result);
+            
         } catch (IOException e) {
             result.addError(0, "Failed to read file: " + e.getMessage());
+            updateUploadStatus(upload, result);
+        } catch (Exception e) {
+            logger.error("Unexpected error processing CRIF file: {}", e.getMessage(), e);
+            result.addError(0, "Processing failed: " + e.getMessage());
+            updateUploadStatus(upload, result);
         }
         
         return result;
@@ -258,9 +304,39 @@ public class CrifParserService {
     }
     
     /**
+     * Update upload status based on parsing results
+     */
+    private void updateUploadStatus(CrifUpload upload, CrifParsingResult result) {
+        upload.setTotalRecords(result.getTotalRecords());
+        upload.setValidRecords(result.getValidRecords());
+        upload.setErrorRecords(result.getErrorRecords());
+        
+        if (result.hasErrors() && result.getValidRecords() == 0) {
+            upload.setProcessingStatus(CrifUpload.ProcessingStatus.FAILED);
+            // Create error summary (first few errors)
+            StringBuilder errorSummary = new StringBuilder();
+            result.getErrors().stream()
+                .limit(3)
+                .forEach(error -> errorSummary.append(error.toString()).append("; "));
+            upload.setErrorMessage(errorSummary.toString());
+        } else {
+            upload.setProcessingStatus(CrifUpload.ProcessingStatus.COMPLETED);
+            if (result.hasErrors()) {
+                upload.setErrorMessage(result.getErrorRecords() + " records had errors");
+            }
+        }
+        
+        crifUploadRepository.save(upload);
+        logger.info("Updated upload {} status to {}: {} valid, {} errors", 
+                   upload.getUploadId(), upload.getProcessingStatus(), 
+                   upload.getValidRecords(), upload.getErrorRecords());
+    }
+    
+    /**
      * Result class for CRIF parsing operations
      */
     public static class CrifParsingResult {
+        private String uploadId;
         private String filename;
         private String portfolioId;
         private LocalDate valuationDate;
@@ -298,6 +374,9 @@ public class CrifParserService {
         }
         
         // Getters and setters
+        public String getUploadId() { return uploadId; }
+        public void setUploadId(String uploadId) { this.uploadId = uploadId; }
+        
         public String getFilename() { return filename; }
         public void setFilename(String filename) { this.filename = filename; }
         

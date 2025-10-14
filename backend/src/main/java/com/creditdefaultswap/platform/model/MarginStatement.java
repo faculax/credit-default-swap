@@ -1,6 +1,7 @@
 package com.creditdefaultswap.platform.model;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -61,6 +62,12 @@ public class MarginStatement {
     
     @Column(name = "retry_count")
     private Integer retryCount = 0;
+    
+    @Column(name = "variation_margin", precision = 15, scale = 2)
+    private BigDecimal variationMargin;
+    
+    @Column(name = "initial_margin", precision = 15, scale = 2)
+    private BigDecimal initialMargin;
     
     public enum StatementFormat {
         CSV, XML, JSON, PROPRIETARY
@@ -231,6 +238,22 @@ public class MarginStatement {
     
     public void incrementRetryCount() {
         this.retryCount = (this.retryCount == null) ? 1 : this.retryCount + 1;
+    }
+    
+    public BigDecimal getVariationMargin() {
+        return variationMargin;
+    }
+    
+    public void setVariationMargin(BigDecimal variationMargin) {
+        this.variationMargin = variationMargin;
+    }
+    
+    public BigDecimal getInitialMargin() {
+        return initialMargin;
+    }
+    
+    public void setInitialMargin(BigDecimal initialMargin) {
+        this.initialMargin = initialMargin;
     }
     
     @PrePersist
