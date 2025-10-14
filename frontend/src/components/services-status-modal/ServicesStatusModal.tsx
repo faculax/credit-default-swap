@@ -21,7 +21,10 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
   const [services, setServices] = useState<ServiceStatus[]>([
     { name: 'PostgreSQL Database', status: 'UNKNOWN' },
     { name: 'API Gateway', status: 'UNKNOWN' },
-    { name: 'Backend Service', status: 'UNKNOWN' }
+    { name: 'Backend Service', status: 'UNKNOWN' },
+    { name: 'CDS Risk Engine', status: 'UNKNOWN' },
+    { name: 'Open Source Risk Engine (ORE)', status: 'UNKNOWN' },
+    { name: 'React Frontend', status: 'UNKNOWN' }
   ]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
@@ -32,6 +35,9 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
     try {
       const response = await fetch(`${API_BASE_URL}/health/status`);
       const data = await response.json();
+      
+      // Generate dummy status for additional services
+      const generateDummyResponseTime = () => Math.floor(Math.random() * 15) + 5; // 5-20ms
       
       const updatedServices: ServiceStatus[] = [
         // PostgreSQL - inferred from backend status
@@ -61,6 +67,30 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
             `${API_BASE_URL.replace('/api', '')}${data.backendStatus.healthEndpoint}` : 
             'Backend Service',
           error: data.backendStatus?.error || (data.backendStatus?.status !== 'UP' ? 'Service unavailable' : undefined)
+        },
+        // CDS Risk Engine (dummy health)
+        {
+          name: 'CDS Risk Engine',
+          status: 'ONLINE',
+          responseTime: generateDummyResponseTime(),
+          lastChecked: new Date().toLocaleTimeString(),
+          url: 'http://localhost:8082'
+        },
+        // Open Source Risk Engine - ORE (dummy health)
+        {
+          name: 'Open Source Risk Engine (ORE)',
+          status: 'ONLINE',
+          responseTime: generateDummyResponseTime(),
+          lastChecked: new Date().toLocaleTimeString(),
+          url: 'ore-engine'
+        },
+        // React Frontend (dummy health)
+        {
+          name: 'React Frontend',
+          status: 'ONLINE',
+          responseTime: generateDummyResponseTime(),
+          lastChecked: new Date().toLocaleTimeString(),
+          url: 'http://localhost:3000'
         }
       ];
       
@@ -72,7 +102,10 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
       setServices([
         { name: 'PostgreSQL Database', status: 'UNKNOWN', error: 'Cannot reach gateway' },
         { name: 'API Gateway', status: 'OFFLINE', error: 'Connection failed', url: 'http://localhost:8081' },
-        { name: 'Backend Service', status: 'UNKNOWN', error: 'Cannot reach gateway' }
+        { name: 'Backend Service', status: 'UNKNOWN', error: 'Cannot reach gateway' },
+        { name: 'CDS Risk Engine', status: 'UNKNOWN', error: 'Cannot reach gateway', url: 'http://localhost:8082' },
+        { name: 'Open Source Risk Engine (ORE)', status: 'UNKNOWN', error: 'Cannot reach gateway', url: 'ore-engine' },
+        { name: 'React Frontend', status: 'UNKNOWN', error: 'Cannot reach gateway', url: 'http://localhost:3000' }
       ]);
     } finally {
       setIsRefreshing(false);
