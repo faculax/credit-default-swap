@@ -2,8 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { CDSTradeResponse } from '../../services/cdsTradeService';
 import { CreditEvent, creditEventService } from '../../services/creditEventService';
 import RiskMeasuresPanel from '../risk/RiskMeasuresPanel';
+import MarketDataPanel from '../risk/MarketDataPanel';
 import ScenarioRunModal from '../risk/ScenarioRunModal';
 import RegressionStatusBadge from '../risk/RegressionStatusBadge';
+import { fetchRiskMeasures } from '../../services/risk/riskService';
+import { RiskMeasures } from '../../services/risk/riskTypes';
 
 interface TradeDetailModalProps {
   isOpen: boolean;
@@ -14,8 +17,10 @@ interface TradeDetailModalProps {
 const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onClose }) => {
   const [creditEvents, setCreditEvents] = useState<CreditEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
-  const [activeTab, setActiveTab] = useState<'details' | 'events' | 'risk'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'events' | 'risk' | 'marketdata'>('details');
   const [showScenarioModal, setShowScenarioModal] = useState(false);
+  const [riskMeasures, setRiskMeasures] = useState<RiskMeasures | null>(null);
+  const [loadingRisk, setLoadingRisk] = useState(false);
 
   const loadCreditEvents = useCallback(async () => {
     if (!trade) return;
@@ -32,11 +37,30 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
     }
   }, [trade]);
 
+  const loadRiskMeasures = useCallback(async () => {
+    if (!trade) return;
+    
+    setLoadingRisk(true);
+    try {
+      const measures = await fetchRiskMeasures(trade.id);
+      setRiskMeasures(measures);
+    } catch (error) {
+      console.error('Failed to load risk measures:', error);
+      setRiskMeasures(null);
+    } finally {
+      setLoadingRisk(false);
+    }
+  }, [trade]);
+
   useEffect(() => {
     if (isOpen && trade) {
       loadCreditEvents();
+      // Load risk measures when opening modal or switching to risk/marketdata tabs
+      if (activeTab === 'risk' || activeTab === 'marketdata') {
+        loadRiskMeasures();
+      }
     }
-  }, [isOpen, trade, loadCreditEvents]);
+  }, [isOpen, trade, activeTab, loadCreditEvents, loadRiskMeasures]);
 
   if (!isOpen || !trade) return null;
 
@@ -89,11 +113,15 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
           {[
             { key: 'details', label: 'Details' },
             { key: 'events', label: 'Credit Events' },
-            { key: 'risk', label: 'Risk' }
+            { key: 'risk', label: 'Risk' },
+            { key: 'marketdata', label: 'Market Data' }
           ].map(t => (
             <button
               key={t.key}
-              onClick={() => setActiveTab(t.key as any)}
+              onClick={() => {
+                console.log('🔄 Tab switch:', { from: activeTab, to: t.key });
+                setActiveTab(t.key as any);
+              }}
               className={`pb-2 px-1 text-sm font-medium border-b-2 -mb-px transition-colors ${
                 activeTab === t.key ? 'border-fd-green text-fd-text' : 'border-transparent text-fd-text-muted hover:text-fd-text'
               }`}
@@ -333,6 +361,26 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
             <RiskMeasuresPanel tradeId={trade.id} trade={trade} />
           </div>
         )}
+        {activeTab === 'marketdata' && trade && (() => {
+          console.log('📊 Market Data tab active:', { 
+            tradeId: trade.id, 
+            loadingRisk, 
+            hasRiskMeasures: !!riskMeasures,
+            hasMarketSnapshot: !!riskMeasures?.marketDataSnapshot 
+          });
+          return (
+            <div className="mt-4 space-y-6">
+              {loadingRisk ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fd-green"></div>
+                  <span className="ml-3 text-fd-text-muted">Loading market data snapshot...</span>
+                </div>
+              ) : (
+                <MarketDataPanel marketDataSnapshot={riskMeasures?.marketDataSnapshot} />
+              )}
+            </div>
+          );
+        })()}
         <div className="flex justify-end space-x-4 mt-8 pt-4 border-t border-fd-border">
           <button onClick={onClose} className="px-6 py-2 bg-fd-green text-fd-dark font-medium rounded hover:bg-fd-green-hover transition-colors">Close</button>
         </div>

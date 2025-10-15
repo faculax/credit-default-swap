@@ -1,9 +1,11 @@
 package com.creditdefaultswap.riskengine.ore;
 
 import com.creditdefaultswap.riskengine.model.Cashflow;
+import com.creditdefaultswap.riskengine.model.MarketDataSnapshot;
 import com.creditdefaultswap.riskengine.model.RiskMeasures;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -25,6 +27,12 @@ import java.util.stream.Collectors;
 public class OreOutputParser {
     
     private static final Logger logger = LoggerFactory.getLogger(OreOutputParser.class);
+    private final MarketDataSnapshotBuilder marketDataSnapshotBuilder;
+    
+    @Autowired
+    public OreOutputParser(MarketDataSnapshotBuilder marketDataSnapshotBuilder) {
+        this.marketDataSnapshotBuilder = marketDataSnapshotBuilder;
+    }
     
     /**
      * Parses ORE output to extract risk measures from actual output files.
@@ -63,6 +71,11 @@ public class OreOutputParser {
             // Parse REAL cashflow schedule from flows.csv
             List<Cashflow> cashflows = parseCashflows(tradeId, workingDirPath);
             riskMeasures.setCashflows(cashflows);
+            
+            // Capture market data snapshot - extract valuation date from ORE working dir
+            LocalDate valuationDate = extractValuationDate(workingDirPath);
+            MarketDataSnapshot snapshot = marketDataSnapshotBuilder.buildSnapshot(workingDirPath, valuationDate);
+            riskMeasures.setMarketDataSnapshot(snapshot);
             
             logger.info("ORE Risk Calculation - Trade {}: NPV={} {}, Fair Spread Clean={} bps, Protection Leg NPV={}, {} cashflows", 
                 tradeId, riskMeasures.getNpv(), riskMeasures.getCurrency(), 
@@ -500,6 +513,39 @@ public class OreOutputParser {
         
         logger.error("Created error risk measures for trade {}: {}", tradeId, errorMessage);
         return riskMeasures;
+    }
+    
+    /**
+     * Extracts valuation date from ORE config file
+     */
+    private LocalDate extractValuationDate(String workingDirPath) {
+        try {
+            java.nio.file.Path oreConfigPath = java.nio.file.Paths.get(workingDirPath, "ore.xml");
+            if (!java.nio.file.Files.exists(oreConfigPath)) {
+                logger.warn("ore.xml not found, defaulting to today");
+                return LocalDate.now();
+            }
+            
+            String content = java.nio.file.Files.readString(oreConfigPath);
+            // Extract asofDate parameter
+            int startIdx = content.indexOf("<Parameter name=\"asofDate\">");
+            if (startIdx == -1) {
+                return LocalDate.now();
+            }
+            int endIdx = content.indexOf("</Parameter>", startIdx);
+            if (endIdx == -1) {
+                return LocalDate.now();
+            }
+            
+            String dateStr = content.substring(startIdx + 27, endIdx).trim();
+            // Parse yyyyMMdd format
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+            return LocalDate.parse(dateStr, formatter);
+            
+        } catch (Exception e) {
+            logger.warn("Failed to extract valuation date from ore.xml, using today", e);
+            return LocalDate.now();
+        }
     }
     
     /**

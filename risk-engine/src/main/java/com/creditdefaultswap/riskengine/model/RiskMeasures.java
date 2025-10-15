@@ -35,6 +35,9 @@ public class RiskMeasures {
     // Cashflow schedule
     private List<Cashflow> cashflows; // Complete cashflow schedule
     
+    // Market data snapshot used for this calculation
+    private MarketDataSnapshot marketDataSnapshot;
+    
     // DEPRECATED - These are fake estimates, kept for backwards compatibility but will be removed
     @Deprecated private BigDecimal dv01;
     @Deprecated private BigDecimal gamma;
@@ -111,6 +114,9 @@ public class RiskMeasures {
     
     public List<Cashflow> getCashflows() { return cashflows; }
     public void setCashflows(List<Cashflow> cashflows) { this.cashflows = cashflows; }
+    
+    public MarketDataSnapshot getMarketDataSnapshot() { return marketDataSnapshot; }
+    public void setMarketDataSnapshot(MarketDataSnapshot marketDataSnapshot) { this.marketDataSnapshot = marketDataSnapshot; }
     
     // DEPRECATED getters/setters
     @Deprecated public BigDecimal getDv01() { return dv01; }
