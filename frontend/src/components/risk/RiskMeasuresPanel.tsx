@@ -438,6 +438,12 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
               <span className="text-fd-text-muted">Current Notional:</span>
               <div className="font-mono text-fd-text">{formatCurrency(data.currentNotional, data.currency)}</div>
             </div>
+            {trade?.recoveryRate !== undefined && trade?.recoveryRate !== null && (
+              <div>
+                <span className="text-fd-text-muted">Recovery Rate:</span>
+                <div className="font-mono text-fd-text font-semibold">{trade.recoveryRate}%</div>
+              </div>
+            )}
             {paidCoupons > 0 && (
               <div>
                 <span className="text-fd-text-muted">Total Paid Coupons:</span>

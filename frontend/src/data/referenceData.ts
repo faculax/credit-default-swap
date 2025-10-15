@@ -102,4 +102,5 @@ export interface CDSTrade {
   paymentCalendar: string;
   accrualStartDate: string;
   tradeStatus: string;
+  recoveryRate: number;
 }

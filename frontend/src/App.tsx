@@ -42,7 +42,8 @@ function App() {
         restructuringClause: trade.restructuringClause,
         paymentCalendar: trade.paymentCalendar,
         accrualStartDate: trade.accrualStartDate,
-        tradeStatus: trade.tradeStatus
+        tradeStatus: trade.tradeStatus,
+        recoveryRate: trade.recoveryRate
       };
 
       const savedTrade = await cdsTradeService.createTrade(tradeRequest);

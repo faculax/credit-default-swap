@@ -56,6 +56,9 @@ public class CDSTrade {
     @Column(name = "accrual_start_date", nullable = false)
     private LocalDate accrualStartDate;
     
+    @Column(name = "recovery_rate", nullable = false, precision = 5, scale = 2)
+    private BigDecimal recoveryRate;
+    
     @Enumerated(EnumType.STRING)
     @Column(name = "trade_status", nullable = false)
     private TradeStatus tradeStatus;
@@ -198,6 +201,14 @@ public class CDSTrade {
     
     public void setAccrualStartDate(LocalDate accrualStartDate) {
         this.accrualStartDate = accrualStartDate;
+    }
+    
+    public BigDecimal getRecoveryRate() {
+        return recoveryRate;
+    }
+    
+    public void setRecoveryRate(BigDecimal recoveryRate) {
+        this.recoveryRate = recoveryRate;
     }
     
     public TradeStatus getTradeStatus() {

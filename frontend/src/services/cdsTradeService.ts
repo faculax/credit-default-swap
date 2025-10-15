@@ -17,6 +17,7 @@ export interface CDSTradeRequest {
   paymentCalendar: string;
   accrualStartDate: string;
   tradeStatus: string;
+  recoveryRate: number;
 }
 
 export interface CDSTradeResponse extends CDSTradeRequest {

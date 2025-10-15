@@ -105,9 +105,13 @@ public class TradeDataService {
                 response.getPaymentCalendar()
             );
             
+            // Set recovery rate from trade data
+            tradeData.setRecoveryRate(response.getRecoveryRate());
+            
             // Don't set firstCouponDate - let ORE generate the schedule from the adjusted effective date
             
-            logger.info("Successfully fetched CDS trade data: {} - {}", tradeId, response.getReferenceEntity());
+            logger.info("Successfully fetched CDS trade data: {} - {} (Recovery Rate: {}%)", 
+                tradeId, response.getReferenceEntity(), response.getRecoveryRate());
             return tradeData;
             
         } catch (Exception e) {
@@ -157,6 +161,7 @@ public class TradeDataService {
         private String dayCountConvention;
         private String buySellProtection;
         private String paymentCalendar;
+        private BigDecimal recoveryRate;
         
         // Getters and setters
         public Long getId() { return id; }
@@ -191,5 +196,8 @@ public class TradeDataService {
         
         public String getPaymentCalendar() { return paymentCalendar; }
         public void setPaymentCalendar(String paymentCalendar) { this.paymentCalendar = paymentCalendar; }
+        
+        public BigDecimal getRecoveryRate() { return recoveryRate; }
+        public void setRecoveryRate(BigDecimal recoveryRate) { this.recoveryRate = recoveryRate; }
     }
 }

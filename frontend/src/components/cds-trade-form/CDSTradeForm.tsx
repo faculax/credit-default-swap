@@ -27,7 +27,8 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
     dayCountConvention: 'ACT_360',
     buySellProtection: 'BUY',
     paymentCalendar: 'NYC',
-    tradeStatus: 'PENDING'
+    tradeStatus: 'PENDING',
+    recoveryRate: 40
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -47,6 +48,10 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
 
     if (!formData.spread || formData.spread < 0) {
       newErrors.spread = 'Spread must be 0 or greater';
+    }
+
+    if (!formData.recoveryRate || formData.recoveryRate < 0 || formData.recoveryRate > 100) {
+      newErrors.recoveryRate = 'Recovery Rate must be between 0 and 100';
     }
 
     if (!formData.maturityDate) {
@@ -147,7 +152,8 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
         dayCountConvention: 'ACT_360',
         buySellProtection: 'BUY',
         paymentCalendar: 'NYC',
-        tradeStatus: 'PENDING'
+        tradeStatus: 'PENDING',
+        recoveryRate: 40
       });
     }, 1000);
   };
@@ -221,7 +227,8 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
       dayCountConvention: getRandomItem(DAY_COUNT_CONVENTIONS).value,
       restructuringClause: Math.random() > 0.3 ? getRandomItem(RESTRUCTURING_CLAUSES).value : '', // 70% chance of having a clause
       paymentCalendar: getRandomItem(PAYMENT_CALENDARS).value,
-      tradeStatus: 'ACTIVE' // Always generate ACTIVE trades for demo purposes
+      tradeStatus: 'ACTIVE', // Always generate ACTIVE trades for demo purposes
+      recoveryRate: 40  // Default recovery rate
     };
     setFormData(randomData);
     setErrors({}); // Clear any existing errors
@@ -342,6 +349,28 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
 
           <div>
             <label className="block text-fd-text font-medium mb-2">
+              Recovery Rate (%) <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              step="1"
+              min="0"
+              max="100"
+              value={formData.recoveryRate || 40}
+              onChange={(e) => handleInputChange('recoveryRate', parseFloat(e.target.value))}
+              className={inputClassName('recoveryRate')}
+              placeholder="e.g., 40"
+            />
+            {errors.recoveryRate && (
+              <p className="text-red-500 text-sm mt-1">{errors.recoveryRate}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Row 3: Buy/Sell Protection */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-fd-text font-medium mb-2">
               Buy/Sell Protection <span className="text-red-500">*</span>
             </label>
             <select
@@ -355,7 +384,7 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
           </div>
         </div>
 
-        {/* Row 3: Trade Date, Effective Date, Maturity Date */}
+        {/* Row 4: Trade Date, Effective Date, Maturity Date */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-fd-text font-medium mb-2">
@@ -522,7 +551,8 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
                 dayCountConvention: 'ACT_360',
                 buySellProtection: 'BUY',
                 paymentCalendar: 'NYC',
-                tradeStatus: 'PENDING'
+                tradeStatus: 'PENDING',
+                recoveryRate: 40
               });
               setErrors({});
             }}
