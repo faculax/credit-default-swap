@@ -126,6 +126,7 @@ public class CrifParserService {
                         result.addValidSensitivity(sensitivity);
                     }
                 } catch (CrifParsingException e) {
+                    logger.error("CRIF parsing error at line {}: {} - Line content: {}", lineNumber, e.getMessage(), line);
                     result.addError(lineNumber, e.getMessage());
                 }
                 

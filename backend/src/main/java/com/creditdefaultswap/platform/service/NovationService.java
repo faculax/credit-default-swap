@@ -21,14 +21,17 @@ public class NovationService {
     private final CDSTradeRepository cdsTradeRepository;
     private final CCPAccountRepository ccpAccountRepository;
     private final AuditService auditService;
+    private final MarginAccountService marginAccountService;
     
     @Autowired
     public NovationService(CDSTradeRepository cdsTradeRepository, 
                           CCPAccountRepository ccpAccountRepository,
-                          AuditService auditService) {
+                          AuditService auditService,
+                          MarginAccountService marginAccountService) {
         this.cdsTradeRepository = cdsTradeRepository;
         this.ccpAccountRepository = ccpAccountRepository;
         this.auditService = auditService;
+        this.marginAccountService = marginAccountService;
     }
     
     /**
@@ -65,6 +68,14 @@ public class NovationService {
             // Create new CCP trade with identical economic terms
             CDSTrade ccpTrade = createCcpTrade(originalTrade, ccpAccount, novationReference);
             ccpTrade = cdsTradeRepository.save(ccpTrade);
+            
+            // Set up margin account automatically for the new CCP trade
+            MarginAccountService.MarginAccountSetupResult marginSetupResult = 
+                marginAccountService.setupMarginAccountForCcpTrade(ccpTrade, actor);
+            
+            if (!marginSetupResult.isSuccess()) {
+                throw new NovationException("Margin account setup failed: " + marginSetupResult.getMessage());
+            }
             
             // Create audit entries for both trades
             auditService.logAudit(AuditLog.EntityType.TRADE, originalTrade.getId().toString(), 

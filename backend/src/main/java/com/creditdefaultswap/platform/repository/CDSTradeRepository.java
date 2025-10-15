@@ -25,4 +25,8 @@ public interface CDSTradeRepository extends JpaRepository<CDSTrade, Long> {
     List<CDSTrade> findByCcpNameOrderByCreatedAtDesc(String ccpName);
     
     List<CDSTrade> findByIsClearedOrderByCreatedAtDesc(Boolean isCleared);
+    
+    List<CDSTrade> findByNettingSetIdOrderByCreatedAtDesc(String nettingSetId);
+    
+    List<CDSTrade> findByNettingSetIdAndTradeStatus(String nettingSetId, TradeStatus tradeStatus);
 }

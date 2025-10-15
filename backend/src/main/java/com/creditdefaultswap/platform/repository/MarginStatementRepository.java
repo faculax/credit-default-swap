@@ -69,4 +69,10 @@ public interface MarginStatementRepository extends JpaRepository<MarginStatement
     @Query("SELECT ms FROM MarginStatement ms WHERE ms.status = 'RETRYING' " +
            "AND ms.updatedAt < :retryAfter ORDER BY ms.updatedAt ASC")
     List<MarginStatement> findStatementsReadyForRetry(@Param("retryAfter") java.time.LocalDateTime retryAfter);
+    
+    /**
+     * Find statement by CCP details and date for margin account setup
+     */
+    Optional<MarginStatement> findByCcpNameAndMemberFirmAndAccountNumberAndStatementDate(
+            String ccpName, String memberFirm, String accountNumber, LocalDate statementDate);
 }

@@ -2,12 +2,17 @@ package com.creditdefaultswap.platform.service.saccr;
 
 import com.creditdefaultswap.platform.model.saccr.SaCcrCalculation;
 import com.creditdefaultswap.platform.model.saccr.NettingSet;
+import com.creditdefaultswap.platform.model.saccr.SaCcrSupervisoryParameter;
+import com.creditdefaultswap.platform.model.CDSTrade;
+import com.creditdefaultswap.platform.model.TradeStatus;
 import com.creditdefaultswap.platform.repository.saccr.SaCcrCalculationRepository;
+import com.creditdefaultswap.platform.repository.CDSTradeRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -17,26 +22,199 @@ public class SaCcrCalculationService {
 
     @Autowired
     private SaCcrCalculationRepository calculationRepository;
+    
+    @Autowired
+    private CDSTradeRepository cdsTradeRepository;
 
+    /**
+     * Calculate SA-CCR exposures for all netting sets
+     */
     public List<SaCcrCalculation> calculateAllExposures(LocalDate asOfDate, String jurisdiction) {
         log.info("Calculating all SA-CCR exposures for date: {} and jurisdiction: {}", asOfDate, jurisdiction);
         return calculationRepository.findAll();
     }
 
+    /**
+     * Calculate SA-CCR exposure for a specific netting set using Basel III methodology
+     * EAD = α × (RC + PFE)
+     * where α = 1.4 (alpha factor), RC = Replacement Cost, PFE = Potential Future Exposure
+     */
     public SaCcrCalculation calculateExposure(NettingSet nettingSet, LocalDate asOfDate, String jurisdiction) {
         log.info("Calculating SA-CCR exposure for netting set: {} as of date: {} and jurisdiction: {}", 
-                 nettingSet.getId(), asOfDate, jurisdiction);
+                 nettingSet.getNettingSetId(), asOfDate, jurisdiction);
         
-        // For now, return a mock calculation - full implementation would be more complex
-        SaCcrCalculation calculation = new SaCcrCalculation();
-        calculation.setNettingSet(nettingSet);
-        calculation.setCalculationDate(asOfDate);
-        calculation.setReplacementCost(BigDecimal.ZERO);
-        calculation.setPotentialFutureExposure(BigDecimal.ZERO);
-        calculation.setExposureAtDefault(BigDecimal.ZERO);
-        calculation.setAlphaFactor(new BigDecimal("1.4"));
-        calculation.setJurisdiction(jurisdiction);
-        return calculation;
+        try {
+            // Get all active trades in the netting set
+            List<CDSTrade> trades = cdsTradeRepository.findByNettingSetIdAndTradeStatus(
+                nettingSet.getNettingSetId(), TradeStatus.ACTIVE);
+            
+            log.debug("Found {} active trades in netting set {}", trades.size(), nettingSet.getNettingSetId());
+            
+            // Calculate Replacement Cost (RC)
+            BigDecimal replacementCost = calculateReplacementCost(trades, nettingSet);
+            
+            // Calculate Potential Future Exposure (PFE)
+            BigDecimal potentialFutureExposure = calculatePotentialFutureExposure(trades, nettingSet, jurisdiction);
+            
+            // Calculate Exposure at Default (EAD) = α × (RC + PFE)
+            BigDecimal alphaFactor = determineAlphaFactor(nettingSet, jurisdiction);
+            BigDecimal exposureAtDefault = alphaFactor.multiply(
+                replacementCost.add(potentialFutureExposure)
+            ).setScale(2, RoundingMode.HALF_UP);
+            
+            // Create calculation record
+            String calculationId = "SACCR-" + nettingSet.getNettingSetId() + "-" + asOfDate.toString();
+            SaCcrCalculation calculation = new SaCcrCalculation(calculationId, nettingSet.getNettingSetId(), asOfDate, jurisdiction);
+            calculation.setNettingSet(nettingSet);
+            calculation.setReplacementCost(replacementCost);
+            calculation.setPotentialFutureExposure(potentialFutureExposure);
+            calculation.setExposureAtDefault(exposureAtDefault);
+            calculation.setAlphaFactor(alphaFactor);
+            calculation.setEffectiveNotional(potentialFutureExposure); // Store trade count info in effective notional for now
+            calculation.setCalculationStatus(SaCcrCalculation.CalculationStatus.COMPLETED);
+            
+            log.info("SA-CCR calculation completed for netting set {}: RC={}, PFE={}, EAD={}", 
+                     nettingSet.getNettingSetId(), replacementCost, potentialFutureExposure, exposureAtDefault);
+            
+            return calculation;
+            
+        } catch (Exception e) {
+            log.error("Error calculating SA-CCR exposure for netting set {}: {}", 
+                      nettingSet.getNettingSetId(), e.getMessage(), e);
+            throw new RuntimeException("SA-CCR calculation failed: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Calculate Replacement Cost (RC) according to Basel III SA-CCR
+     * RC = max(0, V - C + max(0, 0))
+     * where V = current market value of derivative transactions, C = current market value of collateral
+     */
+    private BigDecimal calculateReplacementCost(List<CDSTrade> trades, NettingSet nettingSet) {
+        log.debug("Calculating replacement cost for {} trades in netting set {}", 
+                  trades.size(), nettingSet.getNettingSetId());
+        
+        BigDecimal netMarketValue = BigDecimal.ZERO;
+        
+        for (CDSTrade trade : trades) {
+            if (trade.getMarkToMarketValue() != null) {
+                netMarketValue = netMarketValue.add(trade.getMarkToMarketValue());
+            }
+        }
+        
+        // For now, assume no collateral posted (C = 0)
+        // In a full implementation, we would fetch collateral amounts from margin statements
+        BigDecimal collateralValue = BigDecimal.ZERO;
+        
+        // RC = max(0, V - C)
+        BigDecimal replacementCost = netMarketValue.subtract(collateralValue).max(BigDecimal.ZERO);
+        
+        log.debug("Replacement cost calculation: net market value={}, collateral={}, RC={}", 
+                  netMarketValue, collateralValue, replacementCost);
+        
+        return replacementCost.setScale(2, RoundingMode.HALF_UP);
+    }
+    
+    /**
+     * Calculate Potential Future Exposure (PFE) according to Basel III SA-CCR
+     * PFE = multiplier × AddOn
+     * where AddOn is based on supervisory parameters and notional amounts
+     */
+    private BigDecimal calculatePotentialFutureExposure(List<CDSTrade> trades, NettingSet nettingSet, String jurisdiction) {
+        log.debug("Calculating potential future exposure for {} trades in netting set {}", 
+                  trades.size(), nettingSet.getNettingSetId());
+        
+        if (trades.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        
+        // Calculate effective notional for credit derivatives
+        BigDecimal effectiveNotional = BigDecimal.ZERO;
+        BigDecimal totalNotional = BigDecimal.ZERO;
+        
+        for (CDSTrade trade : trades) {
+            BigDecimal notional = trade.getNotionalAmount();
+            totalNotional = totalNotional.add(notional);
+            
+            // Apply supervisory factor based on trade characteristics
+            BigDecimal supervisoryFactor = getSupervisoryFactor(trade, jurisdiction);
+            BigDecimal adjustedNotional = notional.multiply(supervisoryFactor);
+            
+            effectiveNotional = effectiveNotional.add(adjustedNotional);
+        }
+        
+        // Calculate multiplier (simplified version)
+        BigDecimal multiplier = calculateMultiplier(nettingSet, trades);
+        
+        // Calculate Add-On
+        BigDecimal addOn = effectiveNotional.multiply(multiplier);
+        
+        // PFE = multiplier × AddOn (simplified - in full implementation would aggregate across asset classes)
+        BigDecimal pfe = addOn.setScale(2, RoundingMode.HALF_UP);
+        
+        log.debug("PFE calculation: effective notional={}, multiplier={}, PFE={}", 
+                  effectiveNotional, multiplier, pfe);
+        
+        return pfe;
+    }
+    
+    /**
+     * Get supervisory factor for a CDS trade based on Basel III parameters
+     */
+    private BigDecimal getSupervisoryFactor(CDSTrade trade, String jurisdiction) {
+        try {
+            // Determine if this is investment grade or high yield based on spread
+            // This is a simplified heuristic - in practice would use credit ratings
+            boolean isInvestmentGrade = trade.getSpread().compareTo(new BigDecimal("500")) <= 0; // 500 bps threshold
+            
+            SaCcrSupervisoryParameter.CreditQuality quality = isInvestmentGrade ? 
+                SaCcrSupervisoryParameter.CreditQuality.IG : 
+                SaCcrSupervisoryParameter.CreditQuality.HY;
+            
+            return SaCcrSupervisoryParameter.getStandardCreditSupervisoryFactor(quality);
+                
+        } catch (Exception e) {
+            log.warn("Error determining supervisory factor for trade {}, using default: {}", 
+                     trade.getId(), e.getMessage());
+            return new BigDecimal("0.0050"); // Default 0.5% for IG credit
+        }
+    }
+    
+    /**
+     * Calculate multiplier according to Basel III SA-CCR formula
+     * Multiplier = min(1, Floor + (1 - Floor) × exp(V / (2 × AddOn)))
+     * where Floor = 0.05, V = net replacement cost
+     */
+    private BigDecimal calculateMultiplier(NettingSet nettingSet, List<CDSTrade> trades) {
+        // Simplified multiplier calculation
+        // In practice, this involves complex aggregation across asset classes
+        
+        if (!nettingSet.getCollateralAgreement()) {
+            // No collateral agreement - multiplier = 1
+            return BigDecimal.ONE;
+        }
+        
+        // For collateralized netting sets, apply simplified multiplier
+        // This is a placeholder - full implementation would be more complex
+        return new BigDecimal("0.75"); // Simplified multiplier for collateralized exposures
+    }
+    
+    /**
+     * Determine alpha factor based on jurisdiction and netting set characteristics
+     */
+    private BigDecimal determineAlphaFactor(NettingSet nettingSet, String jurisdiction) {
+        // Basel III standard alpha factor is 1.4
+        // Some jurisdictions may have different values
+        
+        switch (jurisdiction.toUpperCase()) {
+            case "US":
+            case "EU":
+            case "UK":
+                return new BigDecimal("1.4");
+            default:
+                log.debug("Using default alpha factor for jurisdiction: {}", jurisdiction);
+                return new BigDecimal("1.4");
+        }
     }
 
     public List<SaCcrCalculation> getAllCalculations() {
