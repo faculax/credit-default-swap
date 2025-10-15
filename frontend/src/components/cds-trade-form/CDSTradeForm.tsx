@@ -99,6 +99,27 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
     }
   };
 
+  // Format number with commas for display
+  const formatNumberWithCommas = (num: number | undefined): string => {
+    if (!num && num !== 0) return '';
+    return num.toLocaleString('en-US');
+  };
+
+  // Parse formatted string back to number
+  const parseFormattedNumber = (str: string): number => {
+    return parseFloat(str.replace(/,/g, '')) || 0;
+  };
+
+  // Handle notional amount input with formatting
+  const handleNotionalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/,/g, ''); // Remove commas
+    const numValue = parseFloat(rawValue);
+    
+    if (!isNaN(numValue) || rawValue === '') {
+      handleInputChange('notionalAmount', rawValue === '' ? undefined : numValue);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -181,11 +202,15 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
     // Accrual start date: same as effective date
     const accrualStartDate = effectiveDate;
     
+    // Generate round notional amounts (5M, 10M, 20M, 50M, 100M, 200M, 500M)
+    const roundNotionals = [5000000, 10000000, 20000000, 50000000, 100000000, 200000000, 500000000];
+    const notionalAmount = getRandomItem(roundNotionals);
+    
     const randomData: Partial<CDSTrade> = {
       referenceEntity: getRandomItem(REFERENCE_ENTITIES).code,
       counterparty: getRandomItem(COUNTERPARTIES).code,
       currency: getRandomItem(CURRENCIES).code,
-      notionalAmount: Math.floor(Math.random() * 50000000) + 1000000, // 1M to 50M
+      notionalAmount,
       spread: Math.floor(Math.random() * 500) + 50, // 50 to 550 bps
       buySellProtection: Math.random() > 0.5 ? 'BUY' : 'SELL',
       tradeDate,
@@ -286,13 +311,11 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
               Notional Amount <span className="text-red-500">*</span>
             </label>
             <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.notionalAmount || ''}
-              onChange={(e) => handleInputChange('notionalAmount', parseFloat(e.target.value))}
+              type="text"
+              value={formatNumberWithCommas(formData.notionalAmount)}
+              onChange={handleNotionalChange}
               className={inputClassName('notionalAmount')}
-              placeholder="e.g., 10000000"
+              placeholder="e.g., 10,000,000"
             />
             {errors.notionalAmount && (
               <p className="text-red-500 text-sm mt-1">{errors.notionalAmount}</p>
