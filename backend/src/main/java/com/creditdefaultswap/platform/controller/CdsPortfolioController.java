@@ -2,9 +2,14 @@ package com.creditdefaultswap.platform.controller;
 
 import com.creditdefaultswap.platform.dto.AttachTradesRequest;
 import com.creditdefaultswap.platform.dto.PortfolioPricingResponse;
+import com.creditdefaultswap.platform.model.BondPortfolioConstituent;
+import com.creditdefaultswap.platform.model.BasketPortfolioConstituent;
 import com.creditdefaultswap.platform.model.CdsPortfolio;
 import com.creditdefaultswap.platform.model.CdsPortfolioConstituent;
+import com.creditdefaultswap.platform.model.WeightType;
 import com.creditdefaultswap.platform.service.CdsPortfolioService;
+import com.creditdefaultswap.platform.service.PortfolioBondService;
+import com.creditdefaultswap.platform.service.PortfolioBasketService;
 import com.creditdefaultswap.platform.service.PortfolioPricingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,13 +31,19 @@ public class CdsPortfolioController {
     
     private final CdsPortfolioService portfolioService;
     private final PortfolioPricingService pricingService;
+    private final PortfolioBondService bondService;
+    private final PortfolioBasketService basketService;
     
     @Autowired
     public CdsPortfolioController(
             CdsPortfolioService portfolioService,
-            PortfolioPricingService pricingService) {
+            PortfolioPricingService pricingService,
+            PortfolioBondService bondService,
+            PortfolioBasketService basketService) {
         this.portfolioService = portfolioService;
         this.pricingService = pricingService;
+        this.bondService = bondService;
+        this.basketService = basketService;
     }
     
     /**
@@ -211,6 +222,126 @@ public class CdsPortfolioController {
                     .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {
             logger.error("Error fetching risk summary for portfolio {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    /**
+     * POST /api/cds-portfolios/{id}/bonds - Attach a bond to portfolio
+     */
+    @PostMapping("/{id}/bonds")
+    public ResponseEntity<?> attachBond(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> request) {
+        try {
+            Long bondId = Long.valueOf(request.get("bondId").toString());
+            String weightTypeStr = request.getOrDefault("weightType", "NOTIONAL").toString();
+            WeightType weightType = WeightType.valueOf(weightTypeStr);
+            
+            // Parse weight value, default to 1.0
+            Object weightValueObj = request.get("weightValue");
+            java.math.BigDecimal weightValue = weightValueObj != null 
+                    ? new java.math.BigDecimal(weightValueObj.toString()) 
+                    : java.math.BigDecimal.ONE;
+            
+            BondPortfolioConstituent constituent = bondService.attachBond(id, bondId, weightType, weightValue);
+            return new ResponseEntity<>(constituent, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Error attaching bond to portfolio {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to attach bond: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * DELETE /api/cds-portfolios/{id}/bonds/{bondId} - Remove a bond from portfolio
+     */
+    @DeleteMapping("/{id}/bonds/{bondId}")
+    public ResponseEntity<?> removeBond(
+            @PathVariable Long id,
+            @PathVariable Long bondId) {
+        try {
+            bondService.removeBond(id, bondId);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            logger.error("Error removing bond {} from portfolio {}", bondId, id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to remove bond: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * GET /api/cds-portfolios/{id}/bonds - Get all bonds in portfolio
+     */
+    @GetMapping("/{id}/bonds")
+    public ResponseEntity<?> getPortfolioBonds(@PathVariable Long id) {
+        try {
+            List<BondPortfolioConstituent> bonds = bondService.getPortfolioBonds(id);
+            return ResponseEntity.ok(bonds);
+        } catch (Exception e) {
+            logger.error("Error fetching bonds for portfolio {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    /**
+     * POST /api/cds-portfolios/{id}/baskets - Attach a basket to portfolio
+     */
+    @PostMapping("/{id}/baskets")
+    public ResponseEntity<?> attachBasket(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> request) {
+        try {
+            Long basketId = Long.valueOf(request.get("basketId").toString());
+            String weightTypeStr = request.getOrDefault("weightType", "NOTIONAL").toString();
+            WeightType weightType = WeightType.valueOf(weightTypeStr);
+            
+            // Parse weight value, default to 1.0
+            Object weightValueObj = request.get("weightValue");
+            java.math.BigDecimal weightValue = weightValueObj != null 
+                    ? new java.math.BigDecimal(weightValueObj.toString()) 
+                    : java.math.BigDecimal.ONE;
+            
+            BasketPortfolioConstituent constituent = basketService.attachBasket(id, basketId, weightType, weightValue);
+            return new ResponseEntity<>(constituent, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Error attaching basket to portfolio {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to attach basket: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * DELETE /api/cds-portfolios/{id}/baskets/{basketId} - Remove a basket from portfolio
+     */
+    @DeleteMapping("/{id}/baskets/{basketId}")
+    public ResponseEntity<?> removeBasket(
+            @PathVariable Long id,
+            @PathVariable Long basketId) {
+        try {
+            basketService.removeBasket(id, basketId);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            logger.error("Error removing basket {} from portfolio {}", basketId, id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to remove basket: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * GET /api/cds-portfolios/{id}/baskets - Get all baskets in portfolio
+     */
+    @GetMapping("/{id}/baskets")
+    public ResponseEntity<?> getPortfolioBaskets(@PathVariable Long id) {
+        try {
+            List<BasketPortfolioConstituent> baskets = basketService.getPortfolioBaskets(id);
+            return ResponseEntity.ok(baskets);
+        } catch (Exception e) {
+            logger.error("Error fetching baskets for portfolio {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

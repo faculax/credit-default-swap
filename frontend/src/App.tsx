@@ -10,10 +10,12 @@ import MarginStatementsPage from './components/margin/MarginStatementsPage';
 import SimmDashboard from './components/SimmDashboard';
 import SaCcrDashboard from './components/SaCcrDashboard';
 import ReconciliationDashboard from './components/dashboard/ReconciliationDashboard';
+import BondPage from './components/bond/BondPage';
+import BasketPage from './components/basket/BasketPage';
 import { CDSTrade } from './data/referenceData';
 import { cdsTradeService, CDSTradeRequest, CDSTradeResponse } from './services/cdsTradeService';
 
-type ViewMode = 'form' | 'blotter' | 'portfolios' | 'margin-statements' | 'simm' | 'sa-ccr' | 'reconciliation';
+type ViewMode = 'form' | 'blotter' | 'portfolios' | 'margin-statements' | 'simm' | 'sa-ccr' | 'reconciliation' | 'bonds' | 'baskets';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewMode>('form');
@@ -98,7 +100,7 @@ function App() {
                   : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
               }`}
             >
-              New CDS Trade
+              New Single-Name CDS
             </button>
             <button
               onClick={() => setCurrentView('blotter')}
@@ -108,7 +110,27 @@ function App() {
                   : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
               }`}
             >
-              CDS Trade Blotter
+              Single-Name CDS Blotter
+            </button>
+            <button
+              onClick={() => setCurrentView('bonds')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                currentView === 'bonds'
+                  ? 'bg-fd-green text-fd-dark'
+                  : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
+              }`}
+            >
+              Corporate Bonds
+            </button>
+            <button
+              onClick={() => setCurrentView('baskets')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                currentView === 'baskets'
+                  ? 'bg-fd-green text-fd-dark'
+                  : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
+              }`}
+            >
+              Basket Derivatives
             </button>
             <button
               onClick={() => setCurrentView('portfolios')}
@@ -118,7 +140,7 @@ function App() {
                   : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
               }`}
             >
-              Portfolios
+              CDS Portfolios
             </button>
             <button
               onClick={() => setCurrentView('margin-statements')}
@@ -182,7 +204,12 @@ function App() {
         ) : currentView === 'reconciliation' ? (
           <ReconciliationDashboard />
         ) : null}
-        
+        ) : currentView === 'baskets' ? (
+          <BasketPage />
+        ) : (
+          <BondPage />
+        )}
+
         <ConfirmationModal
           isOpen={isConfirmationOpen}
           trade={bookedTrade}
