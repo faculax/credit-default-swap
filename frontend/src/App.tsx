@@ -203,12 +203,11 @@ function App() {
           <SaCcrDashboard />
         ) : currentView === 'reconciliation' ? (
           <ReconciliationDashboard />
-        ) : null}
+        ) : currentView === 'bonds' ? (
+          <BondPage />
         ) : currentView === 'baskets' ? (
           <BasketPage />
-        ) : (
-          <BondPage />
-        )}
+        ) : null}
 
         <ConfirmationModal
           isOpen={isConfirmationOpen}
