@@ -70,6 +70,7 @@ export interface RiskMeasures {
   couponLegBPS?: number | null;
   currentNotional?: number | null;
   originalNotional?: number | null;
+  riskyAnnuity?: number | null;
   
   // Credit risk arrays
   defaultProbabilities?: number[] | null;

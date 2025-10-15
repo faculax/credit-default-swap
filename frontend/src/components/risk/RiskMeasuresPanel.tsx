@@ -228,6 +228,30 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
     return (value * 10000).toFixed(2) + ' bps';
   };
 
+  // Calculate Risky PV01 if ORE doesn't provide it
+  // Formula: |Premium Leg NPV + Accrued Premium| / (Notional × Running Spread)
+  const calculateRiskyPV01 = (): number | null => {
+    // If ORE provided it, use that
+    if (data.riskyAnnuity !== null && data.riskyAnnuity !== undefined) {
+      return data.riskyAnnuity;
+    }
+
+    // Otherwise calculate it from available data
+    const premiumLegNPV = data.premiumLegNPVClean || 0;
+    const accruedPremium = data.accruedPremium || 0;
+    const notional = data.currentNotional || data.originalNotional;
+    const runningSpread = data.fairSpreadClean; // Fair spread in decimal form
+
+    if (!notional || !runningSpread || runningSpread === 0) {
+      return null;
+    }
+
+    const riskyPV01 = Math.abs(premiumLegNPV + accruedPremium) / (notional * runningSpread);
+    return riskyPV01;
+  };
+
+  const riskyPV01 = calculateRiskyPV01();
+
   // Find the next unpaid coupon (earliest payment date among unpaid)
   const getNextUnpaidCoupon = (): CouponPeriod | null => {
     const unpaidCoupons = couponPeriods
@@ -438,6 +462,15 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
               <span className="text-fd-text-muted">Current Notional:</span>
               <div className="font-mono text-fd-text">{formatCurrency(data.currentNotional, data.currency)}</div>
             </div>
+            {riskyPV01 !== null && (
+              <div>
+                <span className="text-fd-text-muted">Risky PV01:</span>
+                <div className="font-mono text-fd-text font-semibold text-fd-green">{formatValue(riskyPV01, 6)}</div>
+                <div className="text-xs text-fd-text-muted mt-0.5">
+                  {data.riskyAnnuity ? 'From ORE' : 'Calculated'}
+                </div>
+              </div>
+            )}
             {trade?.recoveryRate !== undefined && trade?.recoveryRate !== null && (
               <div>
                 <span className="text-fd-text-muted">Recovery Rate:</span>

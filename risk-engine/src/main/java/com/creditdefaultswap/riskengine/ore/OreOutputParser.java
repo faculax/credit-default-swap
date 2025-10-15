@@ -166,6 +166,15 @@ public class OreOutputParser {
             riskMeasures.setCurrentNotional(parseBigDecimal(results.get("currentNotional[1]")));
             riskMeasures.setOriginalNotional(parseBigDecimal(results.get("originalNotional[1]")));
             
+            // Risky Annuity (PV01_CREDIT / RPV01)
+            BigDecimal riskyAnnuity = parseBigDecimal(results.get("riskyAnnuity"));
+            if (riskyAnnuity != null) {
+                riskMeasures.setRiskyAnnuity(riskyAnnuity);
+                logger.info("✅ Parsed Risky Annuity (PV01_CREDIT): {}", riskyAnnuity);
+            } else {
+                logger.debug("Risky Annuity not found in additional_results.csv (may not be available for all trades)");
+            }
+            
             logger.info("Parsed CDS metrics from additional_results.csv: Fair Spread Clean = {}, Protection Leg NPV = {}, Premium Leg NPV = {}", 
                 riskMeasures.getFairSpreadClean(), riskMeasures.getProtectionLegNPV(), riskMeasures.getPremiumLegNPVClean());
                 

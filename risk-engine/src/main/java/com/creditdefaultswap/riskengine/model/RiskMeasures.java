@@ -25,6 +25,7 @@ public class RiskMeasures {
     private BigDecimal couponLegBPS; // Coupon leg basis point value
     private BigDecimal currentNotional; // Current notional amount
     private BigDecimal originalNotional; // Original notional amount
+    private BigDecimal riskyAnnuity; // Risky PV01 / RPV01 - present value of premium leg per 1bp spread
     
     // Credit risk arrays
     private List<BigDecimal> defaultProbabilities; // Default probabilities by period
@@ -99,6 +100,9 @@ public class RiskMeasures {
     
     public BigDecimal getOriginalNotional() { return originalNotional; }
     public void setOriginalNotional(BigDecimal originalNotional) { this.originalNotional = originalNotional; }
+    
+    public BigDecimal getRiskyAnnuity() { return riskyAnnuity; }
+    public void setRiskyAnnuity(BigDecimal riskyAnnuity) { this.riskyAnnuity = riskyAnnuity; }
     
     public List<BigDecimal> getDefaultProbabilities() { return defaultProbabilities; }
     public void setDefaultProbabilities(List<BigDecimal> defaultProbabilities) { this.defaultProbabilities = defaultProbabilities; }
