@@ -585,10 +585,20 @@ jobs:
           SPOTBUGS_MEDIUM=0
           SPOTBUGS_LOW=0
           
+          # Debug: Show what artifacts were downloaded
+          echo "🔍 Debugging artifact downloads..."
+          echo "Current directory: $(pwd)"
+          echo "Artifact directories:"
+          ls -la
+          echo ""
+          
           # Count issues from each service
           for service in backend gateway risk-engine; do
+            echo "Checking for ${service}-security-reports/spotbugsXml.xml..."
             if [ -f "${service}-security-reports/spotbugsXml.xml" ]; then
+              echo "✅ Found spotbugsXml.xml for ${service}"
               SERVICE_BUGS=$(grep -o '<BugInstance' "${service}-security-reports/spotbugsXml.xml" 2>/dev/null | wc -l || echo "0")
+              echo "   Bug count: $SERVICE_BUGS"
               SPOTBUGS_TOTAL=$((SPOTBUGS_TOTAL + SERVICE_BUGS))
               
               # Count by severity
@@ -599,9 +609,19 @@ jobs:
               SPOTBUGS_HIGH=$((SPOTBUGS_HIGH + HIGH))
               SPOTBUGS_MEDIUM=$((SPOTBUGS_MEDIUM + MEDIUM))
               SPOTBUGS_LOW=$((SPOTBUGS_LOW + LOW))
+            else
+              echo "❌ spotbugsXml.xml NOT found for ${service}"
+              # Try to list what's in the directory
+              if [ -d "${service}-security-reports" ]; then
+                echo "   Directory exists, contents:"
+                ls -la "${service}-security-reports/" || true
+              else
+                echo "   Directory does NOT exist"
+              fi
             fi
           done
           
+          echo ""
           echo "📊 SpotBugs Summary: Total=$SPOTBUGS_TOTAL (High=$SPOTBUGS_HIGH, Medium=$SPOTBUGS_MEDIUM, Low=$SPOTBUGS_LOW)"
           
           # Parse npm audit results from frontend
