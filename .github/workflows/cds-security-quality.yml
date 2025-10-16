@@ -172,26 +172,27 @@ jobs:
             grep -r --include="*.java" -i "password.*=" src/ || true
           fi
 
-      - name: OWASP Dependency vulnerability scan
+      - name: Grype Vulnerability Scan
         run: |
           if [ -d "${{ matrix.service }}" ]; then
-            cd ${{ matrix.service }}
+            echo "🔍 Installing Grype vulnerability scanner..."
+            curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
             
-            # Aggressively clean H2 database for this service
-            echo "🧹 Cleaning ALL H2 database files for ${{ matrix.service }}..."
-            rm -rf target/dependency-check-data 2>/dev/null || true
-            mkdir -p target/dependency-check-data
+            echo "📦 Scanning ${{ matrix.service }} for vulnerabilities..."
+            echo "ℹ️  Using NVD + GitHub Advisory + 10+ vulnerability databases"
             
-            # Also clean Maven's global dependency-check cache
-            rm -rf ~/.m2/repository/org/owasp/dependency-check-data/*.mv.db 2>/dev/null || true
-            rm -rf ~/.m2/repository/org/owasp/dependency-check-data/*.trace.db 2>/dev/null || true
+            # Scan the service directory
+            grype dir:./${{ matrix.service }} \
+              --fail-on high \
+              --output json \
+              --file ${{ matrix.service }}/grype-report.json || true
             
-            echo "🔍 Scanning ${{ matrix.service }} with OWASP Dependency Check 8.4.0..."
-            echo "ℹ️  Using deprecated JSON feeds (more stable H2 database)"
+            # Also generate table format for readability
+            grype dir:./${{ matrix.service }} \
+              --output table \
+              --file ${{ matrix.service }}/grype-report.txt || true
             
-            # Single-threaded scan with isolated database
-            ./mvnw org.owasp:dependency-check-maven:check \
-              -Dodc.data.directory=./target/dependency-check-data
+            echo "✅ Grype scan complete for ${{ matrix.service }}"
           fi
         continue-on-error: true
 
@@ -222,14 +223,41 @@ jobs:
           echo "## 🔒 Security Analysis Summary - ${{ matrix.service }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          # OWASP Dependency Check Summary
-          if [ -f "${{ matrix.service }}/target/dependency-check-report.json" ]; then
-            echo "### 📦 OWASP Dependency Check" >> $GITHUB_STEP_SUMMARY
-            VULN_COUNT=$(jq '.dependencies[].vulnerabilities | length' ${{ matrix.service }}/target/dependency-check-report.json 2>/dev/null | awk '{s+=$1} END {print s}' || echo "0")
-            echo "- **Vulnerabilities Found:** $VULN_COUNT" >> $GITHUB_STEP_SUMMARY
+          # Grype Vulnerability Scan Summary
+          if [ -f "${{ matrix.service }}/grype-report.json" ]; then
+            echo "### 📦 Grype Vulnerability Scan" >> $GITHUB_STEP_SUMMARY
+            
+            # Parse Grype JSON report
+            CRITICAL_COUNT=$(jq '[.matches[] | select(.vulnerability.severity=="Critical")] | length' ${{ matrix.service }}/grype-report.json 2>/dev/null || echo "0")
+            HIGH_COUNT=$(jq '[.matches[] | select(.vulnerability.severity=="High")] | length' ${{ matrix.service }}/grype-report.json 2>/dev/null || echo "0")
+            MEDIUM_COUNT=$(jq '[.matches[] | select(.vulnerability.severity=="Medium")] | length' ${{ matrix.service }}/grype-report.json 2>/dev/null || echo "0")
+            LOW_COUNT=$(jq '[.matches[] | select(.vulnerability.severity=="Low")] | length' ${{ matrix.service }}/grype-report.json 2>/dev/null || echo "0")
+            NEGLIGIBLE_COUNT=$(jq '[.matches[] | select(.vulnerability.severity=="Negligible")] | length' ${{ matrix.service }}/grype-report.json 2>/dev/null || echo "0")
+            TOTAL_COUNT=$(jq '.matches | length' ${{ matrix.service }}/grype-report.json 2>/dev/null || echo "0")
+            
+            echo "- **Total Vulnerabilities:** $TOTAL_COUNT" >> $GITHUB_STEP_SUMMARY
+            echo "- **Critical:** 🔴 $CRITICAL_COUNT" >> $GITHUB_STEP_SUMMARY
+            echo "- **High:** 🟠 $HIGH_COUNT" >> $GITHUB_STEP_SUMMARY
+            echo "- **Medium:** 🟡 $MEDIUM_COUNT" >> $GITHUB_STEP_SUMMARY
+            echo "- **Low:** 🟢 $LOW_COUNT" >> $GITHUB_STEP_SUMMARY
+            echo "- **Negligible:** ⚪ $NEGLIGIBLE_COUNT" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # List top 5 critical/high vulnerabilities
+            if [ "$((CRITICAL_COUNT + HIGH_COUNT))" -gt 0 ]; then
+              echo "#### 🚨 Top Critical/High Vulnerabilities:" >> $GITHUB_STEP_SUMMARY
+              jq -r '.matches[] | select(.vulnerability.severity=="Critical" or .vulnerability.severity=="High") | "- **\(.vulnerability.id)** (\(.vulnerability.severity)): \(.artifact.name):\(.artifact.version) - \(.vulnerability.description // "No description")"' ${{ matrix.service }}/grype-report.json 2>/dev/null | head -5 >> $GITHUB_STEP_SUMMARY || true
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            if [ "$TOTAL_COUNT" -gt 0 ]; then
+              echo "⚠️ **Action Required:** Download the Grype reports from artifacts for detailed findings." >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ No vulnerabilities detected by Grype." >> $GITHUB_STEP_SUMMARY
+            fi
           fi
           
+          echo "" >> $GITHUB_STEP_SUMMARY
           # SpotBugs Summary
           if [ -f "${{ matrix.service }}/target/spotbugsXml.xml" ]; then
             echo "### 🐛 SpotBugs Security Issues" >> $GITHUB_STEP_SUMMARY
@@ -272,8 +300,8 @@ jobs:
         with:
           name: ${{ matrix.service }}-security-reports
           path: |
-            ${{ matrix.service }}/target/dependency-check-report.html
-            ${{ matrix.service }}/target/dependency-check-report.json
+            ${{ matrix.service }}/grype-report.json
+            ${{ matrix.service }}/grype-report.txt
             ${{ matrix.service }}/target/spotbugsXml.xml
             ${{ matrix.service }}/target/site/spotbugs.html
             ${{ matrix.service }}/target/spotbugs.html
