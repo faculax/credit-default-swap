@@ -141,8 +141,23 @@ jobs:
             cd ${{ matrix.service }}
             echo "Analyzing ${{ matrix.service }} service..."
             
-            # Compile and run security-focused static analysis
-            ./mvnw clean compile -DskipTests
+            # Compile with retry logic to handle transient network errors
+            echo "🔨 Building ${{ matrix.service }}..."
+            for i in 1 2 3; do
+              echo "Build attempt $i of 3..."
+              if ./mvnw clean compile -DskipTests -B; then
+                echo "✅ Build succeeded on attempt $i"
+                break
+              else
+                if [ $i -lt 3 ]; then
+                  echo "⚠️  Build failed, retrying in 10 seconds..."
+                  sleep 10
+                else
+                  echo "❌ Build failed after 3 attempts"
+                  exit 1
+                fi
+              fi
+            done
             
             # Custom security checks for CDS platform
             echo "Checking for SQL injection vulnerabilities..."
