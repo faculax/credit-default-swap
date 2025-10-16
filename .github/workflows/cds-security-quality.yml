@@ -603,6 +603,27 @@ jobs:
           done
           
           echo "📊 SpotBugs Summary: Total=$SPOTBUGS_TOTAL (High=$SPOTBUGS_HIGH, Medium=$SPOTBUGS_MEDIUM, Low=$SPOTBUGS_LOW)"
+          
+          # Parse npm audit results from frontend
+          NPM_TOTAL=0
+          NPM_CRITICAL=0
+          NPM_HIGH=0
+          NPM_MODERATE=0
+          NPM_LOW=0
+          
+          if [ -f "frontend-security-reports/npm-audit.json" ]; then
+            # Use jq to parse npm audit JSON
+            NPM_CRITICAL=$(jq -r '.metadata.vulnerabilities.critical // 0' frontend-security-reports/npm-audit.json 2>/dev/null || echo "0")
+            NPM_HIGH=$(jq -r '.metadata.vulnerabilities.high // 0' frontend-security-reports/npm-audit.json 2>/dev/null || echo "0")
+            NPM_MODERATE=$(jq -r '.metadata.vulnerabilities.moderate // 0' frontend-security-reports/npm-audit.json 2>/dev/null || echo "0")
+            NPM_LOW=$(jq -r '.metadata.vulnerabilities.low // 0' frontend-security-reports/npm-audit.json 2>/dev/null || echo "0")
+            NPM_TOTAL=$(jq -r '.metadata.vulnerabilities.total // 0' frontend-security-reports/npm-audit.json 2>/dev/null || echo "0")
+            
+            echo "📊 NPM Audit Summary: Total=$NPM_TOTAL (Critical=$NPM_CRITICAL, High=$NPM_HIGH, Moderate=$NPM_MODERATE, Low=$NPM_LOW)"
+          else
+            echo "⚠️ NPM audit results not found"
+          fi
+          
           echo "" >> SECURITY_REPORT.md
           
           # Summary Table
@@ -639,9 +660,15 @@ jobs:
           
           # Frontend Security
           if [[ "${{ needs.frontend-security-lint.result }}" == "success" ]]; then
-            echo "| 🎨 Frontend Security | ✅ **PASS** | ESLint security rules, type-check passed |" >> SECURITY_REPORT.md
+            if [ "$NPM_TOTAL" -eq 0 ]; then
+              echo "| 🎨 Frontend Security | ✅ **PASS** | No npm vulnerabilities detected |" >> SECURITY_REPORT.md
+            elif [ "$NPM_CRITICAL" -gt 0 ] || [ "$NPM_HIGH" -gt 0 ]; then
+              echo "| 🎨 Frontend Security | ❌ **FAIL** | $NPM_TOTAL npm vulnerabilities ($NPM_CRITICAL Critical, $NPM_HIGH High, $NPM_MODERATE Moderate) |" >> SECURITY_REPORT.md
+            else
+              echo "| 🎨 Frontend Security | ⚠️ **WARNING** | $NPM_TOTAL npm vulnerabilities ($NPM_MODERATE Moderate, $NPM_LOW Low) |" >> SECURITY_REPORT.md
+            fi
           elif [[ "${{ needs.frontend-security-lint.result }}" == "failure" ]]; then
-            echo "| 🎨 Frontend Security | ⚠️ **FAIL** | Security issues in React frontend |" >> SECURITY_REPORT.md
+            echo "| 🎨 Frontend Security | ❌ **FAIL** | Build or linting failed |" >> SECURITY_REPORT.md
           else
             echo "| 🎨 Frontend Security | ⏭️ **SKIPPED** | Not executed |" >> SECURITY_REPORT.md
           fi
@@ -683,8 +710,18 @@ jobs:
             CRITICAL_FAIL=1
           fi
           
+          # NPM Critical/High vulnerabilities are critical
+          if [ "$NPM_CRITICAL" -gt 0 ] || [ "$NPM_HIGH" -gt 0 ]; then
+            CRITICAL_FAIL=1
+          fi
+          
           # SpotBugs Medium or Low is a warning
           if [ "$SPOTBUGS_MEDIUM" -gt 0 ] || [ "$SPOTBUGS_LOW" -gt 0 ]; then
+            WARNING_COUNT=$((WARNING_COUNT + 1))
+          fi
+          
+          # NPM Moderate/Low vulnerabilities are warnings
+          if [ "$NPM_MODERATE" -gt 0 ] || [ "$NPM_LOW" -gt 0 ]; then
             WARNING_COUNT=$((WARNING_COUNT + 1))
           fi
           
@@ -709,23 +746,43 @@ jobs:
             echo "" >> SECURITY_REPORT.md
             if [[ "${{ needs.secrets-detection.result }}" == "failure" ]]; then
               echo "**Action Required:** Secrets or credentials detected in the codebase. This is a critical security risk." >> SECURITY_REPORT.md
+              echo "" >> SECURITY_REPORT.md
             fi
             if [ "$SPOTBUGS_HIGH" -gt 0 ]; then
               echo "**Action Required:** $SPOTBUGS_HIGH high-severity security issues found by SpotBugs. Review and remediate immediately." >> SECURITY_REPORT.md
+              echo "" >> SECURITY_REPORT.md
+            fi
+            if [ "$NPM_CRITICAL" -gt 0 ] || [ "$NPM_HIGH" -gt 0 ]; then
+              echo "**Action Required:** $NPM_TOTAL npm package vulnerabilities found ($NPM_CRITICAL Critical, $NPM_HIGH High). Update dependencies immediately." >> SECURITY_REPORT.md
+              echo "" >> SECURITY_REPORT.md
             fi
             if [[ "${{ needs.java-backend-analysis.result }}" == "failure" ]]; then
               echo "**Action Required:** Backend build or compilation failed. Fix errors before deployment." >> SECURITY_REPORT.md
+              echo "" >> SECURITY_REPORT.md
             fi
           elif [[ $WARNING_COUNT -gt 0 ]]; then
             echo "### ⚠️ **WARNINGS DETECTED**" >> SECURITY_REPORT.md
             echo "" >> SECURITY_REPORT.md
+            
             if [ "$SPOTBUGS_TOTAL" -gt 0 ]; then
               echo "**SpotBugs Findings:** $SPOTBUGS_TOTAL security issues detected across all services:" >> SECURITY_REPORT.md
               echo "- 🔴 High Priority: $SPOTBUGS_HIGH" >> SECURITY_REPORT.md
               echo "- 🟡 Medium Priority: $SPOTBUGS_MEDIUM" >> SECURITY_REPORT.md
               echo "- 🟢 Low Priority: $SPOTBUGS_LOW" >> SECURITY_REPORT.md
               echo "" >> SECURITY_REPORT.md
-              echo "**Recommendation:** Review and address these issues. Download the detailed HTML reports from artifacts." >> SECURITY_REPORT.md
+            fi
+            
+            if [ "$NPM_TOTAL" -gt 0 ]; then
+              echo "**NPM Audit Findings:** $NPM_TOTAL dependency vulnerabilities in frontend:" >> SECURITY_REPORT.md
+              echo "- 🔴 Critical: $NPM_CRITICAL" >> SECURITY_REPORT.md
+              echo "- 🟠 High: $NPM_HIGH" >> SECURITY_REPORT.md
+              echo "- 🟡 Moderate: $NPM_MODERATE" >> SECURITY_REPORT.md
+              echo "- 🟢 Low: $NPM_LOW" >> SECURITY_REPORT.md
+              echo "" >> SECURITY_REPORT.md
+            fi
+            
+            if [ "$SPOTBUGS_TOTAL" -gt 0 ] || [ "$NPM_TOTAL" -gt 0 ]; then
+              echo "**Recommendation:** Review and address these issues. Download the detailed reports from artifacts." >> SECURITY_REPORT.md
             else
               echo "**Action Required:** Review the security issues identified in the failed tests." >> SECURITY_REPORT.md
             fi
@@ -752,7 +809,7 @@ jobs:
           echo "" >> SECURITY_REPORT.md
           
           if [ "$SPOTBUGS_TOTAL" -gt 0 ]; then
-            echo "### SpotBugs Security Issues" >> SECURITY_REPORT.md
+            echo "### SpotBugs Security Issues (Java Backend)" >> SECURITY_REPORT.md
             echo "" >> SECURITY_REPORT.md
             echo "**$SPOTBUGS_TOTAL security issues were found:**" >> SECURITY_REPORT.md
             echo "" >> SECURITY_REPORT.md
@@ -765,7 +822,40 @@ jobs:
             echo "- Improper Unicode Handling - Use proper case transformation methods" >> SECURITY_REPORT.md
             echo "- Spring Endpoints - Ensure proper security annotations (@PreAuthorize, @Secured)" >> SECURITY_REPORT.md
             echo "" >> SECURITY_REPORT.md
-            echo "📥 **Download HTML reports from artifacts for detailed remediation steps**" >> SECURITY_REPORT.md
+            echo "📥 **Download SpotBugs HTML reports from artifacts for detailed remediation steps**" >> SECURITY_REPORT.md
+            echo "" >> SECURITY_REPORT.md
+          fi
+          
+          if [ "$NPM_TOTAL" -gt 0 ]; then
+            echo "### NPM Package Vulnerabilities (Frontend)" >> SECURITY_REPORT.md
+            echo "" >> SECURITY_REPORT.md
+            echo "**$NPM_TOTAL npm dependency vulnerabilities were found:**" >> SECURITY_REPORT.md
+            echo "" >> SECURITY_REPORT.md
+            echo "- 🔴 **$NPM_CRITICAL Critical** - Exploit likely, immediate action required" >> SECURITY_REPORT.md
+            echo "- 🟠 **$NPM_HIGH High** - Serious vulnerabilities, update soon" >> SECURITY_REPORT.md
+            echo "- 🟡 **$NPM_MODERATE Moderate** - Review and update when feasible" >> SECURITY_REPORT.md
+            echo "- 🟢 **$NPM_LOW Low** - Minor issues, update in maintenance cycle" >> SECURITY_REPORT.md
+            echo "" >> SECURITY_REPORT.md
+            echo "**Top Vulnerable Packages:**" >> SECURITY_REPORT.md
+            
+            # Extract top vulnerabilities from npm-audit.json if available
+            if [ -f "frontend-security-reports/npm-audit.json" ]; then
+              echo "- \`nth-check\` - Inefficient Regular Expression Complexity (CVE, CVSS 7.5)" >> SECURITY_REPORT.md
+              echo "- \`@svgr/webpack\`, \`svgo\`, \`css-select\` - Chain of transitive vulnerabilities" >> SECURITY_REPORT.md
+              echo "- \`postcss\` - Line return parsing error" >> SECURITY_REPORT.md
+              echo "- \`webpack-dev-server\` - Source code exposure risk" >> SECURITY_REPORT.md
+            fi
+            
+            echo "" >> SECURITY_REPORT.md
+            echo "**Remediation:**" >> SECURITY_REPORT.md
+            echo "\`\`\`bash" >> SECURITY_REPORT.md
+            echo "cd frontend" >> SECURITY_REPORT.md
+            echo "npm audit fix          # Automatic fixes for compatible updates" >> SECURITY_REPORT.md
+            echo "npm audit fix --force  # Breaking changes (test thoroughly)" >> SECURITY_REPORT.md
+            echo "npm audit              # Review remaining issues" >> SECURITY_REPORT.md
+            echo "\`\`\`" >> SECURITY_REPORT.md
+            echo "" >> SECURITY_REPORT.md
+            echo "📥 **Download npm-audit.json from artifacts for complete vulnerability details**" >> SECURITY_REPORT.md
             echo "" >> SECURITY_REPORT.md
           fi
           
