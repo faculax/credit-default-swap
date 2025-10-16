@@ -41,23 +41,28 @@ const CDSBlotter: React.FC<CDSBlotterProps> = ({ onTradeSelect }) => {
 
   const handleGenerateDemoEvents = async (trade: CDSTradeResponse, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent triggering the row click
-    
+
     if (generatingEvents === trade.id) return; // Already generating
-    
+
     try {
       setGeneratingEvents(trade.id);
       const generatedEvents = await creditEventService.generateDemoCreditEvents(trade.id);
-      
+
       if (generatedEvents.length === 0) {
-        alert('No demo credit events were generated for this trade. The system determined this reference entity is unlikely to have credit events.');
+        alert(
+          'No demo credit events were generated for this trade. The system determined this reference entity is unlikely to have credit events.'
+        );
       } else {
-        alert(`Successfully generated ${generatedEvents.length} demo credit event(s) for trade CDS-${trade.id}. View them in the trade details.`);
+        alert(
+          `Successfully generated ${generatedEvents.length} demo credit event(s) for trade CDS-${trade.id}. View them in the trade details.`
+        );
       }
-      
+
       // Optionally refresh the trades to update any status changes
       loadTrades();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to generate demo credit events';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to generate demo credit events';
       alert(`Error: ${errorMessage}`);
       console.error('Error generating demo credit events:', error);
     } finally {
@@ -68,7 +73,7 @@ const CDSBlotter: React.FC<CDSBlotterProps> = ({ onTradeSelect }) => {
   const formatCurrency = (amount: number, currency: string) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: currency || 'USD'
+      currency: currency || 'USD',
     }).format(amount);
   };
 
@@ -76,7 +81,7 @@ const CDSBlotter: React.FC<CDSBlotterProps> = ({ onTradeSelect }) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -112,7 +117,11 @@ const CDSBlotter: React.FC<CDSBlotterProps> = ({ onTradeSelect }) => {
         <div className="flex">
           <div className="flex-shrink-0">
             <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                clipRule="evenodd"
+              />
             </svg>
           </div>
           <div className="ml-3">
@@ -152,7 +161,9 @@ const CDSBlotter: React.FC<CDSBlotterProps> = ({ onTradeSelect }) => {
           />
         </svg>
         <h3 className="mt-2 text-sm font-medium text-fd-text">No trades found</h3>
-        <p className="mt-1 text-sm text-fd-text-muted">Get started by creating your first CDS trade.</p>
+        <p className="mt-1 text-sm text-fd-text-muted">
+          Get started by creating your first CDS trade.
+        </p>
       </div>
     );
   }
@@ -231,16 +242,16 @@ const CDSBlotter: React.FC<CDSBlotterProps> = ({ onTradeSelect }) => {
                   {trade.counterparty}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <span className={`${trade.buySellProtection === 'BUY' ? 'text-blue-400' : 'text-orange-400'}`}>
+                  <span
+                    className={`${trade.buySellProtection === 'BUY' ? 'text-blue-400' : 'text-orange-400'}`}
+                  >
                     {trade.buySellProtection === 'BUY' ? 'Buy Protection' : 'Sell Protection'}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-fd-text font-medium">
                   {formatCurrency(trade.notionalAmount, trade.currency)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-fd-text">
-                  {trade.spread}
-                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-fd-text">{trade.spread}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-fd-text">
                   {formatDate(trade.tradeDate)}
                 </td>
@@ -248,7 +259,9 @@ const CDSBlotter: React.FC<CDSBlotterProps> = ({ onTradeSelect }) => {
                   {formatDate(trade.maturityDate)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(trade.tradeStatus)}`}>
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(trade.tradeStatus)}`}
+                  >
                     {trade.tradeStatus.replace(/_/g, ' ')}
                   </span>
                 </td>
@@ -257,32 +270,37 @@ const CDSBlotter: React.FC<CDSBlotterProps> = ({ onTradeSelect }) => {
                     onClick={(e) => handleGenerateDemoEvents(trade, e)}
                     disabled={generatingEvents === trade.id || trade.tradeStatus !== 'ACTIVE'}
                     className={`inline-flex items-center justify-center w-8 h-8 rounded transition-colors ${
-                      trade.tradeStatus === 'ACTIVE' 
-                        ? 'text-fd-text-muted hover:text-fd-green hover:bg-fd-green/10' 
+                      trade.tradeStatus === 'ACTIVE'
+                        ? 'text-fd-text-muted hover:text-fd-green hover:bg-fd-green/10'
                         : 'text-fd-text-muted/50 cursor-not-allowed'
                     }`}
                     title={
-                      trade.tradeStatus === 'ACTIVE' 
-                        ? 'Generate demo credit events' 
+                      trade.tradeStatus === 'ACTIVE'
+                        ? 'Generate demo credit events'
                         : 'Only available for ACTIVE trades'
                     }
                   >
                     {generatingEvents === trade.id ? (
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-fd-green"></div>
                     ) : (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
-                          strokeWidth={2} 
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
                           d="M8 6h8V4a2 2 0 00-2-2H10a2 2 0 00-2 2v2zm8 0v2H8V6h8zm0 2v8a2 2 0 01-2 2H10a2 2 0 01-2-2V8h8z"
                         />
-                        <circle cx="10" cy="10" r="1" fill="currentColor"/>
-                        <circle cx="14" cy="10" r="1" fill="currentColor"/>
-                        <circle cx="10" cy="14" r="1" fill="currentColor"/>
-                        <circle cx="14" cy="14" r="1" fill="currentColor"/>
-                        <circle cx="12" cy="12" r="1" fill="currentColor"/>
-                        <circle cx="12" cy="16" r="1" fill="currentColor"/>
+                        <circle cx="10" cy="10" r="1" fill="currentColor" />
+                        <circle cx="14" cy="10" r="1" fill="currentColor" />
+                        <circle cx="10" cy="14" r="1" fill="currentColor" />
+                        <circle cx="14" cy="14" r="1" fill="currentColor" />
+                        <circle cx="12" cy="12" r="1" fill="currentColor" />
+                        <circle cx="12" cy="16" r="1" fill="currentColor" />
                       </svg>
                     )}
                   </button>

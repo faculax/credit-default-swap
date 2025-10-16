@@ -25,7 +25,7 @@ function App() {
   const handleTradeSubmit = async (trade: CDSTrade) => {
     setIsSubmitting(true);
     setSubmitError(null);
-    
+
     try {
       const tradeRequest: CDSTradeRequest = {
         referenceEntity: trade.referenceEntity,
@@ -43,14 +43,13 @@ function App() {
         paymentCalendar: trade.paymentCalendar,
         accrualStartDate: trade.accrualStartDate,
         tradeStatus: trade.tradeStatus,
-        recoveryRate: trade.recoveryRate
+        recoveryRate: trade.recoveryRate,
       };
 
       const savedTrade = await cdsTradeService.createTrade(tradeRequest);
-      
+
       setBookedTrade(savedTrade);
       setIsConfirmationOpen(true);
-      
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       setSubmitError(`Failed to book trade: ${errorMessage}`);
@@ -78,7 +77,7 @@ function App() {
   return (
     <div className="min-h-screen bg-fd-dark">
       <TopBar />
-      
+
       {/* Sub-navigation bar */}
       <div className="bg-fd-darker border-b border-fd-border">
         <div className="px-8 py-4">
@@ -136,9 +135,8 @@ function App() {
           </div>
         </div>
       </div>
-      
-      <div className="p-8">
 
+      <div className="p-8">
         {/* Content based on current view */}
         {currentView === 'form' ? (
           <CDSTradeForm onSubmit={handleTradeSubmit} />
@@ -151,7 +149,7 @@ function App() {
         ) : (
           <BondPage />
         )}
-        
+
         <ConfirmationModal
           isOpen={isConfirmationOpen}
           trade={bookedTrade}

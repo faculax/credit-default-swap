@@ -20,8 +20,8 @@ export interface SimulationRequest {
 
 export interface HorizonMetrics {
   tenor: string;
-  pAnyDefault?: number;  // camelCase from fixed backend
-  panyDefault?: number;  // lowercase from current backend - for backwards compatibility
+  pAnyDefault?: number; // camelCase from fixed backend
+  panyDefault?: number; // lowercase from current backend - for backwards compatibility
   expectedDefaults: number;
   loss: {
     mean: number;
@@ -65,7 +65,10 @@ class SimulationService {
   /**
    * Submit a new simulation run
    */
-  async runSimulation(portfolioId: number, request: SimulationRequest): Promise<SimulationResponse> {
+  async runSimulation(
+    portfolioId: number,
+    request: SimulationRequest
+  ): Promise<SimulationResponse> {
     const response = await fetch(`${this.baseUrl}/portfolio/${portfolioId}`, {
       method: 'POST',
       headers: {
@@ -120,7 +123,7 @@ class SimulationService {
     const dataStr = JSON.stringify(simulation, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
-    
+
     const link = document.createElement('a');
     link.href = url;
     link.download = `simulation-run-${simulation.runId}.json`;

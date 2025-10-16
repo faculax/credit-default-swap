@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Focus on security-related bugs for Risk Engine -->
+    <Match>
+        <Bug category="SECURITY"/>
+    </Match>
+    
+    <!-- Risk engine specific security patterns -->
+    <Match>
+        <Bug pattern="XSS_REQUEST_PARAMETER_TO_SERVLET_WRITER"/>
+    </Match>
+    <Match>
+        <Bug pattern="XSS_REQUEST_PARAMETER_TO_SEND_ERROR"/>
+    </Match>
+    
+    <!-- Password and credential issues -->
+    <Match>
+        <Bug pattern="HARD_CODE_PASSWORD"/>
+    </Match>
+    <Match>
+        <Bug pattern="HARD_CODE_KEY"/>
+    </Match>
+    
+    <!-- Path traversal vulnerabilities for ORE files -->
+    <Match>
+        <Bug pattern="PATH_TRAVERSAL_IN"/>
+    </Match>
+    <Match>
+        <Bug pattern="PATH_TRAVERSAL_OUT"/>
+    </Match>
+    <Match>
+        <Bug pattern="WEAK_FILENAMEUTILS"/>
+    </Match>
+    
+    <!-- Encryption and hashing vulnerabilities -->
+    <Match>
+        <Bug pattern="WEAK_MESSAGE_DIGEST_MD5"/>
+    </Match>
+    <Match>
+        <Bug pattern="WEAK_MESSAGE_DIGEST_SHA1"/>
+    </Match>
+    <Match>
+        <Bug pattern="CIPHER_INTEGRITY"/>
+    </Match>
+    <Match>
+        <Bug pattern="ECB_MODE"/>
+    </Match>
+    
+    <!-- Command injection (critical for ORE integration) -->
+    <Match>
+        <Bug pattern="COMMAND_INJECTION"/>
+    </Match>
+    
+    <!-- Focus on risk calculation and ORE related classes -->
+    <Match>
+        <Class name="~.*Risk.*"/>
+        <Bug category="SECURITY"/>
+    </Match>
+    <Match>
+        <Class name="~.*ORE.*"/>
+        <Bug category="SECURITY"/>
+    </Match>
+    <Match>
+        <Class name="~.*Calculation.*"/>
+        <Bug category="SECURITY"/>
+    </Match>
+    <Match>
+        <Class name="~.*Engine.*"/>
+        <Bug category="SECURITY"/>
+    </Match>
+    
+    <!-- File system security for market data and config files -->
+    <Match>
+        <Class name="~.*File.*"/>
+        <Bug category="SECURITY"/>
+    </Match>
+    <Match>
+        <Class name="~.*Config.*"/>
+        <Bug category="SECURITY"/>
+    </Match>
+    
+    <!-- Trust boundary violations */
+    <Match>
+        <Bug pattern="TRUST_BOUNDARY_VIOLATION"/>
+    </Match>
+    
+    <!-- Unsafe reflection and deserialization -->
+    <Match>
+        <Bug pattern="UNSAFE_JACKSON_DESERIALIZATION"/>
+    </Match>
+    <Match>
+        <Bug pattern="OBJECT_DESERIALIZATION"/>
+    </Match>
+    
+    <!-- XML security for ORE configurations -->
+    <Match>
+        <Bug pattern="XXE_DOCUMENT"/>
+    </Match>
+    <Match>
+        <Bug pattern="XXE_SAXPARSER"/>
+    </Match>
+    <Match>
+        <Bug pattern="XXE_XMLREADER"/>
+    </Match>
+</FindBugsFilter>

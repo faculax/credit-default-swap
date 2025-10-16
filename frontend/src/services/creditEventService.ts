@@ -36,14 +36,16 @@ export interface PhysicalSettlementInstruction {
   updatedAt?: string;
 }
 
-
 class CreditEventService {
   private readonly baseUrl: string = apiUrl('');
 
   /**
    * Record a credit event for a trade
    */
-  async recordCreditEvent(tradeId: number, request: CreateCreditEventRequest): Promise<CreditEvent> {
+  async recordCreditEvent(
+    tradeId: number,
+    request: CreateCreditEventRequest
+  ): Promise<CreditEvent> {
     const response = await fetch(`${this.baseUrl}/cds-trades/${tradeId}/credit-events`, {
       method: 'POST',
       headers: {
@@ -81,7 +83,10 @@ class CreditEventService {
   /**
    * Get physical settlement instruction for a credit event
    */
-  async getPhysicalSettlement(tradeId: number, eventId: string): Promise<PhysicalSettlementInstruction> {
+  async getPhysicalSettlement(
+    tradeId: number,
+    eventId: string
+  ): Promise<PhysicalSettlementInstruction> {
     const response = await fetch(
       `${this.baseUrl}/cds-trades/${tradeId}/credit-events/${eventId}/physical-instruction`
     );

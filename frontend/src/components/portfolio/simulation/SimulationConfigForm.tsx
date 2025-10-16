@@ -8,7 +8,7 @@ interface SimulationConfigFormProps {
 
 const SimulationConfigForm: React.FC<SimulationConfigFormProps> = ({ onSubmit, isSubmitting }) => {
   const today = new Date().toISOString().split('T')[0];
-  
+
   const [valuationDate, setValuationDate] = useState(today);
   const [paths, setPaths] = useState(20000);
   const [selectedHorizons, setSelectedHorizons] = useState<string[]>(['3Y', '5Y']);
@@ -19,10 +19,8 @@ const SimulationConfigForm: React.FC<SimulationConfigFormProps> = ({ onSubmit, i
   const pathOptions = [10000, 20000, 50000, 100000];
 
   const toggleHorizon = (horizon: string) => {
-    setSelectedHorizons(prev =>
-      prev.includes(horizon)
-        ? prev.filter(h => h !== horizon)
-        : [...prev, horizon]
+    setSelectedHorizons((prev) =>
+      prev.includes(horizon) ? prev.filter((h) => h !== horizon) : [...prev, horizon]
     );
   };
 
@@ -56,7 +54,10 @@ const SimulationConfigForm: React.FC<SimulationConfigFormProps> = ({ onSubmit, i
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-fd-darker rounded-lg border border-fd-border p-6 space-y-6">
+    <form
+      onSubmit={handleSubmit}
+      className="bg-fd-darker rounded-lg border border-fd-border p-6 space-y-6"
+    >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Valuation Date */}
         <div>
@@ -84,7 +85,7 @@ const SimulationConfigForm: React.FC<SimulationConfigFormProps> = ({ onSubmit, i
             onChange={(e) => setPaths(parseInt(e.target.value))}
             className="w-full bg-fd-dark border border-fd-border rounded-md px-3 py-2 text-fd-text focus:outline-none focus:ring-2 focus:ring-fd-green"
           >
-            {pathOptions.map(option => (
+            {pathOptions.map((option) => (
               <option key={option} value={option}>
                 {option.toLocaleString()} paths
               </option>
@@ -99,7 +100,7 @@ const SimulationConfigForm: React.FC<SimulationConfigFormProps> = ({ onSubmit, i
           Horizons (select one or more)
         </label>
         <div className="flex flex-wrap gap-2">
-          {availableHorizons.map(horizon => (
+          {availableHorizons.map((horizon) => (
             <button
               key={horizon}
               type="button"
