@@ -4,8 +4,8 @@ spring:
   datasource:
     # Connect to Docker PostgreSQL on localhost
     url: jdbc:postgresql://localhost:5432/cdsplatform
-    username: cdsuser
-    password: cdspass
+    username: ${DB_USERNAME:cdsuser}
+    password: ${DB_PASSWORD:cdspass}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
