@@ -71,6 +71,7 @@ export interface RiskMeasures {
   currentNotional?: number | null;
   originalNotional?: number | null;
   riskyAnnuity?: number | null;
+  jtd?: number | null; // Jump-to-default exposure
   
   // Credit risk arrays
   defaultProbabilities?: number[] | null;

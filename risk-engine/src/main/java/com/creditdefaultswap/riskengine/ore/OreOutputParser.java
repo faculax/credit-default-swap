@@ -175,8 +175,20 @@ public class OreOutputParser {
                 logger.debug("Risky Annuity not found in additional_results.csv (may not be available for all trades)");
             }
             
-            logger.info("Parsed CDS metrics from additional_results.csv: Fair Spread Clean = {}, Protection Leg NPV = {}, Premium Leg NPV = {}", 
-                riskMeasures.getFairSpreadClean(), riskMeasures.getProtectionLegNPV(), riskMeasures.getPremiumLegNPVClean());
+            // Jump-to-Default (JTD) Exposure
+            // JTD represents the potential loss if the reference entity defaults immediately
+            // For a CDS protection buyer: JTD = Protection Leg NPV (the max gain on protection)
+            // For a CDS protection seller: JTD = -Protection Leg NPV (the max loss on default)
+            // We use Protection Leg NPV as the JTD exposure
+            if (protectionLegNPV != null) {
+                riskMeasures.setJtd(protectionLegNPV);
+                logger.info("✅ Calculated Jump-to-Default (JTD) Exposure: {} (from Protection Leg NPV)", protectionLegNPV);
+            } else {
+                logger.debug("Could not calculate JTD - Protection Leg NPV not available");
+            }
+            
+            logger.info("Parsed CDS metrics from additional_results.csv: Fair Spread Clean = {}, Protection Leg NPV = {}, Premium Leg NPV = {}, JTD = {}", 
+                riskMeasures.getFairSpreadClean(), riskMeasures.getProtectionLegNPV(), riskMeasures.getPremiumLegNPVClean(), riskMeasures.getJtd());
                 
         } catch (Exception e) {
             logger.error("Error parsing additional_results.csv", e);

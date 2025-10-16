@@ -430,6 +430,17 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+            {data.jtd !== null && data.jtd !== undefined && (
+              <div className="md:col-span-2 lg:col-span-4 bg-fd-dark rounded p-3 border-l-4 border-fd-green">
+                <span className="text-fd-text-muted">Jump-to-Default (JTD) Exposure:</span>
+                <div className="font-mono text-fd-green font-bold text-xl mt-1">
+                  {formatCurrency(data.jtd, data.currency)}
+                </div>
+                <div className="text-xs text-fd-text-muted mt-1">
+                  Potential loss if reference entity defaults immediately
+                </div>
+              </div>
+            )}
             <div>
               <span className="text-fd-text-muted">Fair Spread (Clean):</span>
               <div className="font-mono text-fd-text font-semibold">{formatBasisPoints(data.fairSpreadClean)}</div>

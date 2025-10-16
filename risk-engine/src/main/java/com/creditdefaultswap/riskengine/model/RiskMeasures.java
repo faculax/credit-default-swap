@@ -26,6 +26,7 @@ public class RiskMeasures {
     private BigDecimal currentNotional; // Current notional amount
     private BigDecimal originalNotional; // Original notional amount
     private BigDecimal riskyAnnuity; // Risky PV01 / RPV01 - present value of premium leg per 1bp spread
+    private BigDecimal jtd; // Jump-to-default exposure - potential loss if reference entity defaults immediately
     
     // Credit risk arrays
     private List<BigDecimal> defaultProbabilities; // Default probabilities by period
@@ -103,6 +104,9 @@ public class RiskMeasures {
     
     public BigDecimal getRiskyAnnuity() { return riskyAnnuity; }
     public void setRiskyAnnuity(BigDecimal riskyAnnuity) { this.riskyAnnuity = riskyAnnuity; }
+    
+    public BigDecimal getJtd() { return jtd; }
+    public void setJtd(BigDecimal jtd) { this.jtd = jtd; }
     
     public List<BigDecimal> getDefaultProbabilities() { return defaultProbabilities; }
     public void setDefaultProbabilities(List<BigDecimal> defaultProbabilities) { this.defaultProbabilities = defaultProbabilities; }
