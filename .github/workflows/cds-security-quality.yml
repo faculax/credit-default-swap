@@ -226,7 +226,9 @@ jobs:
 
       - name: Generate Security Analysis Summary
         if: always()
+        shell: bash
         run: |
+          set +e  # Don't exit on error
           echo "## 🔒 Security Analysis Summary - ${{ matrix.service }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
