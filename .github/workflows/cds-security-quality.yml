@@ -585,24 +585,15 @@ jobs:
           SPOTBUGS_MEDIUM=0
           SPOTBUGS_LOW=0
           
-          # Debug: Show what artifacts were downloaded
-          echo "🔍 Debugging artifact downloads..."
-          echo "Current directory: $(pwd)"
-          echo "Artifact directories:"
-          ls -la
-          echo ""
-          
           # Count issues from each service
           for service in backend gateway risk-engine; do
             # When artifacts are uploaded with path "service/target/file.xml",
             # the least common ancestor (service/) becomes the root.
             # So downloaded artifact structure is: service-security-reports/target/file.xml
             SPOTBUGS_FILE="${service}-security-reports/target/spotbugsXml.xml"
-            echo "Checking for ${SPOTBUGS_FILE}..."
+            
             if [ -f "${SPOTBUGS_FILE}" ]; then
-              echo "✅ Found spotbugsXml.xml for ${service}"
               SERVICE_BUGS=$(grep -o '<BugInstance' "${SPOTBUGS_FILE}" 2>/dev/null | wc -l || echo "0")
-              echo "   Bug count: $SERVICE_BUGS"
               SPOTBUGS_TOTAL=$((SPOTBUGS_TOTAL + SERVICE_BUGS))
               
               # Count by severity
@@ -613,20 +604,8 @@ jobs:
               SPOTBUGS_HIGH=$((SPOTBUGS_HIGH + HIGH))
               SPOTBUGS_MEDIUM=$((SPOTBUGS_MEDIUM + MEDIUM))
               SPOTBUGS_LOW=$((SPOTBUGS_LOW + LOW))
-            else
-              echo "❌ spotbugsXml.xml NOT found for ${service}"
-              # Try to list what's in the directory
-              if [ -d "${service}-security-reports" ]; then
-                echo "   Directory exists, contents:"
-                ls -la "${service}-security-reports/" || true
-              else
-                echo "   Directory does NOT exist"
-              fi
             fi
           done
-          
-          echo ""
-          echo "📊 SpotBugs Summary: Total=$SPOTBUGS_TOTAL (High=$SPOTBUGS_HIGH, Medium=$SPOTBUGS_MEDIUM, Low=$SPOTBUGS_LOW)"
           
           # Parse npm audit results from frontend
           NPM_TOTAL=0
@@ -642,10 +621,6 @@ jobs:
             NPM_MODERATE=$(jq -r '.metadata.vulnerabilities.moderate // 0' frontend-security-reports/npm-audit.json 2>/dev/null || echo "0")
             NPM_LOW=$(jq -r '.metadata.vulnerabilities.low // 0' frontend-security-reports/npm-audit.json 2>/dev/null || echo "0")
             NPM_TOTAL=$(jq -r '.metadata.vulnerabilities.total // 0' frontend-security-reports/npm-audit.json 2>/dev/null || echo "0")
-            
-            echo "📊 NPM Audit Summary: Total=$NPM_TOTAL (Critical=$NPM_CRITICAL, High=$NPM_HIGH, Moderate=$NPM_MODERATE, Low=$NPM_LOW)"
-          else
-            echo "⚠️ NPM audit results not found"
           fi
           
           echo "" >> SECURITY_REPORT.md
