@@ -268,6 +268,18 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🐛 SpotBugs Security Issues" >> $GITHUB_STEP_SUMMARY
           
+          # Debug: List target directory contents
+          echo "**Debug - Checking for SpotBugs XML:**" >> $GITHUB_STEP_SUMMARY
+          if [ -d "${{ matrix.service }}/target" ]; then
+            echo "- Target directory exists" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            ls -la "${{ matrix.service }}/target/" | grep -E "(spotbugs|xml)" >> $GITHUB_STEP_SUMMARY || echo "No spotbugs or xml files found" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ⚠️ Target directory does NOT exist at \`${{ matrix.service }}/target\`" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
           if [ -f "${{ matrix.service }}/target/spotbugsXml.xml" ]; then
             # Count total bugs
             BUG_COUNT=$(grep -c '<BugInstance' ${{ matrix.service }}/target/spotbugsXml.xml 2>/dev/null || echo "0")
