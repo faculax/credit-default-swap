@@ -102,58 +102,10 @@ jobs:
           echo "Checking for exposed market data credentials..."
           find . -name "market_*.txt" -exec head -5 {} \; | grep -i "auth\|token\|key" || true
 
-  prepare-nvd-database:
-    name: Download NVD Database (Shared)
-    runs-on: ubuntu-latest
-    needs: secrets-detection
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-
-      - name: Restore NVD Database Cache
-        id: cache-nvd
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2/repository/org/owasp/dependency-check-data
-          key: ${{ runner.os }}-nvd-db-${{ github.run_id }}
-          restore-keys: |
-            ${{ runner.os }}-nvd-db-
-
-      - name: Download/Update NVD Database
-        if: steps.cache-nvd.outputs.cache-hit != 'true'
-        env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-        run: |
-          cd backend
-          
-          # Clean any corrupted H2 database files first
-          echo "🧹 Cleaning any existing H2 database files..."
-          rm -rf ~/.m2/repository/org/owasp/dependency-check-data/odc.mv.db
-          rm -rf ~/.m2/repository/org/owasp/dependency-check-data/*.mv.db
-          rm -rf ~/.m2/repository/org/owasp/dependency-check-data/*.trace.db
-          
-          if [ -n "$NVD_API_KEY" ]; then
-            echo "🔑 Using NVD API key for fast database download..."
-            echo "⚡ This will download the NVD database ONCE for all services"
-          else
-            echo "⚠️ No NVD API key - download will be slower"
-          fi
-          
-          # Run dependency-check to download/update the NVD database
-          ./mvnw org.owasp:dependency-check-maven:10.0.4:update-only
-          
-          echo "✅ NVD database downloaded and cached"
-
   java-backend-analysis:
     name: Java Backend Security Analysis
     runs-on: ubuntu-latest
-    needs: prepare-nvd-database
+    needs: secrets-detection
     strategy:
       matrix:
         service: [backend, gateway, risk-engine]
@@ -228,10 +180,16 @@ jobs:
           if [ -d "${{ matrix.service }}" ]; then
             cd ${{ matrix.service }}
             
-            echo "� Scanning ${{ matrix.service }} using cached NVD database..."
-            echo "⚡ No download needed - using shared database from prepare-nvd-database job"
+            # Clean any corrupted H2 database files for this service
+            echo "🧹 Cleaning H2 database for ${{ matrix.service }}..."
+            rm -rf target/dependency-check-data/*.mv.db 2>/dev/null || true
+            rm -rf target/dependency-check-data/*.trace.db 2>/dev/null || true
             
-            ./mvnw org.owasp:dependency-check-maven:check
+            echo "🔍 Scanning ${{ matrix.service }} with isolated NVD database..."
+            
+            # Each service gets its own database to avoid transaction conflicts
+            ./mvnw org.owasp:dependency-check-maven:check \
+              -Dodc.data.directory=./target/dependency-check-data
           fi
         continue-on-error: true
 
