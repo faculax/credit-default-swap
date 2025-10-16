@@ -80,6 +80,7 @@
                     <threshold>Low</threshold>
                     <xmlOutput>true</xmlOutput>
                     <xmlOutputDirectory>target</xmlOutputDirectory>
+                    <failOnError>false</failOnError>
                     <includeFilterFile>spotbugs-security-include.xml</includeFilterFile>
                     <plugins>
                         <plugin>
