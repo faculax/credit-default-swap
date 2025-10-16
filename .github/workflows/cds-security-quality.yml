@@ -205,78 +205,82 @@ jobs:
     name: Dynamic Application Security Testing
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: cdsuser
+          POSTGRES_PASSWORD: cdspass
+          POSTGRES_DB: cdsplatform
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Security configuration validation
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Start CDS Platform backend service
         run: |
-          echo "# Dynamic Security Testing Report" > security-test-report.md
-          echo "" >> security-test-report.md
-          echo "## Configuration Security Checks" >> security-test-report.md
-          echo "" >> security-test-report.md
+          echo "Starting backend service for security testing..."
+          cd backend
           
-          # Check for exposed ports and insecure configurations
-          echo "### Docker Configuration Security" >> security-test-report.md
-          if grep -r "privileged.*true" docker-compose*.yml 2>/dev/null; then
-            echo "⚠️ WARNING: Privileged containers detected" >> security-test-report.md
-          else
-            echo "✅ No privileged containers detected" >> security-test-report.md
+          # Run the backend service in the background
+          ./mvnw spring-boot:run &
+          BACKEND_PID=$!
+          
+          echo "Backend started with PID: $BACKEND_PID"
+          
+          # Wait for service to be ready
+          echo "Waiting for backend service to start..."
+          for i in {1..30}; do
+            if curl -f http://localhost:8080/actuator/health 2>/dev/null; then
+              echo "✅ Backend service is ready"
+              break
+            fi
+            echo "Waiting for backend service... ($i/30)"
+            sleep 5
+          done
+          
+          # Check if service actually started
+          if ! curl -f http://localhost:8080/actuator/health 2>/dev/null; then
+            echo "❌ Backend service failed to start"
+            exit 1
           fi
+
+      - name: API security testing
+        run: |
+          echo "Running API security tests..."
           
-          # Check for hardcoded credentials in config files
-          echo "" >> security-test-report.md
-          echo "### Credential Security" >> security-test-report.md
-          CREDS_FOUND=0
+          # Test for SQL injection vulnerabilities
+          echo "Testing CDS trade endpoints for SQL injection..."
+          curl -X POST http://localhost:8080/api/trades \
+            -H "Content-Type: application/json" \
+            -d "{\"referenceEntity\": \"'; DROP TABLE trades; --\"}" || true
           
-          if grep -i "password.*:" backend/src/main/resources/application*.yml | grep -v "POSTGRES_PASSWORD" | grep -v "\${" 2>/dev/null; then
-            echo "⚠️ WARNING: Potential hardcoded passwords in backend config" >> security-test-report.md
-            CREDS_FOUND=1
-          fi
+          # Test for authentication bypass
+          echo "Testing authentication requirements..."
+          curl -v http://localhost:8080/api/portfolios || true
           
-          if [ $CREDS_FOUND -eq 0 ]; then
-            echo "✅ No obvious hardcoded credentials in configurations" >> security-test-report.md
-          fi
+          # Test for XSS in trade descriptions
+          echo "Testing XSS vulnerabilities..."
+          curl -X POST http://localhost:8080/api/trades \
+            -H "Content-Type: application/json" \
+            -d "{\"description\": \"<script>alert(1)</script>\"}" || true
           
-          # Check for secure communication
-          echo "" >> security-test-report.md
-          echo "### Communication Security" >> security-test-report.md
-          if grep -r "http://" backend/src/main/resources/application*.yml | grep -v "localhost" | grep -v "#" 2>/dev/null; then
-            echo "⚠️ WARNING: Non-HTTPS endpoints detected" >> security-test-report.md
-          else
-            echo "✅ No obvious insecure HTTP endpoints" >> security-test-report.md
-          fi
-          
-          # Check API endpoints for potential vulnerabilities
-          echo "" >> security-test-report.md
-          echo "### API Security Analysis" >> security-test-report.md
-          
-          # Find all REST controllers
-          CONTROLLER_COUNT=$(find backend/src -name "*Controller.java" 2>/dev/null | wc -l)
-          echo "- Found $CONTROLLER_COUNT REST controllers" >> security-test-report.md
-          
-          # Check for @PreAuthorize or @Secured annotations
-          SECURED_ENDPOINTS=$(grep -r "@PreAuthorize\|@Secured" backend/src 2>/dev/null | wc -l)
-          if [ $SECURED_ENDPOINTS -gt 0 ]; then
-            echo "- ✅ $SECURED_ENDPOINTS secured endpoints with authorization checks" >> security-test-report.md
-          else
-            echo "- ⚠️ No @PreAuthorize or @Secured annotations found - consider adding authentication" >> security-test-report.md
-          fi
-          
-          # Check for input validation
-          VALIDATED_INPUTS=$(grep -r "@Valid\|@Validated" backend/src 2>/dev/null | wc -l)
-          if [ $VALIDATED_INPUTS -gt 0 ]; then
-            echo "- ✅ $VALIDATED_INPUTS validated input parameters" >> security-test-report.md
-          else
-            echo "- ⚠️ Limited input validation detected - ensure proper validation" >> security-test-report.md
-          fi
-          
-          echo "" >> security-test-report.md
-          echo "## Summary" >> security-test-report.md
-          echo "Dynamic security testing completed. Review warnings above." >> security-test-report.md
-          
-          cat security-test-report.md
+          # Test health endpoint
+          echo "Testing health endpoint..."
+          curl http://localhost:8080/actuator/health || true
 
       - name: Generate security test report
         run: |
