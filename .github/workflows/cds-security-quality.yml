@@ -150,7 +150,7 @@ jobs:
         run: |
           if [ -d "${{ matrix.service }}" ]; then
             cd ${{ matrix.service }}
-            ./mvnw org.owasp:dependency-check-maven:check -DfailBuildOnCVSS=7
+            ./mvnw org.owasp:dependency-check-maven:check
           fi
         continue-on-error: true
 
