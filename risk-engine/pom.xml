@@ -103,6 +103,13 @@
                 <version>8.4.0</version>
                 <configuration>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
+                    <!-- NVD API 2.0 Configuration -->
+                    <!-- NVD deprecated JSON feeds - now using API 2.0 or alternative sources -->
+                    <nvdDatafeedEnabled>false</nvdDatafeedEnabled>
+                    <!-- Enable alternative vulnerability data sources -->
+                    <ossindexAnalyzerEnabled>true</ossindexAnalyzerEnabled>
+                    <retirejsAnalyzerEnabled>true</retirejsAnalyzerEnabled>
+                    <centralAnalyzerEnabled>true</centralAnalyzerEnabled>
                     <suppressionFiles>
                         <suppressionFile>owasp-suppressions.xml</suppressionFile>
                     </suppressionFiles>
