@@ -278,24 +278,34 @@ jobs:
           else
             echo "- ⚠️ Target directory does NOT exist at \`${{ matrix.service }}/target\`" >> $GITHUB_STEP_SUMMARY
           fi
+          
+          # Test file existence explicitly
+          if [ -f "${{ matrix.service }}/target/spotbugsXml.xml" ]; then
+            echo "- ✅ spotbugsXml.xml file exists" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ❌ spotbugsXml.xml file NOT found" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ -f "${{ matrix.service }}/target/spotbugsXml.xml" ]; then
-            # Count total bugs
-            BUG_COUNT=$(grep -c '<BugInstance' ${{ matrix.service }}/target/spotbugsXml.xml 2>/dev/null || echo "0")
+            echo "**Parsing SpotBugs Results:**" >> $GITHUB_STEP_SUMMARY
+            
+            # Count total bugs - use grep with || true to prevent exit on no match
+            BUG_COUNT=$(grep '<BugInstance' ${{ matrix.service }}/target/spotbugsXml.xml 2>/dev/null | wc -l || echo "0")
             
             # Count by priority (SpotBugs uses priority attribute in BugInstance)
             # Priority 1 = High, 2 = Medium, 3 = Low
-            HIGH_COUNT=$(grep '<BugInstance' ${{ matrix.service }}/target/spotbugsXml.xml | grep -c 'priority="1"' 2>/dev/null || echo "0")
-            MEDIUM_COUNT=$(grep '<BugInstance' ${{ matrix.service }}/target/spotbugsXml.xml | grep -c 'priority="2"' 2>/dev/null || echo "0")
-            LOW_COUNT=$(grep '<BugInstance' ${{ matrix.service }}/target/spotbugsXml.xml | grep -c 'priority="3"' 2>/dev/null || echo "0")
+            HIGH_COUNT=$(grep 'priority="1"' ${{ matrix.service }}/target/spotbugsXml.xml 2>/dev/null | wc -l || echo "0")
+            MEDIUM_COUNT=$(grep 'priority="2"' ${{ matrix.service }}/target/spotbugsXml.xml 2>/dev/null | wc -l || echo "0")
+            LOW_COUNT=$(grep 'priority="3"' ${{ matrix.service }}/target/spotbugsXml.xml 2>/dev/null | wc -l || echo "0")
             
-            # If priority counts don't add up, try alternative parsing
-            if [ "$((HIGH_COUNT + MEDIUM_COUNT + LOW_COUNT))" -eq 0 ] && [ "$BUG_COUNT" -gt 0 ]; then
+            # If priority counts don't add up, try rank-based classification
+            PRIORITY_SUM=$((HIGH_COUNT + MEDIUM_COUNT + LOW_COUNT))
+            if [ "$PRIORITY_SUM" -eq 0 ] && [ "$BUG_COUNT" -gt 0 ]; then
               # Try rank-based classification (1-4=High, 5-9=Medium, 10-20=Low)
-              HIGH_COUNT=$(grep '<BugInstance' ${{ matrix.service }}/target/spotbugsXml.xml | grep -E 'rank="[1-4]"' | wc -l 2>/dev/null || echo "0")
-              MEDIUM_COUNT=$(grep '<BugInstance' ${{ matrix.service }}/target/spotbugsXml.xml | grep -E 'rank="[5-9]"' | wc -l 2>/dev/null || echo "0")
-              LOW_COUNT=$(grep '<BugInstance' ${{ matrix.service }}/target/spotbugsXml.xml | grep -E 'rank="1[0-9]|20"' | wc -l 2>/dev/null || echo "0")
+              HIGH_COUNT=$(grep -E 'rank="[1-4]"' ${{ matrix.service }}/target/spotbugsXml.xml 2>/dev/null | wc -l || echo "0")
+              MEDIUM_COUNT=$(grep -E 'rank="[5-9]"' ${{ matrix.service }}/target/spotbugsXml.xml 2>/dev/null | wc -l || echo "0")
+              LOW_COUNT=$(grep -E 'rank="(1[0-9]|20)"' ${{ matrix.service }}/target/spotbugsXml.xml 2>/dev/null | wc -l || echo "0")
             fi
             
             echo "- **Total Issues:** $BUG_COUNT" >> $GITHUB_STEP_SUMMARY
