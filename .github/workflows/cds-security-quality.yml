@@ -180,14 +180,19 @@ jobs:
           if [ -d "${{ matrix.service }}" ]; then
             cd ${{ matrix.service }}
             
-            # Clean any corrupted H2 database files for this service
-            echo "🧹 Cleaning H2 database for ${{ matrix.service }}..."
-            rm -rf target/dependency-check-data/*.mv.db 2>/dev/null || true
-            rm -rf target/dependency-check-data/*.trace.db 2>/dev/null || true
+            # Aggressively clean H2 database for this service
+            echo "🧹 Cleaning ALL H2 database files for ${{ matrix.service }}..."
+            rm -rf target/dependency-check-data 2>/dev/null || true
+            mkdir -p target/dependency-check-data
             
-            echo "🔍 Scanning ${{ matrix.service }} with isolated NVD database..."
+            # Also clean Maven's global dependency-check cache
+            rm -rf ~/.m2/repository/org/owasp/dependency-check-data/*.mv.db 2>/dev/null || true
+            rm -rf ~/.m2/repository/org/owasp/dependency-check-data/*.trace.db 2>/dev/null || true
             
-            # Each service gets its own database to avoid transaction conflicts
+            echo "🔍 Scanning ${{ matrix.service }} with single-threaded NVD processing..."
+            echo "⚙️  Using nvdApiThreadCount=1 to prevent H2 corruption"
+            
+            # Single-threaded scan with isolated database
             ./mvnw org.owasp:dependency-check-maven:check \
               -Dodc.data.directory=./target/dependency-check-data
           fi

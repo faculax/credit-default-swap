@@ -108,11 +108,16 @@
                     <!-- Use NVD API 2.0 (requires NVD_API_KEY env var) -->
                     <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
                     <nvdApiDelay>6000</nvdApiDelay>
+                    <!-- CRITICAL: Disable internal threading to prevent H2 corruption -->
+                    <nvdApiThreadCount>1</nvdApiThreadCount>
                     <!-- Database resilience settings -->
                     <autoUpdate>true</autoUpdate>
                     <databaseDriverName>org.h2.Driver</databaseDriverName>
-                    <nvdMaxRetryCount>10</nvdMaxRetryCount>
+                    <nvdMaxRetryCount>5</nvdMaxRetryCount>
                     <nvdValidForHours>4</nvdValidForHours>
+                    <!-- Limit NVD data fetch to reduce corruption risk -->
+                    <nvdDatafeedUrl>https://nvd.nist.gov/feeds/json/cve/1.1/</nvdDatafeedUrl>
+                    <nvdDatafeedStartYear>2020</nvdDatafeedStartYear>
                     <!-- Fallback to alternative sources if NVD unavailable -->
                     <ossindexAnalyzerEnabled>true</ossindexAnalyzerEnabled>
                     <suppressionFiles>
