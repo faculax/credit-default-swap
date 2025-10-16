@@ -253,7 +253,7 @@ jobs:
           echo "Testing CDS trade endpoints for SQL injection..."
           curl -X POST http://localhost:8080/api/trades \
             -H "Content-Type: application/json" \
-            -d '{"referenceEntity": "'; DROP TABLE trades; --"}' || true
+            -d "{\"referenceEntity\": \"'; DROP TABLE trades; --\"}" || true
           
           # Test for authentication bypass
           echo "Testing authentication requirements..."
@@ -263,7 +263,7 @@ jobs:
           echo "Testing XSS vulnerabilities..."
           curl -X POST http://localhost:8080/api/trades \
             -H "Content-Type: application/json" \
-            -d '{"description": "<script>alert(1)</script>"}' || true
+            -d "{\"description\": \"<script>alert(1)</script>\"}" || true
 
       - name: Generate security test report
         run: |
