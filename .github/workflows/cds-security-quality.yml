@@ -104,7 +104,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload security reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ${{ matrix.service }}-security-reports
@@ -160,7 +160,7 @@ jobs:
           fi
 
       - name: Upload frontend security reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: frontend-security-reports
@@ -275,7 +275,7 @@ jobs:
           echo "- Authentication: ✅ Verified" >> security-test-report.md
 
       - name: Upload dynamic test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: dynamic-security-tests
@@ -288,7 +288,7 @@ jobs:
     if: always()
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
 
       - name: Generate comprehensive report
         run: |
@@ -334,7 +334,7 @@ jobs:
           echo "4. Consider implementing rate limiting for API endpoints" >> SECURITY_REPORT.md
 
       - name: Upload final security report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: security-quality-report
           path: SECURITY_REPORT.md
