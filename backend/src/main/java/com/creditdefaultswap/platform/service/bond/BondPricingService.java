@@ -172,9 +172,11 @@ public class BondPricingService {
                 double survivalProbability = Math.exp(-hazardRate * yearsToPayment);
                 
                 // Expected cashflow = nominal * survival probability + recovery * (1 - survival) for principal
+                // Using default recovery rate of 0.40 for bonds
+                double recoveryRate = 0.40;
                 double expectedCashflow;
                 if (cf.isFinal()) {
-                    double recoveryValue = bond.getNotional().doubleValue() * bond.getRecoveryRate().doubleValue();
+                    double recoveryValue = bond.getNotional().doubleValue() * recoveryRate;
                     expectedCashflow = cf.getCouponAmount() * survivalProbability + 
                                      cf.getPrincipal() * survivalProbability +
                                      recoveryValue * (1 - survivalProbability);
@@ -218,7 +220,9 @@ public class BondPricingService {
     public double calculateJTD(Bond bond, LocalDate valuationDate, double markToMarket) {
         // JTD = Notional * LGD - Current MTM Gain
         // For long position: JTD = Notional * (1 - RecoveryRate)
-        double lgd = 1.0 - bond.getRecoveryRate().doubleValue();
+        // Using default recovery rate of 0.40 for bonds
+        double recoveryRate = 0.40;
+        double lgd = 1.0 - recoveryRate;
         double exposureAtDefault = bond.getNotional().doubleValue() * lgd;
         
         // If MTM is positive (in the money), reduce JTD

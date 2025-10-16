@@ -33,15 +33,6 @@ public class Bond {
     @Column(name = "seniority", nullable = false, length = 20)
     private Seniority seniority;
     
-    @Size(max = 40, message = "Credit curve ID must not exceed 40 characters")
-    @Column(name = "credit_curve_id", length = 40)
-    private String creditCurveId;
-    
-    @DecimalMin(value = "0.0", message = "Recovery rate must be >= 0")
-    @DecimalMax(value = "1.0", message = "Recovery rate must be <= 1")
-    @Column(name = "recovery_rate", precision = 5, scale = 4)
-    private BigDecimal recoveryRate;
-    
     @Size(max = 30, message = "Sector must not exceed 30 characters")
     @Column(name = "sector", length = 30)
     private String sector;
@@ -110,7 +101,6 @@ public class Bond {
         this.settlementDays = 2;
         this.faceValue = new BigDecimal("100.00");
         this.priceConvention = PriceConvention.CLEAN;
-        this.recoveryRate = new BigDecimal("0.4000");
     }
     
     // Getters and Setters
@@ -144,22 +134,6 @@ public class Bond {
     
     public void setSeniority(Seniority seniority) {
         this.seniority = seniority;
-    }
-    
-    public String getCreditCurveId() {
-        return creditCurveId;
-    }
-    
-    public void setCreditCurveId(String creditCurveId) {
-        this.creditCurveId = creditCurveId;
-    }
-    
-    public BigDecimal getRecoveryRate() {
-        return recoveryRate;
-    }
-    
-    public void setRecoveryRate(BigDecimal recoveryRate) {
-        this.recoveryRate = recoveryRate;
     }
     
     public String getSector() {
