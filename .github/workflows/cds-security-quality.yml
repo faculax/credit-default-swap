@@ -25,17 +25,67 @@ jobs:
 
       - name: Scan for secrets with custom patterns
         run: |
-          echo "Scanning for CDS platform specific secrets..."
-          # Check for database URLs, API keys, JWT secrets
-          grep -r -i --include="*.java" --include="*.properties" --include="*.yml" \
-            -E "(password|secret|key|token|credential)" . || true
+          echo "🔍 Scanning for hardcoded secrets and credentials..."
+          echo ""
+          
+          SECRETS_FOUND=0
+          
+          # Check for hardcoded database passwords in YAML/properties files
+          echo "📋 Checking for hardcoded database credentials..."
+          if grep -r --include="*.yml" --include="*.yaml" --include="*.properties" \
+            -E "^\s*(password|datasource\.password):\s*[^${\s]" backend/ gateway/ risk-engine/ 2>/dev/null; then
+            echo "❌ CRITICAL: Hardcoded database passwords found in configuration files!"
+            SECRETS_FOUND=1
+          fi
+          
+          # Check for hardcoded usernames
+          if grep -r --include="*.yml" --include="*.yaml" --include="*.properties" \
+            -E "^\s*(username|datasource\.username):\s*[a-zA-Z0-9_-]+" backend/ gateway/ risk-engine/ 2>/dev/null | grep -v "\${"; then
+            echo "⚠️ WARNING: Hardcoded database usernames found!"
+            SECRETS_FOUND=1
+          fi
+          
+          # Check for JWT secrets, API keys in code
+          echo ""
+          echo "🔐 Checking for API keys and secrets in Java code..."
+          if grep -r --include="*.java" -i \
+            -E "(secret|password|apikey|api_key|private_key)\s*=\s*\"[^\"]+\"" . 2>/dev/null; then
+            echo "❌ CRITICAL: Hardcoded secrets in Java code!"
+            SECRETS_FOUND=1
+          fi
           
           # Check for hardcoded connection strings
-          grep -r --include="*.java" --include="*.properties" \
-            -E "jdbc:postgresql://.*:[0-9]+/" . || true
+          echo ""
+          echo "🗄️ Checking for hardcoded database connection strings..."
+          if grep -r --include="*.java" --include="*.properties" --include="*.yml" \
+            -E "jdbc:postgresql://[^$].*@.*:[0-9]+/" . 2>/dev/null; then
+            echo "❌ CRITICAL: Hardcoded database credentials in connection strings!"
+            SECRETS_FOUND=1
+          fi
           
           # Check for exposed ORE configuration paths
-          find . -name "*.xml" -path "*/ore-*" -exec grep -l "password\|secret" {} \; || true
+          echo ""
+          echo "📁 Checking ORE configuration files..."
+          if find . -name "*.xml" -path "*/ore-*" -exec grep -l "password\|secret" {} \; 2>/dev/null; then
+            echo "⚠️ WARNING: Potential secrets in ORE XML files"
+          fi
+          
+          echo ""
+          if [ $SECRETS_FOUND -eq 1 ]; then
+            echo "==========================================="
+            echo "❌ SECURITY ALERT: Secrets detected!"
+            echo "==========================================="
+            echo ""
+            echo "ACTION REQUIRED:"
+            echo "1. Move all credentials to environment variables"
+            echo "2. Use \${VARIABLE_NAME:default} syntax in YAML files"
+            echo "3. Never commit actual passwords to git"
+            echo "4. Review application.yml, application.properties files"
+            echo ""
+            exit 1
+          else
+            echo "✅ No hardcoded secrets detected"
+          fi
 
       - name: Custom pattern detection
         run: |

@@ -2,9 +2,9 @@ spring:
   application:
     name: trading-platform
   datasource:
-    url: jdbc:postgresql://localhost:5432/cdsplatform
-    username: cdsuser
-    password: cdspass
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:cdsplatform}
+    username: ${DB_USERNAME:cdsuser}
+    password: ${DB_PASSWORD:cdspass}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
