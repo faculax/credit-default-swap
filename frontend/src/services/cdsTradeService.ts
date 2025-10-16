@@ -18,12 +18,24 @@ export interface CDSTradeRequest {
   accrualStartDate: string;
   tradeStatus: string;
   recoveryRate: number;
+  obligation?: {
+    id: number;
+  };
 }
 
-export interface CDSTradeResponse extends CDSTradeRequest {
+export interface CDSTradeResponse extends Omit<CDSTradeRequest, 'obligation'> {
   id: number;
   createdAt: string;
   updatedAt?: string;
+  obligation?: {
+    id: number;
+    isin?: string;
+    issuer: string;
+    seniority: string;
+    couponRate: number;
+    maturityDate: string;
+    [key: string]: any;
+  };
 }
 
 class CDSTradeService {

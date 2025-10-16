@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   REFERENCE_ENTITIES,
   COUNTERPARTIES,
@@ -10,6 +10,7 @@ import {
   TRADE_STATUSES,
   CDSTrade
 } from '../../data/referenceData';
+import { bondService, Bond } from '../../services/bondService';
 
 interface FormErrors {
   [key: string]: string;
@@ -33,6 +34,31 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [availableBonds, setAvailableBonds] = useState<Bond[]>([]);
+  const [loadingBonds, setLoadingBonds] = useState(false);
+
+  // Fetch bonds when reference entity changes
+  useEffect(() => {
+    const fetchBonds = async () => {
+      if (!formData.referenceEntity) {
+        setAvailableBonds([]);
+        return;
+      }
+
+      setLoadingBonds(true);
+      try {
+        const bonds = await bondService.getBondsByIssuer(formData.referenceEntity);
+        setAvailableBonds(bonds);
+      } catch (error) {
+        console.error('Error fetching bonds:', error);
+        setAvailableBonds([]);
+      } finally {
+        setLoadingBonds(false);
+      }
+    };
+
+    fetchBonds();
+  }, [formData.referenceEntity]);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -40,6 +66,10 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
     // Required field validations
     if (!formData.referenceEntity) {
       newErrors.referenceEntity = 'Reference Entity is required';
+    }
+    
+    if (formData.referenceEntity && !formData.obligation?.id) {
+      newErrors.obligation = 'Obligation is required';
     }
 
     if (!formData.notionalAmount || formData.notionalAmount <= 0) {
@@ -90,10 +120,26 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
   };
 
   const handleInputChange = (field: keyof CDSTrade, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => {
+      const updates: Partial<CDSTrade> = {};
+      
+      // Handle obligation specially - convert to nested object
+      if (field === 'obligation') {
+        updates.obligation = value ? { id: value } : undefined;
+      } else {
+        updates[field] = value as any;
+      }
+      
+      // Clear obligation when reference entity changes
+      if (field === 'referenceEntity' && prev.referenceEntity !== value) {
+        updates.obligation = undefined;
+      }
+      
+      return {
+        ...prev,
+        ...updates
+      };
+    });
 
     // Clear error for this field when user starts typing
     if (errors[field]) {
@@ -310,6 +356,40 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
             </select>
           </div>
         </div>
+
+        {/* Row 1.5: Obligation (conditional on reference entity) */}
+        {formData.referenceEntity && (
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <label className="block text-fd-text font-medium mb-2">
+                Obligation (Bond) <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={formData.obligation?.id || ''}
+                onChange={(e) => handleInputChange('obligation', e.target.value ? Number(e.target.value) : undefined)}
+                className={selectClassName('obligation')}
+                disabled={loadingBonds}
+              >
+                <option value="">Select Obligation</option>
+                {loadingBonds && <option value="">Loading bonds...</option>}
+                {!loadingBonds && availableBonds.length === 0 && (
+                  <option value="">No bonds available for {formData.referenceEntity}</option>
+                )}
+                {!loadingBonds && availableBonds.map((bond) => (
+                  <option key={bond.id} value={bond.id}>
+                    {bond.isin ? `${bond.isin} - ` : ''}
+                    {bond.issuer} {bond.seniority} - 
+                    Coupon: {bond.couponRate}% - 
+                    Maturity: {new Date(bond.maturityDate).toLocaleDateString()}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-fd-text-muted mt-1">
+                Select a specific bond from {formData.referenceEntity}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Row 2: Notional Amount, Spread, Buy/Sell Protection */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

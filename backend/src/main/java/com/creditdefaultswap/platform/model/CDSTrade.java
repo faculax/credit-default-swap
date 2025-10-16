@@ -1,5 +1,6 @@
 package com.creditdefaultswap.platform.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -71,6 +72,11 @@ public class CDSTrade {
     
     @Column(name = "version", nullable = false)
     private Integer version = 1;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "obligation_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private Bond obligation;
     
     // Enum for Buy/Sell Protection
     public enum ProtectionDirection {
@@ -241,6 +247,14 @@ public class CDSTrade {
     
     public void setVersion(Integer version) {
         this.version = version;
+    }
+    
+    public Bond getObligation() {
+        return obligation;
+    }
+    
+    public void setObligation(Bond obligation) {
+        this.obligation = obligation;
     }
     
     public void setLastUpdated(LocalDateTime lastUpdated) {

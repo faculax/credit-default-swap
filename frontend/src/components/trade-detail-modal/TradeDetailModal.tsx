@@ -7,6 +7,7 @@ import ScenarioRunModal from '../risk/ScenarioRunModal';
 import RegressionStatusBadge from '../risk/RegressionStatusBadge';
 import { fetchRiskMeasures } from '../../services/risk/riskService';
 import { RiskMeasures } from '../../services/risk/riskTypes';
+import { bondService, Bond } from '../../services/bondService';
 
 interface TradeDetailModalProps {
   isOpen: boolean;
@@ -161,6 +162,18 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
                     <span className="text-fd-text-muted">Reference Entity:</span>
                     <span className="text-fd-text font-medium">{trade.referenceEntity}</span>
                   </div>
+                  {trade.obligation && (
+                    <div className="flex justify-between">
+                      <span className="text-fd-text-muted">Obligation:</span>
+                      <span className="text-fd-text font-medium">
+                        <span className="text-fd-green">
+                          {trade.obligation.isin ? `${trade.obligation.isin} - ` : ''}
+                          {trade.obligation.issuer} {trade.obligation.seniority} 
+                          ({(trade.obligation.couponRate * 100).toFixed(2)}%)
+                        </span>
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-fd-text-muted">Counterparty:</span>
                     <span className="text-fd-text font-medium">{trade.counterparty}</span>

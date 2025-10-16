@@ -103,4 +103,7 @@ export interface CDSTrade {
   accrualStartDate: string;
   tradeStatus: string;
   recoveryRate: number;
+  obligation?: {
+    id: number;
+  };
 }
