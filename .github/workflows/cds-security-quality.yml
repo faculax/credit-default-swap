@@ -284,54 +284,153 @@ jobs:
   code-quality-summary:
     name: Security & Quality Summary
     runs-on: ubuntu-latest
-    needs: [secrets-detection, java-backend-analysis, frontend-security-lint, infrastructure-security]
+    needs: [secrets-detection, java-backend-analysis, frontend-security-lint, infrastructure-security, dynamic-security-testing]
     if: always()
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
+        continue-on-error: true
 
       - name: Generate comprehensive report
         run: |
           echo "# 🛡️ CDS Platform Security & Quality Report" > SECURITY_REPORT.md
-          echo "## Scan Date: $(date)" >> SECURITY_REPORT.md
+          echo "" >> SECURITY_REPORT.md
+          echo "**Branch:** \`${{ github.ref_name }}\`" >> SECURITY_REPORT.md
+          echo "**Commit:** \`${{ github.sha }}\`" >> SECURITY_REPORT.md
+          echo "**Scan Date:** $(date '+%Y-%m-%d %H:%M:%S UTC')" >> SECURITY_REPORT.md
+          echo "**Triggered by:** ${{ github.actor }}" >> SECURITY_REPORT.md
           echo "" >> SECURITY_REPORT.md
           
-          echo "## 🔍 Secrets Detection" >> SECURITY_REPORT.md
+          # Summary Table
+          echo "## � Security Analysis Summary" >> SECURITY_REPORT.md
+          echo "" >> SECURITY_REPORT.md
+          echo "| Test Category | Status | Details |" >> SECURITY_REPORT.md
+          echo "|--------------|--------|---------|" >> SECURITY_REPORT.md
+          
+          # Secrets Detection
           if [[ "${{ needs.secrets-detection.result }}" == "success" ]]; then
-            echo "✅ No secrets detected" >> SECURITY_REPORT.md
+            echo "| 🔍 Secrets Detection | ✅ **PASS** | No hardcoded secrets or credentials detected |" >> SECURITY_REPORT.md
+          elif [[ "${{ needs.secrets-detection.result }}" == "failure" ]]; then
+            echo "| 🔍 Secrets Detection | ❌ **FAIL** | Potential secrets found - **CRITICAL** |" >> SECURITY_REPORT.md
           else
-            echo "❌ Potential secrets found - requires review" >> SECURITY_REPORT.md
+            echo "| 🔍 Secrets Detection | ⏭️ **SKIPPED** | Not executed |" >> SECURITY_REPORT.md
           fi
-          echo "" >> SECURITY_REPORT.md
           
-          echo "## ☕ Java Backend Analysis" >> SECURITY_REPORT.md
+          # Java Backend Analysis
           if [[ "${{ needs.java-backend-analysis.result }}" == "success" ]]; then
-            echo "✅ Backend security analysis passed" >> SECURITY_REPORT.md
+            echo "| ☕ Java Backend (Backend) | ✅ **PASS** | SpotBugs, OWASP, PMD, Checkstyle passed |" >> SECURITY_REPORT.md
+          elif [[ "${{ needs.java-backend-analysis.result }}" == "failure" ]]; then
+            echo "| ☕ Java Backend (Backend) | ⚠️ **FAIL** | Security issues detected in backend service |" >> SECURITY_REPORT.md
           else
-            echo "⚠️ Backend security issues detected" >> SECURITY_REPORT.md
+            echo "| ☕ Java Backend (Backend) | ⏭️ **SKIPPED** | Not executed |" >> SECURITY_REPORT.md
           fi
-          echo "" >> SECURITY_REPORT.md
           
-          echo "## 🎨 Frontend Security" >> SECURITY_REPORT.md
+          # Frontend Security
           if [[ "${{ needs.frontend-security-lint.result }}" == "success" ]]; then
-            echo "✅ Frontend security checks passed" >> SECURITY_REPORT.md
+            echo "| 🎨 Frontend Security | ✅ **PASS** | ESLint security rules, type-check passed |" >> SECURITY_REPORT.md
+          elif [[ "${{ needs.frontend-security-lint.result }}" == "failure" ]]; then
+            echo "| 🎨 Frontend Security | ⚠️ **FAIL** | Security issues in React frontend |" >> SECURITY_REPORT.md
           else
-            echo "⚠️ Frontend security issues detected" >> SECURITY_REPORT.md
+            echo "| 🎨 Frontend Security | ⏭️ **SKIPPED** | Not executed |" >> SECURITY_REPORT.md
           fi
+          
+          # Infrastructure Security
+          if [[ "${{ needs.infrastructure-security.result }}" == "success" ]]; then
+            echo "| 🐳 Infrastructure Security | ✅ **PASS** | Docker, Kubernetes configs secure |" >> SECURITY_REPORT.md
+          elif [[ "${{ needs.infrastructure-security.result }}" == "failure" ]]; then
+            echo "| 🐳 Infrastructure Security | ⚠️ **FAIL** | Infrastructure security issues detected |" >> SECURITY_REPORT.md
+          else
+            echo "| 🐳 Infrastructure Security | ⏭️ **SKIPPED** | Not executed |" >> SECURITY_REPORT.md
+          fi
+          
+          # Dynamic Application Security Testing
+          if [[ "${{ needs.dynamic-security-testing.result }}" == "success" ]]; then
+            echo "| 🔬 Dynamic Security Testing | ✅ **PASS** | Runtime API security tests passed |" >> SECURITY_REPORT.md
+          elif [[ "${{ needs.dynamic-security-testing.result }}" == "failure" ]]; then
+            echo "| 🔬 Dynamic Security Testing | ⚠️ **FAIL** | Runtime vulnerabilities detected |" >> SECURITY_REPORT.md
+          else
+            echo "| � Dynamic Security Testing | ⏭️ **SKIPPED** | Not executed |" >> SECURITY_REPORT.md
+          fi
+          
           echo "" >> SECURITY_REPORT.md
           
-          echo "## 🐳 Infrastructure Security" >> SECURITY_REPORT.md
-          if [[ "${{ needs.infrastructure-security.result }}" == "success" ]]; then
-            echo "✅ Infrastructure configuration secure" >> SECURITY_REPORT.md
-          else
-            echo "⚠️ Infrastructure security issues detected" >> SECURITY_REPORT.md
+          # Overall Status
+          echo "## 🎯 Overall Status" >> SECURITY_REPORT.md
+          echo "" >> SECURITY_REPORT.md
+          
+          CRITICAL_FAIL=0
+          WARNING_COUNT=0
+          
+          if [[ "${{ needs.secrets-detection.result }}" == "failure" ]]; then
+            CRITICAL_FAIL=1
           fi
+          
+          if [[ "${{ needs.java-backend-analysis.result }}" == "failure" ]]; then
+            WARNING_COUNT=$((WARNING_COUNT + 1))
+          fi
+          
+          if [[ "${{ needs.frontend-security-lint.result }}" == "failure" ]]; then
+            WARNING_COUNT=$((WARNING_COUNT + 1))
+          fi
+          
+          if [[ "${{ needs.infrastructure-security.result }}" == "failure" ]]; then
+            WARNING_COUNT=$((WARNING_COUNT + 1))
+          fi
+          
+          if [[ "${{ needs.dynamic-security-testing.result }}" == "failure" ]]; then
+            WARNING_COUNT=$((WARNING_COUNT + 1))
+          fi
+          
+          if [[ $CRITICAL_FAIL -eq 1 ]]; then
+            echo "### ❌ **CRITICAL ISSUES DETECTED**" >> SECURITY_REPORT.md
+            echo "" >> SECURITY_REPORT.md
+            echo "**Action Required:** Secrets or credentials detected in the codebase. This is a critical security risk." >> SECURITY_REPORT.md
+          elif [[ $WARNING_COUNT -gt 0 ]]; then
+            echo "### ⚠️ **WARNINGS DETECTED ($WARNING_COUNT)**" >> SECURITY_REPORT.md
+            echo "" >> SECURITY_REPORT.md
+            echo "**Action Required:** Review the security issues identified in the failed tests." >> SECURITY_REPORT.md
+          else
+            echo "### ✅ **ALL CHECKS PASSED**" >> SECURITY_REPORT.md
+            echo "" >> SECURITY_REPORT.md
+            echo "No critical security issues detected. The codebase meets security standards." >> SECURITY_REPORT.md
+          fi
+          
+          echo "" >> SECURITY_REPORT.md
+          
+          # Detailed Artifacts
+          echo "## � Detailed Reports" >> SECURITY_REPORT.md
+          echo "" >> SECURITY_REPORT.md
+          echo "Download the artifacts from this workflow run for detailed reports:" >> SECURITY_REPORT.md
+          echo "" >> SECURITY_REPORT.md
+          echo "- **Backend Security Reports** - SpotBugs, OWASP dependency check" >> SECURITY_REPORT.md
+          echo "- **Gateway Security Reports** - API gateway security analysis" >> SECURITY_REPORT.md
+          echo "- **Risk Engine Security Reports** - Risk calculation service analysis" >> SECURITY_REPORT.md
+          echo "- **Dynamic Security Tests** - Runtime API testing results" >> SECURITY_REPORT.md
+          echo "" >> SECURITY_REPORT.md
           
           echo "## 📋 Recommendations" >> SECURITY_REPORT.md
-          echo "1. Review any flagged secrets or credentials" >> SECURITY_REPORT.md
-          echo "2. Update dependencies with known vulnerabilities" >> SECURITY_REPORT.md
-          echo "3. Implement additional input validation for CDS trade endpoints" >> SECURITY_REPORT.md
-          echo "4. Consider implementing rate limiting for API endpoints" >> SECURITY_REPORT.md
+          echo "" >> SECURITY_REPORT.md
+          echo "1. ✅ Regularly update dependencies with known vulnerabilities" >> SECURITY_REPORT.md
+          echo "2. ✅ Review OWASP dependency reports for CVEs" >> SECURITY_REPORT.md
+          echo "3. ✅ Implement rate limiting for API endpoints" >> SECURITY_REPORT.md
+          echo "4. ✅ Enable WAF (Web Application Firewall) in production" >> SECURITY_REPORT.md
+          echo "5. ✅ Implement comprehensive logging and monitoring" >> SECURITY_REPORT.md
+          echo "" >> SECURITY_REPORT.md
+          
+          echo "---" >> SECURITY_REPORT.md
+          echo "*Report generated by CDS Platform Security Pipeline*" >> SECURITY_REPORT.md
+          
+          # Also create a simple text summary for console
+          echo "==================================="
+          echo "Security Analysis Summary"
+          echo "==================================="
+          cat SECURITY_REPORT.md
+
+      - name: Add GitHub Actions Job Summary
+        run: |
+          cat SECURITY_REPORT.md >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "💾 **Full report available in artifacts: \`security-quality-report\`**" >> $GITHUB_STEP_SUMMARY
 
       - name: Upload final security report
         uses: actions/upload-artifact@v4
