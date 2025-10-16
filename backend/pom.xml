@@ -122,9 +122,9 @@
                 <version>8.4.0</version>
                 <configuration>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
-                    <!-- NVD API 2.0 Configuration -->
-                    <!-- NVD deprecated JSON feeds - now using API 2.0 or alternative sources -->
+                    <!-- Completely disable NVD - use alternative sources only -->
                     <nvdDatafeedEnabled>false</nvdDatafeedEnabled>
+                    <nvdApiServicesEnabled>false</nvdApiServicesEnabled>
                     <!-- Enable alternative vulnerability data sources -->
                     <ossindexAnalyzerEnabled>true</ossindexAnalyzerEnabled>
                     <retirejsAnalyzerEnabled>true</retirejsAnalyzerEnabled>
