@@ -594,8 +594,10 @@ jobs:
           
           # Count issues from each service
           for service in backend gateway risk-engine; do
-            # Artifact path includes the service directory structure
-            SPOTBUGS_FILE="${service}-security-reports/${service}/target/spotbugsXml.xml"
+            # When artifacts are uploaded with path "service/target/file.xml",
+            # the least common ancestor (service/) becomes the root.
+            # So downloaded artifact structure is: service-security-reports/target/file.xml
+            SPOTBUGS_FILE="${service}-security-reports/target/spotbugsXml.xml"
             echo "Checking for ${SPOTBUGS_FILE}..."
             if [ -f "${SPOTBUGS_FILE}" ]; then
               echo "✅ Found spotbugsXml.xml for ${service}"
