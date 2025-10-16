@@ -313,11 +313,27 @@ jobs:
               echo '```' >> $GITHUB_STEP_SUMMARY
               echo "" >> $GITHUB_STEP_SUMMARY
               
-              # SpotBugs uses 'rank' for severity (1-4=Scariest, 5-9=Scary, 10-14=Troubling, 15-20=Of Concern)
-              # Map to High/Medium/Low: 1-9=High, 10-14=Medium, 15-20=Low
-              HIGH_COUNT=$(grep -E "rank='[1-9]'" ${{ matrix.service }}/target/spotbugsXml.xml 2>/dev/null | wc -l)
-              MEDIUM_COUNT=$(grep -E "rank='1[0-4]'" ${{ matrix.service }}/target/spotbugsXml.xml 2>/dev/null | wc -l)
-              LOW_COUNT=$(grep -E "rank='(15|16|17|18|19|20)'" ${{ matrix.service }}/target/spotbugsXml.xml 2>/dev/null | wc -l)
+              # SpotBugs Rank Classification (Official Reference)
+              # Source: https://spotbugs.readthedocs.io/en/stable/bugDescriptions.html
+              # Source: https://github.com/spotbugs/spotbugs/blob/master/spotbugs/src/main/java/edu/umd/cs/findbugs/BugRanker.java
+              #
+              # Official SpotBugs Rank Scale (1-20, lower = more severe):
+              #   Rank 1-4:   "Scariest"   - Most dangerous bugs
+              #   Rank 5-9:   "Scary"      - Serious bugs
+              #   Rank 10-14: "Troubling"  - Medium concern
+              #   Rank 15-20: "Of Concern" - Lower priority
+              #
+              # Our mapping to High/Medium/Low:
+              #   High (🔴):   Rank 1-9   (Scariest + Scary = Critical security vulnerabilities)
+              #   Medium (🟡): Rank 10-14 (Troubling = Important but not critical)
+              #   Low (🟢):    Rank 15-20 (Of Concern = Good to fix but not urgent)
+              #
+              # Count rank 1-9 (single digit ranks only, using word boundary)
+              HIGH_COUNT=$(grep -oE "rank='[1-9]'" ${{ matrix.service }}/target/spotbugsXml.xml 2>/dev/null | wc -l)
+              # Count rank 10-14
+              MEDIUM_COUNT=$(grep -oE "rank='1[0-4]'" ${{ matrix.service }}/target/spotbugsXml.xml 2>/dev/null | wc -l)
+              # Count rank 15-20
+              LOW_COUNT=$(grep -oE "rank='(15|16|17|18|19|20)'" ${{ matrix.service }}/target/spotbugsXml.xml 2>/dev/null | wc -l)
               
               # If rank-based parsing returns 0, try priority-based as fallback
               RANK_SUM=$((HIGH_COUNT + MEDIUM_COUNT + LOW_COUNT))
