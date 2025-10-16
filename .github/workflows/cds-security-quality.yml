@@ -594,17 +594,19 @@ jobs:
           
           # Count issues from each service
           for service in backend gateway risk-engine; do
-            echo "Checking for ${service}-security-reports/spotbugsXml.xml..."
-            if [ -f "${service}-security-reports/spotbugsXml.xml" ]; then
+            # Artifact path includes the service directory structure
+            SPOTBUGS_FILE="${service}-security-reports/${service}/target/spotbugsXml.xml"
+            echo "Checking for ${SPOTBUGS_FILE}..."
+            if [ -f "${SPOTBUGS_FILE}" ]; then
               echo "✅ Found spotbugsXml.xml for ${service}"
-              SERVICE_BUGS=$(grep -o '<BugInstance' "${service}-security-reports/spotbugsXml.xml" 2>/dev/null | wc -l || echo "0")
+              SERVICE_BUGS=$(grep -o '<BugInstance' "${SPOTBUGS_FILE}" 2>/dev/null | wc -l || echo "0")
               echo "   Bug count: $SERVICE_BUGS"
               SPOTBUGS_TOTAL=$((SPOTBUGS_TOTAL + SERVICE_BUGS))
               
               # Count by severity
-              HIGH=$(grep -oE "rank='[1-9]'" "${service}-security-reports/spotbugsXml.xml" 2>/dev/null | wc -l || echo "0")
-              MEDIUM=$(grep -oE "rank='1[0-4]'" "${service}-security-reports/spotbugsXml.xml" 2>/dev/null | wc -l || echo "0")
-              LOW=$(grep -oE "rank='(15|16|17|18|19|20)'" "${service}-security-reports/spotbugsXml.xml" 2>/dev/null | wc -l || echo "0")
+              HIGH=$(grep -oE "rank='[1-9]'" "${SPOTBUGS_FILE}" 2>/dev/null | wc -l || echo "0")
+              MEDIUM=$(grep -oE "rank='1[0-4]'" "${SPOTBUGS_FILE}" 2>/dev/null | wc -l || echo "0")
+              LOW=$(grep -oE "rank='(15|16|17|18|19|20)'" "${SPOTBUGS_FILE}" 2>/dev/null | wc -l || echo "0")
               
               SPOTBUGS_HIGH=$((SPOTBUGS_HIGH + HIGH))
               SPOTBUGS_MEDIUM=$((SPOTBUGS_MEDIUM + MEDIUM))
