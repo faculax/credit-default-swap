@@ -87,7 +87,7 @@ jobs:
             echo ""
             echo "ACTION REQUIRED:"
             echo "1. Move all credentials to environment variables"
-            echo "2. Use \${VARIABLE_NAME:default} syntax in YAML files"
+            echo '2. Use ${VARIABLE_NAME:default} syntax in YAML files'
             echo "3. Never commit actual passwords to git"
             echo "4. Review application.yml, application.properties files"
             echo ""
