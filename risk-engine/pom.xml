@@ -106,6 +106,12 @@
                     <!-- Use NVD API 2.0 (requires NVD_API_KEY env var) -->
                     <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
                     <nvdApiDelay>6000</nvdApiDelay>
+                    <!-- Prevent database corruption in CI/CD -->
+                    <autoUpdate>true</autoUpdate>
+                    <databaseDriverName>org.h2.Driver</databaseDriverName>
+                    <!-- Add retry logic for transient failures -->
+                    <nvdMaxRetryCount>10</nvdMaxRetryCount>
+                    <nvdValidForHours>4</nvdValidForHours>
                     <!-- Fallback to alternative sources if NVD unavailable -->
                     <ossindexAnalyzerEnabled>true</ossindexAnalyzerEnabled>
                     <suppressionFiles>
