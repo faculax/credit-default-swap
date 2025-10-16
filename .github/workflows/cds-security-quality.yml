@@ -579,6 +579,32 @@ jobs:
           echo "**Triggered by:** ${{ github.actor }}" >> SECURITY_REPORT.md
           echo "" >> SECURITY_REPORT.md
           
+          # Count SpotBugs issues from downloaded artifacts
+          SPOTBUGS_TOTAL=0
+          SPOTBUGS_HIGH=0
+          SPOTBUGS_MEDIUM=0
+          SPOTBUGS_LOW=0
+          
+          # Count issues from each service
+          for service in backend gateway risk-engine; do
+            if [ -f "${service}-security-reports/spotbugsXml.xml" ]; then
+              SERVICE_BUGS=$(grep -o '<BugInstance' "${service}-security-reports/spotbugsXml.xml" 2>/dev/null | wc -l || echo "0")
+              SPOTBUGS_TOTAL=$((SPOTBUGS_TOTAL + SERVICE_BUGS))
+              
+              # Count by severity
+              HIGH=$(grep -oE "rank='[1-9]'" "${service}-security-reports/spotbugsXml.xml" 2>/dev/null | wc -l || echo "0")
+              MEDIUM=$(grep -oE "rank='1[0-4]'" "${service}-security-reports/spotbugsXml.xml" 2>/dev/null | wc -l || echo "0")
+              LOW=$(grep -oE "rank='(15|16|17|18|19|20)'" "${service}-security-reports/spotbugsXml.xml" 2>/dev/null | wc -l || echo "0")
+              
+              SPOTBUGS_HIGH=$((SPOTBUGS_HIGH + HIGH))
+              SPOTBUGS_MEDIUM=$((SPOTBUGS_MEDIUM + MEDIUM))
+              SPOTBUGS_LOW=$((SPOTBUGS_LOW + LOW))
+            fi
+          done
+          
+          echo "📊 SpotBugs Summary: Total=$SPOTBUGS_TOTAL (High=$SPOTBUGS_HIGH, Medium=$SPOTBUGS_MEDIUM, Low=$SPOTBUGS_LOW)"
+          echo "" >> SECURITY_REPORT.md
+          
           # Summary Table
           echo "## � Security Analysis Summary" >> SECURITY_REPORT.md
           echo "" >> SECURITY_REPORT.md
@@ -596,11 +622,19 @@ jobs:
           
           # Java Backend Analysis
           if [[ "${{ needs.java-backend-analysis.result }}" == "success" ]]; then
-            echo "| ☕ Java Backend (Backend) | ✅ **PASS** | SpotBugs, OWASP, PMD, Checkstyle passed |" >> SECURITY_REPORT.md
+            if [ "$SPOTBUGS_TOTAL" -eq 0 ]; then
+              echo "| ☕ Java Backend Services | ✅ **PASS** | No security issues detected |" >> SECURITY_REPORT.md
+            elif [ "$SPOTBUGS_HIGH" -gt 0 ]; then
+              echo "| ☕ Java Backend Services | ❌ **FAIL** | $SPOTBUGS_TOTAL issues found ($SPOTBUGS_HIGH High, $SPOTBUGS_MEDIUM Medium, $SPOTBUGS_LOW Low) |" >> SECURITY_REPORT.md
+            elif [ "$SPOTBUGS_MEDIUM" -gt 0 ]; then
+              echo "| ☕ Java Backend Services | ⚠️ **WARNING** | $SPOTBUGS_TOTAL issues found ($SPOTBUGS_HIGH High, $SPOTBUGS_MEDIUM Medium, $SPOTBUGS_LOW Low) |" >> SECURITY_REPORT.md
+            else
+              echo "| ☕ Java Backend Services | ⚠️ **WARNING** | $SPOTBUGS_TOTAL low-priority issues found |" >> SECURITY_REPORT.md
+            fi
           elif [[ "${{ needs.java-backend-analysis.result }}" == "failure" ]]; then
-            echo "| ☕ Java Backend (Backend) | ⚠️ **FAIL** | Security issues detected in backend service |" >> SECURITY_REPORT.md
+            echo "| ☕ Java Backend Services | ❌ **FAIL** | Build or compilation failed |" >> SECURITY_REPORT.md
           else
-            echo "| ☕ Java Backend (Backend) | ⏭️ **SKIPPED** | Not executed |" >> SECURITY_REPORT.md
+            echo "| ☕ Java Backend Services | ⏭️ **SKIPPED** | Not executed |" >> SECURITY_REPORT.md
           fi
           
           # Frontend Security
@@ -639,12 +673,23 @@ jobs:
           CRITICAL_FAIL=0
           WARNING_COUNT=0
           
+          # Secrets detection is critical
           if [[ "${{ needs.secrets-detection.result }}" == "failure" ]]; then
             CRITICAL_FAIL=1
           fi
           
-          if [[ "${{ needs.java-backend-analysis.result }}" == "failure" ]]; then
+          # SpotBugs High severity is critical
+          if [ "$SPOTBUGS_HIGH" -gt 0 ]; then
+            CRITICAL_FAIL=1
+          fi
+          
+          # SpotBugs Medium or Low is a warning
+          if [ "$SPOTBUGS_MEDIUM" -gt 0 ] || [ "$SPOTBUGS_LOW" -gt 0 ]; then
             WARNING_COUNT=$((WARNING_COUNT + 1))
+          fi
+          
+          if [[ "${{ needs.java-backend-analysis.result }}" == "failure" ]]; then
+            CRITICAL_FAIL=1
           fi
           
           if [[ "${{ needs.frontend-security-lint.result }}" == "failure" ]]; then
@@ -662,11 +707,28 @@ jobs:
           if [[ $CRITICAL_FAIL -eq 1 ]]; then
             echo "### ❌ **CRITICAL ISSUES DETECTED**" >> SECURITY_REPORT.md
             echo "" >> SECURITY_REPORT.md
-            echo "**Action Required:** Secrets or credentials detected in the codebase. This is a critical security risk." >> SECURITY_REPORT.md
+            if [[ "${{ needs.secrets-detection.result }}" == "failure" ]]; then
+              echo "**Action Required:** Secrets or credentials detected in the codebase. This is a critical security risk." >> SECURITY_REPORT.md
+            fi
+            if [ "$SPOTBUGS_HIGH" -gt 0 ]; then
+              echo "**Action Required:** $SPOTBUGS_HIGH high-severity security issues found by SpotBugs. Review and remediate immediately." >> SECURITY_REPORT.md
+            fi
+            if [[ "${{ needs.java-backend-analysis.result }}" == "failure" ]]; then
+              echo "**Action Required:** Backend build or compilation failed. Fix errors before deployment." >> SECURITY_REPORT.md
+            fi
           elif [[ $WARNING_COUNT -gt 0 ]]; then
-            echo "### ⚠️ **WARNINGS DETECTED ($WARNING_COUNT)**" >> SECURITY_REPORT.md
+            echo "### ⚠️ **WARNINGS DETECTED**" >> SECURITY_REPORT.md
             echo "" >> SECURITY_REPORT.md
-            echo "**Action Required:** Review the security issues identified in the failed tests." >> SECURITY_REPORT.md
+            if [ "$SPOTBUGS_TOTAL" -gt 0 ]; then
+              echo "**SpotBugs Findings:** $SPOTBUGS_TOTAL security issues detected across all services:" >> SECURITY_REPORT.md
+              echo "- 🔴 High Priority: $SPOTBUGS_HIGH" >> SECURITY_REPORT.md
+              echo "- 🟡 Medium Priority: $SPOTBUGS_MEDIUM" >> SECURITY_REPORT.md
+              echo "- 🟢 Low Priority: $SPOTBUGS_LOW" >> SECURITY_REPORT.md
+              echo "" >> SECURITY_REPORT.md
+              echo "**Recommendation:** Review and address these issues. Download the detailed HTML reports from artifacts." >> SECURITY_REPORT.md
+            else
+              echo "**Action Required:** Review the security issues identified in the failed tests." >> SECURITY_REPORT.md
+            fi
           else
             echo "### ✅ **ALL CHECKS PASSED**" >> SECURITY_REPORT.md
             echo "" >> SECURITY_REPORT.md
@@ -688,8 +750,29 @@ jobs:
           
           echo "## 📋 Recommendations" >> SECURITY_REPORT.md
           echo "" >> SECURITY_REPORT.md
+          
+          if [ "$SPOTBUGS_TOTAL" -gt 0 ]; then
+            echo "### SpotBugs Security Issues" >> SECURITY_REPORT.md
+            echo "" >> SECURITY_REPORT.md
+            echo "**$SPOTBUGS_TOTAL security issues were found:**" >> SECURITY_REPORT.md
+            echo "" >> SECURITY_REPORT.md
+            echo "- 🔴 **$SPOTBUGS_HIGH High Priority** - Critical vulnerabilities requiring immediate attention" >> SECURITY_REPORT.md
+            echo "- 🟡 **$SPOTBUGS_MEDIUM Medium Priority** - Important security concerns" >> SECURITY_REPORT.md
+            echo "- 🟢 **$SPOTBUGS_LOW Low Priority** - Good practice improvements" >> SECURITY_REPORT.md
+            echo "" >> SECURITY_REPORT.md
+            echo "**Common Issues Found:**" >> SECURITY_REPORT.md
+            echo "- CRLF Injection in Logs - Sanitize user input before logging" >> SECURITY_REPORT.md
+            echo "- Improper Unicode Handling - Use proper case transformation methods" >> SECURITY_REPORT.md
+            echo "- Spring Endpoints - Ensure proper security annotations (@PreAuthorize, @Secured)" >> SECURITY_REPORT.md
+            echo "" >> SECURITY_REPORT.md
+            echo "📥 **Download HTML reports from artifacts for detailed remediation steps**" >> SECURITY_REPORT.md
+            echo "" >> SECURITY_REPORT.md
+          fi
+          
+          echo "### General Security Best Practices" >> SECURITY_REPORT.md
+          echo "" >> SECURITY_REPORT.md
           echo "1. ✅ Regularly update dependencies with known vulnerabilities" >> SECURITY_REPORT.md
-          echo "2. ✅ Review OWASP dependency reports for CVEs" >> SECURITY_REPORT.md
+          echo "2. ✅ Review Grype dependency reports for CVEs" >> SECURITY_REPORT.md
           echo "3. ✅ Implement rate limiting for API endpoints" >> SECURITY_REPORT.md
           echo "4. ✅ Enable WAF (Web Application Firewall) in production" >> SECURITY_REPORT.md
           echo "5. ✅ Implement comprehensive logging and monitoring" >> SECURITY_REPORT.md
