@@ -119,16 +119,14 @@
             <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
-                <version>8.4.0</version>
+                <version>10.0.4</version>
                 <configuration>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
-                    <!-- Completely disable NVD - use alternative sources only -->
-                    <nvdDatafeedEnabled>false</nvdDatafeedEnabled>
-                    <nvdApiServicesEnabled>false</nvdApiServicesEnabled>
-                    <!-- Enable alternative vulnerability data sources -->
+                    <!-- Use NVD API 2.0 (requires NVD_API_KEY env var) -->
+                    <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+                    <nvdApiDelay>6000</nvdApiDelay>
+                    <!-- Fallback to alternative sources if NVD unavailable -->
                     <ossindexAnalyzerEnabled>true</ossindexAnalyzerEnabled>
-                    <retirejsAnalyzerEnabled>true</retirejsAnalyzerEnabled>
-                    <centralAnalyzerEnabled>true</centralAnalyzerEnabled>
                     <suppressionFiles>
                         <suppressionFile>owasp-suppressions.xml</suppressionFile>
                     </suppressionFiles>
