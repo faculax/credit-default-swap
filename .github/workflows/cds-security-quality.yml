@@ -33,7 +33,7 @@ jobs:
           # Check for hardcoded database passwords in YAML/properties files
           echo "📋 Checking for hardcoded database credentials..."
           if grep -r --include="*.yml" --include="*.yaml" --include="*.properties" \
-            -E "^\s*(password|datasource\.password):\s*[^${\s]" backend/ gateway/ risk-engine/ 2>/dev/null; then
+            -E '^\s*(password|datasource\.password):\s*[^${[:space:]]' backend/ gateway/ risk-engine/ 2>/dev/null; then
             echo "❌ CRITICAL: Hardcoded database passwords found in configuration files!"
             SECRETS_FOUND=1
           fi
@@ -41,7 +41,7 @@ jobs:
           # Check for hardcoded usernames
           echo "🔑 Checking for hardcoded usernames..."
           grep -r --include="*.yml" --include="*.yaml" --include="*.properties" \
-            -E "^\s*(username|datasource\.username):\s*[a-zA-Z0-9_-]+" backend/ gateway/ risk-engine/ 2>/dev/null > /tmp/usernames.txt || true
+            -E '^\s*(username|datasource\.username):\s*[a-zA-Z0-9_-]+' backend/ gateway/ risk-engine/ 2>/dev/null > /tmp/usernames.txt || true
           
           if [ -s /tmp/usernames.txt ]; then
             # Check if any don't contain environment variable syntax
@@ -66,7 +66,7 @@ jobs:
           echo ""
           echo "🗄️ Checking for hardcoded database connection strings..."
           if grep -r --include="*.java" --include="*.properties" --include="*.yml" \
-            -E "jdbc:postgresql://[^$].*@.*:[0-9]+/" . 2>/dev/null; then
+            -E 'jdbc:postgresql://[^$].*@.*:[0-9]+/' . 2>/dev/null; then
             echo "❌ CRITICAL: Hardcoded database credentials in connection strings!"
             SECRETS_FOUND=1
           fi
