@@ -129,9 +129,9 @@
                     <nvdValidForHours>4</nvdValidForHours>
                     <!-- Fallback to alternative sources -->
                     <ossindexAnalyzerEnabled>true</ossindexAnalyzerEnabled>
-                    <retirejs>
-                        <enabled>false</enabled>
-                    </retirejs>
+                    <!-- Disable analyzers not relevant for Java backend -->
+                    <retireJsAnalyzerEnabled>false</retireJsAnalyzerEnabled>
+                    <nodeAnalyzerEnabled>false</nodeAnalyzerEnabled>
                     <suppressionFiles>
                         <suppressionFile>owasp-suppressions.xml</suppressionFile>
                     </suppressionFiles>
