@@ -306,6 +306,13 @@ jobs:
             LOW_COUNT=0
             
             if [ "$BUG_COUNT" -gt 0 ]; then
+              # Debug: Show first BugInstance line to see attributes
+              echo "**Debug - Sample BugInstance:**" >> $GITHUB_STEP_SUMMARY
+              echo '```xml' >> $GITHUB_STEP_SUMMARY
+              grep -m1 '<BugInstance' ${{ matrix.service }}/target/spotbugsXml.xml >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "Could not read BugInstance" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              
               # SpotBugs uses 'rank' for severity (1-4=Scariest, 5-9=Scary, 10-14=Troubling, 15-20=Of Concern)
               # Map to High/Medium/Low: 1-9=High, 10-14=Medium, 15-20=Low
               HIGH_COUNT=$(grep -oE 'rank="[1-9]"' ${{ matrix.service }}/target/spotbugsXml.xml 2>/dev/null | wc -l)
