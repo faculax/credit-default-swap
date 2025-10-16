@@ -267,17 +267,35 @@ jobs:
           # SpotBugs Summary
           if [ -f "${{ matrix.service }}/target/spotbugsXml.xml" ]; then
             echo "### 🐛 SpotBugs Security Issues" >> $GITHUB_STEP_SUMMARY
-            BUG_COUNT=$(grep -o '<BugInstance' ${{ matrix.service }}/target/spotbugsXml.xml | wc -l || echo "0")
-            HIGH_COUNT=$(grep 'priority="1"' ${{ matrix.service }}/target/spotbugsXml.xml | wc -l || echo "0")
-            MEDIUM_COUNT=$(grep 'priority="2"' ${{ matrix.service }}/target/spotbugsXml.xml | wc -l || echo "0")
-            LOW_COUNT=$(grep 'priority="3"' ${{ matrix.service }}/target/spotbugsXml.xml | wc -l || echo "0")
+            
+            # Count total bugs
+            BUG_COUNT=$(grep -c '<BugInstance' ${{ matrix.service }}/target/spotbugsXml.xml 2>/dev/null || echo "0")
+            
+            # Count by priority (SpotBugs uses priority attribute in BugInstance)
+            # Priority 1 = High, 2 = Medium, 3 = Low
+            HIGH_COUNT=$(grep '<BugInstance' ${{ matrix.service }}/target/spotbugsXml.xml | grep -c 'priority="1"' 2>/dev/null || echo "0")
+            MEDIUM_COUNT=$(grep '<BugInstance' ${{ matrix.service }}/target/spotbugsXml.xml | grep -c 'priority="2"' 2>/dev/null || echo "0")
+            LOW_COUNT=$(grep '<BugInstance' ${{ matrix.service }}/target/spotbugsXml.xml | grep -c 'priority="3"' 2>/dev/null || echo "0")
+            
+            # If priority counts don't add up, try alternative parsing
+            if [ "$((HIGH_COUNT + MEDIUM_COUNT + LOW_COUNT))" -eq 0 ] && [ "$BUG_COUNT" -gt 0 ]; then
+              # Try rank-based classification (1-4=High, 5-9=Medium, 10-20=Low)
+              HIGH_COUNT=$(grep '<BugInstance' ${{ matrix.service }}/target/spotbugsXml.xml | grep -E 'rank="[1-4]"' | wc -l 2>/dev/null || echo "0")
+              MEDIUM_COUNT=$(grep '<BugInstance' ${{ matrix.service }}/target/spotbugsXml.xml | grep -E 'rank="[5-9]"' | wc -l 2>/dev/null || echo "0")
+              LOW_COUNT=$(grep '<BugInstance' ${{ matrix.service }}/target/spotbugsXml.xml | grep -E 'rank="1[0-9]|20"' | wc -l 2>/dev/null || echo "0")
+            fi
             
             echo "- **Total Issues:** $BUG_COUNT" >> $GITHUB_STEP_SUMMARY
             echo "- **High Priority:** $HIGH_COUNT" >> $GITHUB_STEP_SUMMARY
             echo "- **Medium Priority:** $MEDIUM_COUNT" >> $GITHUB_STEP_SUMMARY
             echo "- **Low Priority:** $LOW_COUNT" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "📄 Download the HTML report from artifacts to see detailed findings." >> $GITHUB_STEP_SUMMARY
+            
+            if [ "$BUG_COUNT" -gt 0 ]; then
+              echo "⚠️ **Action Required:** Download the HTML report from artifacts for detailed findings and remediation steps." >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ No security issues detected by SpotBugs." >> $GITHUB_STEP_SUMMARY
+            fi
           fi
           
           echo "" >> $GITHUB_STEP_SUMMARY
