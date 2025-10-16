@@ -38,10 +38,14 @@ jobs:
             SECRETS_FOUND=1
           fi
           
-          # Check for hardcoded usernames
-          if grep -r --include="*.yml" --include="*.yaml" --include="*.properties" \
-            -E "^\s*(username|datasource\.username):\s*[a-zA-Z0-9_-]+" backend/ gateway/ risk-engine/ 2>/dev/null | grep -v "\${"; then
+          # Check for hardcoded usernames (exclude environment variable syntax)
+          echo "🔑 Checking for hardcoded usernames..."
+          USERNAME_RESULTS=$(grep -r --include="*.yml" --include="*.yaml" --include="*.properties" \
+            -E "^\s*(username|datasource\.username):\s*[a-zA-Z0-9_-]+" backend/ gateway/ risk-engine/ 2>/dev/null || true)
+          
+          if echo "$USERNAME_RESULTS" | grep -v "\${" | grep -q .; then
             echo "⚠️ WARNING: Hardcoded database usernames found!"
+            echo "$USERNAME_RESULTS" | grep -v "\${"
             SECRETS_FOUND=1
           fi
           
@@ -66,7 +70,7 @@ jobs:
           # Check for exposed ORE configuration paths
           echo ""
           echo "📁 Checking ORE configuration files..."
-          if find . -name "*.xml" -path "*/ore-*" -exec grep -l "password\|secret" {} \; 2>/dev/null; then
+          if find . -name "*.xml" -path "*/ore-*" -exec grep -l "password\|secret" {} \; 2>/dev/null | grep -q .; then
             echo "⚠️ WARNING: Potential secrets in ORE XML files"
           fi
           
