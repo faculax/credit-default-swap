@@ -174,9 +174,54 @@ jobs:
         run: |
           if [ -d "${{ matrix.service }}" ]; then
             cd ${{ matrix.service }}
-            ./mvnw spotbugs:check
+            echo "🔍 Running SpotBugs security analysis..."
+            # Run SpotBugs and generate both XML and HTML reports
+            ./mvnw spotbugs:spotbugs spotbugs:check || true
+            
+            # Check if SpotBugs found issues
+            if [ -f "target/spotbugsXml.xml" ]; then
+              BUG_COUNT=$(grep -o '<BugInstance' target/spotbugsXml.xml | wc -l || echo "0")
+              echo "📊 SpotBugs found $BUG_COUNT security issues"
+              
+              if [ "$BUG_COUNT" -gt "0" ]; then
+                echo "⚠️  Review the SpotBugs HTML report in the artifacts"
+                echo "::warning::SpotBugs found $BUG_COUNT security issues in ${{ matrix.service }}"
+              fi
+            fi
           fi
         continue-on-error: true
+
+      - name: Generate Security Analysis Summary
+        if: always()
+        run: |
+          echo "## 🔒 Security Analysis Summary - ${{ matrix.service }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # OWASP Dependency Check Summary
+          if [ -f "${{ matrix.service }}/target/dependency-check-report.json" ]; then
+            echo "### 📦 OWASP Dependency Check" >> $GITHUB_STEP_SUMMARY
+            VULN_COUNT=$(jq '.dependencies[].vulnerabilities | length' ${{ matrix.service }}/target/dependency-check-report.json 2>/dev/null | awk '{s+=$1} END {print s}' || echo "0")
+            echo "- **Vulnerabilities Found:** $VULN_COUNT" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # SpotBugs Summary
+          if [ -f "${{ matrix.service }}/target/spotbugsXml.xml" ]; then
+            echo "### 🐛 SpotBugs Security Issues" >> $GITHUB_STEP_SUMMARY
+            BUG_COUNT=$(grep -o '<BugInstance' ${{ matrix.service }}/target/spotbugsXml.xml | wc -l || echo "0")
+            HIGH_COUNT=$(grep 'priority="1"' ${{ matrix.service }}/target/spotbugsXml.xml | wc -l || echo "0")
+            MEDIUM_COUNT=$(grep 'priority="2"' ${{ matrix.service }}/target/spotbugsXml.xml | wc -l || echo "0")
+            LOW_COUNT=$(grep 'priority="3"' ${{ matrix.service }}/target/spotbugsXml.xml | wc -l || echo "0")
+            
+            echo "- **Total Issues:** $BUG_COUNT" >> $GITHUB_STEP_SUMMARY
+            echo "- **High Priority:** $HIGH_COUNT" >> $GITHUB_STEP_SUMMARY
+            echo "- **Medium Priority:** $MEDIUM_COUNT" >> $GITHUB_STEP_SUMMARY
+            echo "- **Low Priority:** $LOW_COUNT" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "📄 Download the HTML report from artifacts to see detailed findings." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
 
       - name: Upload security reports
         uses: actions/upload-artifact@v4
@@ -185,8 +230,10 @@ jobs:
           name: ${{ matrix.service }}-security-reports
           path: |
             ${{ matrix.service }}/target/dependency-check-report.html
+            ${{ matrix.service }}/target/dependency-check-report.json
             ${{ matrix.service }}/target/spotbugsXml.xml
             ${{ matrix.service }}/target/site/spotbugs.html
+            ${{ matrix.service }}/target/spotbugs.html
 
   frontend-security-lint:
     name: Frontend Security & Linting
