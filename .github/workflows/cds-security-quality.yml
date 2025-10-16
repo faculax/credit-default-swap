@@ -269,29 +269,9 @@ jobs:
           # SpotBugs Summary - Always write section
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🐛 SpotBugs Security Issues" >> $GITHUB_STEP_SUMMARY
-          
-          # Debug: List target directory contents
-          echo "**Debug - Checking for SpotBugs XML:**" >> $GITHUB_STEP_SUMMARY
-          if [ -d "${{ matrix.service }}/target" ]; then
-            echo "- Target directory exists" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            ls -la "${{ matrix.service }}/target/" | grep -E "(spotbugs|xml)" >> $GITHUB_STEP_SUMMARY || echo "No spotbugs or xml files found" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-          else
-            echo "- ⚠️ Target directory does NOT exist at \`${{ matrix.service }}/target\`" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          # Test file existence explicitly
-          if [ -f "${{ matrix.service }}/target/spotbugsXml.xml" ]; then
-            echo "- ✅ spotbugsXml.xml file exists" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "- ❌ spotbugsXml.xml file NOT found" >> $GITHUB_STEP_SUMMARY
-          fi
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ -f "${{ matrix.service }}/target/spotbugsXml.xml" ]; then
-            echo "**Parsing SpotBugs Results:**" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
             
             # Count total bugs - use simple approach without pipes
             BUG_COUNT=0
@@ -299,6 +279,7 @@ jobs:
               BUG_COUNT=$(grep -o '<BugInstance' ${{ matrix.service }}/target/spotbugsXml.xml 2>/dev/null | wc -l)
             fi
             echo "- **Total Issues:** $BUG_COUNT" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
             
             # Count by priority (SpotBugs uses priority attribute in BugInstance)
             HIGH_COUNT=0
@@ -306,12 +287,6 @@ jobs:
             LOW_COUNT=0
             
             if [ "$BUG_COUNT" -gt 0 ]; then
-              # Debug: Show first BugInstance line to see attributes
-              echo "**Debug - Sample BugInstance:**" >> $GITHUB_STEP_SUMMARY
-              echo '```xml' >> $GITHUB_STEP_SUMMARY
-              grep -m1 '<BugInstance' ${{ matrix.service }}/target/spotbugsXml.xml >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "Could not read BugInstance" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
               
               # SpotBugs Rank Classification (Official Reference)
               # Source: https://spotbugs.readthedocs.io/en/stable/bugDescriptions.html
