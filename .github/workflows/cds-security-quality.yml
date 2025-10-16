@@ -264,11 +264,11 @@ jobs:
             fi
           fi
           
+          # SpotBugs Summary - Always write section
           echo "" >> $GITHUB_STEP_SUMMARY
-          # SpotBugs Summary
+          echo "### 🐛 SpotBugs Security Issues" >> $GITHUB_STEP_SUMMARY
+          
           if [ -f "${{ matrix.service }}/target/spotbugsXml.xml" ]; then
-            echo "### 🐛 SpotBugs Security Issues" >> $GITHUB_STEP_SUMMARY
-            
             # Count total bugs
             BUG_COUNT=$(grep -c '<BugInstance' ${{ matrix.service }}/target/spotbugsXml.xml 2>/dev/null || echo "0")
             
@@ -297,6 +297,9 @@ jobs:
             else
               echo "✅ No security issues detected by SpotBugs." >> $GITHUB_STEP_SUMMARY
             fi
+          else
+            echo "⚠️ XML report not found - SpotBugs may have failed to run" >> $GITHUB_STEP_SUMMARY
+            echo "Expected location: \`${{ matrix.service }}/target/spotbugsXml.xml\`" >> $GITHUB_STEP_SUMMARY
           fi
           
           echo "" >> $GITHUB_STEP_SUMMARY
