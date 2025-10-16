@@ -38,16 +38,17 @@ jobs:
             SECRETS_FOUND=1
           fi
           
-          # Check for hardcoded usernames (exclude environment variable syntax)
+          # Check for hardcoded usernames
           echo "🔑 Checking for hardcoded usernames..."
-          USERNAME_RESULTS=$(grep -r --include="*.yml" --include="*.yaml" --include="*.properties" \
-            -E "^\s*(username|datasource\.username):\s*[a-zA-Z0-9_-]+" backend/ gateway/ risk-engine/ 2>/dev/null || true)
+          grep -r --include="*.yml" --include="*.yaml" --include="*.properties" \
+            -E "^\s*(username|datasource\.username):\s*[a-zA-Z0-9_-]+" backend/ gateway/ risk-engine/ 2>/dev/null > /tmp/usernames.txt || true
           
-          if [ -n "$USERNAME_RESULTS" ]; then
-            FILTERED=$(echo "$USERNAME_RESULTS" | grep -v '${' || true)
-            if [ -n "$FILTERED" ]; then
+          if [ -s /tmp/usernames.txt ]; then
+            # Check if any don't contain environment variable syntax
+            grep -v '\$' /tmp/usernames.txt > /tmp/hardcoded_users.txt || true
+            if [ -s /tmp/hardcoded_users.txt ]; then
               echo "⚠️ WARNING: Hardcoded database usernames found!"
-              echo "$FILTERED"
+              cat /tmp/hardcoded_users.txt
               SECRETS_FOUND=1
             fi
           fi
@@ -73,27 +74,27 @@ jobs:
           # Check for exposed ORE configuration paths
           echo ""
           echo "📁 Checking ORE configuration files..."
-          ORE_SECRETS=$(find . -name "*.xml" -path "*/ore-*" -exec grep -l "password\|secret" {} \; 2>/dev/null || true)
-          if [ -n "$ORE_SECRETS" ]; then
+          find . -name "*.xml" -path "*/ore-*" -exec grep -l "password\|secret" {} \; 2>/dev/null > /tmp/ore_secrets.txt || true
+          if [ -s /tmp/ore_secrets.txt ]; then
             echo "⚠️ WARNING: Potential secrets in ORE XML files"
           fi
           
           echo ""
-          if [ "$SECRETS_FOUND" -eq 1 ]; then
+          if [ "$SECRETS_FOUND" = "1" ]; then
             echo "==========================================="
             echo "❌ SECURITY ALERT: Secrets detected!"
             echo "==========================================="
             echo ""
             echo "ACTION REQUIRED:"
             echo "1. Move all credentials to environment variables"
-            echo "2. Use "'$'"{VARIABLE_NAME:default} syntax in YAML files"
+            echo "2. Use \${VARIABLE_NAME:default} syntax in YAML files"
             echo "3. Never commit actual passwords to git"
             echo "4. Review application.yml, application.properties files"
             echo ""
             exit 1
-          else
-            echo "✅ No hardcoded secrets detected"
           fi
+          
+          echo "✅ No hardcoded secrets detected"
 
       - name: Custom pattern detection
         run: |
