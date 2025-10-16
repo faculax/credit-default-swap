@@ -43,10 +43,13 @@ jobs:
           USERNAME_RESULTS=$(grep -r --include="*.yml" --include="*.yaml" --include="*.properties" \
             -E "^\s*(username|datasource\.username):\s*[a-zA-Z0-9_-]+" backend/ gateway/ risk-engine/ 2>/dev/null || true)
           
-          if echo "$USERNAME_RESULTS" | grep -v "\${" | grep -q .; then
-            echo "⚠️ WARNING: Hardcoded database usernames found!"
-            echo "$USERNAME_RESULTS" | grep -v "\${"
-            SECRETS_FOUND=1
+          if [ -n "$USERNAME_RESULTS" ]; then
+            FILTERED=$(echo "$USERNAME_RESULTS" | grep -v '\${' || true)
+            if [ -n "$FILTERED" ]; then
+              echo "⚠️ WARNING: Hardcoded database usernames found!"
+              echo "$FILTERED"
+              SECRETS_FOUND=1
+            fi
           fi
           
           # Check for JWT secrets, API keys in code
@@ -70,7 +73,8 @@ jobs:
           # Check for exposed ORE configuration paths
           echo ""
           echo "📁 Checking ORE configuration files..."
-          if find . -name "*.xml" -path "*/ore-*" -exec grep -l "password\|secret" {} \; 2>/dev/null | grep -q .; then
+          ORE_SECRETS=$(find . -name "*.xml" -path "*/ore-*" -exec grep -l "password\|secret" {} \; 2>/dev/null || true)
+          if [ -n "$ORE_SECRETS" ]; then
             echo "⚠️ WARNING: Potential secrets in ORE XML files"
           fi
           
