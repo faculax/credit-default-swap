@@ -181,14 +181,21 @@ jobs:
             echo "📦 Scanning ${{ matrix.service }} for vulnerabilities..."
             echo "ℹ️  Using NVD + GitHub Advisory + 10+ vulnerability databases"
             
-            # Scan the service directory
+            # Extract version from pom.xml
+            SERVICE_VERSION=$(grep -m1 '<version>' ${{ matrix.service }}/pom.xml | sed 's/.*<version>\(.*\)<\/version>.*/\1/' || echo "1.0.0")
+            
+            # Scan the service directory with explicit name and version
             grype dir:./${{ matrix.service }} \
+              --name "${{ matrix.service }}" \
+              --version "$SERVICE_VERSION" \
               --fail-on high \
               --output json \
               --file ${{ matrix.service }}/grype-report.json || true
             
             # Also generate table format for readability
             grype dir:./${{ matrix.service }} \
+              --name "${{ matrix.service }}" \
+              --version "$SERVICE_VERSION" \
               --output table \
               --file ${{ matrix.service }}/grype-report.txt || true
             
