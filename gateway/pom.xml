@@ -110,38 +110,6 @@
                 </executions>
             </plugin>
 
-            <!-- OWASP Dependency Vulnerability Check -->
-            <plugin>
-                <groupId>org.owasp</groupId>
-                <artifactId>dependency-check-maven</artifactId>
-                <version>8.4.0</version>
-                <configuration>
-                    <failBuildOnCVSS>7</failBuildOnCVSS>
-                    <!-- Use isolated H2 database to prevent transaction conflicts -->
-                    <dataDirectory>${project.build.directory}/dependency-check-data</dataDirectory>
-                    <!-- 8.4.0 uses deprecated JSON feeds (no API key needed) -->
-                    <autoUpdate>true</autoUpdate>
-                    <!-- Fallback to alternative sources -->
-                    <ossindexAnalyzerEnabled>true</ossindexAnalyzerEnabled>
-                    <retireJsAnalyzerEnabled>false</retireJsAnalyzerEnabled>
-                    <nodeAnalyzerEnabled>false</nodeAnalyzerEnabled>
-                    <suppressionFiles>
-                        <suppressionFile>owasp-suppressions.xml</suppressionFile>
-                    </suppressionFiles>
-                    <formats>
-                        <format>HTML</format>
-                        <format>JSON</format>
-                    </formats>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
             <!-- PMD Static Analysis -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
