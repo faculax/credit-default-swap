@@ -9,7 +9,7 @@ on:
     - cron: '0 2 * * *'  # Daily at 2 AM UTC
 
 env:
-  JAVA_VERSION: '17'
+  JAVA_VERSION: '21'
   NODE_VERSION: '18'
   POSTGRES_VERSION: '15'
 
