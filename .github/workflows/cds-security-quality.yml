@@ -127,14 +127,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2-
 
-      - name: Restore NVD Database Cache
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2/repository/org/owasp/dependency-check-data
-          key: ${{ runner.os }}-nvd-db-${{ github.run_id }}
-          restore-keys: |
-            ${{ runner.os }}-nvd-db-
-
       - name: Static security analysis for ${{ matrix.service }}
         run: |
           if [ -d "${{ matrix.service }}" ]; then
