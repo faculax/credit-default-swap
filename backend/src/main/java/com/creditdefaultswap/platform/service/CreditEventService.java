@@ -90,7 +90,51 @@ public class CreditEventService {
             createPhysicalSettlementScaffold(creditEvent, trade);
         }
         
+        // Check if this is a terminal event that triggers automatic payout
+        if (request.getEventType() == CreditEventType.BANKRUPTCY || 
+            request.getEventType() == CreditEventType.RESTRUCTURING) {
+            // Automatically create PAYOUT event
+            createPayoutEvent(tradeId, trade, request.getEventDate(), request.getSettlementMethod());
+        }
+        
         return creditEvent;
+    }
+    
+    /**
+     * Create automatic PAYOUT event for terminal credit events
+     */
+    private void createPayoutEvent(Long tradeId, CDSTrade trade, LocalDate triggerEventDate, SettlementMethod settlementMethod) {
+        // Check if PAYOUT event already exists for this date
+        Optional<CreditEvent> existingPayout = creditEventRepository.findByTradeIdAndEventTypeAndEventDate(
+            tradeId, CreditEventType.PAYOUT, triggerEventDate);
+        
+        if (existingPayout.isPresent()) {
+            return; // Already exists, skip creation
+        }
+        
+        // Create PAYOUT event
+        CreditEvent payoutEvent = new CreditEvent();
+        payoutEvent.setTradeId(tradeId);
+        payoutEvent.setEventType(CreditEventType.PAYOUT);
+        payoutEvent.setEventDate(triggerEventDate);
+        payoutEvent.setNoticeDate(triggerEventDate);
+        payoutEvent.setSettlementMethod(settlementMethod);
+        payoutEvent.setComments("Automatic payout triggered by credit event - CDS protection paid out");
+        
+        creditEventRepository.save(payoutEvent);
+        
+        // Update trade status to SETTLED
+        TradeStatus newStatus = settlementMethod == SettlementMethod.CASH 
+            ? TradeStatus.SETTLED_CASH 
+            : TradeStatus.SETTLED_PHYSICAL;
+        trade.setTradeStatus(newStatus);
+        tradeRepository.save(trade);
+        
+        // Log audit trail
+        auditService.logCreditEventCreation(payoutEvent.getId(), "SYSTEM", 
+            "Automatic payout for " + trade.getReferenceEntity());
+        auditService.logTradeStatusTransition(tradeId, "SYSTEM", 
+            TradeStatus.CREDIT_EVENT_RECORDED.name(), newStatus.name());
     }
     
     /**

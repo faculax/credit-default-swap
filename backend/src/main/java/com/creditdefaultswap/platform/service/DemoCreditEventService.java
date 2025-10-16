@@ -200,12 +200,20 @@ public class DemoCreditEventService {
             "Regulatory suspension of payments"
         };
         
+        String[] payoutComments = {
+            "Automatic payout triggered by credit event",
+            "CDS protection payment processed",
+            "Settlement payout completed",
+            "Protection buyer compensated"
+        };
+        
         String[] comments = switch (eventType) {
             case BANKRUPTCY -> bankruptcyComments;
             case FAILURE_TO_PAY -> failureToPayComments;
             case RESTRUCTURING -> restructuringComments;
             case OBLIGATION_DEFAULT -> accelerationComments;
             case REPUDIATION_MORATORIUM -> repudiationComments;
+            case PAYOUT -> payoutComments;
         };
         
         return comments[random.nextInt(comments.length)] + " - " + referenceEntity;

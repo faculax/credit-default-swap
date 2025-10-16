@@ -5,6 +5,7 @@ import CashflowScheduleTable from './CashflowScheduleTable';
 import { lifecycleService } from '../../services/lifecycleService';
 import { CouponPeriod } from '../../types/lifecycle';
 import { CDSTrade } from '../../data/referenceData';
+import { creditEventService } from '../../services/creditEventService';
 
 interface Props { 
   tradeId: number;
@@ -21,6 +22,18 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
   const [generatingSchedule, setGeneratingSchedule] = useState(false);
   const [valuationDate, setValuationDate] = useState<string | undefined>(undefined); // undefined means "today"
   const [refreshKey, setRefreshKey] = useState(0); // Used to force refresh when clicking same button
+  const [hasPayoutEvent, setHasPayoutEvent] = useState(false);
+
+  const checkForPayoutEvent = async () => {
+    try {
+      const events = await creditEventService.getCreditEventsForTrade(tradeId);
+      const payoutExists = events.some(event => event.eventType === 'PAYOUT');
+      setHasPayoutEvent(payoutExists);
+    } catch (error) {
+      console.error('Failed to check for payout events:', error);
+      setHasPayoutEvent(false);
+    }
+  };
 
   const loadRiskMeasures = async (customValuationDate?: string, forceRefresh: boolean = false) => {
     if(!tradeId) return;
@@ -193,9 +206,132 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
   useEffect(() => {
     loadRiskMeasures();
     loadCouponPeriods();
+    checkForPayoutEvent();
   }, [tradeId]);
 
   if(!tradeId) return <div className="text-fd-text">No trade selected</div>;
+  
+  // Show payout message if PAYOUT event exists
+  if (hasPayoutEvent) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-fd-darker p-6 rounded-md border-2 border-fd-green">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-fd-green/20 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-fd-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-fd-green font-semibold text-lg">CDS Protection Paid Out</h3>
+              <p className="text-fd-text-muted text-sm">A credit event has triggered payout - all risk measures are now zero</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            <div className="bg-fd-dark rounded p-4">
+              <div className="text-xs text-fd-text-muted mb-1">Net Present Value</div>
+              <div className="text-2xl font-bold text-fd-green font-mono">$0.00</div>
+            </div>
+            <div className="bg-fd-dark rounded p-4">
+              <div className="text-xs text-fd-text-muted mb-1">Jump-to-Default (JTD)</div>
+              <div className="text-2xl font-bold text-fd-green font-mono">$0.00</div>
+            </div>
+            <div className="bg-fd-dark rounded p-4">
+              <div className="text-xs text-fd-text-muted mb-1">Fair Spread</div>
+              <div className="text-2xl font-bold text-fd-green font-mono">0 bps</div>
+            </div>
+          </div>
+
+          <div className="mt-6 bg-fd-dark rounded p-4">
+            <div className="flex items-start gap-2">
+              <svg className="w-5 h-5 text-fd-green mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <div className="text-sm text-fd-text-muted">
+                <p className="mb-2">
+                  This trade has experienced a credit event (Bankruptcy or Restructuring) resulting in payout. 
+                  The CDS contract has fulfilled its protection obligation.
+                </p>
+                <p>
+                  All risk exposures have been reduced to zero as the contract has settled and no further obligations remain.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Paid Coupons Information */}
+          <div className="mt-6 bg-fd-dark rounded p-4">
+            <h4 className="text-fd-text font-semibold mb-3 flex items-center gap-2">
+              <svg className="w-5 h-5 text-fd-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+              </svg>
+              Coupon Payment History
+            </h4>
+            {couponPeriods.length === 0 ? (
+              <p className="text-fd-text-muted text-sm">
+                No coupon schedule was generated for this trade.
+              </p>
+            ) : (() => {
+              const paidCoupons = couponPeriods.filter(p => p.paid === true);
+              if (paidCoupons.length === 0) {
+                return (
+                  <p className="text-fd-text-muted text-sm">
+                    No coupons were paid before the credit event occurred.
+                  </p>
+                );
+              }
+              return (
+                <div className="space-y-2">
+                  <p className="text-fd-text text-sm mb-3">
+                    {paidCoupons.length} coupon{paidCoupons.length > 1 ? 's' : ''} paid before credit event:
+                  </p>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {paidCoupons.map((period, index) => (
+                      <div key={period.id} className="bg-fd-darker rounded p-3 flex items-center justify-between border border-fd-border">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4 text-fd-green" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path>
+                            </svg>
+                            <span className="text-fd-text text-sm font-medium">
+                              Period #{index + 1}
+                            </span>
+                            <span className="text-fd-text-muted text-xs">
+                              ({new Date(period.periodStartDate).toLocaleDateString()} - {new Date(period.periodEndDate).toLocaleDateString()})
+                            </span>
+                          </div>
+                          <div className="text-xs text-fd-text-muted mt-1">
+                            Payment Date: {new Date(period.paymentDate).toLocaleDateString()}
+                            {period.paidAt && (
+                              <span className="ml-2 text-fd-green">
+                                ✓ Paid: {new Date(period.paidAt).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-fd-green font-mono font-semibold">
+                            {new Intl.NumberFormat('en-US', {
+                              style: 'currency',
+                              currency: data?.currency || 'USD',
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }).format(period.couponAmount || 0)}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
   if(loading) return (
     <div className="flex items-center gap-2 text-fd-text">
       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-fd-green"></div>
