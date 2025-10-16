@@ -100,22 +100,15 @@
             <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
-                <version>10.0.4</version>
+                <version>8.4.0</version>
                 <configuration>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
                     <!-- Use isolated H2 database to prevent transaction conflicts -->
                     <dataDirectory>${project.build.directory}/dependency-check-data</dataDirectory>
-                    <!-- Use NVD API 2.0 ONLY (disable deprecated datafeed) -->
-                    <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
-                    <nvdApiDelay>6000</nvdApiDelay>
-                    <nvdDatafeedEnabled>false</nvdDatafeedEnabled>
-                    <!-- Database resilience settings -->
+                    <!-- 8.4.0 uses deprecated JSON feeds (no API key needed) -->
                     <autoUpdate>true</autoUpdate>
-                    <nvdMaxRetryCount>5</nvdMaxRetryCount>
-                    <nvdValidForHours>4</nvdValidForHours>
                     <!-- Fallback to alternative sources -->
                     <ossindexAnalyzerEnabled>true</ossindexAnalyzerEnabled>
-                    <!-- Disable analyzers not relevant for Java backend -->
                     <retireJsAnalyzerEnabled>false</retireJsAnalyzerEnabled>
                     <nodeAnalyzerEnabled>false</nodeAnalyzerEnabled>
                     <suppressionFiles>
