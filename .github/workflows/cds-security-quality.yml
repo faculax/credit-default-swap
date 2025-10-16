@@ -57,7 +57,7 @@ jobs:
           echo ""
           echo "🔐 Checking for API keys and secrets in Java code..."
           if grep -r --include="*.java" -i \
-            -E "(secret|password|apikey|api_key|private_key)\s*=\s*\"[^\"]+\"" . 2>/dev/null; then
+            -E '(secret|password|apikey|api_key|private_key)\s*=\s*"[^"]+"' . 2>/dev/null; then
             echo "❌ CRITICAL: Hardcoded secrets in Java code!"
             SECRETS_FOUND=1
           fi
