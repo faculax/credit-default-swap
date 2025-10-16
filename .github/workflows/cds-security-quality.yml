@@ -172,25 +172,7 @@ jobs:
             grep -r --include="*.java" -i "password.*=" src/ || true
           fi
 
-      - name: Check NVD API Key Configuration
-        run: |
-          echo "🔍 Checking for NVD API Key secret..."
-          if [ -z "${{ secrets.NVD_API_KEY }}" ]; then
-            echo "⚠️  NVD_API_KEY secret is NOT configured"
-            echo "ℹ️  Using OSS Index and alternative sources only"
-            echo "ℹ️  To add NVD support:"
-            echo "   1. Get free API key from https://nvd.nist.gov/developers/request-an-api-key"
-            echo "   2. Add to: Settings → Secrets → Actions → New repository secret"
-            echo "   3. Name: NVD_API_KEY"
-          else
-            echo "✅ NVD_API_KEY secret is configured"
-            echo "ℹ️  NVD API will be used for enhanced vulnerability scanning"
-          fi
-          echo ""
-
       - name: OWASP Dependency vulnerability scan
-        env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: |
           if [ -d "${{ matrix.service }}" ]; then
             cd ${{ matrix.service }}
@@ -204,8 +186,8 @@ jobs:
             rm -rf ~/.m2/repository/org/owasp/dependency-check-data/*.mv.db 2>/dev/null || true
             rm -rf ~/.m2/repository/org/owasp/dependency-check-data/*.trace.db 2>/dev/null || true
             
-            echo "🔍 Scanning ${{ matrix.service }} with single-threaded NVD processing..."
-            echo "⚙️  Using nvdApiThreadCount=1 to prevent H2 corruption"
+            echo "🔍 Scanning ${{ matrix.service }} with OWASP Dependency Check 8.4.0..."
+            echo "ℹ️  Using deprecated JSON feeds (more stable H2 database)"
             
             # Single-threaded scan with isolated database
             ./mvnw org.owasp:dependency-check-maven:check \
