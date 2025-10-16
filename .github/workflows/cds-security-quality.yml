@@ -102,9 +102,52 @@ jobs:
           echo "Checking for exposed market data credentials..."
           find . -name "market_*.txt" -exec head -5 {} \; | grep -i "auth\|token\|key" || true
 
+  prepare-nvd-database:
+    name: Download NVD Database (Shared)
+    runs-on: ubuntu-latest
+    needs: secrets-detection
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Restore NVD Database Cache
+        id: cache-nvd
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: ${{ runner.os }}-nvd-db-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-nvd-db-
+
+      - name: Download/Update NVD Database
+        if: steps.cache-nvd.outputs.cache-hit != 'true'
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: |
+          cd backend
+          
+          if [ -n "$NVD_API_KEY" ]; then
+            echo "🔑 Using NVD API key for fast database download..."
+            echo "⚡ This will download the NVD database ONCE for all services"
+          else
+            echo "⚠️ No NVD API key - download will be slower"
+          fi
+          
+          # Run dependency-check to download/update the NVD database
+          ./mvnw org.owasp:dependency-check-maven:10.0.4:update-only
+          
+          echo "✅ NVD database downloaded and cached"
+
   java-backend-analysis:
     name: Java Backend Security Analysis
     runs-on: ubuntu-latest
+    needs: prepare-nvd-database
     strategy:
       matrix:
         service: [backend, gateway, risk-engine]
@@ -121,8 +164,18 @@ jobs:
       - name: Cache Maven dependencies
         uses: actions/cache@v3
         with:
-          path: ~/.m2
+          path: ~/.m2/repository
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-
+
+      - name: Restore NVD Database Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: ${{ runner.os }}-nvd-db-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-nvd-db-
 
       - name: Static security analysis for ${{ matrix.service }}
         run: |
@@ -169,11 +222,8 @@ jobs:
           if [ -d "${{ matrix.service }}" ]; then
             cd ${{ matrix.service }}
             
-            if [ -n "$NVD_API_KEY" ]; then
-              echo "🔑 Using NVD API key for enhanced scanning..."
-            else
-              echo "⚠️  No NVD API key - this will be slower and may hit rate limits"
-            fi
+            echo "� Scanning ${{ matrix.service }} using cached NVD database..."
+            echo "⚡ No download needed - using shared database from prepare-nvd-database job"
             
             ./mvnw org.owasp:dependency-check-maven:check
           fi
