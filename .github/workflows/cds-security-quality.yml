@@ -44,7 +44,7 @@ jobs:
             -E "^\s*(username|datasource\.username):\s*[a-zA-Z0-9_-]+" backend/ gateway/ risk-engine/ 2>/dev/null || true)
           
           if [ -n "$USERNAME_RESULTS" ]; then
-            FILTERED=$(echo "$USERNAME_RESULTS" | grep -v '\${' || true)
+            FILTERED=$(echo "$USERNAME_RESULTS" | grep -v '${' || true)
             if [ -n "$FILTERED" ]; then
               echo "⚠️ WARNING: Hardcoded database usernames found!"
               echo "$FILTERED"
@@ -79,14 +79,14 @@ jobs:
           fi
           
           echo ""
-          if [ $SECRETS_FOUND -eq 1 ]; then
+          if [ "$SECRETS_FOUND" -eq 1 ]; then
             echo "==========================================="
             echo "❌ SECURITY ALERT: Secrets detected!"
             echo "==========================================="
             echo ""
             echo "ACTION REQUIRED:"
             echo "1. Move all credentials to environment variables"
-            echo "2. Use \${VARIABLE_NAME:default} syntax in YAML files"
+            echo "2. Use "'$'"{VARIABLE_NAME:default} syntax in YAML files"
             echo "3. Never commit actual passwords to git"
             echo "4. Review application.yml, application.properties files"
             echo ""
