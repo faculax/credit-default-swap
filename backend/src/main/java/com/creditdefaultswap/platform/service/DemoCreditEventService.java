@@ -137,7 +137,8 @@ public class DemoCreditEventService {
             request.setComments(comments);
             
             // Use the existing service to create the event (ensures all validation and processing)
-            return creditEventService.recordCreditEvent(trade.getId(), request);
+            var response = creditEventService.recordCreditEvent(trade.getId(), request);
+            return response.getCreditEvent();
             
         } catch (Exception e) {
             // Log but don't fail the entire generation process

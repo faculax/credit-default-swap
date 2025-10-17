@@ -16,9 +16,10 @@ interface TradeDetailModalProps {
   trade: CDSTradeResponse | null;
   onClose: () => void;
   onTradeUpdated?: (updatedTrade: CDSTradeResponse) => void;
+  onTradesUpdated?: (affectedTradeIds?: number[]) => void;
 }
 
-const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onClose, onTradeUpdated }) => {
+const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onClose, onTradeUpdated, onTradesUpdated }) => {
   const [currentTrade, setCurrentTrade] = useState<CDSTradeResponse | null>(trade);
   const [creditEvents, setCreditEvents] = useState<CreditEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
@@ -29,6 +30,7 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
   const [showCreditEventModal, setShowCreditEventModal] = useState(false);
   const [recordingEvent, setRecordingEvent] = useState(false);
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string>('Credit event recorded successfully');
 
   // Update currentTrade when trade prop changes
   useEffect(() => {
@@ -70,7 +72,7 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
     
     setRecordingEvent(true);
     try {
-      await creditEventService.recordCreditEvent(currentTrade.id, request);
+      const response = await creditEventService.recordCreditEvent(currentTrade.id, request);
       
       // Reload the trade to get updated status
       const updatedTrade = await cdsTradeService.getTradeById(currentTrade.id);
@@ -81,13 +83,27 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
         onTradeUpdated(updatedTrade);
       }
       
+      // Notify parent about all affected trades (for UI refresh)
+      if (onTradesUpdated && response.affectedTradeIds && response.affectedTradeIds.length > 1) {
+        onTradesUpdated(response.affectedTradeIds);
+      }
+      
       // Reload credit events after successful recording
       await loadCreditEvents();
       setShowCreditEventModal(false);
       
-      // Show success notification
+      // Show success notification with propagation info
+      const propagatedCount = response.affectedTradeIds.length - 1;
+      if (propagatedCount > 0) {
+        setSuccessMessage(
+          `This ${response.creditEvent.eventType} event has been propagated to ${propagatedCount} other active CDS contract(s) for the same reference entity. All affected trades have been settled.`
+        );
+      } else {
+        setSuccessMessage('Credit event recorded successfully');
+      }
+      
       setShowSuccessNotification(true);
-      setTimeout(() => setShowSuccessNotification(false), 3000);
+      setTimeout(() => setShowSuccessNotification(false), 5000);
     } catch (error: any) {
       console.error('Failed to record credit event:', error);
       alert('Failed to record credit event: ' + (error.message || 'Unknown error'));
@@ -492,15 +508,15 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
       {/* Success Notification */}
       {showSuccessNotification && (
         <div className="fixed top-4 right-4 z-[60] animate-fade-in">
-          <div className="bg-fd-dark border-2 border-fd-green rounded-lg shadow-lg p-4 flex items-center gap-3 min-w-[320px]">
-            <div className="flex-shrink-0">
+          <div className="bg-fd-dark border-2 border-fd-green rounded-lg shadow-lg p-4 flex items-start gap-3 min-w-[320px] max-w-[480px]">
+            <div className="flex-shrink-0 mt-0.5">
               <svg className="w-6 h-6 text-fd-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
             </div>
             <div className="flex-1">
-              <h4 className="text-fd-text font-semibold">Success!</h4>
-              <p className="text-fd-text-muted text-sm">Credit event recorded successfully</p>
+              <h4 className="text-fd-text font-semibold mb-1">Success!</h4>
+              <p className="text-fd-text-muted text-sm leading-relaxed">{successMessage}</p>
             </div>
             <button
               onClick={() => setShowSuccessNotification(false)}

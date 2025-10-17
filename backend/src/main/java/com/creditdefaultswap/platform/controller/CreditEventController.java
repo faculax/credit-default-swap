@@ -1,6 +1,7 @@
 package com.creditdefaultswap.platform.controller;
 
 import com.creditdefaultswap.platform.dto.CreateCreditEventRequest;
+import com.creditdefaultswap.platform.dto.CreditEventResponse;
 import com.creditdefaultswap.platform.dto.SettlementView;
 import com.creditdefaultswap.platform.model.CashSettlement;
 import com.creditdefaultswap.platform.model.CreditEvent;
@@ -38,19 +39,22 @@ public class CreditEventController {
     /**
      * Record a credit event for a trade
      * Story 4.1 & 4.2
+     * 
+     * Returns the created credit event along with list of all affected trade IDs
+     * (includes propagated trades for BANKRUPTCY and RESTRUCTURING events)
      */
     @PostMapping("/{tradeId}/credit-events")
-    public ResponseEntity<CreditEvent> recordCreditEvent(
+    public ResponseEntity<CreditEventResponse> recordCreditEvent(
             @PathVariable Long tradeId,
             @Valid @RequestBody CreateCreditEventRequest request) {
         
-        CreditEvent creditEvent = creditEventService.recordCreditEvent(tradeId, request);
+        CreditEventResponse response = creditEventService.recordCreditEvent(tradeId, request);
         
         // Return 201 for new creation, 200 for existing (idempotent)
-        HttpStatus status = creditEvent.getCreatedAt().equals(creditEvent.getUpdatedAt()) ? 
+        HttpStatus status = response.getCreditEvent().getCreatedAt().equals(response.getCreditEvent().getUpdatedAt()) ? 
             HttpStatus.CREATED : HttpStatus.OK;
             
-        return new ResponseEntity<>(creditEvent, status);
+        return new ResponseEntity<>(response, status);
     }
     
     /**
