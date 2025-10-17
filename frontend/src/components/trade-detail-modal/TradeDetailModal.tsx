@@ -245,6 +245,12 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
                     </span>
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-fd-text-muted">Settlement Type:</span>
+                    <span className={`font-medium ${currentTrade.settlementType === 'CASH' ? 'text-fd-cyan' : 'text-fd-teal'}`}>
+                      {currentTrade.settlementType === 'CASH' ? 'Cash Settlement' : 'Physical Settlement'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-fd-text-muted">Notional Amount:</span>
                     <span className="text-fd-text font-semibold text-lg">
                       {formatCurrency(currentTrade.notionalAmount, currentTrade.currency)}

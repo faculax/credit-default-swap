@@ -86,6 +86,11 @@ export const TRADE_STATUSES = [
   { value: 'CANCELLED', label: 'Cancelled' }
 ];
 
+export const SETTLEMENT_METHODS = [
+  { value: 'CASH', label: 'Cash Settlement' },
+  { value: 'PHYSICAL', label: 'Physical Settlement' }
+];
+
 export interface CDSTrade {
   referenceEntity: string;
   notionalAmount: number;
@@ -103,6 +108,7 @@ export interface CDSTrade {
   accrualStartDate: string;
   tradeStatus: string;
   recoveryRate: number;
+  settlementType: string;
   obligation?: {
     id: number;
   };

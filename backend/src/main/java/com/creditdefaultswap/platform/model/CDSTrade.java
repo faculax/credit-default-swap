@@ -64,6 +64,10 @@ public class CDSTrade {
     @Column(name = "trade_status", nullable = false)
     private TradeStatus tradeStatus;
     
+    @Enumerated(EnumType.STRING)
+    @Column(name = "settlement_type", nullable = false)
+    private SettlementMethod settlementType;
+    
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     
@@ -223,6 +227,14 @@ public class CDSTrade {
     
     public void setTradeStatus(TradeStatus tradeStatus) {
         this.tradeStatus = tradeStatus;
+    }
+    
+    public SettlementMethod getSettlementType() {
+        return settlementType;
+    }
+    
+    public void setSettlementType(SettlementMethod settlementType) {
+        this.settlementType = settlementType;
     }
     
     public LocalDateTime getCreatedAt() {

@@ -44,7 +44,9 @@ function App() {
         paymentCalendar: trade.paymentCalendar,
         accrualStartDate: trade.accrualStartDate,
         tradeStatus: trade.tradeStatus,
-        recoveryRate: trade.recoveryRate
+        recoveryRate: trade.recoveryRate,
+        settlementType: trade.settlementType,
+        obligation: trade.obligation
       };
 
       const savedTrade = await cdsTradeService.createTrade(tradeRequest);

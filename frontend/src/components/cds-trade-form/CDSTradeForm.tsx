@@ -8,6 +8,7 @@ import {
   RESTRUCTURING_CLAUSES,
   PAYMENT_CALENDARS,
   TRADE_STATUSES,
+  SETTLEMENT_METHODS,
   CDSTrade
 } from '../../data/referenceData';
 import { bondService, Bond } from '../../services/bondService';
@@ -29,7 +30,8 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
     buySellProtection: 'BUY',
     paymentCalendar: 'NYC',
     tradeStatus: 'PENDING',
-    recoveryRate: 40
+    recoveryRate: 40,
+    settlementType: 'CASH'
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -199,7 +201,8 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
         buySellProtection: 'BUY',
         paymentCalendar: 'NYC',
         tradeStatus: 'PENDING',
-        recoveryRate: 40
+        recoveryRate: 40,
+        settlementType: 'CASH'
       });
     }, 1000);
   };
@@ -274,7 +277,8 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
       restructuringClause: Math.random() > 0.3 ? getRandomItem(RESTRUCTURING_CLAUSES).value : '', // 70% chance of having a clause
       paymentCalendar: getRandomItem(PAYMENT_CALENDARS).value,
       tradeStatus: 'ACTIVE', // Always generate ACTIVE trades for demo purposes
-      recoveryRate: 40  // Default recovery rate
+      recoveryRate: 40,  // Default recovery rate
+      settlementType: getRandomItem(SETTLEMENT_METHODS).value
     };
     setFormData(randomData);
     setErrors({}); // Clear any existing errors
@@ -447,7 +451,7 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
           </div>
         </div>
 
-        {/* Row 3: Buy/Sell Protection */}
+        {/* Row 3: Buy/Sell Protection, Settlement Type */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-fd-text font-medium mb-2">
@@ -460,6 +464,23 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
             >
               <option value="BUY">Buy Protection</option>
               <option value="SELL">Sell Protection</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-fd-text font-medium mb-2">
+              Settlement Type <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.settlementType || 'CASH'}
+              onChange={(e) => handleInputChange('settlementType', e.target.value)}
+              className={selectClassName('settlementType')}
+            >
+              {SETTLEMENT_METHODS.map((method) => (
+                <option key={method.value} value={method.value}>
+                  {method.label}
+                </option>
+              ))}
             </select>
           </div>
         </div>

@@ -99,8 +99,8 @@ public class CreditEventService {
         // Check if this is a terminal event that triggers automatic payout
         if (request.getEventType() == CreditEventType.BANKRUPTCY || 
             request.getEventType() == CreditEventType.RESTRUCTURING) {
-            // Automatically create PAYOUT event
-            createPayoutEvent(tradeId, trade, request.getEventDate(), request.getSettlementMethod());
+            // Automatically create PAYOUT event using the trade's settlement type
+            createPayoutEvent(tradeId, trade, request.getEventDate(), trade.getSettlementType());
             
             // Propagate credit event to all other ACTIVE CDS for the same reference entity
             List<Long> propagatedTradeIds = propagateCreditEventToReferenceEntity(trade.getReferenceEntity(), tradeId, request);
@@ -201,8 +201,8 @@ public class CreditEventService {
                     createPhysicalSettlementScaffold(affectedEvent, affectedTrade);
                 }
                 
-                // Create PAYOUT event for affected trade
-                createPayoutEvent(affectedTrade.getId(), affectedTrade, request.getEventDate(), request.getSettlementMethod());
+                // Create PAYOUT event for affected trade using its settlement type
+                createPayoutEvent(affectedTrade.getId(), affectedTrade, request.getEventDate(), affectedTrade.getSettlementType());
                 
                 // Add to affected list
                 affectedTradeIds.add(affectedTrade.getId());

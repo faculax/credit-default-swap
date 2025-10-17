@@ -18,6 +18,7 @@ export interface CDSTradeRequest {
   accrualStartDate: string;
   tradeStatus: string;
   recoveryRate: number;
+  settlementType: string;
   obligation?: {
     id: number;
   };
