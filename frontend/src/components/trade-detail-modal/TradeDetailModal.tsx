@@ -9,6 +9,7 @@ import { fetchRiskMeasures } from '../../services/risk/riskService';
 import { RiskMeasures } from '../../services/risk/riskTypes';
 import { bondService, Bond } from '../../services/bondService';
 import CreditEventModal, { CreateCreditEventRequest } from '../credit-event-modal/CreditEventModal';
+import LifecycleTimeline from '../lifecycle/LifecycleTimeline';
 
 interface TradeDetailModalProps {
   isOpen: boolean;
@@ -21,7 +22,7 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
   const [currentTrade, setCurrentTrade] = useState<CDSTradeResponse | null>(trade);
   const [creditEvents, setCreditEvents] = useState<CreditEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
-  const [activeTab, setActiveTab] = useState<'details' | 'events' | 'risk' | 'marketdata'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'lifecycle' | 'events' | 'risk' | 'marketdata'>('details');
   const [showScenarioModal, setShowScenarioModal] = useState(false);
   const [riskMeasures, setRiskMeasures] = useState<RiskMeasures | null>(null);
   const [loadingRisk, setLoadingRisk] = useState(false);
@@ -155,6 +156,7 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
         <div className="flex space-x-4 border-b border-fd-border mb-6">
           {[
             { key: 'details', label: 'Details' },
+            { key: 'lifecycle', label: 'Lifecycle' },
             { key: 'events', label: 'Credit Events' },
             { key: 'risk', label: 'Risk' },
             { key: 'marketdata', label: 'Market Data' }
@@ -330,6 +332,9 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
               </div>
             </div>
           </>
+        )}
+        {activeTab === 'lifecycle' && currentTrade && (
+          <LifecycleTimeline trade={currentTrade} />
         )}
         {activeTab === 'events' && (
           <div className="mt-4">
