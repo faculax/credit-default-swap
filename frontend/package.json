@@ -24,6 +24,7 @@
     "eslint-plugin-security": "^1.7.1",
     "postcss": "^8.4.0",
     "prettier": "^3.0.0",
+    "retire": "^5.3.0",
     "tailwindcss": "^3.3.0"
   },
   "scripts": {
@@ -39,7 +40,11 @@
     "format:check": "prettier --check src/**/*.{ts,tsx,css,md}",
     "audit:security": "npm audit --audit-level=moderate",
     "security:full": "npm run lint:security && npm run audit:security && npm run type-check",
-    "pre-commit": "npm run format:check && npm run lint && npm run type-check"
+    "pre-commit": "npm run format:check && npm run lint && npm run type-check",
+    "security:audit": "npm audit --json > audit-npm.json 2>&1 || exit 0",
+    "security:eslint": "eslint src --ext .ts,.tsx --config .eslintrc.security.js --format json --output-file eslint-security.json || exit 0",
+    "security:retire": "retire --outputformat json --outputpath retire-report.json --path . || exit 0",
+    "security:scan": "npm run security:audit && npm run security:eslint && npm run security:retire"
   },
   "eslintConfig": {
     "extends": [

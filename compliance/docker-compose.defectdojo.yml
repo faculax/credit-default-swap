@@ -1,0 +1,148 @@
+version: '3.8'
+
+# DefectDojo Security Compliance Platform
+# Access DefectDojo at http://localhost:8081
+# Default credentials: admin/admin (change after first login!)
+
+services:
+  # PostgreSQL Database
+  defectdojo-postgres:
+    image: postgres:13-alpine
+    container_name: defectdojo-postgres
+    environment:
+      POSTGRES_DB: defectdojo
+      POSTGRES_USER: defectdojo
+      POSTGRES_PASSWORD: defectdojo
+    ports:
+      - "5433:5432"  # Avoid conflict with main application postgres on 5432
+    volumes:
+      - defectdojo-db-data:/var/lib/postgresql/data
+    networks:
+      - defectdojo-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U defectdojo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis - Message Broker and Cache
+  defectdojo-redis:
+    image: redis:6-alpine
+    container_name: defectdojo-redis
+    networks:
+      - defectdojo-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Django Application (uWSGI)
+  defectdojo-uwsgi:
+    image: defectdojo/defectdojo-django:latest
+    container_name: defectdojo-uwsgi
+    depends_on:
+      defectdojo-postgres:
+        condition: service_healthy
+      defectdojo-redis:
+        condition: service_healthy
+    environment:
+      # Database Configuration
+      - DD_DATABASE_URL=postgresql://defectdojo:defectdojo@defectdojo-postgres:5432/defectdojo
+      
+      # Celery Configuration
+      - DD_CELERY_BROKER_URL=redis://defectdojo-redis:6379/0
+      
+      # Security Keys (CHANGE THESE IN PRODUCTION!)
+      - DD_SECRET_KEY=zzz-change-this-in-production-zzz
+      - DD_CREDENTIAL_AES_256_KEY=yyy-change-this-credential-key-yyy
+      
+      # Application Settings
+      - DD_ALLOWED_HOSTS=*
+      - DD_DEBUG=False
+      - DD_SESSION_COOKIE_SECURE=False
+      - DD_CSRF_COOKIE_SECURE=False
+      
+      # Admin User - automatically created on first startup
+      - DD_ADMIN_USER=admin
+      - DD_ADMIN_PASSWORD=admin
+      - DD_ADMIN_FIRST_NAME=Admin
+      - DD_ADMIN_LAST_NAME=User
+      - DD_ADMIN_MAIL=admin@defectdojo.local
+      
+      # Initialize database on first run
+      - DD_INITIALIZE=true
+      
+      # Port Configuration
+      - DD_UWSGI_PORT=3031
+      - DD_UWSGI_NUM_OF_PROCESSES=2
+      - DD_UWSGI_NUM_OF_THREADS=2
+      
+    networks:
+      defectdojo-network:
+        aliases:
+          - uwsgi
+    volumes:
+      - defectdojo-media:/app/media
+    restart: unless-stopped
+
+  # NGINX - Web server and reverse proxy
+  defectdojo-nginx:
+    image: defectdojo/defectdojo-nginx:latest
+    container_name: defectdojo-nginx
+    ports:
+      - "8081:8080"  # Access DefectDojo on localhost:8081
+    depends_on:
+      - defectdojo-uwsgi
+    networks:
+      - defectdojo-network
+    environment:
+      - NGINX_METRICS_ENABLED=false
+    restart: unless-stopped
+
+  # Celery Beat - Task Scheduler
+  defectdojo-celerybeat:
+    image: defectdojo/defectdojo-django:latest
+    container_name: defectdojo-celerybeat
+    depends_on:
+      - defectdojo-uwsgi
+    environment:
+      - DD_DATABASE_URL=postgresql://defectdojo:defectdojo@defectdojo-postgres:5432/defectdojo
+      - DD_CELERY_BROKER_URL=redis://defectdojo-redis:6379/0
+      - DD_SECRET_KEY=zzz-change-this-in-production-zzz
+      - DD_CREDENTIAL_AES_256_KEY=yyy-change-this-credential-key-yyy
+    command: celery -A dojo beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    networks:
+      - defectdojo-network
+    restart: unless-stopped
+
+  # Celery Worker - Background Task Processor
+  defectdojo-celeryworker:
+    image: defectdojo/defectdojo-django:latest
+    container_name: defectdojo-celeryworker
+    depends_on:
+      - defectdojo-uwsgi
+    environment:
+      - DD_DATABASE_URL=postgresql://defectdojo:defectdojo@defectdojo-postgres:5432/defectdojo
+      - DD_CELERY_BROKER_URL=redis://defectdojo-redis:6379/0
+      - DD_SECRET_KEY=zzz-change-this-in-production-zzz
+      - DD_CREDENTIAL_AES_256_KEY=yyy-change-this-credential-key-yyy
+    command: celery -A dojo worker -l info --concurrency 3
+    networks:
+      - defectdojo-network
+    volumes:
+      - defectdojo-media:/app/media
+    restart: unless-stopped
+
+volumes:
+  defectdojo-db-data:
+    driver: local
+  defectdojo-media:
+    driver: local
+
+networks:
+  defectdojo-network:
+    driver: bridge
+    name: defectdojo-network

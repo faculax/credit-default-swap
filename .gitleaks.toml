@@ -1,0 +1,105 @@
+title = "CDS Platform Gitleaks Configuration"
+
+# Use default Gitleaks rules as baseline
+[extend]
+useDefault = true
+
+# Additional custom rules for this project
+[[rules]]
+id = "spring-datasource-password"
+description = "Spring Boot datasource password in config"
+regex = '''spring\.datasource\.password\s*[:=]\s*['"]?[^'"\s]+['"]?'''
+tags = ["spring", "password", "database"]
+
+[[rules]]
+id = "spring-security-password"
+description = "Spring Security user password"
+regex = '''spring\.security\.user\.password\s*[:=]\s*['"]?[^'"\s]+['"]?'''
+tags = ["spring", "password", "security"]
+
+[[rules]]
+id = "hardcoded-password-java"
+description = "Hardcoded password in Java code"
+regex = '''(?i)(password|passwd|pwd|secret)\s*=\s*['"][^'"]{6,}['"]'''
+tags = ["java", "password"]
+
+[[rules]]
+id = "jwt-secret-key"
+description = "JWT secret key"
+regex = '''(?i)(jwt[._-]?secret|secret[._-]?key)\s*[:=]\s*['"][^'"]{16,}['"]'''
+tags = ["jwt", "secret"]
+
+[[rules]]
+id = "api-key-generic"
+description = "Generic API key pattern"
+regex = '''(?i)(api[._-]?key|apikey)\s*[:=]\s*['"][A-Za-z0-9_\-]{20,}['"]'''
+tags = ["api", "key"]
+
+[[rules]]
+id = "database-connection-string"
+description = "Database connection string with credentials"
+regex = '''(?i)(jdbc|postgres|mysql|mongodb):\/\/[^:]+:[^@]+@'''
+tags = ["database", "connection"]
+
+[[rules]]
+id = "private-key-header"
+description = "Private key header"
+regex = '''-----BEGIN (RSA|EC|DSA|OPENSSH) PRIVATE KEY-----'''
+tags = ["key", "certificate"]
+
+# Allowlist configuration
+[allowlist]
+description = "Allowlisted files and patterns"
+
+# Paths to ignore
+paths = [
+    '''node_modules/''',
+    '''target/''',
+    '''build/''',
+    '''dist/''',
+    '''.git/''',
+    '''.*test\..*''',
+    '''.*Test\.java''',
+    '''.*Spec\.java''',
+    '''.*test\.ts''',
+    '''.*test\.js''',
+    '''.*\.md''',  # Documentation files
+    '''SECURITY_.*\.md''',
+    '''SECRET_SCANNING_GUIDE\.md''',
+    '''.*example.*''',
+]
+
+# Regex patterns to allowlist (false positives)
+[[allowlist.regexes]]
+description = "Test/example passwords"
+regex = '''(test|example|dummy|fake|mock|sample|placeholder)'''
+
+[[allowlist.regexes]]
+description = "Placeholder values"
+regex = '''(your|my|our|their)[-_]?(password|secret|key|token)'''
+
+[[allowlist.regexes]]
+description = "Documentation and comments"
+regex = '''(TODO|FIXME|XXX|NOTE):'''
+
+[[allowlist.regexes]]
+description = "Default admin credentials in docs/comments"
+regex = '''admin.*admin'''
+
+[[allowlist.regexes]]
+description = "Environment variable references"
+regex = '''\$\{[A-Z_]+\}'''
+
+[[allowlist.regexes]]
+description = "Generic examples"
+regex = '''(sk|pk)_(test|live)_[0-9a-zA-Z]{24,}example'''
+
+# Stop words - don't flag these
+[[allowlist.stopwords]]
+stopwords = [
+    "password",  # The word itself in variable names
+    "secret",
+    "token",
+    "key",
+    "apikey",
+]

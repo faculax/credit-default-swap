@@ -1,0 +1,62 @@
+# DefectDojo Compliance - Git Ignore
+# ===============================================================================
+# Prevent sensitive data and temporary files from being committed
+# ===============================================================================
+
+# Environment variables with secrets
+.env
+*.env
+!.env.example
+
+# API tokens and credentials
+*.token
+credentials.json
+api-keys.txt
+
+# Scan results and reports (should be uploaded, not committed)
+reports/
+*.json
+*.xml
+*.html
+*.sarif
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.bak
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Docker volumes and data (managed by Docker)
+data/
+volumes/
+postgres-data/
+media/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Python cache (if using Python tools)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Node modules (if using Node.js tools)
+node_modules/
+npm-debug.log
+yarn-error.log
