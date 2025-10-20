@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { CDSTradeResponse } from '../../services/cdsTradeService';
+import { lifecycleService } from '../../services/lifecycleService';
 
 interface LifecycleTimelineProps {
   trade: CDSTradeResponse;
+  onTradeUpdated?: () => void;
 }
 
 interface TimelineEvent {
@@ -16,9 +18,14 @@ interface TimelineEvent {
   color: string;
 }
 
-const LifecycleTimeline: React.FC<LifecycleTimelineProps> = ({ trade }) => {
+const LifecycleTimeline: React.FC<LifecycleTimelineProps> = ({ trade, onTradeUpdated }) => {
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState<TimelineEvent[]>([]);
+  const [showTerminateModal, setShowTerminateModal] = useState(false);
+  const [terminationDate, setTerminationDate] = useState('');
+  const [terminationReason, setTerminationReason] = useState('');
+  const [terminating, setTerminating] = useState(false);
+  const [terminateError, setTerminateError] = useState<string | null>(null);
 
   const loadLifecycleData = async () => {
     setLoading(true);
@@ -36,6 +43,8 @@ const LifecycleTimeline: React.FC<LifecycleTimelineProps> = ({ trade }) => {
 
   useEffect(() => {
     loadLifecycleData();
+    // Set default termination date to today
+    setTerminationDate(new Date().toISOString().split('T')[0]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trade.id]);
 
@@ -76,6 +85,39 @@ const LifecycleTimeline: React.FC<LifecycleTimelineProps> = ({ trade }) => {
     setEvents(timelineEvents);
   };
 
+  const handleTerminateTrade = async () => {
+    if (!terminationDate) {
+      setTerminateError('Termination date is required');
+      return;
+    }
+
+    setTerminating(true);
+    setTerminateError(null);
+
+    try {
+      await lifecycleService.fullyTerminate(
+        trade.id,
+        terminationDate,
+        terminationReason || 'Trader initiated termination'
+      );
+      
+      setShowTerminateModal(false);
+      
+      // Notify parent component to refresh trade data
+      if (onTradeUpdated) {
+        onTradeUpdated();
+      }
+      
+      // Reload lifecycle data
+      loadLifecycleData();
+    } catch (error) {
+      console.error('Failed to terminate trade:', error);
+      setTerminateError(error instanceof Error ? error.message : 'Failed to terminate trade');
+    } finally {
+      setTerminating(false);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -105,12 +147,100 @@ const LifecycleTimeline: React.FC<LifecycleTimelineProps> = ({ trade }) => {
 
   return (
     <div className="mt-4">
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-fd-text mb-2">Trade Lifecycle</h3>
-        <p className="text-fd-text-muted text-sm">
-          Visual timeline of key events and milestones for CDS-{trade.id}
-        </p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-fd-text mb-2">Trade Lifecycle</h3>
+          <p className="text-fd-text-muted text-sm">
+            Visual timeline of key events and milestones for CDS-{trade.id}
+          </p>
+        </div>
+        
+        {/* Terminate Trade Button - Only show for ACTIVE trades */}
+        {trade.tradeStatus === 'ACTIVE' && (
+          <button
+            onClick={() => setShowTerminateModal(true)}
+            className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded transition-colors flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            Terminate Trade
+          </button>
+        )}
       </div>
+
+      {/* Terminate Trade Modal */}
+      {showTerminateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-fd-darker border border-fd-border rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-semibold text-fd-text mb-4">Terminate Trade CDS-{trade.id}</h3>
+            
+            <div className="mb-4 p-3 bg-red-900/20 border border-red-700 rounded text-sm text-red-400">
+              <strong>Warning:</strong> This action will fully terminate the trade. The notional will be reduced to zero.
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-fd-text-muted text-sm mb-2">
+                  Termination Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={terminationDate}
+                  onChange={(e) => setTerminationDate(e.target.value)}
+                  className="w-full px-3 py-2 bg-fd-dark border border-fd-border rounded text-fd-text focus:outline-none focus:border-fd-green"
+                />
+              </div>
+
+              <div>
+                <label className="block text-fd-text-muted text-sm mb-2">
+                  Reason (optional)
+                </label>
+                <textarea
+                  value={terminationReason}
+                  onChange={(e) => setTerminationReason(e.target.value)}
+                  placeholder="Enter reason for termination..."
+                  rows={3}
+                  className="w-full px-3 py-2 bg-fd-dark border border-fd-border rounded text-fd-text focus:outline-none focus:border-fd-green resize-none"
+                />
+              </div>
+            </div>
+
+            {terminateError && (
+              <div className="mb-4 p-3 bg-red-900/20 border border-red-700 rounded text-sm text-red-400">
+                {terminateError}
+              </div>
+            )}
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowTerminateModal(false);
+                  setTerminateError(null);
+                }}
+                disabled={terminating}
+                className="px-6 py-2 bg-fd-darker border border-fd-border text-fd-text rounded hover:bg-fd-dark transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleTerminateTrade}
+                disabled={terminating || !terminationDate}
+                className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {terminating ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Terminating...
+                  </>
+                ) : (
+                  'Confirm Termination'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Summary */}
       <div className="grid grid-cols-2 gap-4 mb-8">

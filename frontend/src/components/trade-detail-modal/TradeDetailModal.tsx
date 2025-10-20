@@ -113,6 +113,28 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
     }
   };
 
+  const handleTradeUpdated = async () => {
+    if (!currentTrade) return;
+    
+    try {
+      // Reload the trade to get updated status
+      const updatedTrade = await cdsTradeService.getTradeById(currentTrade.id);
+      setCurrentTrade(updatedTrade);
+      
+      // Notify parent component if callback provided
+      if (onTradeUpdated) {
+        onTradeUpdated(updatedTrade);
+      }
+      
+      // Notify parent to refresh the blotter with this trade ID
+      if (onTradesUpdated) {
+        onTradesUpdated([currentTrade.id]);
+      }
+    } catch (error) {
+      console.error('Failed to reload trade:', error);
+    }
+  };
+
   useEffect(() => {
     if (isOpen && currentTrade) {
       loadCreditEvents();
@@ -358,7 +380,7 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
           </>
         )}
         {activeTab === 'lifecycle' && currentTrade && (
-          <LifecycleTimeline trade={currentTrade} />
+          <LifecycleTimeline trade={currentTrade} onTradeUpdated={handleTradeUpdated} />
         )}
         {activeTab === 'cashflow' && currentTrade && (
           <CashflowPanel trade={currentTrade} />

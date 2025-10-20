@@ -83,6 +83,8 @@ export const PAYMENT_CALENDARS = [
 export const TRADE_STATUSES = [
   { value: 'PENDING', label: 'Pending' },
   { value: 'ACTIVE', label: 'Active' },
+  { value: 'PARTIALLY_TERMINATED', label: 'Partially Terminated' },
+  { value: 'TERMINATED', label: 'Terminated' },
   { value: 'CANCELLED', label: 'Cancelled' }
 ];
 
