@@ -22,12 +22,20 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/cds-portfolios")
 public class CdsPortfolioController {
     
     private static final Logger logger = LoggerFactory.getLogger(CdsPortfolioController.class);
+    
+    /**
+     * Sanitize input for logging to prevent CRLF injection (CWE-117)
+     */
+    private String sanitizeForLog(Object obj) {
+        return obj == null ? "null" : obj.toString().replaceAll("[\r\n]", "_");
+    }
     
     private final CdsPortfolioService portfolioService;
     private final PortfolioPricingService pricingService;
@@ -64,9 +72,10 @@ public class CdsPortfolioController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            logger.error("Error creating portfolio", e);
+            String correlationId = UUID.randomUUID().toString();
+            logger.error("Error creating portfolio [{}]", correlationId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to create portfolio"));
+                    .body(Map.of("error", "Failed to create portfolio. Reference: " + correlationId));
         }
     }
     
@@ -94,8 +103,10 @@ public class CdsPortfolioController {
                     .map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {
-            logger.error("Error fetching portfolio {}", id, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            String correlationId = UUID.randomUUID().toString();
+            logger.error("Error fetching portfolio {} [{}]", sanitizeForLog(id), correlationId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to fetch portfolio. Reference: " + correlationId));
         }
     }
     

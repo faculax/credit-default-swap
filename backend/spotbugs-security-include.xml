@@ -107,4 +107,46 @@
     <Match>
         <Bug pattern="OBJECT_DESERIALIZATION"/>
     </Match>
+    
+    <!-- ===== ZERO-TOLERANCE RULES (from AGENTS.md) ===== -->
+    
+    <!-- CRITICAL: CRLF Injection in Logs (CWE-117) -->
+    <Match>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+    
+    <!-- CRITICAL: Predictable Random Number Generation (CWE-330) -->
+    <Match>
+        <Bug pattern="PREDICTABLE_RANDOM"/>
+    </Match>
+    <Match>
+        <Bug pattern="PREDICTABLE_RANDOM_SCALA"/>
+    </Match>
+    
+    <!-- CRITICAL: Improper String Case Conversion (CWE-176) -->
+    <Match>
+        <Bug pattern="DM_CONVERT_CASE"/>
+    </Match>
+    
+    <!-- CRITICAL: Information Exposure Through Error Messages (CWE-209) -->
+    <Match>
+        <Bug pattern="INFORMATION_EXPOSURE_THROUGH_AN_ERROR_MESSAGE"/>
+    </Match>
+    
+    <!-- CRITICAL: SQL Injection -->
+    <Match>
+        <Bug pattern="SQL_INJECTION"/>
+    </Match>
+    <Match>
+        <Bug pattern="SQL_INJECTION_JPA"/>
+    </Match>
+    <Match>
+        <Bug pattern="SQL_INJECTION_HIBERNATE"/>
+    </Match>
+    <Match>
+        <Bug pattern="SQL_INJECTION_SPRING_JDBC"/>
+    </Match>
+    <Match>
+        <Bug pattern="SQL_INJECTION_JDBC"/>
+    </Match>
 </FindBugsFilter>
