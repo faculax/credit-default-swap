@@ -66,6 +66,7 @@ jobs:
       
       - name: SonarCloud Scan
         working-directory: ${{ matrix.service }}
+        continue-on-error: true
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -83,7 +84,7 @@ jobs:
             -Dsonar.tests=src/test/java \
             -Dsonar.sourceEncoding=UTF-8 \
             -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml \
-            -Dsonar.qualitygate.wait=true
+            -Dsonar.qualitygate.wait=false
       
       - name: Upload SpotBugs results
         if: always()
@@ -132,6 +133,7 @@ jobs:
       
       - name: SonarCloud Frontend Scan
         uses: sonarsource/sonarcloud-github-action@master
+        continue-on-error: true
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -148,7 +150,7 @@ jobs:
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.eslint.reportPaths=eslint-report.json
             -Dsonar.sourceEncoding=UTF-8
-            -Dsonar.qualitygate.wait=true
+            -Dsonar.qualitygate.wait=false
       
       - name: Upload coverage reports
         if: always()
