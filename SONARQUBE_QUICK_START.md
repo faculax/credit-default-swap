@@ -70,7 +70,23 @@ git push
 
 ## 📊 Viewing Results
 
-### SonarQube Dashboard
+### 🎨 Custom Aggregated Dashboard (New!)
+**Open:** `dashboard.html` in your browser
+
+**Features:**
+- ✨ **All 4 services** in one unified view
+- 📊 **Real-time metrics** from SonarQube API
+- 📈 **Trend charts** showing improvement over time
+- 🎯 **Summary cards** with total bugs, vulnerabilities, coverage
+- 🔄 **Auto-refresh** every 5 minutes
+- 🎨 **Beautiful UI** matching CDS platform colors
+
+**Setup:**
+1. Open `dashboard.html` in a browser
+2. If you have a SonarQube token, add it to the `SONAR_TOKEN` variable in the file
+3. Enjoy the aggregated view!
+
+### SonarQube Native Dashboard
 **Main Dashboard:** http://localhost:9000/projects
 
 **Individual Projects:**
@@ -78,6 +94,13 @@ git push
 - **Gateway:** http://localhost:9000/dashboard?id=credit-default-swap-gateway
 - **Risk Engine:** http://localhost:9000/dashboard?id=credit-default-swap-risk-engine
 - **Frontend:** http://localhost:9000/dashboard?id=credit-default-swap-frontend
+
+**Historical Tracking:**
+- **Activity:** http://localhost:9000/project/activity?id=credit-default-swap-backend
+  - Timeline graphs showing trends over time
+  - Compare analyses (before/after)
+  - Version markers
+- **Measures History:** Drill-down metrics with custom date ranges
 
 ### GitHub
 - **Actions Tab:** View workflow execution and summary
