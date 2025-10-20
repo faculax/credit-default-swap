@@ -10,6 +10,7 @@ import { RiskMeasures } from '../../services/risk/riskTypes';
 import { bondService, Bond } from '../../services/bondService';
 import CreditEventModal, { CreateCreditEventRequest } from '../credit-event-modal/CreditEventModal';
 import LifecycleTimeline from '../lifecycle/LifecycleTimeline';
+import CashflowPanel from '../lifecycle/CashflowPanel';
 
 interface TradeDetailModalProps {
   isOpen: boolean;
@@ -23,7 +24,7 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
   const [currentTrade, setCurrentTrade] = useState<CDSTradeResponse | null>(trade);
   const [creditEvents, setCreditEvents] = useState<CreditEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
-  const [activeTab, setActiveTab] = useState<'details' | 'lifecycle' | 'events' | 'risk' | 'marketdata'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'lifecycle' | 'cashflow' | 'events' | 'risk' | 'marketdata'>('details');
   const [showScenarioModal, setShowScenarioModal] = useState(false);
   const [riskMeasures, setRiskMeasures] = useState<RiskMeasures | null>(null);
   const [loadingRisk, setLoadingRisk] = useState(false);
@@ -173,6 +174,7 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
           {[
             { key: 'details', label: 'Details' },
             { key: 'lifecycle', label: 'Lifecycle' },
+            { key: 'cashflow', label: 'Cashflow' },
             { key: 'events', label: 'Credit Events' },
             { key: 'risk', label: 'Risk' },
             { key: 'marketdata', label: 'Market Data' }
@@ -358,6 +360,9 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
         {activeTab === 'lifecycle' && currentTrade && (
           <LifecycleTimeline trade={currentTrade} />
         )}
+        {activeTab === 'cashflow' && currentTrade && (
+          <CashflowPanel trade={currentTrade} />
+        )}
         {activeTab === 'events' && (
           <div className="mt-4">
             <div className="flex items-center justify-between mb-4">
@@ -507,6 +512,7 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
           onClose={() => setShowCreditEventModal(false)}
           onSubmit={handleRecordCreditEvent}
           tradeId={currentTrade.id}
+          referenceEntity={currentTrade.referenceEntity}
           isLoading={recordingEvent}
         />
       )}

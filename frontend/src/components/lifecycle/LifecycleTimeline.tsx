@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { CDSTradeResponse } from '../../services/cdsTradeService';
-import { lifecycleService } from '../../services/lifecycleService';
-import { CouponPeriod } from '../../types/lifecycle';
 
 interface LifecycleTimelineProps {
   trade: CDSTradeResponse;
@@ -9,7 +7,7 @@ interface LifecycleTimelineProps {
 
 interface TimelineEvent {
   id: string;
-  type: 'creation' | 'schedule_generation' | 'coupon_paid' | 'status_change';
+  type: 'creation' | 'status_change';
   timestamp: string;
   title: string;
   description: string;
@@ -19,23 +17,18 @@ interface TimelineEvent {
 }
 
 const LifecycleTimeline: React.FC<LifecycleTimelineProps> = ({ trade }) => {
-  const [coupons, setCoupons] = useState<CouponPeriod[]>([]);
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState<TimelineEvent[]>([]);
 
   const loadLifecycleData = async () => {
     setLoading(true);
     try {
-      // Load coupon schedule
-      const couponSchedule = await lifecycleService.getCouponSchedule(trade.id);
-      setCoupons(couponSchedule);
-      
       // Build timeline events
-      buildTimelineEvents(couponSchedule);
+      buildTimelineEvents();
     } catch (error) {
       console.error('Failed to load lifecycle data:', error);
-      // Build basic timeline without coupon data
-      buildTimelineEvents([]);
+      // Build basic timeline
+      buildTimelineEvents();
     } finally {
       setLoading(false);
     }
@@ -46,10 +39,8 @@ const LifecycleTimeline: React.FC<LifecycleTimelineProps> = ({ trade }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trade.id]);
 
-  const buildTimelineEvents = (couponSchedule: CouponPeriod[]) => {
+  const buildTimelineEvents = () => {
     const timelineEvents: TimelineEvent[] = [];
-    const now = new Date();
-    const isTradeEnded = trade.tradeStatus !== 'ACTIVE' && trade.tradeStatus !== 'PENDING';
 
     // 1. Trade Creation - Use Trade Date instead of createdAt
     timelineEvents.push({
@@ -63,52 +54,7 @@ const LifecycleTimeline: React.FC<LifecycleTimelineProps> = ({ trade }) => {
       color: 'rgb(0, 240, 0)' // fd-green
     });
 
-    // 2. Coupon Schedule Generation (if exists)
-    if (couponSchedule.length > 0) {
-      const firstCoupon = couponSchedule[0];
-      timelineEvents.push({
-        id: 'schedule_gen',
-        type: 'schedule_generation',
-        timestamp: firstCoupon.createdAt,
-        title: 'Coupon Schedule Generated',
-        description: `${couponSchedule.length} coupon periods created`,
-        status: 'completed',
-        icon: '📅',
-        color: 'rgb(0, 232, 247)' // cyan
-      });
-
-      // 3. Coupon Payments - Filter out unpaid coupons if trade has ended
-      couponSchedule.forEach((coupon, index) => {
-        const paymentDate = new Date(coupon.paymentDate);
-        let status: 'completed' | 'pending' | 'upcoming' = 'upcoming';
-        
-        if (coupon.paid && coupon.paidAt) {
-          status = 'completed';
-        } else if (paymentDate <= now) {
-          status = 'pending';
-        }
-
-        // Skip unpaid coupons if trade lifecycle has ended
-        if (isTradeEnded && !coupon.paid) {
-          return;
-        }
-
-        timelineEvents.push({
-          id: `coupon-${coupon.id}`,
-          type: 'coupon_paid',
-          timestamp: coupon.paid && coupon.paidAt ? coupon.paidAt : coupon.paymentDate,
-          title: `Coupon Payment ${index + 1}`,
-          description: coupon.paid 
-            ? `Paid ${formatCurrency(coupon.couponAmount || 0, trade.currency)} on ${formatDate(coupon.paidAt!)}`
-            : `Due ${formatDate(coupon.paymentDate)} - ${formatCurrency(coupon.couponAmount || 0, trade.currency)}`,
-          status,
-          icon: coupon.paid ? '💰' : '⏰',
-          color: coupon.paid ? 'rgb(30, 230, 190)' : 'rgb(60, 75, 97)'
-        });
-      });
-    }
-
-    // 4. Status Changes
+    // 2. Status Changes
     if (trade.updatedAt && trade.updatedAt !== trade.createdAt) {
       timelineEvents.push({
         id: 'status_change',
@@ -148,13 +94,6 @@ const LifecycleTimeline: React.FC<LifecycleTimelineProps> = ({ trade }) => {
     });
   };
 
-  const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency || 'USD'
-    }).format(amount);
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -174,27 +113,15 @@ const LifecycleTimeline: React.FC<LifecycleTimelineProps> = ({ trade }) => {
       </div>
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 gap-4 mb-8">
         <div className="bg-fd-dark rounded-lg p-4 border border-fd-border">
           <div className="text-fd-text-muted text-xs uppercase mb-1">Total Events</div>
           <div className="text-fd-text text-2xl font-bold">{events.length}</div>
         </div>
         <div className="bg-fd-dark rounded-lg p-4 border border-fd-border">
-          <div className="text-fd-text-muted text-xs uppercase mb-1">Coupons Paid</div>
+          <div className="text-fd-text-muted text-xs uppercase mb-1">Current Status</div>
           <div className="text-fd-green text-2xl font-bold">
-            {coupons.filter(c => c.paid).length}
-          </div>
-        </div>
-        <div className="bg-fd-dark rounded-lg p-4 border border-fd-border">
-          <div className="text-fd-text-muted text-xs uppercase mb-1">Pending Payments</div>
-          <div className="text-yellow-400 text-2xl font-bold">
-            {coupons.filter(c => !c.paid && new Date(c.paymentDate) <= new Date()).length}
-          </div>
-        </div>
-        <div className="bg-fd-dark rounded-lg p-4 border border-fd-border">
-          <div className="text-fd-text-muted text-xs uppercase mb-1">Upcoming</div>
-          <div className="text-fd-text text-2xl font-bold">
-            {coupons.filter(c => !c.paid && new Date(c.paymentDate) > new Date()).length}
+            {trade.tradeStatus.replace(/_/g, ' ')}
           </div>
         </div>
       </div>
