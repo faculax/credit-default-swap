@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 public class SimulationService {
     
     private static final Logger log = LoggerFactory.getLogger(SimulationService.class);
+    private static final SecureRandom secureRandom = new SecureRandom();
     private static final int MAX_PATHS = 200000;
     private static final int MIN_PATHS = 100;
     private static final double DEFAULT_BETA = 0.35;
@@ -72,8 +74,8 @@ public class SimulationService {
         // Generate run ID
         String runId = generateRunId();
         
-        // Generate or use provided seed
-        Long seed = request.getSeed() != null ? request.getSeed() : new Random().nextLong();
+        // Generate or use provided seed (using SecureRandom for production)
+        Long seed = request.getSeed() != null ? request.getSeed() : secureRandom.nextLong();
         
         // Create simulation run record
         SimulationRun run = new SimulationRun();
