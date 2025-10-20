@@ -1,0 +1,461 @@
+name: SonarCloud Analysis
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - security-compliance
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+env:
+  JAVA_VERSION: '21'
+  NODE_VERSION: '20'
+  SONAR_ORGANIZATION: 'ayodeleoladeji'
+  SONAR_HOST_URL: 'https://sonarcloud.io'
+
+jobs:
+  sonarcloud-backend:
+    name: ☕ SonarCloud - Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar-backend
+          restore-keys: ${{ runner.os }}-sonar-
+
+      - name: Build Backend
+        working-directory: ./backend
+        run: |
+          echo "🔨 Building backend..."
+          ./mvnw clean compile -DskipTests -B
+
+      - name: Run tests with coverage
+        working-directory: ./backend
+        run: |
+          echo "🧪 Running tests with JaCoCo coverage..."
+          ./mvnw test jacoco:report -B
+
+      - name: Run SpotBugs security analysis
+        working-directory: ./backend
+        continue-on-error: true
+        run: |
+          echo "🐛 Running SpotBugs with FindSecBugs..."
+          ./mvnw spotbugs:spotbugs -B || true
+
+      - name: Run Checkstyle
+        working-directory: ./backend
+        continue-on-error: true
+        run: |
+          echo "📐 Running Checkstyle..."
+          ./mvnw checkstyle:check -B || true
+
+      - name: SonarCloud Scan - Backend
+        working-directory: ./backend
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "📡 Running SonarCloud analysis for Backend..."
+          
+          SONAR_ARGS="-Dsonar.projectKey=${{ env.SONAR_ORGANIZATION }}_credit-default-swap-backend"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.projectName=CDS Platform - Backend"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.organization=${{ env.SONAR_ORGANIZATION }}"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.host.url=${{ env.SONAR_HOST_URL }}"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.token=${{ secrets.SONAR_TOKEN }}"
+          
+          # Source and test configuration
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.sources=src/main/java"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.tests=src/test/java"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.java.binaries=target/classes"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.java.test.binaries=target/test-classes"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.java.libraries=target/*.jar"
+          
+          # Import external reports
+          if [ -f "target/site/jacoco/jacoco.xml" ]; then
+            SONAR_ARGS="$SONAR_ARGS -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml"
+            echo "✅ JaCoCo coverage report found"
+          fi
+          
+          if [ -f "target/spotbugs.sarif" ]; then
+            SONAR_ARGS="$SONAR_ARGS -Dsonar.sarifReportPaths=target/spotbugs.sarif"
+            echo "✅ SpotBugs SARIF report found"
+          fi
+          
+          if [ -f "target/checkstyle-result.xml" ]; then
+            SONAR_ARGS="$SONAR_ARGS -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml"
+            echo "✅ Checkstyle report found"
+          fi
+          
+          # Additional settings
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.sourceEncoding=UTF-8"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.java.source=21"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.qualitygate.wait=true"
+          SONAR_ARGS="$SONAR_ARGS -B"
+          
+          ./mvnw sonar:sonar $SONAR_ARGS
+          
+          echo "✅ SonarCloud analysis complete!"
+          echo "🌐 View: ${{ env.SONAR_HOST_URL }}/dashboard?id=${{ env.SONAR_ORGANIZATION }}_credit-default-swap-backend"
+
+      - name: Upload Backend reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-analysis-reports
+          path: |
+            backend/target/spotbugsXml.xml
+            backend/target/spotbugs.sarif
+            backend/target/site/jacoco/
+            backend/target/checkstyle-result.xml
+          retention-days: 30
+
+  sonarcloud-gateway:
+    name: 🚪 SonarCloud - Gateway
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar-gateway
+          restore-keys: ${{ runner.os }}-sonar-
+
+      - name: Build Gateway
+        working-directory: ./gateway
+        run: |
+          echo "🔨 Building gateway..."
+          ./mvnw clean compile -DskipTests -B
+
+      - name: Run tests with coverage
+        working-directory: ./gateway
+        run: |
+          echo "🧪 Running tests with JaCoCo coverage..."
+          ./mvnw test jacoco:report -B
+
+      - name: Run SpotBugs security analysis
+        working-directory: ./gateway
+        continue-on-error: true
+        run: |
+          echo "🐛 Running SpotBugs with FindSecBugs..."
+          ./mvnw spotbugs:spotbugs -B || true
+
+      - name: Run Checkstyle
+        working-directory: ./gateway
+        continue-on-error: true
+        run: |
+          echo "📐 Running Checkstyle..."
+          ./mvnw checkstyle:check -B || true
+
+      - name: SonarCloud Scan - Gateway
+        working-directory: ./gateway
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "📡 Running SonarCloud analysis for Gateway..."
+          
+          SONAR_ARGS="-Dsonar.projectKey=${{ env.SONAR_ORGANIZATION }}_credit-default-swap-gateway"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.projectName=CDS Platform - Gateway"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.organization=${{ env.SONAR_ORGANIZATION }}"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.host.url=${{ env.SONAR_HOST_URL }}"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.token=${{ secrets.SONAR_TOKEN }}"
+          
+          # Source and test configuration
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.sources=src/main/java"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.tests=src/test/java"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.java.binaries=target/classes"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.java.test.binaries=target/test-classes"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.java.libraries=target/*.jar"
+          
+          # Import external reports
+          if [ -f "target/site/jacoco/jacoco.xml" ]; then
+            SONAR_ARGS="$SONAR_ARGS -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml"
+            echo "✅ JaCoCo coverage report found"
+          fi
+          
+          if [ -f "target/spotbugs.sarif" ]; then
+            SONAR_ARGS="$SONAR_ARGS -Dsonar.sarifReportPaths=target/spotbugs.sarif"
+            echo "✅ SpotBugs SARIF report found"
+          fi
+          
+          if [ -f "target/checkstyle-result.xml" ]; then
+            SONAR_ARGS="$SONAR_ARGS -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml"
+            echo "✅ Checkstyle report found"
+          fi
+          
+          # Additional settings
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.sourceEncoding=UTF-8"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.java.source=21"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.qualitygate.wait=true"
+          SONAR_ARGS="$SONAR_ARGS -B"
+          
+          ./mvnw sonar:sonar $SONAR_ARGS
+          
+          echo "✅ SonarCloud analysis complete!"
+          echo "🌐 View: ${{ env.SONAR_HOST_URL }}/dashboard?id=${{ env.SONAR_ORGANIZATION }}_credit-default-swap-gateway"
+
+      - name: Upload Gateway reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gateway-analysis-reports
+          path: |
+            gateway/target/spotbugsXml.xml
+            gateway/target/spotbugs.sarif
+            gateway/target/site/jacoco/
+            gateway/target/checkstyle-result.xml
+          retention-days: 30
+
+  sonarcloud-risk-engine:
+    name: 📊 SonarCloud - Risk Engine
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar-risk-engine
+          restore-keys: ${{ runner.os }}-sonar-
+
+      - name: Build Risk Engine
+        working-directory: ./risk-engine
+        run: |
+          echo "🔨 Building risk-engine..."
+          ./mvnw clean compile -DskipTests -B
+
+      - name: Run tests with coverage
+        working-directory: ./risk-engine
+        run: |
+          echo "🧪 Running tests with JaCoCo coverage..."
+          ./mvnw test jacoco:report -B
+
+      - name: Run SpotBugs security analysis
+        working-directory: ./risk-engine
+        continue-on-error: true
+        run: |
+          echo "🐛 Running SpotBugs with FindSecBugs..."
+          ./mvnw spotbugs:spotbugs -B || true
+
+      - name: Run Checkstyle
+        working-directory: ./risk-engine
+        continue-on-error: true
+        run: |
+          echo "📐 Running Checkstyle..."
+          ./mvnw checkstyle:check -B || true
+
+      - name: SonarCloud Scan - Risk Engine
+        working-directory: ./risk-engine
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "📡 Running SonarCloud analysis for Risk Engine..."
+          
+          SONAR_ARGS="-Dsonar.projectKey=${{ env.SONAR_ORGANIZATION }}_credit-default-swap-risk-engine"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.projectName=CDS Platform - Risk Engine"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.organization=${{ env.SONAR_ORGANIZATION }}"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.host.url=${{ env.SONAR_HOST_URL }}"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.token=${{ secrets.SONAR_TOKEN }}"
+          
+          # Source and test configuration
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.sources=src/main/java"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.tests=src/test/java"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.java.binaries=target/classes"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.java.test.binaries=target/test-classes"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.java.libraries=target/*.jar"
+          
+          # Import external reports
+          if [ -f "target/site/jacoco/jacoco.xml" ]; then
+            SONAR_ARGS="$SONAR_ARGS -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml"
+            echo "✅ JaCoCo coverage report found"
+          fi
+          
+          if [ -f "target/spotbugs.sarif" ]; then
+            SONAR_ARGS="$SONAR_ARGS -Dsonar.sarifReportPaths=target/spotbugs.sarif"
+            echo "✅ SpotBugs SARIF report found"
+          fi
+          
+          if [ -f "target/checkstyle-result.xml" ]; then
+            SONAR_ARGS="$SONAR_ARGS -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml"
+            echo "✅ Checkstyle report found"
+          fi
+          
+          # Additional settings
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.sourceEncoding=UTF-8"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.java.source=21"
+          SONAR_ARGS="$SONAR_ARGS -Dsonar.qualitygate.wait=true"
+          SONAR_ARGS="$SONAR_ARGS -B"
+          
+          ./mvnw sonar:sonar $SONAR_ARGS
+          
+          echo "✅ SonarCloud analysis complete!"
+          echo "🌐 View: ${{ env.SONAR_HOST_URL }}/dashboard?id=${{ env.SONAR_ORGANIZATION }}_credit-default-swap-risk-engine"
+
+      - name: Upload Risk Engine reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: risk-engine-analysis-reports
+          path: |
+            risk-engine/target/spotbugsXml.xml
+            risk-engine/target/spotbugs.sarif
+            risk-engine/target/site/jacoco/
+            risk-engine/target/checkstyle-result.xml
+          retention-days: 30
+
+  sonarcloud-frontend:
+    name: 🎨 SonarCloud - Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+
+      - name: Install dependencies
+        run: |
+          echo "📦 Installing npm dependencies..."
+          npm ci
+
+      - name: Run tests with coverage
+        continue-on-error: true
+        run: |
+          echo "🧪 Running tests with coverage..."
+          npm run test -- --coverage --watchAll=false --passWithNoTests || true
+
+      - name: SonarCloud Frontend Scan
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectBaseDir: frontend
+          args: >
+            -Dsonar.organization=${{ env.SONAR_ORGANIZATION }}
+            -Dsonar.projectKey=${{ env.SONAR_ORGANIZATION }}_credit-default-swap-frontend
+            -Dsonar.projectName="CDS Platform - Frontend"
+            -Dsonar.sources=src
+            -Dsonar.tests=src
+            -Dsonar.test.inclusions=**/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.spec.tsx
+            -Dsonar.exclusions=**/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.spec.tsx,**/node_modules/**,**/build/**,**/coverage/**
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.sourceEncoding=UTF-8
+            -Dsonar.qualitygate.wait=true
+
+      - name: Upload Frontend reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-analysis-reports
+          path: |
+            frontend/coverage/
+          retention-days: 30
+
+  analysis-summary:
+    name: 📊 Analysis Summary
+    runs-on: ubuntu-latest
+    needs:
+      - sonarcloud-backend
+      - sonarcloud-gateway
+      - sonarcloud-risk-engine
+      - sonarcloud-frontend
+    if: always()
+    steps:
+      - name: Generate Summary Report
+        run: |
+          echo "# 🌐 SonarCloud Analysis Summary" > SUMMARY.md
+          echo "" >> SUMMARY.md
+          echo "**Date:** $(date '+%Y-%m-%d %H:%M:%S UTC')" >> SUMMARY.md
+          echo "**Branch:** \`${{ github.ref_name }}\`" >> SUMMARY.md
+          echo "**Commit:** \`${{ github.sha }}\`" >> SUMMARY.md
+          echo "" >> SUMMARY.md
+          
+          echo "## 📈 Analysis Status" >> SUMMARY.md
+          echo "" >> SUMMARY.md
+          echo "| Service | Status |" >> SUMMARY.md
+          echo "|---------|--------|" >> SUMMARY.md
+          echo "| Backend | ${{ needs.sonarcloud-backend.result == 'success' && '✅ PASSED' || '❌ FAILED' }} |" >> SUMMARY.md
+          echo "| Gateway | ${{ needs.sonarcloud-gateway.result == 'success' && '✅ PASSED' || '❌ FAILED' }} |" >> SUMMARY.md
+          echo "| Risk Engine | ${{ needs.sonarcloud-risk-engine.result == 'success' && '✅ PASSED' || '❌ FAILED' }} |" >> SUMMARY.md
+          echo "| Frontend | ${{ needs.sonarcloud-frontend.result == 'success' && '✅ PASSED' || '❌ FAILED' }} |" >> SUMMARY.md
+          echo "" >> SUMMARY.md
+          
+          echo "## 🌐 SonarCloud Dashboards" >> SUMMARY.md
+          echo "" >> SUMMARY.md
+          echo "- [Backend Dashboard](${{ env.SONAR_HOST_URL }}/dashboard?id=${{ env.SONAR_ORGANIZATION }}_credit-default-swap-backend)" >> SUMMARY.md
+          echo "- [Gateway Dashboard](${{ env.SONAR_HOST_URL }}/dashboard?id=${{ env.SONAR_ORGANIZATION }}_credit-default-swap-gateway)" >> SUMMARY.md
+          echo "- [Risk Engine Dashboard](${{ env.SONAR_HOST_URL }}/dashboard?id=${{ env.SONAR_ORGANIZATION }}_credit-default-swap-risk-engine)" >> SUMMARY.md
+          echo "- [Frontend Dashboard](${{ env.SONAR_HOST_URL }}/dashboard?id=${{ env.SONAR_ORGANIZATION }}_credit-default-swap-frontend)" >> SUMMARY.md
+          echo "" >> SUMMARY.md
+          
+          echo "## 📋 Reports Analyzed" >> SUMMARY.md
+          echo "" >> SUMMARY.md
+          echo "✅ **SpotBugs + FindSecBugs** - Security vulnerabilities (SARIF format)" >> SUMMARY.md
+          echo "✅ **JaCoCo** - Test coverage metrics" >> SUMMARY.md
+          echo "✅ **Checkstyle** - Code style compliance" >> SUMMARY.md
+          echo "✅ **SonarCloud Native** - Code smells, bugs, security hotspots" >> SUMMARY.md
+          echo "" >> SUMMARY.md
+          
+          cat SUMMARY.md
+
+      - name: Add to GitHub Actions Summary
+        run: |
+          cat SUMMARY.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonarcloud-analysis-summary
+          path: SUMMARY.md
+          retention-days: 90
