@@ -331,18 +331,22 @@ jobs:
             --file grype-report.txt || true
 
       # ===========================================
-      # STEP 7: SonarCloud Analysis (Imports SpotBugs!)
+      # STEP 7: SonarCloud Analysis (Comprehensive)
       # ===========================================
-      - name: SonarCloud Scan (imports SpotBugs findings)
+      - name: SonarCloud Scan (native analyzers)
         working-directory: ${{ matrix.service }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "📡 Running SonarCloud analysis..."
-          echo "   ✅ Importing SpotBugs findings from target/spotbugsXml.xml"
-          echo "   ✅ Importing JaCoCo coverage from target/site/jacoco/jacoco.xml"
-          echo "   ✅ Importing Checkstyle findings from target/checkstyle-result.xml"
+          echo "📡 Running comprehensive SonarCloud analysis..."
+          echo ""
+          echo "🔍 Analysis Configuration:"
+          echo "   • Java version: 21"
+          echo "   • Coverage: JaCoCo XML (target/site/jacoco/jacoco.xml)"
+          echo "   • Quality tools: Checkstyle, PMD"
+          echo "   • Security: Native analyzers + Taint analysis + Security hotspots"
+          echo "   • Analyzers: RSPEC-5145 (CRLF), RSPEC-2245 (Random), RSPEC-2076/2077 (Injection)"
           echo ""
           
           ./mvnw sonar:sonar \
@@ -352,12 +356,16 @@ jobs:
             -Dsonar.host.url=${{ env.SONAR_HOST_URL }} \
             -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
-            -Dsonar.java.spotbugs.reportPaths=target/spotbugsXml.xml \
             -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml \
+            -Dsonar.java.pmd.reportPaths=target/pmd.xml \
             -Dsonar.java.binaries=target/classes \
+            -Dsonar.java.libraries=target/*.jar \
             -Dsonar.sources=src/main/java \
             -Dsonar.tests=src/test/java \
             -Dsonar.sourceEncoding=UTF-8 \
+            -Dsonar.java.source=21 \
+            -Dsonar.security.hotspots.enabled=true \
+            -Dsonar.security.taintAnalysis.enabled=true \
             -Dsonar.qualitygate.wait=true \
             -B
           
