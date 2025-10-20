@@ -1,0 +1,162 @@
+#!/bin/bash
+#
+# Git Pre-Commit Hook - CDS Platform Quality Gate
+#
+# This hook runs before each commit to ensure code meets security standards.
+# To install: Copy this file to .git/hooks/pre-commit and make it executable
+#   cp git-hooks/pre-commit.sample .git/hooks/pre-commit
+#   chmod +x .git/hooks/pre-commit
+#
+# To bypass (emergencies only): git commit --no-verify
+#
+
+echo ""
+echo "🔒 Running CDS Platform Quality Gate..."
+echo ""
+
+# Get list of changed Java files
+CHANGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.java$')
+
+if [ -z "$CHANGED_FILES" ]; then
+  echo "ℹ️  No Java files changed, skipping quality checks"
+  exit 0
+fi
+
+echo "📝 Changed Java files:"
+echo "$CHANGED_FILES" | sed 's/^/   /'
+echo ""
+
+# Quick pre-commit checks (faster than full SpotBugs)
+echo "🔍 Running quick security checks..."
+echo ""
+
+VIOLATIONS=0
+
+# Check 1: CRLF Injection Pattern
+echo -n "✓ Checking for CRLF injection patterns... "
+if echo "$CHANGED_FILES" | xargs grep -n 'logger\.\(info\|debug\|warn\|error\).*\+.*' 2>/dev/null | grep -v 'sanitizeForLog'; then
+  echo "❌ FAIL"
+  echo ""
+  echo "⚠️  Found potential CRLF injection:"
+  echo "$CHANGED_FILES" | xargs grep -n 'logger\.\(info\|debug\|warn\|error\).*\+.*' | grep -v 'sanitizeForLog'
+  echo ""
+  echo "💡 Fix: Use sanitizeForLog() or ensure input is safe"
+  VIOLATIONS=$((VIOLATIONS + 1))
+else
+  echo "✅"
+fi
+
+# Check 2: Predictable Random (excluding Demo classes)
+echo -n "✓ Checking for predictable random... "
+if echo "$CHANGED_FILES" | grep -v 'Demo.*Service' | xargs grep -n 'new Random()' 2>/dev/null; then
+  echo "❌ FAIL"
+  echo ""
+  echo "⚠️  Found java.util.Random in production code:"
+  echo "$CHANGED_FILES" | grep -v 'Demo.*Service' | xargs grep -n 'new Random()'
+  echo ""
+  echo "💡 Fix: Use java.security.SecureRandom instead"
+  VIOLATIONS=$((VIOLATIONS + 1))
+else
+  echo "✅"
+fi
+
+# Check 3: Unicode handling
+echo -n "✓ Checking for unicode handling... "
+if echo "$CHANGED_FILES" | xargs grep -n '\.toUpperCase()\|\.toLowerCase()' 2>/dev/null | grep -v 'Locale\.ROOT\|Locale\.ENGLISH'; then
+  echo "❌ FAIL"
+  echo ""
+  echo "⚠️  Found case conversion without Locale:"
+  echo "$CHANGED_FILES" | xargs grep -n '\.toUpperCase()\|\.toLowerCase()' | grep -v 'Locale\.ROOT\|Locale\.ENGLISH'
+  echo ""
+  echo "💡 Fix: Use .toUpperCase(Locale.ROOT) or .toLowerCase(Locale.ROOT)"
+  VIOLATIONS=$((VIOLATIONS + 1))
+else
+  echo "✅"
+fi
+
+# Check 4: Information exposure
+echo -n "✓ Checking for information exposure... "
+if echo "$CHANGED_FILES" | xargs grep -n 'printStackTrace()\|\.getMessage()' 2>/dev/null | grep -v 'logger\|log\.'; then
+  echo "⚠️  WARNING"
+  echo ""
+  echo "⚠️  Found potential information exposure:"
+  echo "$CHANGED_FILES" | xargs grep -n 'printStackTrace()\|\.getMessage()' | grep -v 'logger\|log\.'
+  echo ""
+  echo "💡 Review: Ensure stack traces are not exposed to clients"
+else
+  echo "✅"
+fi
+
+# Check 5: Hardcoded secrets
+echo -n "✓ Checking for hardcoded secrets... "
+if echo "$CHANGED_FILES" | xargs grep -n -i 'password.*=.*"\|secret.*=.*"\|apikey.*=.*"' 2>/dev/null | grep -v 'sanitizeForLog\|//'; then
+  echo "❌ FAIL"
+  echo ""
+  echo "🚨 CRITICAL: Found potential hardcoded secrets:"
+  echo "$CHANGED_FILES" | xargs grep -n -i 'password.*=.*"\|secret.*=.*"\|apikey.*=.*"' | grep -v 'sanitizeForLog\|//'
+  echo ""
+  echo "💡 Fix: Use environment variables or configuration files"
+  VIOLATIONS=$((VIOLATIONS + 1))
+else
+  echo "✅"
+fi
+
+# Check 6: SQL injection patterns
+echo -n "✓ Checking for SQL injection patterns... "
+if echo "$CHANGED_FILES" | xargs grep -n 'createNativeQuery.*+\|createQuery.*+' 2>/dev/null; then
+  echo "❌ FAIL"
+  echo ""
+  echo "⚠️  Found potential SQL injection:"
+  echo "$CHANGED_FILES" | xargs grep -n 'createNativeQuery.*+\|createQuery.*+'
+  echo ""
+  echo "💡 Fix: Use parameterized queries instead of string concatenation"
+  VIOLATIONS=$((VIOLATIONS + 1))
+else
+  echo "✅"
+fi
+
+# Check 7: Missing input validation
+echo -n "✓ Checking for input validation... "
+if echo "$CHANGED_FILES" | xargs grep -l '@PostMapping\|@PutMapping' 2>/dev/null | xargs grep -L '@Valid'; then
+  echo "⚠️  WARNING"
+  echo ""
+  echo "⚠️  Controllers with POST/PUT but possibly missing @Valid:"
+  echo "$CHANGED_FILES" | xargs grep -l '@PostMapping\|@PutMapping' | xargs grep -L '@Valid'
+  echo ""
+  echo "💡 Review: Ensure @Valid is used on @RequestBody parameters"
+else
+  echo "✅"
+fi
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Note: We don't check for missing @PreAuthorize as authorization strategy varies by endpoint type:
+# - Public endpoints (health checks) don't need @PreAuthorize
+# - Internal service APIs use service token validation
+# - User-facing APIs should have @PreAuthorize
+# Security review should verify appropriate authorization per endpoint
+
+if [ "$VIOLATIONS" -gt 0 ]; then
+  echo "❌ PRE-COMMIT CHECK FAILED"
+  echo ""
+  echo "   Critical Violations: $VIOLATIONS"
+  echo ""
+  echo "📋 Action Required:"
+  echo "   1. Fix the violations listed above"
+  echo "   2. Review AGENTS.md for security standards"
+  echo "   3. Review .github/CODE_QUALITY_RULES.md for detailed rules"
+  echo ""
+  echo "💡 To run full quality gate: ./quality-gate-check.sh"
+  echo ""
+  echo "⚠️  To bypass (emergencies only): git commit --no-verify"
+  echo ""
+  exit 1
+else
+  echo "✅ PRE-COMMIT CHECKS PASSED"
+  echo ""
+  echo "💡 Consider running full quality gate before pushing:"
+  echo "   ./quality-gate-check.sh"
+  echo ""
+  exit 0
+fi

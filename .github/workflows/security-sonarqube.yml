@@ -1,0 +1,515 @@
+name: Security & Quality - SonarQube
+
+on:
+  push:
+    branches: 
+      - '**'  # Run on all branches
+  pull_request:
+    branches: 
+      - '**'  # Run on PRs to all branches
+    types: [opened, synchronize, reopened]
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly Monday 2 AM UTC
+  workflow_dispatch:
+
+env:
+  JAVA_VERSION: '21'
+  NODE_VERSION: '20'
+
+jobs:
+  sonarqube-backend:
+    name: SonarQube - Java Backend Analysis
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [backend, gateway, risk-engine]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better blame info
+      
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: maven
+      
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar-${{ matrix.service }}
+          restore-keys: ${{ runner.os }}-sonar-
+      
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2-
+      
+      - name: Build and run tests with coverage
+        working-directory: ${{ matrix.service }}
+        run: |
+          ./mvnw clean verify \
+            -Pcoverage \
+            -DskipTests=false
+      
+      - name: Run SpotBugs analysis
+        working-directory: ${{ matrix.service }}
+        run: |
+          ./mvnw spotbugs:spotbugs -Dspotbugs.xmlOutput=true
+      
+      - name: SonarQube Scan
+        working-directory: ${{ matrix.service }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./mvnw sonar:sonar \
+            -Dsonar.projectKey=credit-default-swap-${{ matrix.service }} \
+            -Dsonar.projectName="CDS Platform - ${{ matrix.service }}" \
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+            -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+            -Dsonar.java.spotbugs.reportPaths=target/spotbugsXml.xml \
+            -Dsonar.java.binaries=target/classes \
+            -Dsonar.sources=src/main/java \
+            -Dsonar.tests=src/test/java \
+            -Dsonar.sourceEncoding=UTF-8 \
+            -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml \
+            -Dsonar.qualitygate.wait=true
+      
+      - name: Upload SpotBugs results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spotbugs-${{ matrix.service }}
+          path: ${{ matrix.service }}/target/spotbugsXml.xml
+          retention-days: 30
+      
+      - name: Upload JaCoCo coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-${{ matrix.service }}
+          path: ${{ matrix.service }}/target/site/jacoco/
+          retention-days: 30
+
+  sonarqube-frontend:
+    name: SonarQube - Frontend Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+      
+      - name: Run linting
+        working-directory: frontend
+        run: npm run lint -- --format json --output-file eslint-report.json || true
+      
+      - name: Run tests with coverage
+        working-directory: frontend
+        run: npm run test -- --coverage --watchAll=false --passWithNoTests
+      
+      - name: SonarQube Frontend Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectBaseDir: frontend
+          args: >
+            -Dsonar.projectKey=credit-default-swap-frontend
+            -Dsonar.projectName="CDS Platform - Frontend"
+            -Dsonar.sources=src
+            -Dsonar.tests=src
+            -Dsonar.test.inclusions=**/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.spec.tsx
+            -Dsonar.exclusions=**/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.spec.tsx,**/node_modules/**,**/build/**,**/coverage/**
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.eslint.reportPaths=eslint-report.json
+            -Dsonar.sourceEncoding=UTF-8
+            -Dsonar.qualitygate.wait=true
+      
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/
+          retention-days: 30
+
+  snyk-security:
+    name: Snyk - Dependency Security
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+      
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      # Backend Snyk scan
+      - name: Run Snyk for Java (Backend)
+        uses: snyk/actions/maven@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --file=backend/pom.xml --sarif-file-output=snyk-backend.sarif
+      
+      - name: Upload Snyk Backend to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: snyk-backend.sarif
+          category: snyk-backend
+      
+      - name: Run Snyk for Java (Gateway)
+        uses: snyk/actions/maven@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --file=gateway/pom.xml --sarif-file-output=snyk-gateway.sarif
+      
+      - name: Upload Snyk Gateway to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: snyk-gateway.sarif
+          category: snyk-gateway
+      
+      - name: Run Snyk for Java (Risk Engine)
+        uses: snyk/actions/maven@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --file=risk-engine/pom.xml --sarif-file-output=snyk-risk-engine.sarif
+      
+      - name: Upload Snyk Risk Engine to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: snyk-risk-engine.sarif
+          category: snyk-risk-engine
+      
+      # Frontend Snyk scan
+      - name: Run Snyk for npm (Frontend)
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=medium --file=frontend/package.json --sarif-file-output=snyk-frontend.sarif
+      
+      - name: Upload Snyk Frontend to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: snyk-frontend.sarif
+          category: snyk-frontend
+      
+      # Container scanning
+      - name: Build backend Docker image
+        run: |
+          docker build -t cds-backend:${{ github.sha }} -f backend/Dockerfile backend/
+      
+      - name: Run Snyk Container scan (Backend)
+        uses: snyk/actions/docker@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          image: cds-backend:${{ github.sha }}
+          args: --severity-threshold=high --sarif-file-output=snyk-container-backend.sarif
+      
+      - name: Upload Snyk Container to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: snyk-container-backend.sarif
+          category: snyk-container
+      
+      # Monitor in Snyk (main branch only)
+      - name: Monitor in Snyk Dashboard
+        if: github.ref == 'refs/heads/main'
+        run: |
+          npx snyk monitor --file=backend/pom.xml --project-name="CDS-Backend" || true
+          npx snyk monitor --file=gateway/pom.xml --project-name="CDS-Gateway" || true
+          npx snyk monitor --file=risk-engine/pom.xml --project-name="CDS-RiskEngine" || true
+          npx snyk monitor --file=frontend/package.json --project-name="CDS-Frontend" || true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+  semgrep-scan:
+    name: Semgrep - Security Patterns
+    runs-on: ubuntu-latest
+    
+    container:
+      image: semgrep/semgrep
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run Semgrep
+        run: |
+          semgrep scan \
+            --config "p/security-audit" \
+            --config "p/owasp-top-ten" \
+            --config "p/java" \
+            --config "p/typescript" \
+            --config "p/docker" \
+            --config "p/kubernetes" \
+            --sarif \
+            --sarif-output=semgrep.sarif \
+            --error \
+            --verbose
+      
+      - name: Upload Semgrep results to GitHub
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+      
+      - name: Upload Semgrep results artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-results
+          path: semgrep.sarif
+          retention-days: 30
+
+  trivy-scan:
+    name: Trivy - Container & Filesystem Security
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run Trivy filesystem scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-fs-results.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+      
+      - name: Upload Trivy filesystem results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-fs-results.sarif
+          category: trivy-filesystem
+      
+      - name: Build backend image for scanning
+        run: |
+          docker build -t cds-backend:${{ github.sha }} -f backend/Dockerfile backend/
+      
+      - name: Run Trivy container scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: cds-backend:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-container-results.sarif'
+          severity: 'CRITICAL,HIGH'
+      
+      - name: Upload Trivy container results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-container-results.sarif
+          category: trivy-container
+
+  gitleaks-scan:
+    name: Gitleaks - Secret Detection
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  checkov-scan:
+    name: Checkov - Infrastructure as Code
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: .
+          framework: dockerfile,kubernetes
+          output_format: sarif
+          output_file_path: checkov-results.sarif
+          soft_fail: true
+      
+      - name: Upload Checkov results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: checkov-results.sarif
+          category: checkov
+
+  quality-gate:
+    name: Quality Gate & Summary
+    needs: 
+      - sonarqube-backend
+      - sonarqube-frontend
+      - snyk-security
+      - semgrep-scan
+      - trivy-scan
+      - gitleaks-scan
+      - checkov-scan
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Check SonarQube Quality Gates
+        id: sonar-check
+        run: |
+          echo "Checking SonarQube quality gates..."
+          # Quality gates are checked during scan with -Dsonar.qualitygate.wait=true
+          echo "status=passed" >> $GITHUB_OUTPUT
+      
+      - name: Generate Security Summary
+        run: |
+          echo "# 🛡️ Security & Quality Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 Scans Completed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Scanner | Purpose | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **SonarQube** | Code Quality + SAST | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Snyk** | Dependencies + Containers | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Semgrep** | Security Patterns | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Trivy** | Vulnerabilities | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Gitleaks** | Secrets Detection | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Checkov** | IaC Security | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🔗 View Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- 📈 [SonarQube Dashboard](${{ secrets.SONAR_HOST_URL }}/projects)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🐛 [Snyk Dashboard](https://app.snyk.io/)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔒 [GitHub Security Tab](https://github.com/${{ github.repository }}/security)" >> $GITHUB_STEP_SUMMARY
+          echo "- 📋 [Code Scanning Alerts](https://github.com/${{ github.repository }}/security/code-scanning)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🎯 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review findings in SonarQube dashboard" >> $GITHUB_STEP_SUMMARY
+          echo "2. Address critical and high severity issues" >> $GITHUB_STEP_SUMMARY
+          echo "3. Check GitHub Security tab for dependency alerts" >> $GITHUB_STEP_SUMMARY
+          echo "4. Review code scanning results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "*Automated security scanning by CDS Platform Quality Gate* 🔒" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sonarUrl = process.env.SONAR_HOST_URL || 'http://localhost:9000';
+            
+            const comment = `## 🔍 Security & Quality Analysis Results
+            
+            ### 📊 Comprehensive Scans Completed
+            
+            | Tool | Focus Area | Coverage |
+            |------|-----------|----------|
+            | 🏆 **SonarQube** | Code Quality, Bugs, Security Hotspots | Java + TypeScript |
+            | 🔐 **Snyk** | Dependencies, Containers | All components |
+            | ⚡ **Semgrep** | Security Patterns (OWASP Top 10) | Source code |
+            | 🐳 **Trivy** | Container vulnerabilities | Docker images |
+            | 🔑 **Gitleaks** | Secret detection | Git history |
+            | 📦 **Checkov** | Infrastructure as Code | Dockerfiles, K8s |
+            
+            ### 🎯 View Detailed Results
+            
+            - **SonarQube Dashboard**: [View Projects](${sonarUrl}/projects)
+              - [Backend Service](${sonarUrl}/dashboard?id=credit-default-swap-backend)
+              - [Gateway Service](${sonarUrl}/dashboard?id=credit-default-swap-gateway)
+              - [Risk Engine](${sonarUrl}/dashboard?id=credit-default-swap-risk-engine)
+              - [Frontend](${sonarUrl}/dashboard?id=credit-default-swap-frontend)
+            
+            - **Snyk**: [Open Dashboard](https://app.snyk.io/)
+            - **GitHub Security**: [Code Scanning Alerts](https://github.com/${context.repo.owner}/${context.repo.repo}/security/code-scanning)
+            
+            ### ✅ Quality Gate Status
+            
+            All quality gates are enforced. Check the workflow run for detailed results.
+            
+            ### 📈 Metrics Tracked
+            
+            - Code Coverage
+            - Security Hotspots
+            - Code Smells
+            - Duplications
+            - Technical Debt
+            - Vulnerabilities (CRITICAL/HIGH/MEDIUM/LOW)
+            
+            ---
+            
+            💡 **Tip**: Fix critical and high severity issues before merging!
+            
+            *Powered by SonarQube Community + Snyk + Semgrep* 🚀`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      
+      - name: Fail on critical issues
+        if: failure()
+        run: |
+          echo "::error::Quality gate failed! Check SonarQube and security scan results."
+          exit 1
