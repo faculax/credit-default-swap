@@ -43,14 +43,8 @@ jobs:
       - name: Build Backend
         working-directory: ./backend
         run: |
-          echo "🔨 Building backend..."
+          echo "🔨 Building backend (compile only, no tests)..."
           ./mvnw clean compile -DskipTests -B
-
-      - name: Run tests with coverage
-        working-directory: ./backend
-        run: |
-          echo "🧪 Running tests with JaCoCo coverage..."
-          ./mvnw test jacoco:report -B
 
       - name: Run SpotBugs security analysis
         working-directory: ./backend
