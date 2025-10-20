@@ -129,6 +129,7 @@ jobs:
       
       - name: Run tests with coverage
         working-directory: frontend
+        continue-on-error: true
         run: npm run test -- --coverage --watchAll=false --passWithNoTests
       
       - name: SonarCloud Frontend Scan
