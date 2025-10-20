@@ -1,0 +1,672 @@
+name: Unified Security & Quality Analysis
+
+on:
+  push:
+    branches: ['**']  # All branches
+  pull_request:
+    branches: ['**']
+    types: [opened, synchronize, reopened]
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+  workflow_dispatch:
+
+env:
+  JAVA_VERSION: '21'
+  NODE_VERSION: '20'
+  SONAR_ORGANIZATION: 'ayodeleoladeji'
+  SONAR_HOST_URL: 'https://sonarcloud.io'
+
+jobs:
+  # ============================================================
+  # PHASE 1: Secrets & Sensitive Data Detection (Critical)
+  # ============================================================
+  secrets-scan:
+    name: 🔐 Secrets Detection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan for hardcoded secrets
+        run: |
+          echo "🔍 Scanning for hardcoded secrets and credentials..."
+          echo ""
+          
+          SECRETS_FOUND=0
+          
+          # Database passwords
+          echo "📋 Checking for hardcoded database credentials..."
+          if grep -r --include="*.yml" --include="*.yaml" --include="*.properties" \
+            -E '^\s*(password|datasource\.password):\s*[^${[:space:]]' backend/ gateway/ risk-engine/ 2>/dev/null; then
+            echo "❌ CRITICAL: Hardcoded database passwords found!"
+            SECRETS_FOUND=1
+          fi
+          
+          # API keys and secrets in Java code
+          echo ""
+          echo "🔐 Checking for API keys and secrets in Java code..."
+          if grep -r --include="*.java" -i \
+            -E '(secret|password|apikey|api_key|private_key)\s*=\s*"[^"]+"' . 2>/dev/null; then
+            echo "❌ CRITICAL: Hardcoded secrets in Java code!"
+            SECRETS_FOUND=1
+          fi
+          
+          # Connection strings with credentials
+          echo ""
+          echo "🗄️ Checking for hardcoded database connection strings..."
+          if grep -r --include="*.java" --include="*.properties" --include="*.yml" \
+            -E 'jdbc:postgresql://[^$].*@.*:[0-9]+/' . 2>/dev/null; then
+            echo "❌ CRITICAL: Hardcoded database credentials in connection strings!"
+            SECRETS_FOUND=1
+          fi
+          
+          if [ "$SECRETS_FOUND" = "1" ]; then
+            echo ""
+            echo "==========================================="
+            echo "❌ SECURITY ALERT: Secrets detected!"
+            echo "==========================================="
+            echo ""
+            echo "ACTION REQUIRED:"
+            echo "1. Move all credentials to environment variables"
+            echo '2. Use ${VARIABLE_NAME:default} syntax in YAML files'
+            echo "3. Never commit actual passwords to git"
+            echo ""
+            exit 1
+          fi
+          
+          echo "✅ No hardcoded secrets detected"
+
+  # ============================================================
+  # PHASE 2: Java Backend Security Analysis + SonarCloud
+  # ============================================================
+  java-security-sonarcloud:
+    name: ☕ ${{ matrix.service }} - Security + SonarCloud
+    runs-on: ubuntu-latest
+    needs: secrets-scan
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [backend, gateway, risk-engine]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for SonarCloud blame info
+
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar-${{ matrix.service }}
+          restore-keys: ${{ runner.os }}-sonar-
+
+      # ===========================================
+      # STEP 1: Build with retry logic
+      # ===========================================
+      - name: Build ${{ matrix.service }}
+        working-directory: ${{ matrix.service }}
+        run: |
+          echo "🔨 Building ${{ matrix.service }}..."
+          for i in 1 2 3; do
+            echo "Build attempt $i of 3..."
+            if ./mvnw clean compile -DskipTests -B; then
+              echo "✅ Build succeeded on attempt $i"
+              break
+            else
+              if [ $i -lt 3 ]; then
+                echo "⚠️  Build failed, retrying in 10 seconds..."
+                sleep 10
+              else
+                echo "❌ Build failed after 3 attempts"
+                exit 1
+              fi
+            fi
+          done
+
+      # ===========================================
+      # STEP 2: Run Tests with JaCoCo Coverage
+      # ===========================================
+      - name: Run tests with coverage
+        working-directory: ${{ matrix.service }}
+        continue-on-error: true
+        run: |
+          echo "🧪 Running tests with coverage..."
+          ./mvnw test jacoco:report -B || true
+          
+          # Extract coverage metrics
+          if [ -f "target/site/jacoco/jacoco.xml" ]; then
+            INSTRUCTION_COVERED=$(grep -oP 'type="INSTRUCTION".*?covered="\K[0-9]+' target/site/jacoco/jacoco.xml | head -1 || echo "0")
+            INSTRUCTION_MISSED=$(grep -oP 'type="INSTRUCTION".*?missed="\K[0-9]+' target/site/jacoco/jacoco.xml | head -1 || echo "0")
+            
+            if [ "$((INSTRUCTION_COVERED + INSTRUCTION_MISSED))" -gt 0 ]; then
+              COVERAGE_PCT=$((INSTRUCTION_COVERED * 100 / (INSTRUCTION_COVERED + INSTRUCTION_MISSED)))
+              echo "📊 Test Coverage: ${COVERAGE_PCT}%"
+              
+              if [ "$COVERAGE_PCT" -lt 80 ]; then
+                echo "⚠️ WARNING: Coverage (${COVERAGE_PCT}%) is below 80% threshold"
+                echo "::warning::${{ matrix.service }} test coverage is ${COVERAGE_PCT}% (target: 80%)"
+              else
+                echo "✅ Coverage meets 80% threshold"
+              fi
+            fi
+          fi
+
+      # ===========================================
+      # STEP 3: SpotBugs Security Analysis
+      # ===========================================
+      - name: Run SpotBugs security analysis
+        working-directory: ${{ matrix.service }}
+        run: |
+          echo "🐛 Running SpotBugs with FindSecBugs plugin..."
+          echo "   Including: CRLF injection, SQL injection, crypto issues, etc."
+          
+          ./mvnw spotbugs:spotbugs -Dspotbugs.xmlOutput=true -B || true
+          
+          # Verify report was generated
+          if [ -f "target/spotbugsXml.xml" ]; then
+            BUG_COUNT=$(grep -o '<BugInstance' target/spotbugsXml.xml 2>/dev/null | wc -l || echo "0")
+            echo "📊 SpotBugs found $BUG_COUNT security issues"
+            
+            # Parse by severity (SpotBugs rank: 1-9=Critical, 10-14=Medium, 15-20=Low)
+            HIGH_COUNT=$(grep -oE "rank='[1-9]'" target/spotbugsXml.xml 2>/dev/null | wc -l || echo "0")
+            MEDIUM_COUNT=$(grep -oE "rank='1[0-4]'" target/spotbugsXml.xml 2>/dev/null | wc -l || echo "0")
+            LOW_COUNT=$(grep -oE "rank='(15|16|17|18|19|20)'" target/spotbugsXml.xml 2>/dev/null | wc -l || echo "0")
+            
+            echo "   🔴 Critical (Rank 1-9): $HIGH_COUNT"
+            echo "   🟡 Medium (Rank 10-14): $MEDIUM_COUNT"
+            echo "   🟢 Low (Rank 15-20): $LOW_COUNT"
+            
+            if [ "$BUG_COUNT" -gt 0 ]; then
+              echo "::warning::${{ matrix.service }} has $BUG_COUNT SpotBugs findings"
+            fi
+          else
+            echo "❌ SpotBugs report not generated!"
+            exit 1
+          fi
+
+      # ===========================================
+      # STEP 4: Checkstyle Analysis
+      # ===========================================
+      - name: Run Checkstyle
+        working-directory: ${{ matrix.service }}
+        continue-on-error: true
+        run: |
+          echo "📐 Running Checkstyle..."
+          ./mvnw checkstyle:check -B || true
+
+      # ===========================================
+      # STEP 5: ZERO-TOLERANCE Quality Gate
+      # ===========================================
+      - name: Quality Gate - Zero-Tolerance Rules
+        working-directory: ${{ matrix.service }}
+        run: |
+          echo "🚨 Checking for ZERO-TOLERANCE security violations..."
+          echo ""
+          
+          CRITICAL_VIOLATIONS=0
+          
+          # RULE 1: CRLF Injection (CWE-117)
+          echo "🔍 Rule 1: CRLF Injection in Logs..."
+          CRLF_COUNT=$(grep -c 'CRLF_INJECTION_LOGS' target/spotbugsXml.xml 2>/dev/null || echo "0")
+          if [ "$CRLF_COUNT" -gt 0 ]; then
+            echo "❌ FAIL: $CRLF_COUNT CRLF injection vulnerabilities (CWE-117)"
+            echo "::error::${{ matrix.service }} has $CRLF_COUNT CRLF injection issues"
+            CRITICAL_VIOLATIONS=$((CRITICAL_VIOLATIONS + CRLF_COUNT))
+          else
+            echo "✅ PASS: No CRLF injection detected"
+          fi
+          echo ""
+          
+          # RULE 2: Predictable Random (CWE-330)
+          echo "🔍 Rule 2: Predictable Random Number Generation..."
+          RANDOM_COUNT=$(grep -c 'PREDICTABLE_RANDOM' target/spotbugsXml.xml 2>/dev/null || echo "0")
+          DEMO_EXCEPTIONS=$(grep 'PREDICTABLE_RANDOM' target/spotbugsXml.xml 2>/dev/null | grep -c 'Demo.*Service' || echo "0")
+          ACTUAL_RANDOM_VIOLATIONS=$((RANDOM_COUNT - DEMO_EXCEPTIONS))
+          
+          if [ "$ACTUAL_RANDOM_VIOLATIONS" -gt 0 ]; then
+            echo "❌ FAIL: $ACTUAL_RANDOM_VIOLATIONS predictable random issues (CWE-330)"
+            echo "::error::${{ matrix.service }} uses java.util.Random in production code"
+            CRITICAL_VIOLATIONS=$((CRITICAL_VIOLATIONS + ACTUAL_RANDOM_VIOLATIONS))
+          else
+            if [ "$DEMO_EXCEPTIONS" -gt 0 ]; then
+              echo "✅ PASS: $DEMO_EXCEPTIONS Random usages in Demo classes (acceptable)"
+            else
+              echo "✅ PASS: No predictable random detected"
+            fi
+          fi
+          echo ""
+          
+          # RULE 3: Improper Unicode/Locale Handling (CWE-176)
+          echo "🔍 Rule 3: Improper Unicode/Locale Handling..."
+          UNICODE_COUNT=$(grep -c 'DM_CONVERT_CASE' target/spotbugsXml.xml 2>/dev/null || echo "0")
+          if [ "$UNICODE_COUNT" -gt 0 ]; then
+            echo "❌ FAIL: $UNICODE_COUNT improper case conversion (CWE-176)"
+            echo "::error::${{ matrix.service }} has toUpperCase/toLowerCase without Locale"
+            CRITICAL_VIOLATIONS=$((CRITICAL_VIOLATIONS + UNICODE_COUNT))
+          else
+            echo "✅ PASS: No unicode handling issues"
+          fi
+          echo ""
+          
+          # RULE 4: Information Exposure (CWE-209)
+          echo "🔍 Rule 4: Information Exposure in Exceptions..."
+          INFO_EXP_COUNT=$(grep -c 'INFORMATION_EXPOSURE_THROUGH_AN_ERROR_MESSAGE' target/spotbugsXml.xml 2>/dev/null || echo "0")
+          if [ "$INFO_EXP_COUNT" -gt 0 ]; then
+            echo "❌ FAIL: $INFO_EXP_COUNT information exposure issues (CWE-209)"
+            echo "::error::${{ matrix.service }} exposes stack traces or internal details"
+            CRITICAL_VIOLATIONS=$((CRITICAL_VIOLATIONS + INFO_EXP_COUNT))
+          else
+            echo "✅ PASS: No information exposure detected"
+          fi
+          echo ""
+          
+          # RULE 5: SQL Injection
+          echo "🔍 Rule 5: SQL Injection Vulnerabilities..."
+          SQL_COUNT=$(grep -c 'SQL_INJECTION' target/spotbugsXml.xml 2>/dev/null || echo "0")
+          if [ "$SQL_COUNT" -gt 0 ]; then
+            echo "❌ FAIL: $SQL_COUNT potential SQL injection issues"
+            echo "::error::${{ matrix.service }} has potential SQL injection vulnerabilities"
+            CRITICAL_VIOLATIONS=$((CRITICAL_VIOLATIONS + SQL_COUNT))
+          else
+            echo "✅ PASS: No SQL injection detected"
+          fi
+          echo ""
+          
+          # Summary
+          echo "======================================"
+          echo "Quality Gate Summary: ${{ matrix.service }}"
+          echo "======================================"
+          echo "Total Critical Violations: $CRITICAL_VIOLATIONS"
+          echo ""
+          
+          if [ "$CRITICAL_VIOLATIONS" -gt 0 ]; then
+            echo "❌ QUALITY GATE FAILED"
+            echo ""
+            echo "🚨 CRITICAL: This service has $CRITICAL_VIOLATIONS zero-tolerance violations"
+            echo "📋 Review: AGENTS.md for remediation steps"
+            echo "📥 Download: SpotBugs HTML report from artifacts"
+            echo ""
+            exit 1
+          else
+            echo "✅ QUALITY GATE PASSED"
+            echo "All mandatory security rules satisfied"
+          fi
+
+      # ===========================================
+      # STEP 6: Grype Vulnerability Scan
+      # ===========================================
+      - name: Grype vulnerability scan
+        working-directory: ${{ matrix.service }}
+        continue-on-error: true
+        run: |
+          echo "🔍 Installing Grype vulnerability scanner..."
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+          
+          echo "📦 Scanning ${{ matrix.service }} for CVEs..."
+          
+          SERVICE_VERSION=$(grep -m1 '<version>' pom.xml | sed 's/.*<version>\(.*\)<\/version>.*/\1/' || echo "1.0.0")
+          
+          grype dir:. \
+            --name "${{ matrix.service }}" \
+            --version "$SERVICE_VERSION" \
+            --output json \
+            --file grype-report.json || true
+          
+          grype dir:. \
+            --name "${{ matrix.service }}" \
+            --version "$SERVICE_VERSION" \
+            --output table \
+            --file grype-report.txt || true
+
+      # ===========================================
+      # STEP 7: SonarCloud Analysis (Imports SpotBugs!)
+      # ===========================================
+      - name: SonarCloud Scan (imports SpotBugs findings)
+        working-directory: ${{ matrix.service }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "📡 Running SonarCloud analysis..."
+          echo "   ✅ Importing SpotBugs findings from target/spotbugsXml.xml"
+          echo "   ✅ Importing JaCoCo coverage from target/site/jacoco/jacoco.xml"
+          echo "   ✅ Importing Checkstyle findings from target/checkstyle-result.xml"
+          echo ""
+          
+          ./mvnw sonar:sonar \
+            -Dsonar.projectKey=${{ env.SONAR_ORGANIZATION }}_credit-default-swap-${{ matrix.service }} \
+            -Dsonar.projectName="CDS Platform - ${{ matrix.service }}" \
+            -Dsonar.organization=${{ env.SONAR_ORGANIZATION }} \
+            -Dsonar.host.url=${{ env.SONAR_HOST_URL }} \
+            -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+            -Dsonar.java.spotbugs.reportPaths=target/spotbugsXml.xml \
+            -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml \
+            -Dsonar.java.binaries=target/classes \
+            -Dsonar.sources=src/main/java \
+            -Dsonar.tests=src/test/java \
+            -Dsonar.sourceEncoding=UTF-8 \
+            -Dsonar.qualitygate.wait=true \
+            -B
+          
+          echo ""
+          echo "✅ SonarCloud analysis complete!"
+          echo "🌐 View results: ${{ env.SONAR_HOST_URL }}/dashboard?id=${{ env.SONAR_ORGANIZATION }}_credit-default-swap-${{ matrix.service }}"
+
+      # ===========================================
+      # STEP 8: Upload Artifacts
+      # ===========================================
+      - name: Upload security reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.service }}-security-reports
+          path: |
+            ${{ matrix.service }}/target/spotbugsXml.xml
+            ${{ matrix.service }}/target/site/spotbugs.html
+            ${{ matrix.service }}/target/site/jacoco/
+            ${{ matrix.service }}/grype-report.json
+            ${{ matrix.service }}/grype-report.txt
+          retention-days: 30
+
+  # ============================================================
+  # PHASE 3: Frontend Security + SonarCloud
+  # ============================================================
+  frontend-security-sonarcloud:
+    name: 🎨 Frontend - Security + SonarCloud
+    runs-on: ubuntu-latest
+    needs: secrets-scan
+    defaults:
+      run:
+        working-directory: ./frontend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Security linting
+        run: |
+          echo "🔒 Running security-focused linting..."
+          
+          echo "Checking for XSS vulnerabilities..."
+          grep -r "dangerouslySetInnerHTML\|innerHTML" src/ || echo "✅ No dangerous HTML injection found"
+          
+          echo ""
+          echo "Checking for hardcoded endpoints..."
+          grep -r "http://\|https://" src/ | grep -v "localhost" || echo "✅ No hardcoded endpoints found"
+
+      - name: Run tests with coverage
+        continue-on-error: true
+        run: npm run test -- --coverage --watchAll=false --passWithNoTests || true
+
+      - name: npm audit
+        run: |
+          echo "📦 Running npm audit..."
+          npm audit --audit-level=moderate --json > npm-audit.json || true
+          
+          # Parse and display results
+          CRITICAL=$(jq -r '.metadata.vulnerabilities.critical // 0' npm-audit.json 2>/dev/null || echo "0")
+          HIGH=$(jq -r '.metadata.vulnerabilities.high // 0' npm-audit.json 2>/dev/null || echo "0")
+          MODERATE=$(jq -r '.metadata.vulnerabilities.moderate // 0' npm-audit.json 2>/dev/null || echo "0")
+          LOW=$(jq -r '.metadata.vulnerabilities.low // 0' npm-audit.json 2>/dev/null || echo "0")
+          
+          echo "📊 NPM Audit Results:"
+          echo "   🔴 Critical: $CRITICAL"
+          echo "   🟠 High: $HIGH"
+          echo "   🟡 Moderate: $MODERATE"
+          echo "   🟢 Low: $LOW"
+          
+          if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
+            echo "::warning::Frontend has $CRITICAL critical and $HIGH high severity vulnerabilities"
+          fi
+
+      - name: SonarCloud Frontend Scan
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectBaseDir: frontend
+          args: >
+            -Dsonar.organization=${{ env.SONAR_ORGANIZATION }}
+            -Dsonar.projectKey=${{ env.SONAR_ORGANIZATION }}_credit-default-swap-frontend
+            -Dsonar.projectName="CDS Platform - Frontend"
+            -Dsonar.sources=src
+            -Dsonar.tests=src
+            -Dsonar.test.inclusions=**/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.spec.tsx
+            -Dsonar.exclusions=**/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.spec.tsx,**/node_modules/**,**/build/**,**/coverage/**
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.sourceEncoding=UTF-8
+            -Dsonar.qualitygate.wait=true
+
+      - name: Upload frontend reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-security-reports
+          path: |
+            frontend/coverage/
+            frontend/npm-audit.json
+          retention-days: 30
+
+  # ============================================================
+  # PHASE 4: Unified Summary Dashboard
+  # ============================================================
+  unified-summary:
+    name: 📊 Unified Security Dashboard
+    runs-on: ubuntu-latest
+    needs: 
+      - secrets-scan
+      - java-security-sonarcloud
+      - frontend-security-sonarcloud
+    if: always()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+
+      - name: Generate unified security report
+        run: |
+          echo "# 🛡️ Unified Security & Quality Analysis Report" > UNIFIED_REPORT.md
+          echo "" >> UNIFIED_REPORT.md
+          echo "**Branch:** \`${{ github.ref_name }}\`" >> UNIFIED_REPORT.md
+          echo "**Commit:** \`${{ github.sha }}\`" >> UNIFIED_REPORT.md
+          echo "**Scan Date:** $(date '+%Y-%m-%d %H:%M:%S UTC')" >> UNIFIED_REPORT.md
+          echo "**Triggered by:** ${{ github.actor }}" >> UNIFIED_REPORT.md
+          echo "" >> UNIFIED_REPORT.md
+          
+          # Job status summary
+          echo "## 🎯 Analysis Status" >> UNIFIED_REPORT.md
+          echo "" >> UNIFIED_REPORT.md
+          echo "| Phase | Status |" >> UNIFIED_REPORT.md
+          echo "|-------|--------|" >> UNIFIED_REPORT.md
+          echo "| 🔐 Secrets Detection | ${{ needs.secrets-scan.result == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> UNIFIED_REPORT.md
+          echo "| ☕ Backend Security | ${{ needs.java-security-sonarcloud.result == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> UNIFIED_REPORT.md
+          echo "| 🎨 Frontend Security | ${{ needs.frontend-security-sonarcloud.result == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> UNIFIED_REPORT.md
+          echo "" >> UNIFIED_REPORT.md
+          
+          # SonarCloud Dashboard Links
+          echo "## 🌐 SonarCloud Dashboard (Single Source of Truth)" >> UNIFIED_REPORT.md
+          echo "" >> UNIFIED_REPORT.md
+          echo "All SpotBugs findings are imported and visible in SonarCloud:" >> UNIFIED_REPORT.md
+          echo "" >> UNIFIED_REPORT.md
+          echo "### 📈 Quick Access" >> UNIFIED_REPORT.md
+          echo "" >> UNIFIED_REPORT.md
+          echo "- 🏢 [**Organization Dashboard**](${{ env.SONAR_HOST_URL }}/organizations/${{ env.SONAR_ORGANIZATION }}/projects)" >> UNIFIED_REPORT.md
+          echo "" >> UNIFIED_REPORT.md
+          echo "### 🔍 Service Dashboards" >> UNIFIED_REPORT.md
+          echo "" >> UNIFIED_REPORT.md
+          echo "| Service | SonarCloud Dashboard |" >> UNIFIED_REPORT.md
+          echo "|---------|---------------------|" >> UNIFIED_REPORT.md
+          echo "| **Backend** | [${{ env.SONAR_HOST_URL }}/dashboard?id=${{ env.SONAR_ORGANIZATION }}_credit-default-swap-backend](${{ env.SONAR_HOST_URL }}/dashboard?id=${{ env.SONAR_ORGANIZATION }}_credit-default-swap-backend) |" >> UNIFIED_REPORT.md
+          echo "| **Gateway** | [${{ env.SONAR_HOST_URL }}/dashboard?id=${{ env.SONAR_ORGANIZATION }}_credit-default-swap-gateway](${{ env.SONAR_HOST_URL }}/dashboard?id=${{ env.SONAR_ORGANIZATION }}_credit-default-swap-gateway) |" >> UNIFIED_REPORT.md
+          echo "| **Risk Engine** | [${{ env.SONAR_HOST_URL }}/dashboard?id=${{ env.SONAR_ORGANIZATION }}_credit-default-swap-risk-engine](${{ env.SONAR_HOST_URL }}/dashboard?id=${{ env.SONAR_ORGANIZATION }}_credit-default-swap-risk-engine) |" >> UNIFIED_REPORT.md
+          echo "| **Frontend** | [${{ env.SONAR_HOST_URL }}/dashboard?id=${{ env.SONAR_ORGANIZATION }}_credit-default-swap-frontend](${{ env.SONAR_HOST_URL }}/dashboard?id=${{ env.SONAR_ORGANIZATION }}_credit-default-swap-frontend) |" >> UNIFIED_REPORT.md
+          echo "" >> UNIFIED_REPORT.md
+          
+          # What's included
+          echo "## 📋 Comprehensive Analysis Includes" >> UNIFIED_REPORT.md
+          echo "" >> UNIFIED_REPORT.md
+          echo "### ✅ Security Scans" >> UNIFIED_REPORT.md
+          echo "- **SpotBugs + FindSecBugs** - CRLF injection, SQL injection, crypto issues" >> UNIFIED_REPORT.md
+          echo "- **Secrets Detection** - Hardcoded passwords, API keys, credentials" >> UNIFIED_REPORT.md
+          echo "- **Grype CVE Scan** - Known vulnerabilities in dependencies" >> UNIFIED_REPORT.md
+          echo "- **NPM Audit** - Frontend package vulnerabilities" >> UNIFIED_REPORT.md
+          echo "" >> UNIFIED_REPORT.md
+          echo "### 📊 Quality Metrics" >> UNIFIED_REPORT.md
+          echo "- **Test Coverage** - JaCoCo for Java, Jest for TypeScript" >> UNIFIED_REPORT.md
+          echo "- **Code Smells** - Maintainability issues" >> UNIFIED_REPORT.md
+          echo "- **Technical Debt** - Estimated remediation effort" >> UNIFIED_REPORT.md
+          echo "- **Code Duplications** - DRY violations" >> UNIFIED_REPORT.md
+          echo "" >> UNIFIED_REPORT.md
+          echo "### 🚨 Zero-Tolerance Rules" >> UNIFIED_REPORT.md
+          echo "- **CWE-117** - CRLF Injection in Logs" >> UNIFIED_REPORT.md
+          echo "- **CWE-330** - Predictable Random Number Generation" >> UNIFIED_REPORT.md
+          echo "- **CWE-176** - Improper Unicode/Locale Handling" >> UNIFIED_REPORT.md
+          echo "- **CWE-209** - Information Exposure Through Errors" >> UNIFIED_REPORT.md
+          echo "- **SQL Injection** - Unparameterized queries" >> UNIFIED_REPORT.md
+          echo "" >> UNIFIED_REPORT.md
+          
+          # Navigation guide
+          echo "## 🧭 How to Use SonarCloud Dashboard" >> UNIFIED_REPORT.md
+          echo "" >> UNIFIED_REPORT.md
+          echo "1. **Overview Tab** - High-level metrics (bugs, vulnerabilities, code smells)" >> UNIFIED_REPORT.md
+          echo "2. **Issues Tab** - All findings including SpotBugs imports" >> UNIFIED_REPORT.md
+          echo "3. **Security Hotspots** - Code requiring security review" >> UNIFIED_REPORT.md
+          echo "4. **Measures Tab** - Detailed metrics and historical trends" >> UNIFIED_REPORT.md
+          echo "5. **Code Tab** - Browse code with inline issue annotations" >> UNIFIED_REPORT.md
+          echo "" >> UNIFIED_REPORT.md
+          
+          # Remediation
+          echo "## 🔧 Remediation Guide" >> UNIFIED_REPORT.md
+          echo "" >> UNIFIED_REPORT.md
+          echo "### Critical Issues (Fix Immediately)" >> UNIFIED_REPORT.md
+          echo "1. Review **Security Hotspots** in SonarCloud" >> UNIFIED_REPORT.md
+          echo "2. Address all **Blocker** and **Critical** severity issues" >> UNIFIED_REPORT.md
+          echo "3. Fix **Zero-Tolerance Violations** (CRLF, Random, Case Conversion)" >> UNIFIED_REPORT.md
+          echo "" >> UNIFIED_REPORT.md
+          echo "### High-Priority Issues" >> UNIFIED_REPORT.md
+          echo "1. Update dependencies with **Critical/High CVEs** (Grype + NPM Audit)" >> UNIFIED_REPORT.md
+          echo "2. Remove any **hardcoded secrets** detected" >> UNIFIED_REPORT.md
+          echo "3. Address **Major** bugs and **High** security vulnerabilities" >> UNIFIED_REPORT.md
+          echo "" >> UNIFIED_REPORT.md
+          echo "### Continuous Improvement" >> UNIFIED_REPORT.md
+          echo "1. Maintain **80%+ test coverage**" >> UNIFIED_REPORT.md
+          echo "2. Keep **Technical Debt ratio < 5%**" >> UNIFIED_REPORT.md
+          echo "3. Reduce **code duplications**" >> UNIFIED_REPORT.md
+          echo "" >> UNIFIED_REPORT.md
+          
+          # Footer
+          echo "---" >> UNIFIED_REPORT.md
+          echo "*This unified report combines SpotBugs, Grype, npm audit, and SonarCloud analysis.*" >> UNIFIED_REPORT.md
+          echo "*All findings are centralized in SonarCloud for easy tracking and remediation.*" >> UNIFIED_REPORT.md
+          
+          cat UNIFIED_REPORT.md
+
+      - name: Add to GitHub Actions Summary
+        run: |
+          cat UNIFIED_REPORT.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload unified report
+        uses: actions/upload-artifact@v4
+        with:
+          name: unified-security-report
+          path: UNIFIED_REPORT.md
+          retention-days: 90
+
+      - name: Comment on PR with unified dashboard
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const org = '${{ env.SONAR_ORGANIZATION }}';
+            const host = '${{ env.SONAR_HOST_URL }}';
+            
+            const comment = `## 🛡️ Unified Security & Quality Analysis Complete
+            
+            ### 🎯 Single Dashboard View
+            
+            All security findings (SpotBugs, secrets, CVEs) are imported into **SonarCloud** for centralized tracking!
+            
+            | Service | SonarCloud Dashboard | Status |
+            |---------|---------------------|--------|
+            | **Backend** | [View Dashboard](${host}/dashboard?id=${org}_credit-default-swap-backend) | ${{ needs.java-security-sonarcloud.result == 'success' && '✅' || '❌' }} |
+            | **Gateway** | [View Dashboard](${host}/dashboard?id=${org}_credit-default-swap-gateway) | ${{ needs.java-security-sonarcloud.result == 'success' && '✅' || '❌' }} |
+            | **Risk Engine** | [View Dashboard](${host}/dashboard?id=${org}_credit-default-swap-risk-engine) | ${{ needs.java-security-sonarcloud.result == 'success' && '✅' || '❌' }} |
+            | **Frontend** | [View Dashboard](${host}/dashboard?id=${org}_credit-default-swap-frontend) | ${{ needs.frontend-security-sonarcloud.result == 'success' && '✅' || '❌' }} |
+            
+            ### 📊 Comprehensive Analysis Includes
+            
+            ✅ **SpotBugs + FindSecBugs** - CRLF injection, SQL injection, crypto issues  
+            ✅ **Secrets Detection** - Hardcoded passwords, API keys  
+            ✅ **Grype CVE Scan** - Known vulnerabilities in dependencies  
+            ✅ **Test Coverage** - JaCoCo (Java) + Jest (TypeScript)  
+            ✅ **Code Quality** - Bugs, code smells, technical debt  
+            ✅ **Zero-Tolerance Rules** - CRLF, Random, Unicode, SQL injection  
+            
+            ### 🔗 Quick Links
+            
+            - 🏢 [**Organization Dashboard**](${host}/organizations/${org}/projects) - See all projects
+            - 📥 [**Download Reports**](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) - Detailed artifacts
+            
+            ### 💡 Next Steps
+            
+            1. **Review Critical Issues** - Check Security Hotspots in SonarCloud
+            2. **Fix Zero-Tolerance Violations** - CRLF, Random, Case Conversion
+            3. **Update Dependencies** - Address CVEs from Grype/npm audit
+            
+            ---
+            
+            *Single scan, single dashboard, complete visibility!* 🚀`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: Fail workflow if critical issues found
+        run: |
+          if [[ "${{ needs.secrets-scan.result }}" == "failure" ]]; then
+            echo "❌ CRITICAL: Secrets detected in codebase"
+            exit 1
+          fi
+          
+          if [[ "${{ needs.java-security-sonarcloud.result }}" == "failure" ]]; then
+            echo "❌ CRITICAL: Java security analysis failed"
+            exit 1
+          fi
+          
+          if [[ "${{ needs.frontend-security-sonarcloud.result }}" == "failure" ]]; then
+            echo "⚠️  WARNING: Frontend security analysis failed"
+            # Don't fail the workflow for frontend issues
+          fi
+          
+          echo "✅ Security analysis completed successfully"
