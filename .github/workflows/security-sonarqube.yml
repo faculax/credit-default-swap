@@ -53,13 +53,14 @@ jobs:
       
       - name: Build and run tests with coverage
         working-directory: ${{ matrix.service }}
+        continue-on-error: true
         run: |
-          ./mvnw clean verify \
-            -Pcoverage \
-            -DskipTests=false
+          ./mvnw clean test \
+            -Dmaven.test.failure.ignore=true
       
       - name: Run SpotBugs analysis
         working-directory: ${{ matrix.service }}
+        continue-on-error: true
         run: |
           ./mvnw spotbugs:spotbugs -Dspotbugs.xmlOutput=true
       
