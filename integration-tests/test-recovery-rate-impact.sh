@@ -101,7 +101,8 @@ create_trade_with_recovery() {
   "buySellProtection": "BUY",
   "tradeStatus": "ACTIVE",
   "paymentCalendar": "NYC",
-  "restructuringClause": ""
+  "restructuringClause": "",
+  "settlementType": "CASH"
 }
 EOF
 )
@@ -160,29 +161,38 @@ EOF
     
     print_info "Calculating risk with valuation date: ${valuation_date}"
     
-    local response=$(curl -s -X POST "${RISK_API}/scenario/calculate" \
+    # Save response to temp file to handle large/complex JSON with embedded strings
+    local temp_response="/tmp/risk_response_recovery_${trade_id}.json"
+    curl -s -X POST "${RISK_API}/scenario/calculate" \
         -H "Content-Type: application/json" \
-        -d "$scenario_request")
+        -d "$scenario_request" > "$temp_response"
     
-    local first_result=$(echo "$response" | jq '.[0] // empty')
-    
-    if [[ -z "$first_result" || "$first_result" == "null" ]]; then
-        print_error "Risk calculation failed for ${label}"
-        echo "$response"
+    # Check if response is valid JSON array first
+    if ! jq -e 'type == "array"' "$temp_response" > /dev/null 2>&1; then
+        print_error "Risk calculation failed for ${label} - invalid JSON response"
+        print_info "Response (first 500 chars): $(head -c 500 "$temp_response")"
+        rm -f "$temp_response"
         exit 1
     fi
     
-    local npv=$(echo "$first_result" | jq -r '.npv // empty')
-    local fair_spread=$(echo "$first_result" | jq -r '.fairSpreadClean // empty')
-    local protection_leg=$(echo "$first_result" | jq -r '.protectionLegNPV // empty')
-    local premium_leg=$(echo "$first_result" | jq -r '.premiumLegNPVClean // empty')
+    # Parse the first element
+    local first_result=$(jq -c '.[0] // empty' "$temp_response" 2>/dev/null)
+    if [[ -z "$first_result" || "$first_result" == "null" ]]; then
+        print_error "Risk calculation failed for ${label} - no results in array"
+        print_info "Response array length: $(jq 'length' "$temp_response")"
+        rm -f "$temp_response"
+        exit 1
+    fi
+    
+    local npv=$(jq -r '.[0].npv // empty' "$temp_response" 2>/dev/null)
+    local fair_spread=$(jq -r '.[0].fairSpreadClean // empty' "$temp_response" 2>/dev/null)
+    local protection_leg=$(jq -r '.[0].protectionLegNPV // empty' "$temp_response" 2>/dev/null)
+    local premium_leg=$(jq -r '.[0].premiumLegNPVClean // empty' "$temp_response" 2>/dev/null)
     
     print_success "NPV: ${npv}"
     print_info "Fair Spread Clean: ${fair_spread} bps"
     print_info "Protection Leg NPV: ${protection_leg}"
     print_info "Premium Leg NPV: ${premium_leg}"
-    
-    echo "$first_result" | jq '{npv, fairSpreadClean, protectionLegNPV, premiumLegNPVClean}'
     
     # Store values for comparison (both NPV and protection leg)
     if [[ "$label" == "low recovery" ]]; then
@@ -192,6 +202,9 @@ EOF
         NPV_HIGH_RECOVERY=$npv
         PROTECTION_LEG_HIGH_RECOVERY=$protection_leg
     fi
+    
+    # Clean up temp file
+    rm -f "$temp_response"
 }
 
 # Verify NPVs are different
