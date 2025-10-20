@@ -16,8 +16,12 @@
     <artifactId>cds-platform</artifactId>
     <version>1.0.0</version>
     <name>cds-platform</name>
-    <description>Credit Default Swap Trading Platform Backend</description>    <properties>
+    <description>Credit Default Swap Trading Platform Backend</description>
+    
+    <properties>
         <java.version>21</java.version>
+        <sonar.organization>ayodeleoladeji</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
 
     <dependencies>

@@ -1,4 +1,4 @@
-name: Security & Quality - SonarQube
+name: Security & Quality - SonarCloud
 
 on:
   push:
@@ -17,8 +17,8 @@ env:
   NODE_VERSION: '20'
 
 jobs:
-  sonarqube-backend:
-    name: SonarQube - Java Backend Analysis
+  sonarcloud-backend:
+    name: SonarCloud - Java Backend Analysis
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -28,7 +28,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for better blame info
+          fetch-depth: 0  # Full history for better blame info and SonarCloud
       
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
@@ -63,17 +63,17 @@ jobs:
         run: |
           ./mvnw spotbugs:spotbugs -Dspotbugs.xmlOutput=true
       
-      - name: SonarQube Scan
+      - name: SonarCloud Scan
         working-directory: ${{ matrix.service }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ./mvnw sonar:sonar \
-            -Dsonar.projectKey=credit-default-swap-${{ matrix.service }} \
+            -Dsonar.projectKey=ayodeleoladeji_credit-default-swap-${{ matrix.service }} \
             -Dsonar.projectName="CDS Platform - ${{ matrix.service }}" \
-            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+            -Dsonar.organization=ayodeleoladeji \
+            -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
             -Dsonar.java.spotbugs.reportPaths=target/spotbugsXml.xml \
@@ -100,8 +100,8 @@ jobs:
           path: ${{ matrix.service }}/target/site/jacoco/
           retention-days: 30
 
-  sonarqube-frontend:
-    name: SonarQube - Frontend Analysis
+  sonarcloud-frontend:
+    name: SonarCloud - Frontend Analysis
     runs-on: ubuntu-latest
     
     steps:
@@ -129,16 +129,16 @@ jobs:
         working-directory: frontend
         run: npm run test -- --coverage --watchAll=false --passWithNoTests
       
-      - name: SonarQube Frontend Scan
-        uses: sonarsource/sonarqube-scan-action@master
+      - name: SonarCloud Frontend Scan
+        uses: sonarsource/sonarcloud-github-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectBaseDir: frontend
           args: >
-            -Dsonar.projectKey=credit-default-swap-frontend
+            -Dsonar.organization=ayodeleoladeji
+            -Dsonar.projectKey=ayodeleoladeji_credit-default-swap-frontend
             -Dsonar.projectName="CDS Platform - Frontend"
             -Dsonar.sources=src
             -Dsonar.tests=src
@@ -396,8 +396,8 @@ jobs:
   quality-gate:
     name: Quality Gate & Summary
     needs: 
-      - sonarqube-backend
-      - sonarqube-frontend
+      - sonarcloud-backend
+      - sonarcloud-frontend
       - snyk-security
       - semgrep-scan
       - trivy-scan
@@ -410,10 +410,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Check SonarQube Quality Gates
+      - name: Check SonarCloud Quality Gates
         id: sonar-check
         run: |
-          echo "Checking SonarQube quality gates..."
+          echo "Checking SonarCloud quality gates..."
           # Quality gates are checked during scan with -Dsonar.qualitygate.wait=true
           echo "status=passed" >> $GITHUB_OUTPUT
       
@@ -425,7 +425,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Scanner | Purpose | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|---------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| **SonarQube** | Code Quality + SAST | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| **SonarCloud** | Code Quality + SAST | ✅ |" >> $GITHUB_STEP_SUMMARY
           echo "| **Snyk** | Dependencies + Containers | ✅ |" >> $GITHUB_STEP_SUMMARY
           echo "| **Semgrep** | Security Patterns | ✅ |" >> $GITHUB_STEP_SUMMARY
           echo "| **Trivy** | Vulnerabilities | ✅ |" >> $GITHUB_STEP_SUMMARY
@@ -434,14 +434,14 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 🔗 View Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- 📈 [SonarQube Dashboard](${{ secrets.SONAR_HOST_URL }}/projects)" >> $GITHUB_STEP_SUMMARY
+          echo "- 📈 [SonarCloud Dashboard](https://sonarcloud.io/organizations/ayodeleoladeji/projects)" >> $GITHUB_STEP_SUMMARY
           echo "- 🐛 [Snyk Dashboard](https://app.snyk.io/)" >> $GITHUB_STEP_SUMMARY
           echo "- 🔒 [GitHub Security Tab](https://github.com/${{ github.repository }}/security)" >> $GITHUB_STEP_SUMMARY
           echo "- 📋 [Code Scanning Alerts](https://github.com/${{ github.repository }}/security/code-scanning)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 🎯 Next Steps" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "1. Review findings in SonarQube dashboard" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review findings in SonarCloud dashboard" >> $GITHUB_STEP_SUMMARY
           echo "2. Address critical and high severity issues" >> $GITHUB_STEP_SUMMARY
           echo "3. Check GitHub Security tab for dependency alerts" >> $GITHUB_STEP_SUMMARY
           echo "4. Review code scanning results" >> $GITHUB_STEP_SUMMARY
@@ -454,15 +454,13 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const sonarUrl = process.env.SONAR_HOST_URL || 'http://localhost:9000';
-            
             const comment = `## 🔍 Security & Quality Analysis Results
             
             ### 📊 Comprehensive Scans Completed
             
             | Tool | Focus Area | Coverage |
             |------|-----------|----------|
-            | 🏆 **SonarQube** | Code Quality, Bugs, Security Hotspots | Java + TypeScript |
+            | 🏆 **SonarCloud** | Code Quality, Bugs, Security Hotspots | Java + TypeScript |
             | 🔐 **Snyk** | Dependencies, Containers | All components |
             | ⚡ **Semgrep** | Security Patterns (OWASP Top 10) | Source code |
             | 🐳 **Trivy** | Container vulnerabilities | Docker images |
@@ -471,11 +469,11 @@ jobs:
             
             ### 🎯 View Detailed Results
             
-            - **SonarQube Dashboard**: [View Projects](${sonarUrl}/projects)
-              - [Backend Service](${sonarUrl}/dashboard?id=credit-default-swap-backend)
-              - [Gateway Service](${sonarUrl}/dashboard?id=credit-default-swap-gateway)
-              - [Risk Engine](${sonarUrl}/dashboard?id=credit-default-swap-risk-engine)
-              - [Frontend](${sonarUrl}/dashboard?id=credit-default-swap-frontend)
+            - **SonarCloud Dashboard**: [View Projects](https://sonarcloud.io/organizations/ayodeleoladeji/projects)
+              - [Backend Service](https://sonarcloud.io/project/overview?id=ayodeleoladeji_credit-default-swap-backend)
+              - [Gateway Service](https://sonarcloud.io/project/overview?id=ayodeleoladeji_credit-default-swap-gateway)
+              - [Risk Engine](https://sonarcloud.io/project/overview?id=ayodeleoladeji_credit-default-swap-risk-engine)
+              - [Frontend](https://sonarcloud.io/project/overview?id=ayodeleoladeji_credit-default-swap-frontend)
             
             - **Snyk**: [Open Dashboard](https://app.snyk.io/)
             - **GitHub Security**: [Code Scanning Alerts](https://github.com/${context.repo.owner}/${context.repo.repo}/security/code-scanning)
@@ -497,7 +495,7 @@ jobs:
             
             💡 **Tip**: Fix critical and high severity issues before merging!
             
-            *Powered by SonarQube Community + Snyk + Semgrep* 🚀`;
+            *Powered by SonarCloud + Snyk + Semgrep* 🚀`;
             
             github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -505,8 +503,6 @@ jobs:
               repo: context.repo.repo,
               body: comment
             });
-        env:
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
       
       - name: Fail on critical issues
         if: failure()
