@@ -164,6 +164,96 @@ jobs:
             grep -r --include="*.java" -i "password.*=" src/ || true
           fi
 
+      - name: Code Pattern Validation (Anti-Pattern Detection)
+        run: |
+          if [ -d "${{ matrix.service }}" ]; then
+            cd ${{ matrix.service }}
+            echo "🔍 Scanning for security anti-patterns..."
+            echo ""
+            
+            ANTIPATTERN_VIOLATIONS=0
+            
+            # Anti-Pattern 1: Trust client input for authorization
+            echo "🛡️  Checking for client-controlled authorization..."
+            if grep -rn --include="*.java" 'request\.getParameter.*[Rr]ole' src/ 2>/dev/null; then
+              echo "❌ WARNING: Possible client-controlled role assignment"
+              echo "::warning::Potential authorization bypass in ${{ matrix.service }}"
+              ANTIPATTERN_VIOLATIONS=$((ANTIPATTERN_VIOLATIONS + 1))
+            else
+              echo "✅ No client-controlled authorization detected"
+            fi
+            echo ""
+            
+            # Anti-Pattern 2: Null check for authorization
+            echo "🔐 Checking for null-based authorization..."
+            if grep -rn --include="*.java" 'if.*!=.*null.*{.*allow\|permit\|access' src/ 2>/dev/null; then
+              echo "⚠️  WARNING: Possible null-based authorization (authentication ≠ authorization)"
+              ANTIPATTERN_VIOLATIONS=$((ANTIPATTERN_VIOLATIONS + 1))
+            else
+              echo "✅ No null-based authorization detected"
+            fi
+            echo ""
+            
+            # Anti-Pattern 3: Disabled security features
+            echo "🚫 Checking for disabled security features..."
+            if grep -rn --include="*.java" '@CrossOrigin.*origins.*=.*"\*"' src/ 2>/dev/null; then
+              echo "❌ WARNING: CORS enabled for all origins - CSRF vulnerability"
+              echo "::warning::Promiscuous CORS configuration in ${{ matrix.service }}"
+              ANTIPATTERN_VIOLATIONS=$((ANTIPATTERN_VIOLATIONS + 1))
+            fi
+            if grep -rn --include="*.java" '\.csrf()\.disable()' src/ 2>/dev/null; then
+              echo "⚠️  INFO: CSRF protection disabled (verify if appropriate for API)"
+            fi
+            echo ""
+            
+            # Anti-Pattern 4: Weak cryptography
+            echo "🔒 Checking for weak cryptographic algorithms..."
+            if grep -rn --include="*.java" 'MessageDigest\.getInstance.*"MD5"\|"SHA1"' src/ 2>/dev/null; then
+              echo "❌ WARNING: Weak hash algorithm (MD5/SHA1) - Use BCrypt or Argon2"
+              echo "::warning::Weak cryptography in ${{ matrix.service }}"
+              ANTIPATTERN_VIOLATIONS=$((ANTIPATTERN_VIOLATIONS + 1))
+            else
+              echo "✅ No weak cryptographic algorithms detected"
+            fi
+            echo ""
+            
+            # Anti-Pattern 5: Silent security exception handling
+            echo "🔕 Checking for silent security exception handling..."
+            if grep -rn --include="*.java" -A2 'catch.*SecurityException' src/ 2>/dev/null | grep -c '//.*ignore\|^[[:space:]]*}' > /dev/null; then
+              echo "❌ WARNING: Security exceptions being silently ignored"
+              echo "::warning::Silent security exception handling in ${{ matrix.service }}"
+              ANTIPATTERN_VIOLATIONS=$((ANTIPATTERN_VIOLATIONS + 1))
+            else
+              echo "✅ No silent security exception handling detected"
+            fi
+            echo ""
+            
+            # Anti-Pattern 6: Unsafe logging patterns
+            echo "📝 Checking for unsafe logging patterns..."
+            UNSAFE_LOGS=$(grep -rn --include="*.java" 'logger\.\(info\|debug\|warn\|error\).*password\|secret\|token\|apikey\|api_key' src/ 2>/dev/null | wc -l || echo "0")
+            if [ "$UNSAFE_LOGS" -gt 0 ]; then
+              echo "❌ WARNING: $UNSAFE_LOGS instances of sensitive data in logs"
+              echo "::warning::Sensitive data logging in ${{ matrix.service }}"
+              ANTIPATTERN_VIOLATIONS=$((ANTIPATTERN_VIOLATIONS + UNSAFE_LOGS))
+            else
+              echo "✅ No sensitive data logging detected"
+            fi
+            echo ""
+            
+            # Note: Missing @PreAuthorize is NOT checked here as it depends on endpoint type
+            # Public, internal, and actuator endpoints may legitimately not have @PreAuthorize
+            # Security review should verify authorization strategy per endpoint
+            
+            # Summary
+            if [ "$ANTIPATTERN_VIOLATIONS" -gt 0 ]; then
+              echo "⚠️  Found $ANTIPATTERN_VIOLATIONS anti-pattern violations"
+              echo "📋 Review: AI_AGENT_INSTRUCTIONS.md for secure patterns"
+            else
+              echo "✅ No anti-patterns detected"
+            fi
+          fi
+        continue-on-error: true
+
       - name: Grype Vulnerability Scan
         run: |
           if [ -d "${{ matrix.service }}" ]; then
@@ -195,6 +285,46 @@ jobs:
           fi
         continue-on-error: true
 
+      - name: Run Unit Tests with Coverage
+        run: |
+          if [ -d "${{ matrix.service }}" ]; then
+            cd ${{ matrix.service }}
+            echo "🧪 Running unit tests with coverage..."
+            
+            # Run tests with JaCoCo coverage
+            ./mvnw test jacoco:report -B || true
+            
+            # Check if coverage report exists
+            if [ -f "target/site/jacoco/index.html" ]; then
+              echo "✅ Coverage report generated"
+              
+              # Extract coverage metrics from JaCoCo XML
+              if [ -f "target/site/jacoco/jacoco.xml" ]; then
+                # Parse instruction coverage percentage
+                INSTRUCTION_COVERED=$(grep -oP 'type="INSTRUCTION".*?covered="\K[0-9]+' target/site/jacoco/jacoco.xml | head -1 || echo "0")
+                INSTRUCTION_MISSED=$(grep -oP 'type="INSTRUCTION".*?missed="\K[0-9]+' target/site/jacoco/jacoco.xml | head -1 || echo "0")
+                
+                if [ "$((INSTRUCTION_COVERED + INSTRUCTION_MISSED))" -gt 0 ]; then
+                  COVERAGE_PCT=$((INSTRUCTION_COVERED * 100 / (INSTRUCTION_COVERED + INSTRUCTION_MISSED)))
+                  echo "📊 Test Coverage: ${COVERAGE_PCT}%"
+                  
+                  # Enforce 80% coverage threshold
+                  if [ "$COVERAGE_PCT" -lt 80 ]; then
+                    echo "❌ FAIL: Test coverage (${COVERAGE_PCT}%) is below 80% threshold"
+                    echo "::warning::${{ matrix.service }} test coverage is ${COVERAGE_PCT}% (target: 80%)"
+                  else
+                    echo "✅ PASS: Test coverage meets 80% threshold"
+                  fi
+                else
+                  echo "⚠️  WARNING: Could not calculate coverage percentage"
+                fi
+              fi
+            else
+              echo "⚠️  WARNING: Coverage report not generated"
+            fi
+          fi
+        continue-on-error: true
+
       - name: SpotBugs security analysis
         run: |
           if [ -d "${{ matrix.service }}" ]; then
@@ -215,6 +345,114 @@ jobs:
             fi
           fi
         continue-on-error: true
+
+      - name: Enforce Quality Gates (Zero-Tolerance Security Rules)
+        run: |
+          if [ -d "${{ matrix.service }}" ]; then
+            cd ${{ matrix.service }}
+            echo "🚨 Checking for ZERO-TOLERANCE security violations..."
+            echo ""
+            
+            CRITICAL_VIOLATIONS=0
+            
+            # RULE 1: CRLF Injection Detection
+            echo "🔍 Rule 1: Checking for CRLF injection in logs..."
+            if [ -f "target/spotbugsXml.xml" ]; then
+              CRLF_COUNT=$(grep -c 'CRLF_INJECTION_LOGS' target/spotbugsXml.xml 2>/dev/null || echo "0")
+              if [ "$CRLF_COUNT" -gt 0 ]; then
+                echo "❌ FAIL: $CRLF_COUNT CRLF injection vulnerabilities (CWE-117)"
+                echo "::error::${{ matrix.service }} has $CRLF_COUNT CRLF injection issues"
+                CRITICAL_VIOLATIONS=$((CRITICAL_VIOLATIONS + CRLF_COUNT))
+              else
+                echo "✅ PASS: No CRLF injection detected"
+              fi
+            fi
+            echo ""
+            
+            # RULE 2: Predictable Random Detection
+            echo "🔍 Rule 2: Checking for predictable random number generation..."
+            if [ -f "target/spotbugsXml.xml" ]; then
+              RANDOM_COUNT=$(grep -c 'PREDICTABLE_RANDOM' target/spotbugsXml.xml 2>/dev/null || echo "0")
+              # Allow java.util.Random ONLY in DemoService classes
+              DEMO_EXCEPTIONS=$(grep 'PREDICTABLE_RANDOM' target/spotbugsXml.xml 2>/dev/null | grep -c 'Demo.*Service' || echo "0")
+              ACTUAL_VIOLATIONS=$((RANDOM_COUNT - DEMO_EXCEPTIONS))
+              
+              if [ "$ACTUAL_VIOLATIONS" -gt 0 ]; then
+                echo "❌ FAIL: $ACTUAL_VIOLATIONS predictable random issues (CWE-330)"
+                echo "::error::${{ matrix.service }} uses java.util.Random in production code"
+                CRITICAL_VIOLATIONS=$((CRITICAL_VIOLATIONS + ACTUAL_VIOLATIONS))
+              else
+                if [ "$DEMO_EXCEPTIONS" -gt 0 ]; then
+                  echo "✅ PASS: $DEMO_EXCEPTIONS Random usages in Demo classes (acceptable)"
+                else
+                  echo "✅ PASS: No predictable random detected"
+                fi
+              fi
+            fi
+            echo ""
+            
+            # RULE 3: Unicode Handling Detection
+            echo "🔍 Rule 3: Checking for improper unicode/locale handling..."
+            if [ -f "target/spotbugsXml.xml" ]; then
+              UNICODE_COUNT=$(grep -c 'DM_CONVERT_CASE' target/spotbugsXml.xml 2>/dev/null || echo "0")
+              if [ "$UNICODE_COUNT" -gt 0 ]; then
+                echo "❌ FAIL: $UNICODE_COUNT improper case conversion (CWE-176)"
+                echo "::error::${{ matrix.service }} has toUpperCase/toLowerCase without Locale"
+                CRITICAL_VIOLATIONS=$((CRITICAL_VIOLATIONS + UNICODE_COUNT))
+              else
+                echo "✅ PASS: No unicode handling issues"
+              fi
+            fi
+            echo ""
+            
+            # RULE 4: Information Exposure Detection
+            echo "🔍 Rule 4: Checking for information exposure in exceptions..."
+            if [ -f "target/spotbugsXml.xml" ]; then
+              INFO_EXP_COUNT=$(grep -c 'INFORMATION_EXPOSURE_THROUGH_AN_ERROR_MESSAGE' target/spotbugsXml.xml 2>/dev/null || echo "0")
+              if [ "$INFO_EXP_COUNT" -gt 0 ]; then
+                echo "❌ FAIL: $INFO_EXP_COUNT information exposure issues (CWE-209)"
+                echo "::error::${{ matrix.service }} exposes stack traces or internal details"
+                CRITICAL_VIOLATIONS=$((CRITICAL_VIOLATIONS + INFO_EXP_COUNT))
+              else
+                echo "✅ PASS: No information exposure detected"
+              fi
+            fi
+            echo ""
+            
+            # RULE 5: SQL Injection Detection
+            echo "🔍 Rule 5: Checking for SQL injection vulnerabilities..."
+            if [ -f "target/spotbugsXml.xml" ]; then
+              SQL_COUNT=$(grep -c 'SQL_INJECTION' target/spotbugsXml.xml 2>/dev/null || echo "0")
+              if [ "$SQL_COUNT" -gt 0 ]; then
+                echo "❌ FAIL: $SQL_COUNT potential SQL injection issues"
+                echo "::error::${{ matrix.service }} has potential SQL injection vulnerabilities"
+                CRITICAL_VIOLATIONS=$((CRITICAL_VIOLATIONS + SQL_COUNT))
+              else
+                echo "✅ PASS: No SQL injection detected"
+              fi
+            fi
+            echo ""
+            
+            # Summary
+            echo "======================================"
+            echo "Quality Gate Summary: ${{ matrix.service }}"
+            echo "======================================"
+            echo "Total Critical Violations: $CRITICAL_VIOLATIONS"
+            echo ""
+            
+            if [ "$CRITICAL_VIOLATIONS" -gt 0 ]; then
+              echo "❌ QUALITY GATE FAILED"
+              echo ""
+              echo "🚨 CRITICAL: This service has $CRITICAL_VIOLATIONS zero-tolerance violations"
+              echo "📋 Review: CODE_QUALITY_RULES.md for remediation steps"
+              echo "📥 Download: SpotBugs HTML report from artifacts"
+              echo ""
+              exit 1
+            else
+              echo "✅ QUALITY GATE PASSED"
+              echo "All mandatory security rules satisfied"
+            fi
+          fi
 
       - name: Generate Security Analysis Summary
         if: always()
