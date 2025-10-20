@@ -74,8 +74,6 @@ public class BondPricingResponse {
         private BigDecimal couponRate;
         private String couponFrequency;
         private String dayCount;
-        private BigDecimal recoveryRate;
-        private String creditCurveId;
         
         public BigDecimal getCouponRate() {
             return couponRate;
@@ -99,22 +97,6 @@ public class BondPricingResponse {
         
         public void setDayCount(String dayCount) {
             this.dayCount = dayCount;
-        }
-        
-        public BigDecimal getRecoveryRate() {
-            return recoveryRate;
-        }
-        
-        public void setRecoveryRate(BigDecimal recoveryRate) {
-            this.recoveryRate = recoveryRate;
-        }
-        
-        public String getCreditCurveId() {
-            return creditCurveId;
-        }
-        
-        public void setCreditCurveId(String creditCurveId) {
-            this.creditCurveId = creditCurveId;
         }
     }
     

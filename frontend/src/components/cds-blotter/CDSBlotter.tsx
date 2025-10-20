@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { cdsTradeService, CDSTradeResponse } from '../../services/cdsTradeService';
 import { creditEventService } from '../../services/creditEventService';
 
@@ -6,7 +6,11 @@ interface CDSBlotterProps {
   onTradeSelect?: (trade: CDSTradeResponse) => void;
 }
 
-const CDSBlotter: React.FC<CDSBlotterProps> = ({ onTradeSelect }) => {
+export interface CDSBlotterRef {
+  refreshTrades: () => void;
+}
+
+const CDSBlotter = forwardRef<CDSBlotterRef, CDSBlotterProps>(({ onTradeSelect }, ref) => {
   const [trades, setTrades] = useState<CDSTradeResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -16,6 +20,11 @@ const CDSBlotter: React.FC<CDSBlotterProps> = ({ onTradeSelect }) => {
   useEffect(() => {
     loadTrades();
   }, []);
+
+  // Expose refreshTrades method via ref
+  useImperativeHandle(ref, () => ({
+    refreshTrades: loadTrades
+  }));
 
   const loadTrades = async () => {
     try {
@@ -294,6 +303,8 @@ const CDSBlotter: React.FC<CDSBlotterProps> = ({ onTradeSelect }) => {
       </div>
     </div>
   );
-};
+});
+
+CDSBlotter.displayName = 'CDSBlotter';
 
 export default CDSBlotter;

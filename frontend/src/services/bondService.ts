@@ -5,8 +5,6 @@ export interface Bond {
   isin?: string;
   issuer: string;
   seniority: 'SR_UNSEC' | 'SR_SEC' | 'SUBORD';
-  creditCurveId?: string;
-  recoveryRate?: number;
   sector?: string;
   currency: string;
   notional: number;
@@ -42,8 +40,6 @@ export interface BondPricingResponse {
     couponRate: number;
     couponFrequency: string;
     dayCount: string;
-    recoveryRate: number;
-    creditCurveId?: string;
   };
 }
 

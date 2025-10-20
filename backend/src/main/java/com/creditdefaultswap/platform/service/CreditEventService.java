@@ -1,6 +1,7 @@
 package com.creditdefaultswap.platform.service;
 
 import com.creditdefaultswap.platform.dto.CreateCreditEventRequest;
+import com.creditdefaultswap.platform.dto.CreditEventResponse;
 import com.creditdefaultswap.platform.model.*;
 import com.creditdefaultswap.platform.repository.CDSTradeRepository;
 import com.creditdefaultswap.platform.repository.CreditEventRepository;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,7 +41,11 @@ public class CreditEventService {
      * Record a credit event for a trade with full validation and settlement processing
      */
     @Transactional
-    public CreditEvent recordCreditEvent(Long tradeId, CreateCreditEventRequest request) {
+    public CreditEventResponse recordCreditEvent(Long tradeId, CreateCreditEventRequest request) {
+        // List to track all affected trade IDs
+        List<Long> affectedTradeIds = new ArrayList<>();
+        affectedTradeIds.add(tradeId);
+        
         // Validation
         validateRequest(request);
         
@@ -57,7 +63,7 @@ public class CreditEventService {
         
         if (existingEvent.isPresent()) {
             // Return existing event (idempotent behavior)
-            return existingEvent.get();
+            return new CreditEventResponse(existingEvent.get(), affectedTradeIds);
         }
         
         // Create new credit event
@@ -90,7 +96,125 @@ public class CreditEventService {
             createPhysicalSettlementScaffold(creditEvent, trade);
         }
         
-        return creditEvent;
+        // Check if this is a terminal event that triggers automatic payout
+        if (request.getEventType() == CreditEventType.BANKRUPTCY || 
+            request.getEventType() == CreditEventType.RESTRUCTURING) {
+            // Automatically create PAYOUT event using the trade's settlement type
+            createPayoutEvent(tradeId, trade, request.getEventDate(), trade.getSettlementType());
+            
+            // Propagate credit event to all other ACTIVE CDS for the same reference entity
+            List<Long> propagatedTradeIds = propagateCreditEventToReferenceEntity(trade.getReferenceEntity(), tradeId, request);
+            affectedTradeIds.addAll(propagatedTradeIds);
+        }
+        
+        return new CreditEventResponse(creditEvent, affectedTradeIds);
+    }
+    
+    /**
+     * Create automatic PAYOUT event for terminal credit events
+     */
+    private void createPayoutEvent(Long tradeId, CDSTrade trade, LocalDate triggerEventDate, SettlementMethod settlementMethod) {
+        // Check if PAYOUT event already exists for this date
+        Optional<CreditEvent> existingPayout = creditEventRepository.findByTradeIdAndEventTypeAndEventDate(
+            tradeId, CreditEventType.PAYOUT, triggerEventDate);
+        
+        if (existingPayout.isPresent()) {
+            return; // Already exists, skip creation
+        }
+        
+        // Create PAYOUT event
+        CreditEvent payoutEvent = new CreditEvent();
+        payoutEvent.setTradeId(tradeId);
+        payoutEvent.setEventType(CreditEventType.PAYOUT);
+        payoutEvent.setEventDate(triggerEventDate);
+        payoutEvent.setNoticeDate(triggerEventDate);
+        payoutEvent.setSettlementMethod(settlementMethod);
+        payoutEvent.setComments("Automatic payout triggered by credit event - CDS protection paid out");
+        
+        creditEventRepository.save(payoutEvent);
+        
+        // Update trade status to SETTLED
+        TradeStatus newStatus = settlementMethod == SettlementMethod.CASH 
+            ? TradeStatus.SETTLED_CASH 
+            : TradeStatus.SETTLED_PHYSICAL;
+        trade.setTradeStatus(newStatus);
+        tradeRepository.save(trade);
+        
+        // Log audit trail
+        auditService.logCreditEventCreation(payoutEvent.getId(), "SYSTEM", 
+            "Automatic payout for " + trade.getReferenceEntity());
+        auditService.logTradeStatusTransition(tradeId, "SYSTEM", 
+            TradeStatus.CREDIT_EVENT_RECORDED.name(), newStatus.name());
+    }
+    
+    /**
+     * Propagate credit event to all other ACTIVE CDS for the same reference entity
+     * This ensures that when BANKRUPTCY or RESTRUCTURING is recorded for one CDS,
+     * all other active CDS for that reference entity are automatically triggered
+     * 
+     * @return List of trade IDs that were affected by the propagation
+     */
+    private List<Long> propagateCreditEventToReferenceEntity(String referenceEntity, Long originTradeId, CreateCreditEventRequest request) {
+        List<Long> affectedTradeIds = new ArrayList<>();
+        
+        // Find all other ACTIVE trades for the same reference entity
+        List<CDSTrade> affectedTrades = tradeRepository.findByReferenceEntityOrderByCreatedAtDesc(referenceEntity)
+            .stream()
+            .filter(t -> t.getTradeStatus() == TradeStatus.ACTIVE && !t.getId().equals(originTradeId))
+            .toList();
+        
+        if (affectedTrades.isEmpty()) {
+            return affectedTradeIds; // No other active trades to propagate to
+        }
+        
+        // For each affected trade, create the same credit event and payout
+        for (CDSTrade affectedTrade : affectedTrades) {
+            try {
+                // Create credit event for affected trade
+                CreditEvent affectedEvent = new CreditEvent();
+                affectedEvent.setTradeId(affectedTrade.getId());
+                affectedEvent.setEventType(request.getEventType());
+                affectedEvent.setEventDate(request.getEventDate());
+                affectedEvent.setNoticeDate(request.getNoticeDate());
+                affectedEvent.setSettlementMethod(request.getSettlementMethod());
+                affectedEvent.setComments("Propagated credit event for reference entity: " + referenceEntity + 
+                    " (originated from Trade ID: " + originTradeId + ")");
+                
+                // Save credit event
+                affectedEvent = creditEventRepository.save(affectedEvent);
+                
+                // Update trade status
+                TradeStatus oldStatus = affectedTrade.getTradeStatus();
+                affectedTrade.setTradeStatus(TradeStatus.CREDIT_EVENT_RECORDED);
+                tradeRepository.save(affectedTrade);
+                
+                // Log audit trail
+                auditService.logCreditEventCreation(affectedEvent.getId(), "SYSTEM", 
+                    "Propagated to " + affectedTrade.getReferenceEntity());
+                auditService.logTradeStatusTransition(affectedTrade.getId(), "SYSTEM", 
+                    oldStatus.name(), TradeStatus.CREDIT_EVENT_RECORDED.name());
+                
+                // Process settlement based on method
+                if (request.getSettlementMethod() == SettlementMethod.CASH) {
+                    cashSettlementService.calculateCashSettlement(affectedEvent.getId(), affectedTrade);
+                } else if (request.getSettlementMethod() == SettlementMethod.PHYSICAL) {
+                    createPhysicalSettlementScaffold(affectedEvent, affectedTrade);
+                }
+                
+                // Create PAYOUT event for affected trade using its settlement type
+                createPayoutEvent(affectedTrade.getId(), affectedTrade, request.getEventDate(), affectedTrade.getSettlementType());
+                
+                // Add to affected list
+                affectedTradeIds.add(affectedTrade.getId());
+                
+            } catch (Exception e) {
+                // Log error but continue processing other trades
+                auditService.logCreditEventCreation(null, "SYSTEM", 
+                    "Failed to propagate credit event to Trade ID: " + affectedTrade.getId() + " - " + e.getMessage());
+            }
+        }
+        
+        return affectedTradeIds;
     }
     
     /**

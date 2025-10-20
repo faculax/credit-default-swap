@@ -173,8 +173,8 @@ const BondDetailView: React.FC<BondDetailViewProps> = ({ bondId, onClose }) => {
                     <p className="font-medium text-fd-text">{bond.sector || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-fd-text-muted">Recovery Rate</p>
-                    <p className="font-medium text-fd-text">{formatPercent(bond.recoveryRate || 0.40)}</p>
+                    <p className="text-xs text-fd-text-muted">ISIN</p>
+                    <p className="font-medium text-fd-text">{bond.isin || 'N/A'}</p>
                   </div>
                 </div>
               </div>
@@ -230,23 +230,6 @@ const BondDetailView: React.FC<BondDetailViewProps> = ({ bondId, onClose }) => {
                   <div>
                     <p className="text-xs text-fd-text-muted">Face Value</p>
                     <p className="font-medium text-fd-text">{bond.faceValue || 100}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Credit Curve */}
-              <div>
-                <h3 className="text-sm font-semibold text-fd-text-muted uppercase tracking-wide mb-3">
-                  Credit Reference
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-fd-text-muted">Credit Curve ID</p>
-                    <p className="font-medium text-fd-text">{bond.creditCurveId || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-fd-text-muted">ISIN</p>
-                    <p className="font-medium text-fd-text">{bond.isin || 'N/A'}</p>
                   </div>
                 </div>
               </div>

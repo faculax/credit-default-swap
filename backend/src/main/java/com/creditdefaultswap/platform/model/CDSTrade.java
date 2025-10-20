@@ -1,5 +1,6 @@
 package com.creditdefaultswap.platform.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -56,9 +57,16 @@ public class CDSTrade {
     @Column(name = "accrual_start_date", nullable = false)
     private LocalDate accrualStartDate;
     
+    @Column(name = "recovery_rate", nullable = false, precision = 5, scale = 2)
+    private BigDecimal recoveryRate;
+    
     @Enumerated(EnumType.STRING)
     @Column(name = "trade_status", nullable = false)
     private TradeStatus tradeStatus;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "settlement_type", nullable = false)
+    private SettlementMethod settlementType;
     
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -68,6 +76,11 @@ public class CDSTrade {
     
     @Column(name = "version", nullable = false)
     private Integer version = 1;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "obligation_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private Bond obligation;
     
     // Enum for Buy/Sell Protection
     public enum ProtectionDirection {
@@ -200,12 +213,28 @@ public class CDSTrade {
         this.accrualStartDate = accrualStartDate;
     }
     
+    public BigDecimal getRecoveryRate() {
+        return recoveryRate;
+    }
+    
+    public void setRecoveryRate(BigDecimal recoveryRate) {
+        this.recoveryRate = recoveryRate;
+    }
+    
     public TradeStatus getTradeStatus() {
         return tradeStatus;
     }
     
     public void setTradeStatus(TradeStatus tradeStatus) {
         this.tradeStatus = tradeStatus;
+    }
+    
+    public SettlementMethod getSettlementType() {
+        return settlementType;
+    }
+    
+    public void setSettlementType(SettlementMethod settlementType) {
+        this.settlementType = settlementType;
     }
     
     public LocalDateTime getCreatedAt() {
@@ -230,6 +259,14 @@ public class CDSTrade {
     
     public void setVersion(Integer version) {
         this.version = version;
+    }
+    
+    public Bond getObligation() {
+        return obligation;
+    }
+    
+    public void setObligation(Bond obligation) {
+        this.obligation = obligation;
     }
     
     public void setLastUpdated(LocalDateTime lastUpdated) {

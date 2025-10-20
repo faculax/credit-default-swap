@@ -19,6 +19,38 @@ export interface Cashflow {
   presentValueBase?: number | null;
 }
 
+export interface QuoteData {
+  tenor?: string;
+  quoteName?: string;
+  value?: number;
+  type?: string;
+}
+
+export interface DiscountCurveData {
+  currency?: string;
+  curveId?: string;
+  quotes?: QuoteData[];
+}
+
+export interface DefaultCurveData {
+  referenceEntity?: string;
+  currency?: string;
+  curveId?: string;
+  recoveryRate?: number;
+  spreadQuotes?: QuoteData[];
+}
+
+export interface MarketDataSnapshot {
+  valuationDate?: string;
+  baseCurrency?: string;
+  discountCurves?: DiscountCurveData[];
+  defaultCurves?: DefaultCurveData[];
+  fxRates?: { [key: string]: number };
+  marketDataFileContent?: string;
+  todaysMarketFileContent?: string;
+  curveConfigFileContent?: string;
+}
+
 export interface RiskMeasures {
   tradeId: number;
   valuationTimestamp: string;
@@ -38,6 +70,8 @@ export interface RiskMeasures {
   couponLegBPS?: number | null;
   currentNotional?: number | null;
   originalNotional?: number | null;
+  riskyAnnuity?: number | null;
+  jtd?: number | null; // Jump-to-default exposure
   
   // Credit risk arrays
   defaultProbabilities?: number[] | null;
@@ -47,6 +81,9 @@ export interface RiskMeasures {
   
   // Cashflow schedule
   cashflows?: Cashflow[] | null;
+  
+  // Market data snapshot used for this calculation
+  marketDataSnapshot?: MarketDataSnapshot | null;
   
   // DEPRECATED - Fake metrics (kept for backwards compatibility)
   dv01?: number | null;

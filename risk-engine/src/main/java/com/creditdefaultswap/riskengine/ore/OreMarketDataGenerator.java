@@ -65,7 +65,8 @@ public class OreMarketDataGenerator {
                 .orElse(null);
             
             if (trade != null) {
-                generateCDSCurve(marketData, dateStr, entity, trade.getCurrency(), trade.getSpread());
+                BigDecimal recoveryRate = trade.getRecoveryRate() != null ? trade.getRecoveryRate() : new BigDecimal("40");
+                generateCDSCurve(marketData, dateStr, entity, trade.getCurrency(), trade.getSpread(), recoveryRate);
             }
         }
         
@@ -119,14 +120,14 @@ public class OreMarketDataGenerator {
     /**
      * Generates CDS curve (credit spreads and recovery rate) for a reference entity
      */
-    private void generateCDSCurve(StringBuilder sb, String date, String entity, String currency, BigDecimal spread) {
+    private void generateCDSCurve(StringBuilder sb, String date, String entity, String currency, BigDecimal spread, BigDecimal recoveryRatePercent) {
         // Convert spread from basis points to decimal if needed
         double spreadDecimal = convertSpreadToDecimal(spread);
         
-        // Standard 40% recovery for corporates
-        double recoveryRate = 0.4;
+        // Convert recovery rate from percentage (0-100) to decimal (0-1)
+        double recoveryRate = recoveryRatePercent.doubleValue() / 100.0;
         
-        sb.append("# ").append(entity).append(" ").append(currency).append("\n");
+        sb.append("# ").append(entity).append(" ").append(currency).append(" (Recovery Rate: ").append(recoveryRatePercent).append("%)\n");
         sb.append(date).append(" RECOVERY_RATE/RATE/").append(entity).append("/SR/").append(currency).append(" ").append(recoveryRate).append("\n");
         // Use CDS/CREDIT_SPREAD instead of HAZARD_RATE for SpreadCDS curve type
         sb.append(date).append(" CDS/CREDIT_SPREAD/").append(entity).append("/SR/").append(currency).append("/1Y ").append(spreadDecimal).append("\n");

@@ -50,23 +50,6 @@ public class BondValidator {
             }
         }
         
-        // Recovery rate bounds (already in entity but double-check)
-        if (bond.getRecoveryRate() != null) {
-            if (bond.getRecoveryRate().compareTo(BigDecimal.ZERO) < 0 || 
-                bond.getRecoveryRate().compareTo(BigDecimal.ONE) > 0) {
-                errors.add("Recovery rate must be between 0 and 1");
-            }
-        }
-        
-        // Credit curve ID format suggestion
-        if (bond.getCreditCurveId() != null && !bond.getCreditCurveId().isEmpty()) {
-            String suggested = bond.getIssuer() + "_" + bond.getSeniority() + "_" + bond.getCurrency();
-            if (!bond.getCreditCurveId().equals(suggested)) {
-                // This is just a warning, not an error
-                // errors.add("Credit curve ID format suggestion: " + suggested);
-            }
-        }
-        
         // Issuer validation (basic non-empty check - could be extended to reference data)
         if (bond.getIssuer() == null || bond.getIssuer().trim().isEmpty()) {
             errors.add("Issuer is required");

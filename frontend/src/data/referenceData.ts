@@ -83,7 +83,14 @@ export const PAYMENT_CALENDARS = [
 export const TRADE_STATUSES = [
   { value: 'PENDING', label: 'Pending' },
   { value: 'ACTIVE', label: 'Active' },
+  { value: 'PARTIALLY_TERMINATED', label: 'Partially Terminated' },
+  { value: 'TERMINATED', label: 'Terminated' },
   { value: 'CANCELLED', label: 'Cancelled' }
+];
+
+export const SETTLEMENT_METHODS = [
+  { value: 'CASH', label: 'Cash Settlement' },
+  { value: 'PHYSICAL', label: 'Physical Settlement' }
 ];
 
 export interface CDSTrade {
@@ -102,4 +109,9 @@ export interface CDSTrade {
   paymentCalendar: string;
   accrualStartDate: string;
   tradeStatus: string;
+  recoveryRate: number;
+  settlementType: string;
+  obligation?: {
+    id: number;
+  };
 }

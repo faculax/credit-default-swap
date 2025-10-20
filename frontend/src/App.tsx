@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import './App.css';
 import TopBar from './components/top-bar/TopBar';
 import CDSTradeForm from './components/cds-trade-form/CDSTradeForm';
 import ConfirmationModal from './components/confirmation-modal/ConfirmationModal';
-import CDSBlotter from './components/cds-blotter/CDSBlotter';
+import CDSBlotter, { CDSBlotterRef } from './components/cds-blotter/CDSBlotter';
 import TradeDetailModal from './components/trade-detail-modal/TradeDetailModal';
 import PortfolioPage from './components/portfolio/PortfolioPage';
 import BondPage from './components/bond/BondPage';
@@ -21,6 +21,7 @@ function App() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [selectedTrade, setSelectedTrade] = useState<CDSTradeResponse | null>(null);
   const [isTradeDetailOpen, setIsTradeDetailOpen] = useState(false);
+  const blotterRef = useRef<CDSBlotterRef>(null);
 
   const handleTradeSubmit = async (trade: CDSTrade) => {
     setIsSubmitting(true);
@@ -42,7 +43,10 @@ function App() {
         restructuringClause: trade.restructuringClause,
         paymentCalendar: trade.paymentCalendar,
         accrualStartDate: trade.accrualStartDate,
-        tradeStatus: trade.tradeStatus
+        tradeStatus: trade.tradeStatus,
+        recoveryRate: trade.recoveryRate,
+        settlementType: trade.settlementType,
+        obligation: trade.obligation
       };
 
       const savedTrade = await cdsTradeService.createTrade(tradeRequest);
@@ -72,6 +76,13 @@ function App() {
   const handleCloseTradeDetail = () => {
     setIsTradeDetailOpen(false);
     setSelectedTrade(null);
+  };
+
+  const handleTradesUpdated = (affectedTradeIds?: number[]) => {
+    // When trades are updated (e.g., credit event propagated), refresh the blotter
+    if (blotterRef.current) {
+      blotterRef.current.refreshTrades();
+    }
   };
 
   return (
@@ -142,7 +153,7 @@ function App() {
         {currentView === 'form' ? (
           <CDSTradeForm onSubmit={handleTradeSubmit} />
         ) : currentView === 'blotter' ? (
-          <CDSBlotter onTradeSelect={handleTradeSelect} />
+          <CDSBlotter ref={blotterRef} onTradeSelect={handleTradeSelect} />
         ) : currentView === 'portfolios' ? (
           <PortfolioPage />
         ) : currentView === 'baskets' ? (
@@ -161,6 +172,7 @@ function App() {
           isOpen={isTradeDetailOpen}
           trade={selectedTrade}
           onClose={handleCloseTradeDetail}
+          onTradesUpdated={handleTradesUpdated}
         />
       </div>
     </div>

@@ -1,9 +1,11 @@
 package com.creditdefaultswap.riskengine.ore;
 
 import com.creditdefaultswap.riskengine.model.Cashflow;
+import com.creditdefaultswap.riskengine.model.MarketDataSnapshot;
 import com.creditdefaultswap.riskengine.model.RiskMeasures;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -25,6 +27,12 @@ import java.util.stream.Collectors;
 public class OreOutputParser {
     
     private static final Logger logger = LoggerFactory.getLogger(OreOutputParser.class);
+    private final MarketDataSnapshotBuilder marketDataSnapshotBuilder;
+    
+    @Autowired
+    public OreOutputParser(MarketDataSnapshotBuilder marketDataSnapshotBuilder) {
+        this.marketDataSnapshotBuilder = marketDataSnapshotBuilder;
+    }
     
     /**
      * Parses ORE output to extract risk measures from actual output files.
@@ -63,6 +71,11 @@ public class OreOutputParser {
             // Parse REAL cashflow schedule from flows.csv
             List<Cashflow> cashflows = parseCashflows(tradeId, workingDirPath);
             riskMeasures.setCashflows(cashflows);
+            
+            // Capture market data snapshot - extract valuation date from ORE working dir
+            LocalDate valuationDate = extractValuationDate(workingDirPath);
+            MarketDataSnapshot snapshot = marketDataSnapshotBuilder.buildSnapshot(workingDirPath, valuationDate);
+            riskMeasures.setMarketDataSnapshot(snapshot);
             
             logger.info("ORE Risk Calculation - Trade {}: NPV={} {}, Fair Spread Clean={} bps, Protection Leg NPV={}, {} cashflows", 
                 tradeId, riskMeasures.getNpv(), riskMeasures.getCurrency(), 
@@ -153,8 +166,29 @@ public class OreOutputParser {
             riskMeasures.setCurrentNotional(parseBigDecimal(results.get("currentNotional[1]")));
             riskMeasures.setOriginalNotional(parseBigDecimal(results.get("originalNotional[1]")));
             
-            logger.info("Parsed CDS metrics from additional_results.csv: Fair Spread Clean = {}, Protection Leg NPV = {}, Premium Leg NPV = {}", 
-                riskMeasures.getFairSpreadClean(), riskMeasures.getProtectionLegNPV(), riskMeasures.getPremiumLegNPVClean());
+            // Risky Annuity (PV01_CREDIT / RPV01)
+            BigDecimal riskyAnnuity = parseBigDecimal(results.get("riskyAnnuity"));
+            if (riskyAnnuity != null) {
+                riskMeasures.setRiskyAnnuity(riskyAnnuity);
+                logger.info("✅ Parsed Risky Annuity (PV01_CREDIT): {}", riskyAnnuity);
+            } else {
+                logger.debug("Risky Annuity not found in additional_results.csv (may not be available for all trades)");
+            }
+            
+            // Jump-to-Default (JTD) Exposure
+            // JTD represents the potential loss if the reference entity defaults immediately
+            // For a CDS protection buyer: JTD = Protection Leg NPV (the max gain on protection)
+            // For a CDS protection seller: JTD = -Protection Leg NPV (the max loss on default)
+            // We use Protection Leg NPV as the JTD exposure
+            if (protectionLegNPV != null) {
+                riskMeasures.setJtd(protectionLegNPV);
+                logger.info("✅ Calculated Jump-to-Default (JTD) Exposure: {} (from Protection Leg NPV)", protectionLegNPV);
+            } else {
+                logger.debug("Could not calculate JTD - Protection Leg NPV not available");
+            }
+            
+            logger.info("Parsed CDS metrics from additional_results.csv: Fair Spread Clean = {}, Protection Leg NPV = {}, Premium Leg NPV = {}, JTD = {}", 
+                riskMeasures.getFairSpreadClean(), riskMeasures.getProtectionLegNPV(), riskMeasures.getPremiumLegNPVClean(), riskMeasures.getJtd());
                 
         } catch (Exception e) {
             logger.error("Error parsing additional_results.csv", e);
@@ -500,6 +534,39 @@ public class OreOutputParser {
         
         logger.error("Created error risk measures for trade {}: {}", tradeId, errorMessage);
         return riskMeasures;
+    }
+    
+    /**
+     * Extracts valuation date from ORE config file
+     */
+    private LocalDate extractValuationDate(String workingDirPath) {
+        try {
+            java.nio.file.Path oreConfigPath = java.nio.file.Paths.get(workingDirPath, "ore.xml");
+            if (!java.nio.file.Files.exists(oreConfigPath)) {
+                logger.warn("ore.xml not found, defaulting to today");
+                return LocalDate.now();
+            }
+            
+            String content = java.nio.file.Files.readString(oreConfigPath);
+            // Extract asofDate parameter
+            int startIdx = content.indexOf("<Parameter name=\"asofDate\">");
+            if (startIdx == -1) {
+                return LocalDate.now();
+            }
+            int endIdx = content.indexOf("</Parameter>", startIdx);
+            if (endIdx == -1) {
+                return LocalDate.now();
+            }
+            
+            String dateStr = content.substring(startIdx + 27, endIdx).trim();
+            // Parse yyyyMMdd format
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+            return LocalDate.parse(dateStr, formatter);
+            
+        } catch (Exception e) {
+            logger.warn("Failed to extract valuation date from ore.xml, using today", e);
+            return LocalDate.now();
+        }
     }
     
     /**
