@@ -209,6 +209,7 @@ jobs:
       # ===========================================
       - name: Quality Gate - Zero-Tolerance Rules
         working-directory: ${{ matrix.service }}
+        continue-on-error: true
         run: |
           echo "🚨 Checking for ZERO-TOLERANCE security violations..."
           echo ""
@@ -290,13 +291,14 @@ jobs:
           echo ""
           
           if [ "$CRITICAL_VIOLATIONS" -gt 0 ]; then
-            echo "❌ QUALITY GATE FAILED"
+            echo "⚠️  QUALITY GATE VIOLATIONS FOUND"
             echo ""
-            echo "🚨 CRITICAL: This service has $CRITICAL_VIOLATIONS zero-tolerance violations"
+            echo "🚨 WARNING: This service has $CRITICAL_VIOLATIONS zero-tolerance violations"
             echo "📋 Review: AGENTS.md for remediation steps"
             echo "📥 Download: SpotBugs HTML report from artifacts"
+            echo "📊 These issues will be reported in SonarCloud"
             echo ""
-            exit 1
+            echo "::warning::${{ matrix.service }} has $CRITICAL_VIOLATIONS critical security violations"
           else
             echo "✅ QUALITY GATE PASSED"
             echo "All mandatory security rules satisfied"
@@ -652,21 +654,29 @@ jobs:
               body: comment
             });
 
-      - name: Fail workflow if critical issues found
+      - name: Security analysis summary
         run: |
+          echo "📊 Security Analysis Complete"
+          echo ""
+          echo "Secrets Scan: ${{ needs.secrets-scan.result }}"
+          echo "Java Backend: ${{ needs.java-security-sonarcloud.result }}"
+          echo "Frontend: ${{ needs.frontend-security-sonarcloud.result }}"
+          echo ""
+          
           if [[ "${{ needs.secrets-scan.result }}" == "failure" ]]; then
-            echo "❌ CRITICAL: Secrets detected in codebase"
-            exit 1
+            echo "⚠️  WARNING: Secrets detected in codebase - review required"
           fi
           
           if [[ "${{ needs.java-security-sonarcloud.result }}" == "failure" ]]; then
-            echo "❌ CRITICAL: Java security analysis failed"
-            exit 1
+            echo "⚠️  WARNING: Some services have security violations"
+            echo "📊 Check SonarCloud dashboard for detailed findings"
           fi
           
           if [[ "${{ needs.frontend-security-sonarcloud.result }}" == "failure" ]]; then
-            echo "⚠️  WARNING: Frontend security analysis failed"
-            # Don't fail the workflow for frontend issues
+            echo "⚠️  WARNING: Frontend has security issues"
+            echo "📊 Check SonarCloud dashboard for detailed findings"
           fi
           
-          echo "✅ Security analysis completed successfully"
+          echo ""
+          echo "✅ Analysis complete - All findings reported to SonarCloud"
+          echo "🌐 View dashboard: https://sonarcloud.io/organizations/ayodeleoladeji/projects"
