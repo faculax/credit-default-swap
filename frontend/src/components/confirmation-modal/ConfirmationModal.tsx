@@ -78,6 +78,12 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, trade, on
                 </span>
               </div>
               <div className="flex justify-between">
+                <span className="text-fd-text-muted">Settlement Type:</span>
+                <span className={`${trade.settlementType === 'CASH' ? 'text-fd-cyan' : 'text-fd-teal'}`}>
+                  {trade.settlementType === 'CASH' ? 'Cash Settlement' : 'Physical Settlement'}
+                </span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-fd-text-muted">Notional:</span>
                 <span className="text-fd-text font-medium">
                   {formatCurrency(trade.notionalAmount, trade.currency)}

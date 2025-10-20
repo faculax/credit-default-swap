@@ -14,8 +14,6 @@ public class BondRequest {
     private String isin;
     private String issuer;
     private Seniority seniority;
-    private String creditCurveId;
-    private BigDecimal recoveryRate;
     private String sector;
     private String currency;
     private BigDecimal notional;
@@ -51,22 +49,6 @@ public class BondRequest {
     
     public void setSeniority(Seniority seniority) {
         this.seniority = seniority;
-    }
-    
-    public String getCreditCurveId() {
-        return creditCurveId;
-    }
-    
-    public void setCreditCurveId(String creditCurveId) {
-        this.creditCurveId = creditCurveId;
-    }
-    
-    public BigDecimal getRecoveryRate() {
-        return recoveryRate;
-    }
-    
-    public void setRecoveryRate(BigDecimal recoveryRate) {
-        this.recoveryRate = recoveryRate;
     }
     
     public String getSector() {

@@ -131,8 +131,6 @@ public class BondService {
         inputs.setCouponRate(bond.getCouponRate());
         inputs.setCouponFrequency(bond.getCouponFrequency().name());
         inputs.setDayCount(bond.getDayCount().name());
-        inputs.setRecoveryRate(bond.getRecoveryRate());
-        inputs.setCreditCurveId(bond.getCreditCurveId());
         
         response.setInputs(inputs);
         
@@ -154,8 +152,6 @@ public class BondService {
         bond.setIsin(request.getIsin());
         bond.setIssuer(request.getIssuer());
         bond.setSeniority(request.getSeniority());
-        bond.setCreditCurveId(request.getCreditCurveId());
-        bond.setRecoveryRate(request.getRecoveryRate() != null ? request.getRecoveryRate() : bond.getRecoveryRate());
         bond.setSector(request.getSector());
         bond.setCurrency(request.getCurrency() != null ? request.getCurrency() : bond.getCurrency());
         bond.setNotional(request.getNotional());
@@ -178,8 +174,6 @@ public class BondService {
         if (request.getIsin() != null) bond.setIsin(request.getIsin());
         if (request.getIssuer() != null) bond.setIssuer(request.getIssuer());
         if (request.getSeniority() != null) bond.setSeniority(request.getSeniority());
-        if (request.getCreditCurveId() != null) bond.setCreditCurveId(request.getCreditCurveId());
-        if (request.getRecoveryRate() != null) bond.setRecoveryRate(request.getRecoveryRate());
         if (request.getSector() != null) bond.setSector(request.getSector());
         if (request.getCurrency() != null) bond.setCurrency(request.getCurrency());
         if (request.getNotional() != null) bond.setNotional(request.getNotional());

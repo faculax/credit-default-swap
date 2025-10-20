@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   REFERENCE_ENTITIES,
   COUNTERPARTIES,
@@ -8,8 +8,10 @@ import {
   RESTRUCTURING_CLAUSES,
   PAYMENT_CALENDARS,
   TRADE_STATUSES,
+  SETTLEMENT_METHODS,
   CDSTrade
 } from '../../data/referenceData';
+import { bondService, Bond } from '../../services/bondService';
 
 interface FormErrors {
   [key: string]: string;
@@ -27,11 +29,38 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
     dayCountConvention: 'ACT_360',
     buySellProtection: 'BUY',
     paymentCalendar: 'NYC',
-    tradeStatus: 'PENDING'
+    tradeStatus: 'PENDING',
+    recoveryRate: 40,
+    settlementType: 'CASH'
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [availableBonds, setAvailableBonds] = useState<Bond[]>([]);
+  const [loadingBonds, setLoadingBonds] = useState(false);
+
+  // Fetch bonds when reference entity changes
+  useEffect(() => {
+    const fetchBonds = async () => {
+      if (!formData.referenceEntity) {
+        setAvailableBonds([]);
+        return;
+      }
+
+      setLoadingBonds(true);
+      try {
+        const bonds = await bondService.getBondsByIssuer(formData.referenceEntity);
+        setAvailableBonds(bonds);
+      } catch (error) {
+        console.error('Error fetching bonds:', error);
+        setAvailableBonds([]);
+      } finally {
+        setLoadingBonds(false);
+      }
+    };
+
+    fetchBonds();
+  }, [formData.referenceEntity]);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -40,6 +69,10 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
     if (!formData.referenceEntity) {
       newErrors.referenceEntity = 'Reference Entity is required';
     }
+    
+    if (formData.referenceEntity && !formData.obligation?.id) {
+      newErrors.obligation = 'Obligation is required';
+    }
 
     if (!formData.notionalAmount || formData.notionalAmount <= 0) {
       newErrors.notionalAmount = 'Notional Amount must be greater than 0';
@@ -47,6 +80,10 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
 
     if (!formData.spread || formData.spread < 0) {
       newErrors.spread = 'Spread must be 0 or greater';
+    }
+
+    if (!formData.recoveryRate || formData.recoveryRate < 0 || formData.recoveryRate > 100) {
+      newErrors.recoveryRate = 'Recovery Rate must be between 0 and 100';
     }
 
     if (!formData.maturityDate) {
@@ -85,10 +122,26 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
   };
 
   const handleInputChange = (field: keyof CDSTrade, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => {
+      const updates: Partial<CDSTrade> = {};
+      
+      // Handle obligation specially - convert to nested object
+      if (field === 'obligation') {
+        updates.obligation = value ? { id: value } : undefined;
+      } else {
+        updates[field] = value as any;
+      }
+      
+      // Clear obligation when reference entity changes
+      if (field === 'referenceEntity' && prev.referenceEntity !== value) {
+        updates.obligation = undefined;
+      }
+      
+      return {
+        ...prev,
+        ...updates
+      };
+    });
 
     // Clear error for this field when user starts typing
     if (errors[field]) {
@@ -96,6 +149,27 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
         ...prev,
         [field]: ''
       }));
+    }
+  };
+
+  // Format number with commas for display
+  const formatNumberWithCommas = (num: number | undefined): string => {
+    if (!num && num !== 0) return '';
+    return num.toLocaleString('en-US');
+  };
+
+  // Parse formatted string back to number
+  const parseFormattedNumber = (str: string): number => {
+    return parseFloat(str.replace(/,/g, '')) || 0;
+  };
+
+  // Handle notional amount input with formatting
+  const handleNotionalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/,/g, ''); // Remove commas
+    const numValue = parseFloat(rawValue);
+    
+    if (!isNaN(numValue) || rawValue === '') {
+      handleInputChange('notionalAmount', rawValue === '' ? undefined : numValue);
     }
   };
 
@@ -126,7 +200,9 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
         dayCountConvention: 'ACT_360',
         buySellProtection: 'BUY',
         paymentCalendar: 'NYC',
-        tradeStatus: 'PENDING'
+        tradeStatus: 'PENDING',
+        recoveryRate: 40,
+        settlementType: 'CASH'
       });
     }, 1000);
   };
@@ -181,11 +257,15 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
     // Accrual start date: same as effective date
     const accrualStartDate = effectiveDate;
     
+    // Generate round notional amounts (5M, 10M, 20M, 50M, 100M, 200M, 500M)
+    const roundNotionals = [5000000, 10000000, 20000000, 50000000, 100000000, 200000000, 500000000];
+    const notionalAmount = getRandomItem(roundNotionals);
+    
     const randomData: Partial<CDSTrade> = {
       referenceEntity: getRandomItem(REFERENCE_ENTITIES).code,
       counterparty: getRandomItem(COUNTERPARTIES).code,
       currency: getRandomItem(CURRENCIES).code,
-      notionalAmount: Math.floor(Math.random() * 50000000) + 1000000, // 1M to 50M
+      notionalAmount,
       spread: Math.floor(Math.random() * 500) + 50, // 50 to 550 bps
       buySellProtection: Math.random() > 0.5 ? 'BUY' : 'SELL',
       tradeDate,
@@ -196,7 +276,9 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
       dayCountConvention: getRandomItem(DAY_COUNT_CONVENTIONS).value,
       restructuringClause: Math.random() > 0.3 ? getRandomItem(RESTRUCTURING_CLAUSES).value : '', // 70% chance of having a clause
       paymentCalendar: getRandomItem(PAYMENT_CALENDARS).value,
-      tradeStatus: 'ACTIVE' // Always generate ACTIVE trades for demo purposes
+      tradeStatus: 'ACTIVE', // Always generate ACTIVE trades for demo purposes
+      recoveryRate: 40,  // Default recovery rate
+      settlementType: getRandomItem(SETTLEMENT_METHODS).value
     };
     setFormData(randomData);
     setErrors({}); // Clear any existing errors
@@ -279,6 +361,40 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
           </div>
         </div>
 
+        {/* Row 1.5: Obligation (conditional on reference entity) */}
+        {formData.referenceEntity && (
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <label className="block text-fd-text font-medium mb-2">
+                Obligation (Bond) <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={formData.obligation?.id || ''}
+                onChange={(e) => handleInputChange('obligation', e.target.value ? Number(e.target.value) : undefined)}
+                className={selectClassName('obligation')}
+                disabled={loadingBonds}
+              >
+                <option value="">Select Obligation</option>
+                {loadingBonds && <option value="">Loading bonds...</option>}
+                {!loadingBonds && availableBonds.length === 0 && (
+                  <option value="">No bonds available for {formData.referenceEntity}</option>
+                )}
+                {!loadingBonds && availableBonds.map((bond) => (
+                  <option key={bond.id} value={bond.id}>
+                    {bond.isin ? `${bond.isin} - ` : ''}
+                    {bond.issuer} {bond.seniority} - 
+                    Coupon: {bond.couponRate}% - 
+                    Maturity: {new Date(bond.maturityDate).toLocaleDateString()}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-fd-text-muted mt-1">
+                Select a specific bond from {formData.referenceEntity}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Row 2: Notional Amount, Spread, Buy/Sell Protection */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
@@ -286,13 +402,11 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
               Notional Amount <span className="text-red-500">*</span>
             </label>
             <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.notionalAmount || ''}
-              onChange={(e) => handleInputChange('notionalAmount', parseFloat(e.target.value))}
+              type="text"
+              value={formatNumberWithCommas(formData.notionalAmount)}
+              onChange={handleNotionalChange}
               className={inputClassName('notionalAmount')}
-              placeholder="e.g., 10000000"
+              placeholder="e.g., 10,000,000"
             />
             {errors.notionalAmount && (
               <p className="text-red-500 text-sm mt-1">{errors.notionalAmount}</p>
@@ -319,6 +433,28 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
 
           <div>
             <label className="block text-fd-text font-medium mb-2">
+              Recovery Rate (%) <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              step="1"
+              min="0"
+              max="100"
+              value={formData.recoveryRate || 40}
+              onChange={(e) => handleInputChange('recoveryRate', parseFloat(e.target.value))}
+              className={inputClassName('recoveryRate')}
+              placeholder="e.g., 40"
+            />
+            {errors.recoveryRate && (
+              <p className="text-red-500 text-sm mt-1">{errors.recoveryRate}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Row 3: Buy/Sell Protection, Settlement Type */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-fd-text font-medium mb-2">
               Buy/Sell Protection <span className="text-red-500">*</span>
             </label>
             <select
@@ -330,9 +466,26 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
               <option value="SELL">Sell Protection</option>
             </select>
           </div>
+
+          <div>
+            <label className="block text-fd-text font-medium mb-2">
+              Settlement Type <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.settlementType || 'CASH'}
+              onChange={(e) => handleInputChange('settlementType', e.target.value)}
+              className={selectClassName('settlementType')}
+            >
+              {SETTLEMENT_METHODS.map((method) => (
+                <option key={method.value} value={method.value}>
+                  {method.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        {/* Row 3: Trade Date, Effective Date, Maturity Date */}
+        {/* Row 4: Trade Date, Effective Date, Maturity Date */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-fd-text font-medium mb-2">
@@ -499,7 +652,8 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
                 dayCountConvention: 'ACT_360',
                 buySellProtection: 'BUY',
                 paymentCalendar: 'NYC',
-                tradeStatus: 'PENDING'
+                tradeStatus: 'PENDING',
+                recoveryRate: 40
               });
               setErrors({});
             }}

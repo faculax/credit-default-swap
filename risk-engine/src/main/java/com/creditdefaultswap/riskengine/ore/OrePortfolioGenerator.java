@@ -134,6 +134,7 @@ public class OrePortfolioGenerator {
         private String dayCountConvention;
         private String buySellProtection;
         private String paymentCalendar;
+        private BigDecimal recoveryRate;  // Recovery rate as percentage (0-100)
         
         public CDSTradeData() {}
         
@@ -189,5 +190,8 @@ public class OrePortfolioGenerator {
         
         public LocalDate getFirstCouponDate() { return firstCouponDate; }
         public void setFirstCouponDate(LocalDate firstCouponDate) { this.firstCouponDate = firstCouponDate; }
+        
+        public BigDecimal getRecoveryRate() { return recoveryRate; }
+        public void setRecoveryRate(BigDecimal recoveryRate) { this.recoveryRate = recoveryRate; }
     }
 }

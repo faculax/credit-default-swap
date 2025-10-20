@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { cdsTradeService, CDSTradeResponse } from '../../services/cdsTradeService';
 import { creditEventService } from '../../services/creditEventService';
 import { novationService } from '../../services/novationService';
@@ -8,7 +8,11 @@ interface CDSBlotterProps {
   onTradeSelect?: (trade: CDSTradeResponse) => void;
 }
 
-const CDSBlotter: React.FC<CDSBlotterProps> = ({ onTradeSelect }) => {
+export interface CDSBlotterRef {
+  refreshTrades: () => void;
+}
+
+const CDSBlotter = forwardRef<CDSBlotterRef, CDSBlotterProps>(({ onTradeSelect }, ref) => {
   const [trades, setTrades] = useState<CDSTradeResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,6 +24,11 @@ const CDSBlotter: React.FC<CDSBlotterProps> = ({ onTradeSelect }) => {
   useEffect(() => {
     loadTrades();
   }, []);
+
+  // Expose refreshTrades method via ref
+  useImperativeHandle(ref, () => ({
+    refreshTrades: loadTrades
+  }));
 
   const loadTrades = async () => {
     try {
@@ -89,16 +98,12 @@ const CDSBlotter: React.FC<CDSBlotterProps> = ({ onTradeSelect }) => {
       setSelectedTradeForNovation(null);
       await loadTrades();
       
-      alert(`Successfully novated trade CDS-${tradeId} to ${ccpName}`);
+      alert('Novation completed successfully!');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Novation failed';
+      const errorMessage = error instanceof Error ? error.message : 'Failed to execute novation';
       alert(`Error: ${errorMessage}`);
-      console.error('Novation failed:', error);
+      console.error('Error executing novation:', error);
     }
-  };
-
-  const isTradeEligibleForNovation = (trade: CDSTradeResponse): boolean => {
-    return trade.tradeStatus === 'ACTIVE' || trade.tradeStatus === 'PENDING';
   };
 
   const formatCurrency = (amount: number, currency: string) => {
@@ -122,12 +127,11 @@ const CDSBlotter: React.FC<CDSBlotterProps> = ({ onTradeSelect }) => {
         return 'bg-yellow-100 text-yellow-800';
       case 'ACTIVE':
         return 'bg-green-100 text-green-800';
-      case 'CANCELLED':
+      case 'MATURED':
+        return 'bg-gray-100 text-gray-800';
+      case 'DEFAULTED':
         return 'bg-red-100 text-red-800';
-      case 'CREDIT_EVENT_RECORDED':
-        return 'bg-orange-100 text-orange-800';
-      case 'SETTLED_CASH':
-      case 'SETTLED_PHYSICAL':
+      case 'TERMINATED':
         return 'bg-blue-100 text-blue-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -136,221 +140,132 @@ const CDSBlotter: React.FC<CDSBlotterProps> = ({ onTradeSelect }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fd-green"></div>
+      <div className="bg-fd-darker rounded-lg p-6">
+        <div className="animate-pulse">
+          <div className="h-6 bg-fd-border rounded mb-4"></div>
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-12 bg-fd-border rounded"></div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-md p-4">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <div className="ml-3">
-            <h3 className="text-sm font-medium text-red-800">Error Loading Trades</h3>
-            <div className="mt-2 text-sm text-red-700">
-              <p>{error}</p>
-            </div>
-            <div className="mt-4">
-              <button
-                onClick={loadTrades}
-                className="bg-red-100 px-3 py-2 rounded-md text-sm font-medium text-red-800 hover:bg-red-200"
-              >
-                Retry
-              </button>
-            </div>
-          </div>
+      <div className="bg-fd-darker rounded-lg p-6">
+        <div className="text-red-400 text-center">
+          <p className="text-lg font-medium">Error Loading Trades</p>
+          <p className="text-sm mt-2">{error}</p>
+          <button
+            onClick={loadTrades}
+            className="mt-4 px-4 py-2 bg-fd-green text-fd-dark rounded-md hover:bg-opacity-90 transition-colors"
+          >
+            Retry
+          </button>
         </div>
-      </div>
-    );
-  }
-
-  if (trades.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <svg
-          className="mx-auto h-12 w-12 text-fd-text-muted"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-        <h3 className="mt-2 text-sm font-medium text-fd-text">No trades found</h3>
-        <p className="mt-1 text-sm text-fd-text-muted">Get started by creating your first CDS trade.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-fd-darker rounded-lg shadow-fd border border-fd-border">
-      <div className="px-6 py-4 border-b border-fd-border">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-fd-text">CDS Trade Blotter</h2>
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-fd-text-muted">
-              {trades.length} trade{trades.length !== 1 ? 's' : ''}
-            </span>
-            <button
-              onClick={loadTrades}
-              className="px-3 py-1 bg-fd-green text-fd-dark rounded hover:bg-fd-green-hover text-sm font-medium"
-            >
-              Refresh
-            </button>
-          </div>
-        </div>
+    <div className="bg-fd-darker rounded-lg p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-fd-text">CDS Trades</h2>
+        <button
+          onClick={loadTrades}
+          className="px-4 py-2 bg-fd-green text-fd-dark rounded-md hover:bg-opacity-90 transition-colors"
+        >
+          Refresh
+        </button>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-fd-border">
-          <thead className="bg-fd-dark">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
-                Trade ID
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
-                Reference Entity
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
-                Counterparty
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
-                Direction
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
-                Notional
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
-                Spread (bps)
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
-                Trade Date
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
-                Maturity
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-fd-darker divide-y divide-fd-border">
-            {trades.map((trade) => (
-              <tr
-                key={trade.id}
-                onClick={() => handleTradeClick(trade)}
-                className={`cursor-pointer hover:bg-fd-dark transition-colors ${
-                  selectedTradeId === trade.id ? 'bg-fd-dark ring-2 ring-fd-green' : ''
-                }`}
-              >
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-fd-text">
-                  CDS-{trade.id}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-fd-text">
-                  {trade.referenceEntity}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-fd-text">
-                  {trade.counterparty}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <span className={`${trade.buySellProtection === 'BUY' ? 'text-blue-400' : 'text-orange-400'}`}>
-                    {trade.buySellProtection === 'BUY' ? 'Buy Protection' : 'Sell Protection'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-fd-text font-medium">
-                  {formatCurrency(trade.notionalAmount, trade.currency)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-fd-text">
-                  {trade.spread}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-fd-text">
-                  {formatDate(trade.tradeDate)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-fd-text">
-                  {formatDate(trade.maturityDate)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(trade.tradeStatus)}`}>
-                    {trade.tradeStatus.replace(/_/g, ' ')}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={(e) => handleGenerateDemoEvents(trade, e)}
-                      disabled={generatingEvents === trade.id || trade.tradeStatus !== 'ACTIVE'}
-                      className={`inline-flex items-center justify-center w-8 h-8 rounded transition-colors ${
-                        trade.tradeStatus === 'ACTIVE' 
-                          ? 'text-fd-text-muted hover:text-fd-green hover:bg-fd-green/10' 
-                          : 'text-fd-text-muted/50 cursor-not-allowed'
-                      }`}
-                      title={
-                        trade.tradeStatus === 'ACTIVE' 
-                          ? 'Generate demo credit events' 
-                          : 'Only available for ACTIVE trades'
-                      }
-                    >
-                      {generatingEvents === trade.id ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-fd-green"></div>
-                      ) : (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            strokeWidth={2} 
-                            d="M8 6h8V4a2 2 0 00-2-2H10a2 2 0 00-2 2v2zm8 0v2H8V6h8zm0 2v8a2 2 0 01-2 2H10a2 2 0 01-2-2V8h8z"
-                          />
-                          <circle cx="10" cy="10" r="1" fill="currentColor"/>
-                          <circle cx="14" cy="10" r="1" fill="currentColor"/>
-                          <circle cx="10" cy="14" r="1" fill="currentColor"/>
-                          <circle cx="14" cy="14" r="1" fill="currentColor"/>
-                          <circle cx="12" cy="12" r="1" fill="currentColor"/>
-                          <circle cx="12" cy="16" r="1" fill="currentColor"/>
-                        </svg>
-                      )}
-                    </button>
-                    
-                    <button
-                      onClick={(e) => handleNovateClick(trade, e)}
-                      disabled={!isTradeEligibleForNovation(trade)}
-                      className={`inline-flex items-center justify-center w-8 h-8 rounded transition-colors ${
-                        isTradeEligibleForNovation(trade)
-                          ? 'text-fd-text-muted hover:text-blue-400 hover:bg-blue-400/10' 
-                          : 'text-fd-text-muted/50 cursor-not-allowed'
-                      }`}
-                      title={
-                        isTradeEligibleForNovation(trade)
-                          ? 'Novate trade to CCP' 
-                          : 'Only available for ACTIVE or PENDING trades'
-                      }
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-                      </svg>
-                    </button>
-                  </div>
-                </td>
+      {trades.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-fd-text text-lg">No trades found</p>
+          <p className="text-fd-text-secondary text-sm mt-2">
+            Book your first CDS trade using the form above
+          </p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-fd-border">
+                <th className="text-left py-3 px-4 text-fd-text font-medium">Trade ID</th>
+                <th className="text-left py-3 px-4 text-fd-text font-medium">Reference Entity</th>
+                <th className="text-left py-3 px-4 text-fd-text font-medium">Notional</th>
+                <th className="text-left py-3 px-4 text-fd-text font-medium">Spread</th>
+                <th className="text-left py-3 px-4 text-fd-text font-medium">Maturity</th>
+                <th className="text-left py-3 px-4 text-fd-text font-medium">Counterparty</th>
+                <th className="text-left py-3 px-4 text-fd-text font-medium">Status</th>
+                <th className="text-left py-3 px-4 text-fd-text font-medium">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      
-      {/* Novation Modal */}
+            </thead>
+            <tbody>
+              {trades.map((trade) => (
+                <tr
+                  key={trade.id}
+                  onClick={() => handleTradeClick(trade)}
+                  className={`border-b border-fd-border hover:bg-fd-dark cursor-pointer transition-colors ${
+                    selectedTradeId === trade.id ? 'bg-fd-dark' : ''
+                  }`}
+                >
+                  <td className="py-3 px-4 text-fd-text">CDS-{trade.id}</td>
+                  <td className="py-3 px-4 text-fd-text">{trade.referenceEntity}</td>
+                  <td className="py-3 px-4 text-fd-text">
+                    {formatCurrency(trade.notionalAmount, trade.currency)}
+                  </td>
+                  <td className="py-3 px-4 text-fd-text">{(trade.spread * 100).toFixed(2)}%</td>
+                  <td className="py-3 px-4 text-fd-text">{formatDate(trade.maturityDate)}</td>
+                  <td className="py-3 px-4 text-fd-text">{trade.counterparty}</td>
+                  <td className="py-3 px-4">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(trade.tradeStatus)}`}>
+                      {trade.tradeStatus}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={(e) => handleGenerateDemoEvents(trade, e)}
+                        disabled={generatingEvents === trade.id}
+                        className="px-3 py-1 bg-fd-cyan text-fd-dark text-xs rounded hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                        title="Generate demo credit events for this trade"
+                      >
+                        {generatingEvents === trade.id ? (
+                          <svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        ) : (
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                        )}
+                        <span>Events</span>
+                      </button>
+                      
+                      <button
+                        onClick={(e) => handleNovateClick(trade, e)}
+                        className="px-3 py-1 bg-fd-green-secondary text-fd-dark text-xs rounded hover:bg-opacity-90 transition-colors flex items-center space-x-1"
+                        title="Novate this trade to a CCP"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                        <span>Novate</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       <NovationModal
         isOpen={showNovationModal}
         trade={selectedTradeForNovation}
@@ -362,6 +277,8 @@ const CDSBlotter: React.FC<CDSBlotterProps> = ({ onTradeSelect }) => {
       />
     </div>
   );
-};
+});
+
+CDSBlotter.displayName = 'CDSBlotter';
 
 export default CDSBlotter;

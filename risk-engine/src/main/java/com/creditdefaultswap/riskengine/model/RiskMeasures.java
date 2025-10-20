@@ -25,6 +25,8 @@ public class RiskMeasures {
     private BigDecimal couponLegBPS; // Coupon leg basis point value
     private BigDecimal currentNotional; // Current notional amount
     private BigDecimal originalNotional; // Original notional amount
+    private BigDecimal riskyAnnuity; // Risky PV01 / RPV01 - present value of premium leg per 1bp spread
+    private BigDecimal jtd; // Jump-to-default exposure - potential loss if reference entity defaults immediately
     
     // Credit risk arrays
     private List<BigDecimal> defaultProbabilities; // Default probabilities by period
@@ -34,6 +36,9 @@ public class RiskMeasures {
     
     // Cashflow schedule
     private List<Cashflow> cashflows; // Complete cashflow schedule
+    
+    // Market data snapshot used for this calculation
+    private MarketDataSnapshot marketDataSnapshot;
     
     // DEPRECATED - These are fake estimates, kept for backwards compatibility but will be removed
     @Deprecated private BigDecimal dv01;
@@ -97,6 +102,12 @@ public class RiskMeasures {
     public BigDecimal getOriginalNotional() { return originalNotional; }
     public void setOriginalNotional(BigDecimal originalNotional) { this.originalNotional = originalNotional; }
     
+    public BigDecimal getRiskyAnnuity() { return riskyAnnuity; }
+    public void setRiskyAnnuity(BigDecimal riskyAnnuity) { this.riskyAnnuity = riskyAnnuity; }
+    
+    public BigDecimal getJtd() { return jtd; }
+    public void setJtd(BigDecimal jtd) { this.jtd = jtd; }
+    
     public List<BigDecimal> getDefaultProbabilities() { return defaultProbabilities; }
     public void setDefaultProbabilities(List<BigDecimal> defaultProbabilities) { this.defaultProbabilities = defaultProbabilities; }
     
@@ -111,6 +122,9 @@ public class RiskMeasures {
     
     public List<Cashflow> getCashflows() { return cashflows; }
     public void setCashflows(List<Cashflow> cashflows) { this.cashflows = cashflows; }
+    
+    public MarketDataSnapshot getMarketDataSnapshot() { return marketDataSnapshot; }
+    public void setMarketDataSnapshot(MarketDataSnapshot marketDataSnapshot) { this.marketDataSnapshot = marketDataSnapshot; }
     
     // DEPRECATED getters/setters
     @Deprecated public BigDecimal getDv01() { return dv01; }

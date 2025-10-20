@@ -39,25 +39,12 @@ const BondCreationModal: React.FC<BondCreationModalProps> = ({ isOpen, onClose, 
     seniority: 'SR_UNSEC',
     settlementDays: 2,
     faceValue: 100,
-    recoveryRate: 0.40,
     priceConvention: 'CLEAN'
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [userModifiedCreditCurve, setUserModifiedCreditCurve] = useState(false);
   const [userModifiedSector, setUserModifiedSector] = useState(false);
-
-  // Auto-suggest Credit Curve ID when issuer, seniority, or currency changes
-  useEffect(() => {
-    if (!userModifiedCreditCurve && formData.issuer && formData.seniority && formData.currency) {
-      const suggestedId = `${formData.issuer}_${formData.seniority}_${formData.currency}`;
-      setFormData(prev => ({
-        ...prev,
-        creditCurveId: suggestedId
-      }));
-    }
-  }, [formData.issuer, formData.seniority, formData.currency, userModifiedCreditCurve]);
 
   // Auto-populate sector when issuer changes
   useEffect(() => {
@@ -104,21 +91,11 @@ const BondCreationModal: React.FC<BondCreationModalProps> = ({ isOpen, onClose, 
       newErrors.maturityDate = 'Maturity date must be after issue date';
     }
 
-    if (formData.recoveryRate !== undefined && 
-        (formData.recoveryRate < 0 || formData.recoveryRate > 1)) {
-      newErrors.recoveryRate = 'Recovery rate must be between 0 and 1';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleInputChange = (field: keyof Bond, value: any) => {
-    // Track if user manually edits the credit curve ID
-    if (field === 'creditCurveId') {
-      setUserModifiedCreditCurve(true);
-    }
-    
     // Track if user manually edits the sector
     if (field === 'sector') {
       setUserModifiedSector(true);
@@ -166,11 +143,9 @@ const BondCreationModal: React.FC<BondCreationModalProps> = ({ isOpen, onClose, 
       seniority: 'SR_UNSEC',
       settlementDays: 2,
       faceValue: 100,
-      recoveryRate: 0.40,
       priceConvention: 'CLEAN'
     });
     setErrors({});
-    setUserModifiedCreditCurve(false);
     setUserModifiedSector(false);
   };
 
@@ -238,33 +213,6 @@ const BondCreationModal: React.FC<BondCreationModalProps> = ({ isOpen, onClose, 
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-fd-text mb-1">
-                Credit Curve ID
-              </label>
-              <input
-                type="text"
-                value={formData.creditCurveId || ''}
-                onChange={(e) => handleInputChange('creditCurveId', e.target.value)}
-                className="w-full px-3 py-2 bg-fd-dark border border-fd-border text-fd-text rounded-md focus:outline-none focus:ring-2 focus:ring-fd-green focus:border-transparent placeholder-fd-text-muted"
-                placeholder="Auto-suggested from issuer_seniority_currency"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-fd-text mb-1">
-                Recovery Rate (0-1)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.recoveryRate || ''}
-                onChange={(e) => handleInputChange('recoveryRate', parseFloat(e.target.value))}
-                className={`w-full px-3 py-2 bg-fd-dark border ${errors.recoveryRate ? 'border-red-500' : 'border-fd-border'} text-fd-text rounded-md focus:outline-none focus:ring-2 focus:ring-fd-green focus:border-transparent placeholder-fd-text-muted`}
-              />
-              {errors.recoveryRate && <p className="mt-1 text-sm text-red-400">{errors.recoveryRate}</p>}
             </div>
 
             <div>

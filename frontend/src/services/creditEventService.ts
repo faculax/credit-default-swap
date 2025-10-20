@@ -14,6 +14,11 @@ export interface CreditEvent {
   updatedAt?: string;
 }
 
+export interface CreditEventResponse {
+  creditEvent: CreditEvent;
+  affectedTradeIds: number[];
+}
+
 export interface CashSettlement {
   id: string;
   creditEventId: string;
@@ -42,8 +47,9 @@ class CreditEventService {
 
   /**
    * Record a credit event for a trade
+   * Returns the credit event along with IDs of all affected trades (for propagated events)
    */
-  async recordCreditEvent(tradeId: number, request: CreateCreditEventRequest): Promise<CreditEvent> {
+  async recordCreditEvent(tradeId: number, request: CreateCreditEventRequest): Promise<CreditEventResponse> {
     const response = await fetch(`${this.baseUrl}/cds-trades/${tradeId}/credit-events`, {
       method: 'POST',
       headers: {

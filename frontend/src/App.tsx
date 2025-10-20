@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import './App.css';
 import TopBar from './components/top-bar/TopBar';
 import CDSTradeForm from './components/cds-trade-form/CDSTradeForm';
 import ConfirmationModal from './components/confirmation-modal/ConfirmationModal';
-import CDSBlotter from './components/cds-blotter/CDSBlotter';
+import CDSBlotter, { CDSBlotterRef } from './components/cds-blotter/CDSBlotter';
 import TradeDetailModal from './components/trade-detail-modal/TradeDetailModal';
 import PortfolioPage from './components/portfolio/PortfolioPage';
 import MarginStatementsPage from './components/margin/MarginStatementsPage';
@@ -21,15 +21,12 @@ function App() {
   const [currentView, setCurrentView] = useState<ViewMode>('form');
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [bookedTrade, setBookedTrade] = useState<CDSTradeResponse | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+
   const [selectedTrade, setSelectedTrade] = useState<CDSTradeResponse | null>(null);
   const [isTradeDetailOpen, setIsTradeDetailOpen] = useState(false);
+  const blotterRef = useRef<CDSBlotterRef>(null);
 
   const handleTradeSubmit = async (trade: CDSTrade) => {
-    setIsSubmitting(true);
-    setSubmitError(null);
-    
     try {
       const tradeRequest: CDSTradeRequest = {
         referenceEntity: trade.referenceEntity,
@@ -46,7 +43,10 @@ function App() {
         restructuringClause: trade.restructuringClause,
         paymentCalendar: trade.paymentCalendar,
         accrualStartDate: trade.accrualStartDate,
-        tradeStatus: trade.tradeStatus
+        tradeStatus: trade.tradeStatus,
+        recoveryRate: trade.recoveryRate,
+        settlementType: trade.settlementType,
+        obligation: trade.obligation
       };
 
       const savedTrade = await cdsTradeService.createTrade(tradeRequest);
@@ -56,10 +56,7 @@ function App() {
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      setSubmitError(`Failed to book trade: ${errorMessage}`);
       alert(`Error booking trade: ${errorMessage}`);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -78,10 +75,11 @@ function App() {
     setSelectedTrade(null);
   };
 
-  const handleTradeUpdate = () => {
-    // Force a re-render of the blotter to refresh trade data
-    // The CDSBlotter will handle its own refresh
-    setCurrentView('blotter');
+  const handleTradesUpdated = (affectedTradeIds?: number[]) => {
+    // When trades are updated (e.g., credit event propagated), refresh the blotter
+    if (blotterRef.current) {
+      blotterRef.current.refreshTrades();
+    }
   };
 
   return (
@@ -192,7 +190,7 @@ function App() {
         {currentView === 'form' ? (
           <CDSTradeForm onSubmit={handleTradeSubmit} />
         ) : currentView === 'blotter' ? (
-          <CDSBlotter onTradeSelect={handleTradeSelect} />
+          <CDSBlotter ref={blotterRef} onTradeSelect={handleTradeSelect} />
         ) : currentView === 'portfolios' ? (
           <PortfolioPage />
         ) : currentView === 'margin-statements' ? (
@@ -219,7 +217,7 @@ function App() {
           isOpen={isTradeDetailOpen}
           trade={selectedTrade}
           onClose={handleCloseTradeDetail}
-          onTradeUpdate={handleTradeUpdate}
+          onTradesUpdated={handleTradesUpdated}
         />
       </div>
     </div>
