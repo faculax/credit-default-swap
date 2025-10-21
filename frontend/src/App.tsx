@@ -141,16 +141,6 @@ function App() {
               CDS Portfolios
             </button>
             <button
-              onClick={() => setCurrentView('margin-statements')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                currentView === 'margin-statements'
-                  ? 'bg-fd-green text-fd-dark'
-                  : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
-              }`}
-            >
-              Margin Statements
-            </button>
-            <button
               onClick={() => setCurrentView('simm')}
               className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                 currentView === 'simm'
@@ -169,6 +159,16 @@ function App() {
               }`}
             >
               SA-CCR Exposure
+            </button>
+            <button
+              onClick={() => setCurrentView('margin-statements')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                currentView === 'margin-statements'
+                  ? 'bg-fd-green text-fd-dark'
+                  : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
+              }`}
+            >
+              Margin Statements
             </button>
             <button
               onClick={() => setCurrentView('reconciliation')}

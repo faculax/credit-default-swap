@@ -72,7 +72,21 @@ public interface MarginStatementRepository extends JpaRepository<MarginStatement
     
     /**
      * Find statement by CCP details and date for margin account setup
+     * Returns list to handle potential duplicates - caller should take first or most recent
      */
-    Optional<MarginStatement> findByCcpNameAndMemberFirmAndAccountNumberAndStatementDate(
+    List<MarginStatement> findByCcpNameAndMemberFirmAndAccountNumberAndStatementDate(
             String ccpName, String memberFirm, String accountNumber, LocalDate statementDate);
+    
+    /**
+     * Find most recent statement by CCP details and date for margin account setup
+     */
+    @Query("SELECT ms FROM MarginStatement ms WHERE ms.ccpName = :ccpName " +
+           "AND ms.memberFirm = :memberFirm AND ms.accountNumber = :accountNumber " +
+           "AND ms.statementDate = :statementDate " +
+           "ORDER BY ms.createdAt DESC")
+    List<MarginStatement> findByCcpNameAndMemberFirmAndAccountNumberAndStatementDateOrderByCreatedAtDesc(
+            @Param("ccpName") String ccpName, 
+            @Param("memberFirm") String memberFirm, 
+            @Param("accountNumber") String accountNumber, 
+            @Param("statementDate") LocalDate statementDate);
 }

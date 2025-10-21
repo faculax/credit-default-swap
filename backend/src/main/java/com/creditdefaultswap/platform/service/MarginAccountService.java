@@ -123,7 +123,7 @@ public class MarginAccountService {
         LocalDate statementDate = LocalDate.now();
         
         // Try to find existing statement for this account and date
-        var existingStatement = marginStatementRepository
+        var existingStatements = marginStatementRepository
             .findByCcpNameAndMemberFirmAndAccountNumberAndStatementDate(
                 ccpTrade.getCcpName(),
                 ccpTrade.getCcpMemberId(), // Using member ID as member firm for now
@@ -131,9 +131,9 @@ public class MarginAccountService {
                 statementDate
             );
         
-        if (existingStatement.isPresent()) {
-            logger.debug("Using existing margin statement: {}", existingStatement.get().getStatementId());
-            return existingStatement.get();
+        if (!existingStatements.isEmpty()) {
+            logger.debug("Using existing margin statement: {}", existingStatements.get(0).getStatementId());
+            return existingStatements.get(0);
         }
         
         // Create new margin statement

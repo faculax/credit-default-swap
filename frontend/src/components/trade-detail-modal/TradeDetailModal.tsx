@@ -172,6 +172,16 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
     });
   };
 
+  const formatRestructuringClause = (clause: string) => {
+    const labels: { [key: string]: string } = {
+      'NO_RESTRUCTURING': 'No R',
+      'MODIFIED_RESTRUCTURING': 'Mod R',
+      'MODIFIED_MODIFIED_RESTRUCTURING': 'Mod Mod R',
+      'FULL_RESTRUCTURING': 'Full R'
+    };
+    return labels[clause] || clause.replace(/_/g, ' ');
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-fd-darker rounded-lg shadow-fd border border-fd-border p-6 max-w-5xl w-full mx-4 max-h-[90vh] overflow-y-auto">
@@ -247,15 +257,32 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
                     <span className="text-fd-text font-medium">{currentTrade.referenceEntity}</span>
                   </div>
                   {currentTrade.obligation && (
-                    <div className="flex justify-between">
-                      <span className="text-fd-text-muted">Obligation:</span>
-                      <span className="text-fd-text font-medium">
-                        <span className="text-fd-green">
-                          {currentTrade.obligation.isin ? `${currentTrade.obligation.isin} - ` : ''}
-                          {currentTrade.obligation.issuer} {currentTrade.obligation.seniority} 
-                          ({(currentTrade.obligation.couponRate * 100).toFixed(2)}%)
-                        </span>
-                      </span>
+                    <div className="bg-fd-dark rounded-lg p-3 space-y-2">
+                      <div className="text-sm text-fd-text-muted mb-1">Reference Obligation</div>
+                      <div className="space-y-1">
+                        {currentTrade.obligation.isin && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-fd-text-muted">ISIN:</span>
+                            <span className="text-fd-green font-mono">{currentTrade.obligation.isin}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between text-sm">
+                          <span className="text-fd-text-muted">Issuer:</span>
+                          <span className="text-fd-text">{currentTrade.obligation.issuer}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-fd-text-muted">Seniority:</span>
+                          <span className="text-fd-text">{currentTrade.obligation.seniority}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-fd-text-muted">Coupon:</span>
+                          <span className="text-fd-text">{(currentTrade.obligation.couponRate * 100).toFixed(3)}%</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-fd-text-muted">Maturity:</span>
+                          <span className="text-fd-text">{formatDate(currentTrade.obligation.maturityDate)}</span>
+                        </div>
+                      </div>
                     </div>
                   )}
                   <div className="flex justify-between">
@@ -343,7 +370,7 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
                   {currentTrade.restructuringClause && (
                     <div className="flex justify-between">
                       <span className="text-fd-text-muted">Restructuring Clause:</span>
-                      <span className="text-fd-text">{currentTrade.restructuringClause.replace(/_/g, ' ')}</span>
+                      <span className="text-fd-text">{formatRestructuringClause(currentTrade.restructuringClause)}</span>
                     </div>
                   )}
                 </div>

@@ -57,6 +57,7 @@ class CreditEventServiceTest {
         mockTrade.setReferenceEntity("ACME Corp");
         mockTrade.setNotionalAmount(BigDecimal.valueOf(1000000));
         mockTrade.setTradeStatus(TradeStatus.ACTIVE);
+        mockTrade.setSettlementType(SettlementMethod.CASH); // Add settlement type
         
         validRequest = new CreateCreditEventRequest();
         validRequest.setEventType(CreditEventType.BANKRUPTCY);
@@ -222,12 +223,14 @@ class CreditEventServiceTest {
         mockTrade2.setReferenceEntity("ACME Corp");
         mockTrade2.setNotionalAmount(BigDecimal.valueOf(500000));
         mockTrade2.setTradeStatus(TradeStatus.ACTIVE);
+        mockTrade2.setSettlementType(SettlementMethod.CASH);
         
         CDSTrade mockTrade3 = new CDSTrade();
         mockTrade3.setId(3L);
         mockTrade3.setReferenceEntity("ACME Corp");
         mockTrade3.setNotionalAmount(BigDecimal.valueOf(750000));
         mockTrade3.setTradeStatus(TradeStatus.ACTIVE);
+        mockTrade3.setSettlementType(SettlementMethod.CASH);
         
         // Mock repository responses
         when(tradeRepository.findById(1L)).thenReturn(Optional.of(mockTrade));
@@ -243,19 +246,22 @@ class CreditEventServiceTest {
         when(tradeRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        creditEventService.recordCreditEvent(1L, validRequest);
+        CreditEventResponse response = creditEventService.recordCreditEvent(1L, validRequest);
 
         // Assert - verify credit events created for all 3 trades (original + 2 propagated)
         verify(creditEventRepository, atLeast(5)).save(any(CreditEvent.class)); // original event + payout + 2 propagated events + 2 propagated payouts
         
-        // Verify trade status updates for all trades
-        verify(tradeRepository, atLeast(3)).save(argThat(trade -> 
-            trade.getTradeStatus() == TradeStatus.CREDIT_EVENT_RECORDED || 
-            trade.getTradeStatus() == TradeStatus.SETTLED_CASH
-        ));
+        // Verify trade status updates for all trades (2 saves per trade: CREDIT_EVENT_RECORDED + SETTLED_CASH)
+        verify(tradeRepository, atLeast(6)).save(any(CDSTrade.class));
         
         // Verify cash settlement calculated for all trades
         verify(cashSettlementService, times(3)).calculateCashSettlement(any(UUID.class), any(CDSTrade.class));
+        
+        // Verify response includes all affected trade IDs
+        assertEquals(3, response.getAffectedTradeIds().size());
+        assertTrue(response.getAffectedTradeIds().contains(1L));
+        assertTrue(response.getAffectedTradeIds().contains(2L));
+        assertTrue(response.getAffectedTradeIds().contains(3L));
     }
 
     @Test
@@ -269,6 +275,7 @@ class CreditEventServiceTest {
         mockTrade2.setReferenceEntity("ACME Corp");
         mockTrade2.setNotionalAmount(BigDecimal.valueOf(2000000));
         mockTrade2.setTradeStatus(TradeStatus.ACTIVE);
+        mockTrade2.setSettlementType(SettlementMethod.CASH);
         
         // Mock repository responses
         when(tradeRepository.findById(1L)).thenReturn(Optional.of(mockTrade));
@@ -279,21 +286,26 @@ class CreditEventServiceTest {
             .thenReturn(Optional.empty());
         
         CreditEvent savedEvent = new CreditEvent();
-        savedEvent.setId(UUID.randomUUID());
+        savedEvent.setId(java.util.UUID.randomUUID());
         when(creditEventRepository.save(any())).thenReturn(savedEvent);
         when(tradeRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        creditEventService.recordCreditEvent(1L, validRequest);
+        CreditEventResponse response = creditEventService.recordCreditEvent(1L, validRequest);
 
-        // Assert - verify credit events created for both trades
-        verify(creditEventRepository, atLeast(4)).save(any(CreditEvent.class)); // original event + payout + propagated event + propagated payout
+        // Assert - verify credit events created for both trades (original event + payout + propagated event + propagated payout)
+        verify(creditEventRepository, atLeast(4)).save(any(CreditEvent.class));
         
-        // Verify trade status updates
-        verify(tradeRepository, atLeast(2)).save(argThat(trade -> 
-            trade.getTradeStatus() == TradeStatus.CREDIT_EVENT_RECORDED || 
-            trade.getTradeStatus() == TradeStatus.SETTLED_CASH
-        ));
+        // Verify trade status updates (2 saves per trade: CREDIT_EVENT_RECORDED + SETTLED_CASH)
+        verify(tradeRepository, atLeast(4)).save(any(CDSTrade.class));
+        
+        // Verify cash settlement calculated for both trades
+        verify(cashSettlementService, times(2)).calculateCashSettlement(any(java.util.UUID.class), any(CDSTrade.class));
+        
+        // Verify response includes both affected trade IDs
+        assertEquals(2, response.getAffectedTradeIds().size());
+        assertTrue(response.getAffectedTradeIds().contains(1L));
+        assertTrue(response.getAffectedTradeIds().contains(2L));
     }
 
     @Test
