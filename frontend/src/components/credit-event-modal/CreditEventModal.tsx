@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { REFERENCE_ENTITIES } from '../../data/referenceData';
 
 export type CreditEventType = 'BANKRUPTCY' | 'FAILURE_TO_PAY' | 'RESTRUCTURING' | 'OBLIGATION_DEFAULT' | 'REPUDIATION_MORATORIUM' | 'PAYOUT';
 export type SettlementMethod = 'CASH' | 'PHYSICAL';
@@ -16,6 +17,7 @@ interface CreditEventModalProps {
   onClose: () => void;
   onSubmit: (request: CreateCreditEventRequest) => Promise<void>;
   tradeId: number;
+  referenceEntity?: string;
   isLoading?: boolean;
 }
 
@@ -24,12 +26,19 @@ const CreditEventModal: React.FC<CreditEventModalProps> = ({
   onClose,
   onSubmit,
   tradeId,
+  referenceEntity,
   isLoading = false
 }) => {
   // Get today's date in YYYY-MM-DD format
   const getTodayDate = () => {
     const today = new Date();
     return today.toISOString().split('T')[0];
+  };
+
+  // Helper function to get full name of reference entity
+  const getReferenceEntityFullName = (code: string): string => {
+    const entity = REFERENCE_ENTITIES.find(e => e.code === code);
+    return entity ? entity.name : code;
   };
 
   const [formData, setFormData] = useState<CreateCreditEventRequest>({
@@ -137,6 +146,22 @@ const CreditEventModal: React.FC<CreditEventModalProps> = ({
             </svg>
           </button>
         </div>
+
+        {/* Reference Entity Information */}
+        {referenceEntity && (
+          <div className="mb-4 p-3 bg-fd-dark rounded-lg border border-fd-border">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-fd-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              <div className="flex-1">
+                <p className="text-xs text-fd-text-muted uppercase tracking-wide">Reference Entity</p>
+                <p className="text-fd-green font-semibold">{getReferenceEntityFullName(referenceEntity)}</p>
+                <p className="text-fd-text-muted text-xs mt-0.5">{referenceEntity}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

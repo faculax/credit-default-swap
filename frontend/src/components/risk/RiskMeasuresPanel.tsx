@@ -4,12 +4,12 @@ import { RiskMeasures } from '../../services/risk/riskTypes';
 import CashflowScheduleTable from './CashflowScheduleTable';
 import { lifecycleService } from '../../services/lifecycleService';
 import { CouponPeriod } from '../../types/lifecycle';
-import { CDSTrade } from '../../data/referenceData';
+import { CDSTradeResponse } from '../../services/cdsTradeService';
 import { creditEventService } from '../../services/creditEventService';
 
 interface Props { 
   tradeId: number;
-  trade?: CDSTrade; // Optional trade object for richer display
+  trade?: CDSTradeResponse; // Optional trade object for richer display
 }
 
 const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
@@ -23,6 +23,13 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
   const [valuationDate, setValuationDate] = useState<string | undefined>(undefined); // undefined means "today"
   const [refreshKey, setRefreshKey] = useState(0); // Used to force refresh when clicking same button
   const [hasPayoutEvent, setHasPayoutEvent] = useState(false);
+
+  // Check if trade is in a final state (settled or terminated) where no modifications are allowed
+  const isTradeFinalized = trade && (
+    trade.tradeStatus === 'SETTLED_CASH' || 
+    trade.tradeStatus === 'SETTLED_PHYSICAL' ||
+    trade.tradeStatus === 'TERMINATED'
+  );
 
   const checkForPayoutEvent = async () => {
     try {
@@ -745,7 +752,7 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
                     </td>
                     <td className="py-2 px-3 text-center">
                       {/* Show Cancel button for the most recently paid coupon */}
-                      {period.paid && canUnpayCoupon(period) && (
+                      {period.paid && canUnpayCoupon(period) && !isTradeFinalized && (
                         <div className="flex flex-col gap-1 items-center">
                           <button
                             onClick={() => handleUnpayCoupon(period.id)}
@@ -774,8 +781,15 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
                         </span>
                       )}
                       
+                      {/* Show payment timestamp for finalized trades (no cancel button) */}
+                      {period.paid && canUnpayCoupon(period) && isTradeFinalized && (
+                        <span className="text-xs text-fd-text-muted">
+                          {new Date(period.paidAt!).toLocaleString()}
+                        </span>
+                      )}
+                      
                       {/* Show payment buttons for unpaid coupons */}
-                      {!period.paid && (
+                      {!period.paid && !isTradeFinalized && (
                         <div className="flex gap-1 justify-center">
                           <button
                             onClick={() => handlePayCoupon(period.id, true)}
@@ -802,6 +816,13 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
                             {canPayCoupon(period) ? 'Pay Now' : '🔒'}
                           </button>
                         </div>
+                      )}
+                      
+                      {/* Show locked message for finalized trades */}
+                      {!period.paid && isTradeFinalized && (
+                        <span className="text-xs text-red-400">
+                          🔒 Trade {trade?.tradeStatus.replace(/_/g, ' ').toLowerCase()}
+                        </span>
                       )}
                     </td>
                   </tr>
@@ -836,20 +857,26 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
           <p className="text-fd-text-muted mb-4">
             No coupon schedule generated for this trade yet.
           </p>
-          <button
-            onClick={handleGenerateSchedule}
-            disabled={generatingSchedule}
-            className="px-4 py-2 bg-fd-green text-fd-dark rounded font-medium hover:bg-fd-green-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {generatingSchedule ? (
-              <span className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-fd-dark"></div>
-                Generating Schedule...
-              </span>
-            ) : (
-              'Generate Coupon Schedule'
-            )}
-          </button>
+          {isTradeFinalized ? (
+            <p className="text-red-400 text-sm">
+              Cannot generate schedule - trade is {trade?.tradeStatus.replace(/_/g, ' ').toLowerCase()}
+            </p>
+          ) : (
+            <button
+              onClick={handleGenerateSchedule}
+              disabled={generatingSchedule}
+              className="px-4 py-2 bg-fd-green text-fd-dark rounded font-medium hover:bg-fd-green-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {generatingSchedule ? (
+                <span className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-fd-dark"></div>
+                  Generating Schedule...
+                </span>
+              ) : (
+                'Generate Coupon Schedule'
+              )}
+            </button>
+          )}
         </div>
       )}
 

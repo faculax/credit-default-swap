@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { CDSTradeResponse } from '../../services/cdsTradeService';
 import { lifecycleService } from '../../services/lifecycleService';
-import { CouponPeriod } from '../../types/lifecycle';
 
 interface LifecycleTimelineProps {
   trade: CDSTradeResponse;
+  onTradeUpdated?: () => void;
 }
 
 interface TimelineEvent {
   id: string;
-  type: 'creation' | 'schedule_generation' | 'coupon_paid' | 'status_change';
+  type: 'creation' | 'status_change';
   timestamp: string;
   title: string;
   description: string;
@@ -18,24 +18,24 @@ interface TimelineEvent {
   color: string;
 }
 
-const LifecycleTimeline: React.FC<LifecycleTimelineProps> = ({ trade }) => {
-  const [coupons, setCoupons] = useState<CouponPeriod[]>([]);
+const LifecycleTimeline: React.FC<LifecycleTimelineProps> = ({ trade, onTradeUpdated }) => {
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState<TimelineEvent[]>([]);
+  const [showTerminateModal, setShowTerminateModal] = useState(false);
+  const [terminationDate, setTerminationDate] = useState('');
+  const [terminationReason, setTerminationReason] = useState('');
+  const [terminating, setTerminating] = useState(false);
+  const [terminateError, setTerminateError] = useState<string | null>(null);
 
   const loadLifecycleData = async () => {
     setLoading(true);
     try {
-      // Load coupon schedule
-      const couponSchedule = await lifecycleService.getCouponSchedule(trade.id);
-      setCoupons(couponSchedule);
-      
       // Build timeline events
-      buildTimelineEvents(couponSchedule);
+      buildTimelineEvents();
     } catch (error) {
       console.error('Failed to load lifecycle data:', error);
-      // Build basic timeline without coupon data
-      buildTimelineEvents([]);
+      // Build basic timeline
+      buildTimelineEvents();
     } finally {
       setLoading(false);
     }
@@ -43,13 +43,13 @@ const LifecycleTimeline: React.FC<LifecycleTimelineProps> = ({ trade }) => {
 
   useEffect(() => {
     loadLifecycleData();
+    // Set default termination date to today
+    setTerminationDate(new Date().toISOString().split('T')[0]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trade.id]);
 
-  const buildTimelineEvents = (couponSchedule: CouponPeriod[]) => {
+  const buildTimelineEvents = () => {
     const timelineEvents: TimelineEvent[] = [];
-    const now = new Date();
-    const isTradeEnded = trade.tradeStatus !== 'ACTIVE' && trade.tradeStatus !== 'PENDING';
 
     // 1. Trade Creation - Use Trade Date instead of createdAt
     timelineEvents.push({
@@ -63,52 +63,7 @@ const LifecycleTimeline: React.FC<LifecycleTimelineProps> = ({ trade }) => {
       color: 'rgb(0, 240, 0)' // fd-green
     });
 
-    // 2. Coupon Schedule Generation (if exists)
-    if (couponSchedule.length > 0) {
-      const firstCoupon = couponSchedule[0];
-      timelineEvents.push({
-        id: 'schedule_gen',
-        type: 'schedule_generation',
-        timestamp: firstCoupon.createdAt,
-        title: 'Coupon Schedule Generated',
-        description: `${couponSchedule.length} coupon periods created`,
-        status: 'completed',
-        icon: '📅',
-        color: 'rgb(0, 232, 247)' // cyan
-      });
-
-      // 3. Coupon Payments - Filter out unpaid coupons if trade has ended
-      couponSchedule.forEach((coupon, index) => {
-        const paymentDate = new Date(coupon.paymentDate);
-        let status: 'completed' | 'pending' | 'upcoming' = 'upcoming';
-        
-        if (coupon.paid && coupon.paidAt) {
-          status = 'completed';
-        } else if (paymentDate <= now) {
-          status = 'pending';
-        }
-
-        // Skip unpaid coupons if trade lifecycle has ended
-        if (isTradeEnded && !coupon.paid) {
-          return;
-        }
-
-        timelineEvents.push({
-          id: `coupon-${coupon.id}`,
-          type: 'coupon_paid',
-          timestamp: coupon.paid && coupon.paidAt ? coupon.paidAt : coupon.paymentDate,
-          title: `Coupon Payment ${index + 1}`,
-          description: coupon.paid 
-            ? `Paid ${formatCurrency(coupon.couponAmount || 0, trade.currency)} on ${formatDate(coupon.paidAt!)}`
-            : `Due ${formatDate(coupon.paymentDate)} - ${formatCurrency(coupon.couponAmount || 0, trade.currency)}`,
-          status,
-          icon: coupon.paid ? '💰' : '⏰',
-          color: coupon.paid ? 'rgb(30, 230, 190)' : 'rgb(60, 75, 97)'
-        });
-      });
-    }
-
-    // 4. Status Changes
+    // 2. Status Changes
     if (trade.updatedAt && trade.updatedAt !== trade.createdAt) {
       timelineEvents.push({
         id: 'status_change',
@@ -130,6 +85,39 @@ const LifecycleTimeline: React.FC<LifecycleTimelineProps> = ({ trade }) => {
     setEvents(timelineEvents);
   };
 
+  const handleTerminateTrade = async () => {
+    if (!terminationDate) {
+      setTerminateError('Termination date is required');
+      return;
+    }
+
+    setTerminating(true);
+    setTerminateError(null);
+
+    try {
+      await lifecycleService.fullyTerminate(
+        trade.id,
+        terminationDate,
+        terminationReason || 'Trader initiated termination'
+      );
+      
+      setShowTerminateModal(false);
+      
+      // Notify parent component to refresh trade data
+      if (onTradeUpdated) {
+        onTradeUpdated();
+      }
+      
+      // Reload lifecycle data
+      loadLifecycleData();
+    } catch (error) {
+      console.error('Failed to terminate trade:', error);
+      setTerminateError(error instanceof Error ? error.message : 'Failed to terminate trade');
+    } finally {
+      setTerminating(false);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -148,13 +136,6 @@ const LifecycleTimeline: React.FC<LifecycleTimelineProps> = ({ trade }) => {
     });
   };
 
-  const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency || 'USD'
-    }).format(amount);
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -166,35 +147,111 @@ const LifecycleTimeline: React.FC<LifecycleTimelineProps> = ({ trade }) => {
 
   return (
     <div className="mt-4">
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-fd-text mb-2">Trade Lifecycle</h3>
-        <p className="text-fd-text-muted text-sm">
-          Visual timeline of key events and milestones for CDS-{trade.id}
-        </p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-fd-text mb-2">Trade Lifecycle</h3>
+          <p className="text-fd-text-muted text-sm">
+            Visual timeline of key events and milestones for CDS-{trade.id}
+          </p>
+        </div>
+        
+        {/* Terminate Trade Button - Only show for ACTIVE trades */}
+        {trade.tradeStatus === 'ACTIVE' && (
+          <button
+            onClick={() => setShowTerminateModal(true)}
+            className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded transition-colors flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            Terminate Trade
+          </button>
+        )}
       </div>
 
+      {/* Terminate Trade Modal */}
+      {showTerminateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-fd-darker border border-fd-border rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-semibold text-fd-text mb-4">Terminate Trade CDS-{trade.id}</h3>
+            
+            <div className="mb-4 p-3 bg-red-900/20 border border-red-700 rounded text-sm text-red-400">
+              <strong>Warning:</strong> This action will fully terminate the trade. The notional will be reduced to zero.
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-fd-text-muted text-sm mb-2">
+                  Termination Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={terminationDate}
+                  onChange={(e) => setTerminationDate(e.target.value)}
+                  className="w-full px-3 py-2 bg-fd-dark border border-fd-border rounded text-fd-text focus:outline-none focus:border-fd-green"
+                />
+              </div>
+
+              <div>
+                <label className="block text-fd-text-muted text-sm mb-2">
+                  Reason (optional)
+                </label>
+                <textarea
+                  value={terminationReason}
+                  onChange={(e) => setTerminationReason(e.target.value)}
+                  placeholder="Enter reason for termination..."
+                  rows={3}
+                  className="w-full px-3 py-2 bg-fd-dark border border-fd-border rounded text-fd-text focus:outline-none focus:border-fd-green resize-none"
+                />
+              </div>
+            </div>
+
+            {terminateError && (
+              <div className="mb-4 p-3 bg-red-900/20 border border-red-700 rounded text-sm text-red-400">
+                {terminateError}
+              </div>
+            )}
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowTerminateModal(false);
+                  setTerminateError(null);
+                }}
+                disabled={terminating}
+                className="px-6 py-2 bg-fd-darker border border-fd-border text-fd-text rounded hover:bg-fd-dark transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleTerminateTrade}
+                disabled={terminating || !terminationDate}
+                className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {terminating ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Terminating...
+                  </>
+                ) : (
+                  'Confirm Termination'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Stats Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 gap-4 mb-8">
         <div className="bg-fd-dark rounded-lg p-4 border border-fd-border">
           <div className="text-fd-text-muted text-xs uppercase mb-1">Total Events</div>
           <div className="text-fd-text text-2xl font-bold">{events.length}</div>
         </div>
         <div className="bg-fd-dark rounded-lg p-4 border border-fd-border">
-          <div className="text-fd-text-muted text-xs uppercase mb-1">Coupons Paid</div>
+          <div className="text-fd-text-muted text-xs uppercase mb-1">Current Status</div>
           <div className="text-fd-green text-2xl font-bold">
-            {coupons.filter(c => c.paid).length}
-          </div>
-        </div>
-        <div className="bg-fd-dark rounded-lg p-4 border border-fd-border">
-          <div className="text-fd-text-muted text-xs uppercase mb-1">Pending Payments</div>
-          <div className="text-yellow-400 text-2xl font-bold">
-            {coupons.filter(c => !c.paid && new Date(c.paymentDate) <= new Date()).length}
-          </div>
-        </div>
-        <div className="bg-fd-dark rounded-lg p-4 border border-fd-border">
-          <div className="text-fd-text-muted text-xs uppercase mb-1">Upcoming</div>
-          <div className="text-fd-text text-2xl font-bold">
-            {coupons.filter(c => !c.paid && new Date(c.paymentDate) > new Date()).length}
+            {trade.tradeStatus.replace(/_/g, ' ')}
           </div>
         </div>
       </div>

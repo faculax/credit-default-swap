@@ -154,7 +154,9 @@ create_test_trade() {
   "buySellProtection": "${buy_sell}",
   "tradeStatus": "ACTIVE",
   "paymentCalendar": "${payment_calendar}",
-  "restructuringClause": "${restructuring}"
+  "restructuringClause": "${restructuring}",
+  "recoveryRate": 40.0,
+  "settlementType": "CASH"
 }
 EOF
 )
@@ -218,20 +220,55 @@ get_risk_snapshot() {
 }
 EOF
 )
-    local response=$(curl -s -X POST "${RISK_API}/scenario/calculate" -H "Content-Type: application/json" -d "$scenario_request")
-    local first_result=$(echo "$response" | jq '.[0] // empty')
-    if [[ -z "$first_result" || "$first_result" == "null" ]]; then
-        print_error "Risk snapshot failed for ${label}"
-        echo "$response"
+    
+    # Save response to temp file to handle large/complex JSON with embedded strings
+    local temp_response="/tmp/risk_response_${label}.json"
+    curl -s -X POST "${RISK_API}/scenario/calculate" -H "Content-Type: application/json" -d "$scenario_request" > "$temp_response"
+    
+    # Check if response is valid JSON array first
+    if ! jq -e 'type == "array"' "$temp_response" > /dev/null 2>&1; then
+        print_error "Risk snapshot failed for ${label} - invalid JSON response"
+        print_info "Response (first 500 chars): $(head -c 500 "$temp_response")"
+        rm -f "$temp_response"
         return 1
     fi
+    
+    # Parse the first element
+    local first_result=$(jq -c '.[0] // empty' "$temp_response" 2>/dev/null)
+    if [[ -z "$first_result" || "$first_result" == "null" ]]; then
+        print_error "Risk snapshot failed for ${label} - no results in array"
+        print_info "Response array length: $(jq 'length' "$temp_response")"
+        rm -f "$temp_response"
+        return 1
+    fi
+    
     # Export fields dynamically
     local fields=(npv fairSpreadClean fairSpreadDirty protectionLegNPV premiumLegNPVClean accruedPremium upfrontPremium couponLegBps currentNotional)
     for f in "${fields[@]}"; do
-        local val=$(echo "$first_result" | jq -r ".${f} // empty")
+        local val=$(jq -r ".[0].${f} // empty" "$temp_response" 2>/dev/null)
         eval "${label}_$(echo $f | tr '[:lower:]' '[:upper:]')=\"$val\""
     done
-    echo "$first_result" | jq '{npv, fairSpreadClean, fairSpreadDirty, protectionLegNPV, premiumLegNPVClean, accruedPremium, upfrontPremium, couponLegBps, currentNotional}'
+    
+    # Print only the key metrics (manually to avoid jq control character issues)
+    print_success "Risk calculated for ${label}"
+    local npv_var="${label}_NPV"
+    local fsc_var="${label}_FAIRSPREADCLEAN"
+    local fsd_var="${label}_FAIRSPREADDIRTY"
+    local pln_var="${label}_PROTECTIONLEGNPV"
+    local pmc_var="${label}_PREMIUMLEGNPVCLEAN"
+    local apr_var="${label}_ACCRUEDPREMIUM"
+    local cur_var="${label}_CURRENTNOTIONAL"
+    
+    printf "${YELLOW}  NPV: %s\n" "${!npv_var}"
+    printf "  Fair Spread (Clean): %s\n" "${!fsc_var}"
+    printf "  Fair Spread (Dirty): %s\n" "${!fsd_var}"
+    printf "  Protection Leg NPV: %s\n" "${!pln_var}"
+    printf "  Premium Leg NPV (Clean): %s\n" "${!pmc_var}"
+    printf "  Accrued Premium: %s\n" "${!apr_var}"
+    printf "  Current Notional: %s${NC}\n" "${!cur_var}"
+    
+    # Clean up temp file
+    rm -f "$temp_response"
 }
 
 # Pay next coupon

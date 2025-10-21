@@ -286,16 +286,8 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
 
   return (
     <div className="max-w-4xl mx-auto bg-fd-darker rounded-lg shadow-fd border border-fd-border p-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-6">
         <h2 className="text-2xl font-bold text-fd-text">New CDS Trade Entry</h2>
-        <button
-          type="button"
-          onClick={generateRandomData}
-          className="px-4 py-2 bg-fd-teal text-fd-dark font-medium rounded hover:bg-fd-cyan transition-colors flex items-center space-x-2"
-        >
-          <span>🎲</span>
-          <span>Fill Random Data</span>
-        </button>
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -642,6 +634,13 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
 
         {/* Submit Button */}
         <div className="flex justify-end space-x-4 pt-6 border-t border-fd-border">
+          <button
+            type="button"
+            onClick={generateRandomData}
+            className="px-6 py-2 bg-transparent border border-fd-border text-fd-text rounded hover:bg-fd-dark transition-colors"
+          >
+            Fill Random Data
+          </button>
           <button
             type="button"
             onClick={() => {
