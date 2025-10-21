@@ -8,17 +8,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 @Service
 public class DemoCreditEventService {
     
     private final CDSTradeRepository tradeRepository;
     private final CreditEventService creditEventService;
-    private final Random random = new Random();
+    // Use SecureRandom even for demo data to avoid CWE-330 vulnerability
+    private final SecureRandom random = new SecureRandom();
     
     // Common reference entities that might have credit events
     private static final String[] CREDIT_EVENT_ENTITIES = {
