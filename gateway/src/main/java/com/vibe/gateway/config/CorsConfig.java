@@ -30,13 +30,12 @@ public class CorsConfig {
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
                     .collect(Collectors.toList());
-            corsConfig.setAllowedOrigins(origins);
+            origins.forEach(corsConfig::addAllowedOrigin);
         } else {
             String single = System.getenv().getOrDefault("FRONTEND_ORIGIN", "http://localhost:3000");
-            corsConfig.setAllowedOrigins(Arrays.asList(
-                single,
-                "https://credit-default-swap.onrender.com"
-            ));
+            corsConfig.addAllowedOrigin(single);
+            // Always allow the production frontend URL
+            corsConfig.addAllowedOrigin("https://credit-default-swap.onrender.com");
             logger.info("CORS: Added allowed origins: {} and https://credit-default-swap.onrender.com", single);
         }
 
