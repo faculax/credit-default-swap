@@ -7,7 +7,6 @@ import {
   BasketPortfolioConstituent,
   PortfolioPricingResponse,
 } from '../../services/portfolioService';
-import { cdsTradeService, CDSTradeResponse } from '../../services/cdsTradeService';
 import AttachInstrumentsModal from './AttachInstrumentsModal';
 import SimulationPanel from './simulation/SimulationPanel';
 import EnhancedOverview from './EnhancedOverview';
@@ -34,6 +33,7 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
 
   useEffect(() => {
     loadPortfolioData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [portfolioId]);
 
   const loadPortfolioData = async () => {
@@ -636,12 +636,5 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
     </div>
   );
 };
-
-const MetricCard: React.FC<{ label: string; value: string }> = ({ label, value }) => (
-  <div className="bg-fd-dark p-4 rounded-lg border border-fd-border">
-    <p className="text-sm text-fd-text-muted mb-1">{label}</p>
-    <p className="text-xl font-semibold text-fd-text">{value}</p>
-  </div>
-);
 
 export default PortfolioDetail;

@@ -158,11 +158,6 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
     return num.toLocaleString('en-US');
   };
 
-  // Parse formatted string back to number
-  const parseFormattedNumber = (str: string): number => {
-    return parseFloat(str.replace(/,/g, '')) || 0;
-  };
-
   // Handle notional amount input with formatting
   const handleNotionalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value.replace(/,/g, ''); // Remove commas

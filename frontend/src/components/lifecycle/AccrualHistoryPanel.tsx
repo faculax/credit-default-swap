@@ -36,7 +36,7 @@ export const AccrualHistoryPanel: React.FC<Props> = ({ tradeId }) => {
 
   useEffect(() => {
     loadCumulative();
-  }, [tradeId]);
+  }, [tradeId, loadCumulative]);
 
   return (
     <div className="space-y-4">

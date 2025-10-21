@@ -149,19 +149,6 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
 
   if (!isOpen) return null;
 
-  const getStatusColor = (status: ServiceStatus['status']) => {
-    switch (status) {
-      case 'ONLINE':
-        return 'text-fd-green';
-      case 'OFFLINE':
-        return 'text-red-500';
-      case 'UNKNOWN':
-        return 'text-fd-text-muted';
-      default:
-        return 'text-fd-text-muted';
-    }
-  };
-
   const getStatusBadgeColor = (status: ServiceStatus['status']) => {
     switch (status) {
       case 'ONLINE':

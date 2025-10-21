@@ -17,7 +17,6 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({ portfolioId }) => {
 
   const {
     simulation,
-    loading: polling,
     error: pollingError,
   } = useSimulationPolling(runId, !!runId);
 
