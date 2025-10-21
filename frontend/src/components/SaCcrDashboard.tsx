@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiUrl } from '../config/api';
 
 interface NettingSet {
     id: number;
@@ -9,7 +10,6 @@ interface NettingSet {
     governingLaw: string;
     nettingEligible: boolean;
     collateralAgreement: boolean;
-    isActive: boolean;
     createdAt: string;
 }
 
@@ -57,18 +57,29 @@ const SaCcrDashboard: React.FC = () => {
     }, []);
 
     const loadNettingSets = async () => {
+        console.log('Loading netting sets...');
+        setError(null);
         try {
-            const response = await fetch('http://localhost:8080/api/v1/sa-ccr/netting-sets');
+            const url = apiUrl('/v1/sa-ccr/netting-sets');
+            console.log('API URL:', url);
+            
+            const response = await fetch(url);
+            console.log('Response status:', response.status);
+            
             const data = await response.json();
+            console.log('API Response:', data);
             
             if (data.status === 'SUCCESS') {
-                setNettingSets(data.nettingSets);
+                console.log('Setting netting sets:', data.nettingSets?.length);
+                setNettingSets(data.nettingSets || []);
             } else {
-                setError(data.message || 'Failed to load netting sets');
+                const errorMsg = data.message || 'Failed to load netting sets';
+                console.error('API error:', errorMsg);
+                setError(errorMsg);
             }
         } catch (err) {
+            console.error('Fetch error:', err);
             setError('Error connecting to SA-CCR service');
-            console.error('Error loading netting sets:', err);
         }
     };
 
@@ -77,11 +88,9 @@ const SaCcrDashboard: React.FC = () => {
         setError(null);
         
         try {
-            const url = new URL('http://localhost:8080/api/v1/sa-ccr/calculate');
-            url.searchParams.append('valuationDate', calculationRequest.valuationDate);
-            url.searchParams.append('jurisdiction', calculationRequest.jurisdiction);
+            const url = apiUrl(`/v1/sa-ccr/calculate?valuationDate=${calculationRequest.valuationDate}&jurisdiction=${calculationRequest.jurisdiction}`);
             
-            const response = await fetch(url.toString(), {
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -116,16 +125,22 @@ const SaCcrDashboard: React.FC = () => {
         return num.toFixed(decimals);
     };
 
+    // Filter calculations by selected jurisdiction
+    const getFilteredCalculations = () => {
+        return calculations.filter(calc => calc.jurisdiction === calculationRequest.jurisdiction);
+    };
+
     const getTotalExposure = () => {
-        return calculations.reduce((sum, calc) => sum + calc.exposureAtDefault, 0);
+        return getFilteredCalculations().reduce((sum, calc) => sum + calc.exposureAtDefault, 0);
     };
 
     const getMaxExposure = () => {
-        return Math.max(...calculations.map(calc => calc.exposureAtDefault), 0);
+        const filtered = getFilteredCalculations();
+        return filtered.length > 0 ? Math.max(...filtered.map(calc => calc.exposureAtDefault)) : 0;
     };
 
     const getActiveNettingSetsCount = () => {
-        return nettingSets.filter(ns => ns.isActive).length;
+        return nettingSets.length;
     };
 
     return (
@@ -139,6 +154,12 @@ const SaCcrDashboard: React.FC = () => {
                     </p>
                 </div>
                 <div className="flex items-center space-x-4">
+                    <button
+                        onClick={loadNettingSets}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    >
+                        Refresh Netting Sets
+                    </button>
                     <div className="text-sm text-fd-text-secondary">
                         Last Updated: {new Date().toLocaleString()}
                     </div>
@@ -155,6 +176,16 @@ const SaCcrDashboard: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* Debug Info */}
+            <div className="bg-blue-900/30 border border-blue-500 rounded-lg p-3 mb-6">
+                <h4 className="text-blue-300 font-medium text-sm">Debug Info</h4>
+                <div className="text-blue-200 text-xs mt-1 space-y-1">
+                    <div>Netting Sets Count: {nettingSets.length}</div>
+                    <div>Has Error: {error ? 'Yes' : 'No'}</div>
+                    <div>API URL: {apiUrl('/v1/sa-ccr/netting-sets')}</div>
+                </div>
+            </div>
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -220,10 +251,10 @@ const SaCcrDashboard: React.FC = () => {
                         <div className="ml-5 w-0 flex-1">
                             <dl>
                                 <dt className="text-sm font-medium text-fd-text-secondary truncate">
-                                    Calculations Count
+                                    Calculations Count ({calculationRequest.jurisdiction})
                                 </dt>
                                 <dd className="text-lg font-medium text-fd-text">
-                                    {calculations.length}
+                                    {getFilteredCalculations().length}
                                 </dd>
                             </dl>
                         </div>
@@ -297,11 +328,19 @@ const SaCcrDashboard: React.FC = () => {
             {calculations.length > 0 && (
                 <div className="bg-fd-darker border border-fd-border rounded-lg">
                     <div className="px-6 py-4 border-b border-fd-border">
-                        <h2 className="text-xl font-semibold text-fd-text">SA-CCR Calculation Results</h2>
+                        <h2 className="text-xl font-semibold text-fd-text">
+                            SA-CCR Calculation Results - {calculationRequest.jurisdiction}
+                        </h2>
                         <p className="text-sm text-fd-text-secondary mt-1">
                             Exposure at Default (EAD) = α × (Replacement Cost + Potential Future Exposure)
+                            {getFilteredCalculations().length === 0 && (
+                                <span className="text-yellow-400 ml-2">
+                                    ⚠️ No calculations for selected jurisdiction. Change jurisdiction or run calculations.
+                                </span>
+                            )}
                         </p>
                     </div>
+                    {getFilteredCalculations().length > 0 ? (
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-fd-border">
                             <thead>
@@ -330,7 +369,7 @@ const SaCcrDashboard: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-fd-border">
-                                {calculations.map((calculation) => (
+                                {getFilteredCalculations().map((calculation) => (
                                     <tr
                                         key={calculation.id}
                                         className="hover:bg-fd-dark/50 cursor-pointer"
@@ -373,6 +412,12 @@ const SaCcrDashboard: React.FC = () => {
                             </tbody>
                         </table>
                     </div>
+                    ) : (
+                        <div className="px-6 py-8 text-center text-fd-text-muted">
+                            <p>No calculations found for jurisdiction: {calculationRequest.jurisdiction}</p>
+                            <p className="text-sm mt-2">Try selecting a different jurisdiction or running calculations.</p>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -409,7 +454,7 @@ const SaCcrDashboard: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-fd-border">
-                            {nettingSets.filter(ns => ns.isActive).map((nettingSet) => (
+                            {nettingSets.map(nettingSet => (
                                 <tr key={nettingSet.id} className="hover:bg-fd-dark/50">
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-fd-text">
                                         {nettingSet.nettingSetId}

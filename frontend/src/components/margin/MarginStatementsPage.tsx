@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import StatementUpload from './StatementUpload';
 import StatementList from './StatementList';
+import AutomatedStatementGenerator from './AutomatedStatementGenerator';
 
 const MarginStatementsPage: React.FC = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [activeTab, setActiveTab] = useState<'upload' | 'list'>('upload');
+  const [activeTab, setActiveTab] = useState<'generate' | 'upload' | 'list'>('generate');
 
   const handleUploadSuccess = (statementId: number) => {
     // Trigger refresh of the statement list
@@ -32,13 +33,26 @@ const MarginStatementsPage: React.FC = () => {
             <div>
               <h1 className="text-3xl font-bold text-fd-text">Margin Statements</h1>
               <p className="text-fd-text-muted mt-1">
-                Upload and manage daily VM/IM statements from CCPs
+                Generate automated VM/IM statements or upload external CCP statements
               </p>
             </div>
           </div>
 
           {/* Tab Navigation */}
           <div className="flex space-x-1 bg-fd-darker rounded-lg p-1 w-fit">
+            <button
+              onClick={() => setActiveTab('generate')}
+              className={`px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 ${
+                activeTab === 'generate'
+                  ? 'bg-green-500 text-white'
+                  : 'text-fd-text-muted hover:text-fd-text hover:bg-fd-border/50'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+              <span>Auto Generate</span>
+            </button>
             <button
               onClick={() => setActiveTab('upload')}
               className={`px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 ${
@@ -70,7 +84,15 @@ const MarginStatementsPage: React.FC = () => {
 
         {/* Content */}
         <div className="space-y-6">
-          {activeTab === 'upload' ? (
+          {activeTab === 'generate' ? (
+            <AutomatedStatementGenerator 
+              onGenerationSuccess={() => {
+                setRefreshTrigger(prev => prev + 1);
+                setActiveTab('list');
+              }}
+              onGenerationError={handleUploadError}
+            />
+          ) : activeTab === 'upload' ? (
             <StatementUpload 
               onUploadSuccess={handleUploadSuccess}
               onUploadError={handleUploadError}

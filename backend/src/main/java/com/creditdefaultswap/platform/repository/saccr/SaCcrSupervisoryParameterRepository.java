@@ -32,6 +32,9 @@ public interface SaCcrSupervisoryParameterRepository extends JpaRepository<SaCcr
     List<SaCcrSupervisoryParameter> findByJurisdictionAndAssetClassAndParameterTypeAndEffectiveDateLessThanEqual(
             String jurisdiction, String assetClass, String parameterType, LocalDate asOfDate);
     
+    List<SaCcrSupervisoryParameter> findByJurisdictionAndAssetClassAndParameterTypeAndEffectiveDateLessThanEqualOrderByEffectiveDateDesc(
+            String jurisdiction, String assetClass, String parameterType, LocalDate asOfDate);
+    
     Optional<SaCcrSupervisoryParameter> findTopByJurisdictionAndParameterTypeAndEffectiveDateLessThanEqualOrderByEffectiveDateDesc(
             String jurisdiction, String parameterType, LocalDate asOfDate);
     

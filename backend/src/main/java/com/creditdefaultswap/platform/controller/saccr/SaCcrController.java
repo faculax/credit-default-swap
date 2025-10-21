@@ -4,6 +4,7 @@ import com.creditdefaultswap.platform.model.saccr.NettingSet;
 import com.creditdefaultswap.platform.model.saccr.SaCcrCalculation;
 import com.creditdefaultswap.platform.model.saccr.SaCcrSupervisoryParameter;
 import com.creditdefaultswap.platform.service.saccr.SaCcrCalculationService;
+import com.creditdefaultswap.platform.service.saccr.SaCcrJurisdictionService;
 import com.creditdefaultswap.platform.repository.saccr.NettingSetRepository;
 import com.creditdefaultswap.platform.repository.saccr.SaCcrSupervisoryParameterRepository;
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +27,6 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api/v1/sa-ccr")
-@CrossOrigin(origins = "http://localhost:3000")
 public class SaCcrController {
     
     private static final Logger logger = LoggerFactory.getLogger(SaCcrController.class);
@@ -38,6 +39,9 @@ public class SaCcrController {
     
     @Autowired
     private SaCcrSupervisoryParameterRepository supervisoryParameterRepository;
+    
+    @Autowired
+    private SaCcrJurisdictionService jurisdictionService;
     
     // ========== Calculation Endpoints ==========
     
@@ -303,6 +307,172 @@ public class SaCcrController {
             logger.error("Error getting system status: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("status", "ERROR", "message", e.getMessage()));
+        }
+    }
+    
+    // ========== Jurisdiction-Specific Endpoints ==========
+    
+    /**
+     * Get all supported jurisdictions with their configurations
+     */
+    @GetMapping("/jurisdictions")
+    public ResponseEntity<?> getSupportedJurisdictions() {
+        try {
+            List<SaCcrJurisdictionService.JurisdictionConfig> jurisdictions = 
+                jurisdictionService.getSupportedJurisdictions();
+            
+            return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "jurisdictionCount", jurisdictions.size(),
+                "jurisdictions", jurisdictions
+            ));
+            
+        } catch (Exception e) {
+            logger.error("Error getting supported jurisdictions: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("status", "ERROR", "message", e.getMessage()));
+        }
+    }
+    
+    /**
+     * Get jurisdiction-specific configuration and parameters
+     */
+    @GetMapping("/jurisdictions/{jurisdiction}")
+    public ResponseEntity<?> getJurisdictionDetails(
+            @PathVariable String jurisdiction,
+            @RequestParam(value = "asOfDate", required = false) 
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate asOfDate) {
+        
+        try {
+            if (asOfDate == null) {
+                asOfDate = LocalDate.now();
+            }
+            
+            if (!jurisdictionService.isJurisdictionSupported(jurisdiction)) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("status", "ERROR", "message", "Unsupported jurisdiction: " + jurisdiction));
+            }
+            
+            SaCcrJurisdictionService.JurisdictionConfig config = 
+                jurisdictionService.getJurisdictionConfig(jurisdiction);
+            
+            // Get jurisdiction-specific parameters
+            List<SaCcrSupervisoryParameter> parameters = 
+                supervisoryParameterRepository.findByJurisdictionOrderByEffectiveDateDesc(jurisdiction);
+            
+            // Get alpha factor for this jurisdiction
+            BigDecimal alphaFactor = jurisdictionService.getAlphaFactor(jurisdiction, asOfDate);
+            
+            return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "jurisdiction", jurisdiction,
+                "asOfDate", asOfDate,
+                "config", config,
+                "alphaFactor", alphaFactor,
+                "parameterCount", parameters.size(),
+                "parameters", parameters
+            ));
+            
+        } catch (Exception e) {
+            logger.error("Error getting jurisdiction details for {}: {}", jurisdiction, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("status", "ERROR", "message", e.getMessage()));
+        }
+    }
+    
+    /**
+     * Compare jurisdictional differences in SA-CCR implementation
+     */
+    @PostMapping("/jurisdictions/compare")
+    public ResponseEntity<?> compareJurisdictions(
+            @RequestBody Map<String, Object> request) {
+        
+        try {
+            @SuppressWarnings("unchecked")
+            List<String> jurisdictions = (List<String>) request.get("jurisdictions");
+            LocalDate asOfDate = request.containsKey("asOfDate") ? 
+                LocalDate.parse((String) request.get("asOfDate")) : LocalDate.now();
+            
+            if (jurisdictions == null || jurisdictions.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("status", "ERROR", "message", "At least one jurisdiction must be specified"));
+            }
+            
+            // Validate all jurisdictions are supported
+            for (String jurisdiction : jurisdictions) {
+                if (!jurisdictionService.isJurisdictionSupported(jurisdiction)) {
+                    return ResponseEntity.badRequest()
+                            .body(Map.of("status", "ERROR", "message", "Unsupported jurisdiction: " + jurisdiction));
+                }
+            }
+            
+            Map<String, Object> comparison = jurisdictionService.getJurisdictionComparison(jurisdictions, asOfDate);
+            
+            return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "asOfDate", asOfDate,
+                "comparedJurisdictions", jurisdictions,
+                "comparison", comparison
+            ));
+            
+        } catch (Exception e) {
+            logger.error("Error comparing jurisdictions: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("status", "ERROR", "message", e.getMessage()));
+        }
+    }
+    
+    /**
+     * Calculate SA-CCR exposure for specific jurisdiction with detailed breakdown
+     */
+    @PostMapping("/calculate/jurisdiction/{jurisdiction}")
+    public ResponseEntity<?> calculateExposureByJurisdiction(
+            @PathVariable String jurisdiction,
+            @RequestParam("valuationDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate valuationDate,
+            @RequestParam(value = "nettingSetId", required = false) String nettingSetId) {
+        
+        try {
+            if (!jurisdictionService.isJurisdictionSupported(jurisdiction)) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("status", "ERROR", "message", "Unsupported jurisdiction: " + jurisdiction));
+            }
+            
+            logger.info("Calculating SA-CCR exposure for jurisdiction: {} as of {}", jurisdiction, valuationDate);
+            
+            List<SaCcrCalculation> calculations;
+            if (nettingSetId != null) {
+                // Calculate for specific netting set
+                // Implementation would filter by netting set
+                calculations = calculationService.calculateAllExposures(valuationDate, jurisdiction);
+                calculations = calculations.stream()
+                    .filter(calc -> nettingSetId.equals(calc.getNettingSetId()))
+                    .toList();
+            } else {
+                // Calculate for all netting sets
+                calculations = calculationService.calculateAllExposures(valuationDate, jurisdiction);
+            }
+            
+            // Get jurisdiction configuration for context
+            SaCcrJurisdictionService.JurisdictionConfig config = 
+                jurisdictionService.getJurisdictionConfig(jurisdiction);
+            
+            return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "message", "SA-CCR calculations completed for jurisdiction: " + jurisdiction,
+                "jurisdiction", jurisdiction,
+                "jurisdictionConfig", config,
+                "calculationCount", calculations.size(),
+                "valuationDate", valuationDate,
+                "calculations", calculations
+            ));
+            
+        } catch (Exception e) {
+            logger.error("Error calculating SA-CCR exposure for jurisdiction {}: {}", jurisdiction, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(
+                        "status", "ERROR",
+                        "message", "Failed to calculate SA-CCR exposures for jurisdiction " + jurisdiction + ": " + e.getMessage()
+                    ));
         }
     }
 }

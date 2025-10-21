@@ -25,6 +25,9 @@ public class SaCcrCalculationService {
     
     @Autowired
     private CDSTradeRepository cdsTradeRepository;
+    
+    @Autowired
+    private SaCcrJurisdictionService jurisdictionService;
 
     /**
      * Calculate SA-CCR exposures for all netting sets
@@ -159,7 +162,7 @@ public class SaCcrCalculationService {
     }
     
     /**
-     * Get supervisory factor for a CDS trade based on Basel III parameters
+     * Get supervisory factor for a CDS trade based on jurisdiction-specific parameters
      */
     private BigDecimal getSupervisoryFactor(CDSTrade trade, String jurisdiction) {
         try {
@@ -167,11 +170,10 @@ public class SaCcrCalculationService {
             // This is a simplified heuristic - in practice would use credit ratings
             boolean isInvestmentGrade = trade.getSpread().compareTo(new BigDecimal("500")) <= 0; // 500 bps threshold
             
-            SaCcrSupervisoryParameter.CreditQuality quality = isInvestmentGrade ? 
-                SaCcrSupervisoryParameter.CreditQuality.IG : 
-                SaCcrSupervisoryParameter.CreditQuality.HY;
+            String creditQuality = isInvestmentGrade ? "IG" : "HY";
             
-            return SaCcrSupervisoryParameter.getStandardCreditSupervisoryFactor(quality);
+            // Use jurisdiction service to get jurisdiction-specific alpha factor (as a supervisory parameter)
+            return jurisdictionService.getAlphaFactor(jurisdiction, LocalDate.now());
                 
         } catch (Exception e) {
             log.warn("Error determining supervisory factor for trade {}, using default: {}", 
@@ -203,18 +205,8 @@ public class SaCcrCalculationService {
      * Determine alpha factor based on jurisdiction and netting set characteristics
      */
     private BigDecimal determineAlphaFactor(NettingSet nettingSet, String jurisdiction) {
-        // Basel III standard alpha factor is 1.4
-        // Some jurisdictions may have different values
-        
-        switch (jurisdiction.toUpperCase()) {
-            case "US":
-            case "EU":
-            case "UK":
-                return new BigDecimal("1.4");
-            default:
-                log.debug("Using default alpha factor for jurisdiction: {}", jurisdiction);
-                return new BigDecimal("1.4");
-        }
+        // Use jurisdiction service to get jurisdiction-specific alpha factor
+        return jurisdictionService.getAlphaFactor(jurisdiction, LocalDate.now());
     }
 
     public List<SaCcrCalculation> getAllCalculations() {

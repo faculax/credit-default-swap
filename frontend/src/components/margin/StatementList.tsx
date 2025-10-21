@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { apiUrl } from '../../config/api';
+import MarginPositionsModal from './MarginPositionsModal';
 
 interface MarginStatement {
   id: number;
@@ -29,6 +31,7 @@ const StatementList: React.FC<StatementListProps> = ({ refreshTrigger }) => {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>('ALL');
   const [selectedStatement, setSelectedStatement] = useState<MarginStatement | null>(null);
+  const [showPositionsModal, setShowPositionsModal] = useState(false);
 
   const statusFilters = ['ALL', 'PENDING', 'PROCESSING', 'PROCESSED', 'FAILED', 'DISPUTED', 'RETRYING'];
 
@@ -445,8 +448,7 @@ const StatementList: React.FC<StatementListProps> = ({ refreshTrigger }) => {
                 {selectedStatement.status === 'PROCESSED' && (
                   <button
                     onClick={() => {
-                      // Navigate to positions view
-                      window.open(`/api/margin-statements/${selectedStatement.id}/positions`, '_blank');
+                      setShowPositionsModal(true);
                     }}
                     className="px-4 py-2 bg-fd-green text-fd-dark rounded hover:bg-fd-green/80 transition-colors"
                   >
@@ -457,6 +459,15 @@ const StatementList: React.FC<StatementListProps> = ({ refreshTrigger }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Positions Modal */}
+      {showPositionsModal && selectedStatement && (
+        <MarginPositionsModal
+          statementId={selectedStatement.id}
+          statementName={`${selectedStatement.ccpName} - ${selectedStatement.statementId}`}
+          onClose={() => setShowPositionsModal(false)}
+        />
       )}
     </div>
   );

@@ -4,8 +4,8 @@
 replace_env_vars() {
     echo "Replacing environment variables in built files..."
     
-    # Get the API_BASE_URL from environment or use default
-    API_URL=${REACT_APP_API_BASE_URL:-"http://localhost:8081/api"}
+    # Get the API_BASE_URL from environment or use default relative path
+    API_URL=${REACT_APP_API_BASE_URL:-"/api"}
     echo "Using REACT_APP_API_BASE_URL: $API_URL"
     
     # Find all JavaScript files in the build directory
@@ -14,7 +14,7 @@ replace_env_vars() {
         sed -i "s|https://fxtrading-gateway-fnhnhybfhzdubycz.uksouth-01.azurewebsites.net/api|$API_URL|g" "$file"
         sed -i "s|https://credit-default-swap-gateway.onrender.com/api|$API_URL|g" "$file"
         # Only replace localhost if API_URL is different (avoid replacing with itself)
-        if [ "$API_URL" != "http://localhost:8081/api" ]; then
+        if [ "$API_URL" != "/api" ]; then
             sed -i "s|http://localhost:8081/api|$API_URL|g" "$file"
         fi
     done
@@ -31,7 +31,7 @@ update_version_endpoint() {
     BUILD_TIMESTAMP=$(date +%s)
     VERSION=${REACT_APP_VERSION:-"1.0.0"}
     ENVIRONMENT=${NODE_ENV:-"production"}
-    API_URL=${REACT_APP_API_BASE_URL:-"http://localhost:8081/api"}
+    API_URL=${REACT_APP_API_BASE_URL:-"/api"}
     
     echo "Build Time: $BUILD_TIME"
     echo "Build Timestamp: $BUILD_TIMESTAMP"

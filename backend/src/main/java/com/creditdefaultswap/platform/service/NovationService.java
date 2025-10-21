@@ -152,6 +152,8 @@ public class NovationService {
         ccpTrade.setRestructuringClause(originalTrade.getRestructuringClause());
         ccpTrade.setPaymentCalendar(originalTrade.getPaymentCalendar());
         ccpTrade.setAccrualStartDate(originalTrade.getAccrualStartDate());
+        ccpTrade.setRecoveryRate(originalTrade.getRecoveryRate());
+        ccpTrade.setSettlementType(originalTrade.getSettlementType());
         
         // Set CCP-specific fields
         ccpTrade.setCounterparty(ccpAccount.getCcpName());

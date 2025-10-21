@@ -18,7 +18,6 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/dashboard")
-@CrossOrigin(origins = "http://localhost:3000")
 public class DashboardController {
     
     private static final Logger logger = LoggerFactory.getLogger(DashboardController.class);

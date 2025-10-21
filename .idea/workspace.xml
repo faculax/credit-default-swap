@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="aa4b7a24-3c1a-4d8b-84d4-372ad1efd33b" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/creditdefaultswap/platform/service/MarginAccountService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/creditdefaultswap/platform/controller/SimmController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/creditdefaultswap/platform/controller/SimmController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/creditdefaultswap/platform/model/AuditLog.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/creditdefaultswap/platform/model/AuditLog.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/creditdefaultswap/platform/repository/CDSTradeRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/creditdefaultswap/platform/repository/CDSTradeRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/creditdefaultswap/platform/repository/MarginStatementRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/creditdefaultswap/platform/repository/MarginStatementRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/creditdefaultswap/platform/service/AuditService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/creditdefaultswap/platform/service/AuditService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/creditdefaultswap/platform/service/NovationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/creditdefaultswap/platform/service/NovationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/creditdefaultswap/platform/service/dashboard/DashboardAggregationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/creditdefaultswap/platform/service/dashboard/DashboardAggregationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/creditdefaultswap/platform/service/saccr/SaCcrCalculationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/creditdefaultswap/platform/service/saccr/SaCcrCalculationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/creditdefaultswap/platform/service/simm/CrifParserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/creditdefaultswap/platform/service/simm/CrifParserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/resources/db/migration/V15__create_bonds_table.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-stories/epic_08_margin_clearing_and_capital/story_8_1_ccp_novation_account_enrichment.md" beforeDir="false" afterPath="$PROJECT_DIR$/user-stories/epic_08_margin_clearing_and_capital/story_8_1_ccp_novation_account_enrichment.md" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 6
+}]]></component>
+  <component name="ProjectId" id="345ZvUX1TQSHhjfPMnofPcjBbru" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "epic__8__margin__clearing__and__capital",
+    "last_opened_file_path": "D:/Repos/credit-default-swap"
+  }
+}]]></component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="aa4b7a24-3c1a-4d8b-84d4-372ad1efd33b" name="Changes" comment="" />
+      <created>1760505623174</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1760505623174</updated>
+    </task>
+    <servers />
+  </component>
+</project>

@@ -15,6 +15,13 @@ public interface SaCcrCalculationRepository extends JpaRepository<SaCcrCalculati
     
     List<SaCcrCalculation> findByNettingSet_IdOrderByCalculationDateDesc(Long nettingSetId);
     
+    SaCcrCalculation findTopByNettingSet_IdOrderByCalculationDateDesc(Long nettingSetId);
+    
+    // Find by nettingSetId string (for CCP clearing accounts)
+    SaCcrCalculation findTopByNettingSetIdOrderByCalculationDateDesc(String nettingSetId);
+    
+    List<SaCcrCalculation> findByNettingSetIdOrderByCalculationDateDesc(String nettingSetId);
+    
     List<SaCcrCalculation> findByJurisdictionOrderByCalculationDateDesc(String jurisdiction);
     
     List<SaCcrCalculation> findByCalculationDateOrderByNettingSet_Id(LocalDate calculationDate);
@@ -23,8 +30,6 @@ public interface SaCcrCalculationRepository extends JpaRepository<SaCcrCalculati
             Long nettingSetId, LocalDate fromDate, LocalDate toDate);
     
     Optional<SaCcrCalculation> findByNettingSet_IdAndCalculationDate(Long nettingSetId, LocalDate calculationDate);
-    
-    SaCcrCalculation findTopByNettingSet_IdOrderByCalculationDateDesc(Long nettingSetId);
     
     List<SaCcrCalculation> findByCalculationDateBetweenOrderByCalculationDateDesc(
             LocalDate fromDate, LocalDate toDate);

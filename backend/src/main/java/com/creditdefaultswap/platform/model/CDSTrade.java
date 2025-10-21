@@ -77,10 +77,11 @@ public class CDSTrade {
     @Column(name = "version", nullable = false)
     private Integer version = 1;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "obligation_id")
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private Bond obligation;
+    // TODO: Uncomment when V20__add_obligation_to_cds_trades.sql migration is applied
+    // @ManyToOne(fetch = FetchType.LAZY)
+    // @JoinColumn(name = "obligation_id", nullable = true)
+    // @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    // private Bond obligation;
     
     // CCP and Novation related fields
     @Column(name = "ccp_name", length = 50)
@@ -298,13 +299,14 @@ public class CDSTrade {
         this.version = version;
     }
     
-    public Bond getObligation() {
-        return obligation;
-    }
-    
-    public void setObligation(Bond obligation) {
-        this.obligation = obligation;
-    }
+    // TODO: Uncomment when V20__add_obligation_to_cds_trades.sql migration is applied
+    // public Bond getObligation() {
+    //     return obligation;
+    // }
+    // 
+    // public void setObligation(Bond obligation) {
+    //     this.obligation = obligation;
+    // }
     
     public String getCcpName() {
         return ccpName;

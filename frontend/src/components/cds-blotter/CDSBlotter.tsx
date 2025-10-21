@@ -249,7 +249,7 @@ const CDSBlotter = forwardRef<CDSBlotterRef, CDSBlotterProps>(({ onTradeSelect }
                       
                       <button
                         onClick={(e) => handleNovateClick(trade, e)}
-                        className="px-3 py-1 bg-fd-green-secondary text-fd-dark text-xs rounded hover:bg-opacity-90 transition-colors flex items-center space-x-1"
+                        className="px-3 py-1 bg-fd-cyan text-fd-dark text-xs rounded hover:bg-opacity-90 transition-colors flex items-center space-x-1"
                         title="Novate this trade to a CCP"
                       >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

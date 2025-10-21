@@ -1,17 +1,18 @@
-# Story 8.2 – Daily VM/IM Statement Ingestion
+# Story 8.2 – Daily VM/IM Statement Generation & Reconciliation
 
 **As a risk operations user**,  
-I want to ingest and reconcile daily variation margin (VM) and initial margin (IM) statements from CCPs  
-So that I can maintain accurate collateral positions and identify discrepancies promptly.
+I want to automatically generate daily variation margin (VM) and initial margin (IM) statements using existing CCP relationships and netting sets  
+So that I can maintain accurate collateral positions without manual file uploads and reduce operational overhead.
 
 ## ✅ Acceptance Criteria
-- Support multiple CCP statement formats (CSV, XML, proprietary) via configurable parsers.
-- Statement files validated against schema and business rules before processing.
+- Automatically generate VM/IM statements for all active CCP netting sets using existing trade and exposure data.
+- VM calculations based on daily mark-to-market changes aggregated by netting set.
+- IM calculations derived from SIMM results and SA-CCR exposures per netting set.
+- Support manual statement upload as fallback for CCP statement reconciliation.
 - VM and IM positions updated in collateral ledger with effective dates and audit trail.
-- Tolerance checking performed against internal calculations with configurable thresholds.
+- Tolerance checking performed against CCP statements (when available) with configurable thresholds.
 - Discrepancy alerts generated for material differences with detailed variance breakdown.
-- Statement processing status tracked (PENDING, PROCESSED, FAILED, DISPUTED).
-- Failed statements queued for retry with exponential backoff and manual intervention.
+- Statement generation status tracked (PENDING, GENERATED, RECONCILED, DISPUTED).
 - Historical statement archive maintained for regulatory audit and replay scenarios.
 
 ## 🧪 Statement Validation Rules
@@ -23,22 +24,32 @@ So that I can maintain accurate collateral positions and identify discrepancies 
 | IM Amount | Numeric, must be non-negative |
 | Currency | Must be valid ISO currency code |
 
+## 🔄 VM/IM Generation Logic
+| Component | Source Data | Logic |
+|-----------|-------------|-------|
+| VM Calculation | Daily trade MTM + Netting Set grouping | Aggregate P&L changes by netting set, apply netting |
+| IM Calculation | SIMM results + SA-CCR exposures | Use max(SIMM_IM, SA-CCR_multiplier * EAD) per netting set |
+| Netting Set Mapping | Existing CDS trades with `netting_set_id` | Group by CCP + Member + Currency combination |
+| CCP Integration | Active CCP accounts from `ccp_accounts` table | Auto-discover active relationships |
+
 ## 🧠 UX Notes
-- Statement ingestion dashboard shows processing status with color-coded indicators.
-- Drag-and-drop file upload with format detection and preview.
-- Discrepancy drill-down shows field-level variances with tolerance context.
+- Statement generation dashboard shows auto-generated positions with real-time status.
+- Optional drag-and-drop file upload for CCP statement reconciliation.
+- Discrepancy drill-down shows field-level variances between generated vs. CCP statements.
+- Netting set detail view shows underlying trades contributing to VM/IM.
 
 ## 🛠 Implementation Guidance
-- Use strategy pattern for different CCP statement parsers.
-- Implement idempotent processing to handle duplicate statement submissions.
-- Consider batch processing for large statement files with progress tracking.
-- Store raw statement data alongside parsed values for audit purposes.
+- Use existing netting set data from cleared trades to auto-generate statements.
+- Implement daily batch job to calculate VM/IM for all active netting sets.
+- Store generated statements alongside any manually uploaded CCP statements for comparison.
+- Leverage existing SA-CCR and SIMM calculation results for IM components.
 
 ## 📦 Deliverables
-- Statement parsing framework with CCP-specific adapters.
-- Collateral ledger updates with reconciliation logic.
-- Discrepancy alerting and workflow management.
-- Statement upload UI with processing status tracking.
+- Automated VM/IM statement generation service using existing netting sets.
+- Daily batch job to calculate margins for all active CCP relationships.
+- Enhanced collateral ledger with auto-generated and reconciled positions.
+- Optional statement upload capability for CCP reconciliation.
+- Statement generation UI with netting set drill-down and variance analysis.
 
 ## ⏭ Dependencies / Links
 - Requires collateral ledger schema (may extend existing trade storage).
