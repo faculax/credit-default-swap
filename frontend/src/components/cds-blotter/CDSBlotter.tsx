@@ -1,6 +1,8 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { cdsTradeService, CDSTradeResponse } from '../../services/cdsTradeService';
 import { creditEventService } from '../../services/creditEventService';
+import { novationService } from '../../services/novationService';
+import NovationModal from '../novation/NovationModal';
 
 interface CDSBlotterProps {
   onTradeSelect?: (trade: CDSTradeResponse) => void;
@@ -16,6 +18,10 @@ const CDSBlotter = forwardRef<CDSBlotterRef, CDSBlotterProps>(({ onTradeSelect }
   const [error, setError] = useState<string | null>(null);
   const [selectedTradeId, setSelectedTradeId] = useState<number | null>(null);
   const [generatingEvents, setGeneratingEvents] = useState<number | null>(null);
+  const [showNovationModal, setShowNovationModal] = useState(false);
+  const [selectedTradeForNovation, setSelectedTradeForNovation] = useState<CDSTradeResponse | null>(null);
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string>('Novation completed successfully');
 
   useEffect(() => {
     loadTrades();
@@ -71,6 +77,37 @@ const CDSBlotter = forwardRef<CDSBlotterRef, CDSBlotterProps>(({ onTradeSelect }
       console.error('Error generating demo credit events:', error);
     } finally {
       setGeneratingEvents(null);
+    }
+  };
+
+  const handleNovateClick = (trade: CDSTradeResponse, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent triggering the row click
+    setSelectedTradeForNovation(trade);
+    setShowNovationModal(true);
+  };
+
+  const handleNovationConfirm = async (tradeId: number, ccpName: string, memberFirm: string) => {
+    try {
+      await novationService.executeNovation({
+        tradeId,
+        ccpName,
+        memberFirm,
+        actor: 'operations_user' // TODO: Get from user context
+      });
+      
+      // Close modal and refresh trades
+      setShowNovationModal(false);
+      setSelectedTradeForNovation(null);
+      await loadTrades();
+      
+      // Show success notification
+      setSuccessMessage('Novation completed successfully!');
+      setShowSuccessNotification(true);
+      setTimeout(() => setShowSuccessNotification(false), 5000);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to execute novation';
+      alert(`Error: ${errorMessage}`);
+      console.error('Error executing novation:', error);
     }
   };
 
@@ -262,45 +299,92 @@ const CDSBlotter = forwardRef<CDSBlotterRef, CDSBlotterProps>(({ onTradeSelect }
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <button
-                    onClick={(e) => handleGenerateDemoEvents(trade, e)}
-                    disabled={generatingEvents === trade.id || trade.tradeStatus !== 'ACTIVE'}
-                    className={`inline-flex items-center justify-center w-8 h-8 rounded transition-colors ${
-                      trade.tradeStatus === 'ACTIVE' 
-                        ? 'text-fd-text-muted hover:text-fd-green hover:bg-fd-green/10' 
-                        : 'text-fd-text-muted/50 cursor-not-allowed'
-                    }`}
-                    title={
-                      trade.tradeStatus === 'ACTIVE' 
-                        ? 'Generate demo credit events' 
-                        : 'Only available for ACTIVE trades'
-                    }
-                  >
-                    {generatingEvents === trade.id ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-fd-green"></div>
-                    ) : (
+                  <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={(e) => handleGenerateDemoEvents(trade, e)}
+                      disabled={generatingEvents === trade.id || trade.tradeStatus !== 'ACTIVE'}
+                      className={`inline-flex items-center justify-center w-8 h-8 rounded transition-colors ${
+                        trade.tradeStatus === 'ACTIVE' 
+                          ? 'text-fd-text-muted hover:text-fd-green hover:bg-fd-green/10'
+                          : 'text-fd-text-muted/50 cursor-not-allowed'
+                      }`}
+                      title={
+                        trade.tradeStatus === 'ACTIVE' 
+                          ? 'Generate demo credit events' 
+                          : 'Only available for ACTIVE trades'
+                      }
+                    >
+                      {generatingEvents === trade.id ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-fd-green"></div>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth={2} 
+                            d="M8 6h8V4a2 2 0 00-2-2H10a2 2 0 00-2 2v2zm8 0v2H8V6h8zm0 2v8a2 2 0 01-2 2H10a2 2 0 01-2-2V8h8z"
+                          />
+                          <circle cx="10" cy="10" r="1" fill="currentColor"/>
+                          <circle cx="14" cy="10" r="1" fill="currentColor"/>
+                          <circle cx="10" cy="14" r="1" fill="currentColor"/>
+                          <circle cx="14" cy="14" r="1" fill="currentColor"/>
+                          <circle cx="12" cy="12" r="1" fill="currentColor"/>
+                          <circle cx="12" cy="16" r="1" fill="currentColor"/>
+                        </svg>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={(e) => handleNovateClick(trade, e)}
+                      className="inline-flex items-center justify-center w-8 h-8 rounded transition-colors text-fd-text-muted hover:text-fd-cyan hover:bg-fd-cyan/10"
+                      title="Novate this trade to a CCP"
+                    >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
-                          strokeWidth={2} 
-                          d="M8 6h8V4a2 2 0 00-2-2H10a2 2 0 00-2 2v2zm8 0v2H8V6h8zm0 2v8a2 2 0 01-2 2H10a2 2 0 01-2-2V8h8z"
-                        />
-                        <circle cx="10" cy="10" r="1" fill="currentColor"/>
-                        <circle cx="14" cy="10" r="1" fill="currentColor"/>
-                        <circle cx="10" cy="14" r="1" fill="currentColor"/>
-                        <circle cx="14" cy="14" r="1" fill="currentColor"/>
-                        <circle cx="12" cy="12" r="1" fill="currentColor"/>
-                        <circle cx="12" cy="16" r="1" fill="currentColor"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                       </svg>
-                    )}
-                  </button>
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      <NovationModal
+        isOpen={showNovationModal}
+        trade={selectedTradeForNovation}
+        onClose={() => {
+          setShowNovationModal(false);
+          setSelectedTradeForNovation(null);
+        }}
+        onConfirm={handleNovationConfirm}
+      />
+
+      {/* Success Notification */}
+      {showSuccessNotification && (
+        <div className="fixed top-4 right-4 z-[60] animate-fade-in">
+          <div className="bg-fd-dark border-2 border-fd-green rounded-lg shadow-lg p-4 flex items-start gap-3 min-w-[320px] max-w-[480px]">
+            <div className="flex-shrink-0 mt-0.5">
+              <svg className="w-6 h-6 text-fd-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h4 className="text-fd-text font-semibold mb-1">Success!</h4>
+              <p className="text-fd-text-muted text-sm leading-relaxed">{successMessage}</p>
+            </div>
+            <button
+              onClick={() => setShowSuccessNotification(false)}
+              className="flex-shrink-0 text-fd-text-muted hover:text-fd-text transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 });

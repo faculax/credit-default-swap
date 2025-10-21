@@ -1,8 +1,15 @@
 # Dependency directories
 frontend/node_modules/
+# Frontend build artifacts
+frontend/build/
 # Backend and gateway build targets
 backend/target/
 gateway/target/
 risk-engine/target/
+
+# IDE folders
 .vscode/
+.idea/
+
+# OS files
 .DS_Store

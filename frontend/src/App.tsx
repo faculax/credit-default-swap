@@ -6,27 +6,27 @@ import ConfirmationModal from './components/confirmation-modal/ConfirmationModal
 import CDSBlotter, { CDSBlotterRef } from './components/cds-blotter/CDSBlotter';
 import TradeDetailModal from './components/trade-detail-modal/TradeDetailModal';
 import PortfolioPage from './components/portfolio/PortfolioPage';
+import MarginStatementsPage from './components/margin/MarginStatementsPage';
+import SimmDashboard from './components/SimmDashboard';
+import SaCcrDashboard from './components/SaCcrDashboard';
+import ReconciliationDashboard from './components/dashboard/ReconciliationDashboard';
 import BondPage from './components/bond/BondPage';
 import BasketPage from './components/basket/BasketPage';
 import { CDSTrade } from './data/referenceData';
 import { cdsTradeService, CDSTradeRequest, CDSTradeResponse } from './services/cdsTradeService';
 
-type ViewMode = 'form' | 'blotter' | 'portfolios' | 'bonds' | 'baskets';
+type ViewMode = 'form' | 'blotter' | 'portfolios' | 'margin-statements' | 'simm' | 'sa-ccr' | 'reconciliation' | 'bonds' | 'baskets';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewMode>('form');
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [bookedTrade, setBookedTrade] = useState<CDSTradeResponse | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+
   const [selectedTrade, setSelectedTrade] = useState<CDSTradeResponse | null>(null);
   const [isTradeDetailOpen, setIsTradeDetailOpen] = useState(false);
   const blotterRef = useRef<CDSBlotterRef>(null);
 
   const handleTradeSubmit = async (trade: CDSTrade) => {
-    setIsSubmitting(true);
-    setSubmitError(null);
-    
     try {
       const tradeRequest: CDSTradeRequest = {
         referenceEntity: trade.referenceEntity,
@@ -56,10 +56,7 @@ function App() {
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      setSubmitError(`Failed to book trade: ${errorMessage}`);
       alert(`Error booking trade: ${errorMessage}`);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -143,6 +140,46 @@ function App() {
             >
               CDS Portfolios
             </button>
+            <button
+              onClick={() => setCurrentView('simm')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                currentView === 'simm'
+                  ? 'bg-fd-green text-fd-dark'
+                  : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
+              }`}
+            >
+              SIMM Calculator
+            </button>
+            <button
+              onClick={() => setCurrentView('sa-ccr')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                currentView === 'sa-ccr'
+                  ? 'bg-fd-green text-fd-dark'
+                  : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
+              }`}
+            >
+              SA-CCR Exposure
+            </button>
+            <button
+              onClick={() => setCurrentView('margin-statements')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                currentView === 'margin-statements'
+                  ? 'bg-fd-green text-fd-dark'
+                  : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
+              }`}
+            >
+              Margin Statements
+            </button>
+            <button
+              onClick={() => setCurrentView('reconciliation')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                currentView === 'reconciliation'
+                  ? 'bg-fd-green text-fd-dark'
+                  : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
+              }`}
+            >
+              Reconciliation Dashboard
+            </button>
           </div>
         </div>
       </div>
@@ -156,12 +193,20 @@ function App() {
           <CDSBlotter ref={blotterRef} onTradeSelect={handleTradeSelect} />
         ) : currentView === 'portfolios' ? (
           <PortfolioPage />
+        ) : currentView === 'margin-statements' ? (
+          <MarginStatementsPage />
+        ) : currentView === 'simm' ? (
+          <SimmDashboard />
+        ) : currentView === 'sa-ccr' ? (
+          <SaCcrDashboard />
+        ) : currentView === 'reconciliation' ? (
+          <ReconciliationDashboard />
+        ) : currentView === 'bonds' ? (
+          <BondPage />
         ) : currentView === 'baskets' ? (
           <BasketPage />
-        ) : (
-          <BondPage />
-        )}
-        
+        ) : null}
+
         <ConfirmationModal
           isOpen={isConfirmationOpen}
           trade={bookedTrade}

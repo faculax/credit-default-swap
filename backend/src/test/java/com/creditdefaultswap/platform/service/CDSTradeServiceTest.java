@@ -16,6 +16,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -23,6 +24,9 @@ public class CDSTradeServiceTest {
 
     @Mock
     private CDSTradeRepository cdsTradeRepository;
+
+    @Mock
+    private NettingSetAssignmentService nettingSetAssignmentService;
 
     @InjectMocks
     private CDSTradeService cdsTradeService;
@@ -52,6 +56,9 @@ public class CDSTradeServiceTest {
     @Test
     void testSaveTrade() {
         // Given
+        when(nettingSetAssignmentService.determineNettingSetId(
+            anyString(), any(), anyString(), any(Boolean.class)))
+            .thenReturn("NS-001");
         when(cdsTradeRepository.save(any(CDSTrade.class))).thenReturn(sampleTrade);
 
         // When

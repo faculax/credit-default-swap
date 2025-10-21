@@ -77,10 +77,47 @@ public class CDSTrade {
     @Column(name = "version", nullable = false)
     private Integer version = 1;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "obligation_id")
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "obligation_id", nullable = true)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Bond obligation;
+    
+    // CCP and Novation related fields
+    @Column(name = "ccp_name", length = 50)
+    private String ccpName;
+    
+    @Column(name = "ccp_member_id", length = 50)
+    private String ccpMemberId;
+    
+    @Column(name = "clearing_account", length = 50)
+    private String clearingAccount;
+    
+    @Column(name = "netting_set_id", length = 50)
+    private String nettingSetId;
+    
+    @Column(name = "original_trade_id")
+    private Long originalTradeId;
+    
+    @Column(name = "novation_timestamp")
+    private LocalDateTime novationTimestamp;
+    
+    @Column(name = "novation_reference", length = 100)
+    private String novationReference;
+    
+    @Column(name = "uti", length = 100)
+    private String uti; // Unique Transaction Identifier
+    
+    @Column(name = "usi", length = 100)
+    private String usi; // Unique Swap Identifier
+    
+    @Column(name = "is_cleared", nullable = false)
+    private Boolean isCleared = false;
+    
+    @Column(name = "upfront_amount", precision = 15, scale = 2)
+    private BigDecimal upfrontAmount = BigDecimal.ZERO;
+    
+    @Column(name = "mark_to_market_value", precision = 15, scale = 2)
+    private BigDecimal markToMarketValue = BigDecimal.ZERO;
     
     // Enum for Buy/Sell Protection
     public enum ProtectionDirection {
@@ -267,6 +304,102 @@ public class CDSTrade {
     
     public void setObligation(Bond obligation) {
         this.obligation = obligation;
+    }
+    
+    public String getCcpName() {
+        return ccpName;
+    }
+    
+    public void setCcpName(String ccpName) {
+        this.ccpName = ccpName;
+    }
+    
+    public String getCcpMemberId() {
+        return ccpMemberId;
+    }
+    
+    public void setCcpMemberId(String ccpMemberId) {
+        this.ccpMemberId = ccpMemberId;
+    }
+    
+    public String getClearingAccount() {
+        return clearingAccount;
+    }
+    
+    public void setClearingAccount(String clearingAccount) {
+        this.clearingAccount = clearingAccount;
+    }
+    
+    public String getNettingSetId() {
+        return nettingSetId;
+    }
+    
+    public void setNettingSetId(String nettingSetId) {
+        this.nettingSetId = nettingSetId;
+    }
+    
+    public Long getOriginalTradeId() {
+        return originalTradeId;
+    }
+    
+    public void setOriginalTradeId(Long originalTradeId) {
+        this.originalTradeId = originalTradeId;
+    }
+    
+    public LocalDateTime getNovationTimestamp() {
+        return novationTimestamp;
+    }
+    
+    public void setNovationTimestamp(LocalDateTime novationTimestamp) {
+        this.novationTimestamp = novationTimestamp;
+    }
+    
+    public String getNovationReference() {
+        return novationReference;
+    }
+    
+    public void setNovationReference(String novationReference) {
+        this.novationReference = novationReference;
+    }
+    
+    public String getUti() {
+        return uti;
+    }
+    
+    public void setUti(String uti) {
+        this.uti = uti;
+    }
+    
+    public String getUsi() {
+        return usi;
+    }
+    
+    public void setUsi(String usi) {
+        this.usi = usi;
+    }
+    
+    public Boolean getIsCleared() {
+        return isCleared;
+    }
+    
+    public void setIsCleared(Boolean isCleared) {
+        this.isCleared = isCleared;
+    }
+    
+    public BigDecimal getUpfrontAmount() {
+        return upfrontAmount;
+    }
+    
+    public void setUpfrontAmount(BigDecimal upfrontAmount) {
+        this.upfrontAmount = upfrontAmount;
+    }
+    
+    public BigDecimal getMarkToMarketValue() {
+        return markToMarketValue;
+    }
+    
+    public void setMarkToMarketValue(BigDecimal markToMarketValue) {
+        this.markToMarketValue = markToMarketValue;
     }
     
     public void setLastUpdated(LocalDateTime lastUpdated) {

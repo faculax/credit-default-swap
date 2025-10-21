@@ -2,6 +2,7 @@ package com.creditdefaultswap.platform.service;
 
 import com.creditdefaultswap.platform.model.CDSTrade;
 import com.creditdefaultswap.platform.model.CouponPeriod;
+import com.creditdefaultswap.platform.model.SettlementMethod;
 import com.creditdefaultswap.platform.model.TradeStatus;
 import com.creditdefaultswap.platform.repository.CDSTradeRepository;
 import com.creditdefaultswap.platform.repository.CouponPeriodRepository;
@@ -55,6 +56,8 @@ public class CouponScheduleServiceTest {
         testTrade.setPaymentCalendar("USD");
         testTrade.setAccrualStartDate(LocalDate.of(2024, 1, 20));
         testTrade.setTradeStatus(TradeStatus.ACTIVE);
+        testTrade.setRecoveryRate(new BigDecimal("0.40")); // Standard 40% recovery rate
+        testTrade.setSettlementType(SettlementMethod.CASH); // Default settlement method
         
         testTrade = cdsTradeRepository.save(testTrade);
     }
