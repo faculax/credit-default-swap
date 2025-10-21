@@ -21,12 +21,6 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   const isComplete = simulation.status === 'COMPLETE';
   const isFailed = simulation.status === 'FAILED';
 
-  // For display, use the horizon with most data (prefer 5Y, then 3Y, then 1Y)
-  const displayHorizon =
-    simulation.horizons?.find((h) => h.tenor === '5Y') ||
-    simulation.horizons?.find((h) => h.tenor === '3Y') ||
-    simulation.horizons?.[0];
-
   return (
     <div className="space-y-6">
       {/* Status Header */}

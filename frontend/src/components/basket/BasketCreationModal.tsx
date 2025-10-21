@@ -155,7 +155,7 @@ const BasketCreationModal: React.FC<BasketCreationModalProps> = ({
     }
   };
 
-  const handleConstituentChange = (index: number, field: keyof BasketConstituent, value: any) => {
+  const handleConstituentChange = (index: number, field: keyof BasketConstituent, value: string | number) => {
     const updated = [...constituents];
     updated[index] = { ...updated[index], [field]: value };
     setConstituents(updated);
