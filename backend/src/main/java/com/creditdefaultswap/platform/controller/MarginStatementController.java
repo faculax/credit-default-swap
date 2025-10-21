@@ -247,7 +247,7 @@ public class MarginStatementController {
             
             logger.info("Generating automated margin statements for date: {}", statementDate);
             
-            // Check if statements already exist for this date
+            // Check if statements already exist for this date and delete them
             final LocalDate finalDate = statementDate;
             List<MarginStatement> existingStatements = statementRepository.findAll().stream()
                     .filter(s -> s.getStatementDate().equals(finalDate))
@@ -255,14 +255,10 @@ public class MarginStatementController {
                     .collect(Collectors.toList());
             
             if (!existingStatements.isEmpty()) {
-                logger.warn("Found {} existing automated statements for date: {}", 
+                logger.info("Found {} existing automated statements for date {}, deleting them before regenerating", 
                            existingStatements.size(), statementDate);
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                        "success", false,
-                        "error", "Automated statements already exist for " + statementDate,
-                        "existingCount", existingStatements.size(),
-                        "message", "Delete existing statements first or choose a different date"
-                ));
+                statementRepository.deleteAll(existingStatements);
+                logger.info("Deleted {} existing automated statements", existingStatements.size());
             }
             
             // Generate statements using existing netting set data
@@ -308,7 +304,7 @@ public class MarginStatementController {
         statement.setMemberFirm(generated.getCcpMemberId() != null ? generated.getCcpMemberId() : "AUTOMATED");
         statement.setAccountNumber(generated.getClearingAccount() != null ? generated.getClearingAccount() : generated.getNettingSetId());
         statement.setStatementDate(generated.getStatementDate());
-        statement.setCurrency("USD"); // Default, would extract from netting set in production
+        statement.setCurrency(generated.getCurrency() != null ? generated.getCurrency() : "USD");
         statement.setStatementFormat(MarginStatement.StatementFormat.JSON);
         statement.setFileName("automated-" + generated.getStatementId() + ".json");
         statement.setStatus(MarginStatement.StatementStatus.PROCESSED);

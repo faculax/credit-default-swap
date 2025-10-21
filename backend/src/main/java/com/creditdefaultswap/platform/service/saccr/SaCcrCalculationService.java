@@ -45,18 +45,36 @@ public class SaCcrCalculationService {
         
         for (NettingSet nettingSet : allNettingSets) {
             try {
+                // Always recalculate to ensure fresh data
+                SaCcrCalculation calculation = calculateExposure(nettingSet, asOfDate, jurisdiction);
+                
                 // Check if calculation already exists for this netting set and date
                 String calculationId = "SACCR-" + nettingSet.getNettingSetId() + "-" + asOfDate.toString();
                 SaCcrCalculation existingCalculation = calculationRepository.findByCalculationId(calculationId);
                 
                 if (existingCalculation != null) {
-                    log.info("Calculation already exists for netting set {} on date {}, returning existing calculation", 
+                    log.info("Updating existing SA-CCR calculation for netting set {} on date {}", 
                              nettingSet.getNettingSetId(), asOfDate);
-                    calculations.add(existingCalculation);
+                    // Update existing record with new values
+                    existingCalculation.setReplacementCost(calculation.getReplacementCost());
+                    existingCalculation.setPotentialFutureExposure(calculation.getPotentialFutureExposure());
+                    existingCalculation.setExposureAtDefault(calculation.getExposureAtDefault());
+                    existingCalculation.setAlphaFactor(calculation.getAlphaFactor());
+                    existingCalculation.setEffectiveNotional(calculation.getEffectiveNotional());
+                    existingCalculation.setGrossMtm(calculation.getGrossMtm());
+                    existingCalculation.setVmReceived(calculation.getVmReceived());
+                    existingCalculation.setVmPosted(calculation.getVmPosted());
+                    existingCalculation.setImReceived(calculation.getImReceived());
+                    existingCalculation.setImPosted(calculation.getImPosted());
+                    existingCalculation.setSupervisoryAddon(calculation.getSupervisoryAddon());
+                    existingCalculation.setMultiplier(calculation.getMultiplier());
+                    existingCalculation.setCalculationStatus(SaCcrCalculation.CalculationStatus.COMPLETED);
+                    SaCcrCalculation savedCalculation = calculationRepository.save(existingCalculation);
+                    calculations.add(savedCalculation);
                 } else {
-                    // Calculate new exposure
-                    SaCcrCalculation calculation = calculateExposure(nettingSet, asOfDate, jurisdiction);
-                    // Save the calculation to database
+                    log.info("Creating new SA-CCR calculation for netting set {} on date {}", 
+                             nettingSet.getNettingSetId(), asOfDate);
+                    // Save new calculation to database
                     SaCcrCalculation savedCalculation = calculationRepository.save(calculation);
                     calculations.add(savedCalculation);
                 }

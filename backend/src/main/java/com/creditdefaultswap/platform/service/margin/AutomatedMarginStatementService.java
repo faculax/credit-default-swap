@@ -75,11 +75,12 @@ public class AutomatedMarginStatementService {
         
         log.debug("Generating statement for netting set: {}", nettingSetId);
         
-        // Extract CCP info from trades (all trades in netting set have same CCP)
+        // Extract CCP info from trades (all trades in netting set have same CCP and currency)
         CDSTrade sampleTrade = trades.get(0);
         String ccpName = sampleTrade.getCcpName();
         String ccpMemberId = sampleTrade.getCcpMemberId();
         String clearingAccount = sampleTrade.getClearingAccount();
+        String currency = sampleTrade.getCurrency();
         
         // Calculate VM using trade MTM aggregation
         BigDecimal variationMargin = calculateVariationMargin(trades, statementDate);
@@ -95,6 +96,7 @@ public class AutomatedMarginStatementService {
                 .ccpName(ccpName)
                 .ccpMemberId(ccpMemberId)
                 .clearingAccount(clearingAccount)
+                .currency(currency)
                 .tradeCount(trades.size())
                 .totalNotional(calculateTotalNotional(trades))
                 .variationMarginNet(variationMargin)
@@ -223,6 +225,7 @@ public class AutomatedMarginStatementService {
         private String ccpName;
         private String ccpMemberId;
         private String clearingAccount;
+        private String currency;
         private Integer tradeCount;
         private BigDecimal totalNotional;
         private BigDecimal variationMarginNet;

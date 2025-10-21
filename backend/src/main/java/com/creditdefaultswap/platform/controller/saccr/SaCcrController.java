@@ -6,6 +6,7 @@ import com.creditdefaultswap.platform.model.saccr.SaCcrSupervisoryParameter;
 import com.creditdefaultswap.platform.service.saccr.SaCcrCalculationService;
 import com.creditdefaultswap.platform.service.saccr.SaCcrJurisdictionService;
 import com.creditdefaultswap.platform.repository.saccr.NettingSetRepository;
+import com.creditdefaultswap.platform.repository.saccr.SaCcrCalculationRepository;
 import com.creditdefaultswap.platform.repository.saccr.SaCcrSupervisoryParameterRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,9 @@ public class SaCcrController {
     
     @Autowired
     private NettingSetRepository nettingSetRepository;
+    
+    @Autowired
+    private SaCcrCalculationRepository calculationRepository;
     
     @Autowired
     private SaCcrSupervisoryParameterRepository supervisoryParameterRepository;
@@ -96,10 +100,13 @@ public class SaCcrController {
             SaCcrCalculation calculation = calculationService.calculateExposure(
                     nettingSetOpt.get(), valuationDate, jurisdiction);
             
+            // Save the calculation to database
+            SaCcrCalculation savedCalculation = calculationRepository.save(calculation);
+            
             return ResponseEntity.ok(Map.of(
                 "status", "SUCCESS",
                 "message", "SA-CCR calculation completed",
-                "calculation", calculation
+                "calculation", savedCalculation
             ));
             
         } catch (Exception e) {

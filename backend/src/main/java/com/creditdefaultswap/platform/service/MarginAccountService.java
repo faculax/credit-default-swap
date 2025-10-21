@@ -39,9 +39,26 @@ public class MarginAccountService {
     /**
      * Automatically set up margin account for a newly created CCP trade
      * Creates initial margin positions for proper risk management
+     * 
+     * DISABLED: Auto-creation on trade save is disabled to prevent duplicates.
+     * Use the "Generate Statements" button in the UI to create margin statements.
      */
     @Transactional(propagation = Propagation.REQUIRED)
     public MarginAccountSetupResult setupMarginAccountForCcpTrade(CDSTrade ccpTrade, String actor) {
+        logger.info("Margin account auto-setup is DISABLED. Use manual statement generation instead for trade: {}", ccpTrade.getId());
+        
+        // Return empty result - no auto-creation
+        return new MarginAccountSetupResult(
+                true,
+                "Auto-setup disabled - use manual generation",
+                null,
+                null,
+                null
+        );
+    }
+    
+    /* DISABLED - Original auto-creation logic
+    private MarginAccountSetupResult setupMarginAccountForCcpTrade_DISABLED(CDSTrade ccpTrade, String actor) {
         try {
             logger.info("Setting up margin account for CCP trade: {}", ccpTrade.getId());
             
