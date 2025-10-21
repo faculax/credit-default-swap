@@ -6,6 +6,7 @@ import com.creditdefaultswap.platform.model.saccr.SaCcrSupervisoryParameter;
 import com.creditdefaultswap.platform.model.CDSTrade;
 import com.creditdefaultswap.platform.model.TradeStatus;
 import com.creditdefaultswap.platform.repository.saccr.SaCcrCalculationRepository;
+import com.creditdefaultswap.platform.repository.saccr.NettingSetRepository;
 import com.creditdefaultswap.platform.repository.CDSTradeRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.ArrayList;
 
 @Service
 @Slf4j
@@ -22,6 +24,9 @@ public class SaCcrCalculationService {
 
     @Autowired
     private SaCcrCalculationRepository calculationRepository;
+    
+    @Autowired
+    private NettingSetRepository nettingSetRepository;
     
     @Autowired
     private CDSTradeRepository cdsTradeRepository;
@@ -34,7 +39,35 @@ public class SaCcrCalculationService {
      */
     public List<SaCcrCalculation> calculateAllExposures(LocalDate asOfDate, String jurisdiction) {
         log.info("Calculating all SA-CCR exposures for date: {} and jurisdiction: {}", asOfDate, jurisdiction);
-        return calculationRepository.findAll();
+        
+        List<NettingSet> allNettingSets = nettingSetRepository.findAll();
+        List<SaCcrCalculation> calculations = new ArrayList<>();
+        
+        for (NettingSet nettingSet : allNettingSets) {
+            try {
+                // Check if calculation already exists for this netting set and date
+                String calculationId = "SACCR-" + nettingSet.getNettingSetId() + "-" + asOfDate.toString();
+                SaCcrCalculation existingCalculation = calculationRepository.findByCalculationId(calculationId);
+                
+                if (existingCalculation != null) {
+                    log.info("Calculation already exists for netting set {} on date {}, returning existing calculation", 
+                             nettingSet.getNettingSetId(), asOfDate);
+                    calculations.add(existingCalculation);
+                } else {
+                    // Calculate new exposure
+                    SaCcrCalculation calculation = calculateExposure(nettingSet, asOfDate, jurisdiction);
+                    // Save the calculation to database
+                    SaCcrCalculation savedCalculation = calculationRepository.save(calculation);
+                    calculations.add(savedCalculation);
+                }
+            } catch (Exception e) {
+                log.error("Failed to calculate exposure for netting set {}: {}", 
+                         nettingSet.getNettingSetId(), e.getMessage());
+            }
+        }
+        
+        log.info("Successfully calculated and saved {} exposures for jurisdiction {}", calculations.size(), jurisdiction);
+        return calculations;
     }
 
     /**
@@ -75,6 +108,15 @@ public class SaCcrCalculationService {
             calculation.setAlphaFactor(alphaFactor);
             calculation.setEffectiveNotional(potentialFutureExposure); // Store trade count info in effective notional for now
             calculation.setCalculationStatus(SaCcrCalculation.CalculationStatus.COMPLETED);
+            
+            // Set required fields that have NOT NULL constraints in database
+            calculation.setGrossMtm(BigDecimal.ZERO);
+            calculation.setVmReceived(BigDecimal.ZERO);
+            calculation.setVmPosted(BigDecimal.ZERO);
+            calculation.setImReceived(BigDecimal.ZERO);
+            calculation.setImPosted(BigDecimal.ZERO);
+            calculation.setSupervisoryAddon(BigDecimal.ZERO);
+            calculation.setMultiplier(BigDecimal.ONE);
             
             log.info("SA-CCR calculation completed for netting set {}: RC={}, PFE={}, EAD={}", 
                      nettingSet.getNettingSetId(), replacementCost, potentialFutureExposure, exposureAtDefault);

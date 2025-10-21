@@ -13,6 +13,8 @@ import java.util.Optional;
 @Repository
 public interface SaCcrCalculationRepository extends JpaRepository<SaCcrCalculation, Long> {
     
+    SaCcrCalculation findByCalculationId(String calculationId);
+    
     List<SaCcrCalculation> findByNettingSet_IdOrderByCalculationDateDesc(Long nettingSetId);
     
     SaCcrCalculation findTopByNettingSet_IdOrderByCalculationDateDesc(Long nettingSetId);

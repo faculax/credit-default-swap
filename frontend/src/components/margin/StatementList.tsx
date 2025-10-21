@@ -262,26 +262,26 @@ const StatementList: React.FC<StatementListProps> = ({ refreshTrigger }) => {
       </div>
 
       {/* Statements Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full">
+      <div className="overflow-hidden">
+        <table className="min-w-full">
           <thead className="bg-fd-dark">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
                 Statement
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
-                CCP & Account
+              <th className="px-4 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
+                CCP
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
-                Date & Size
+              <th className="px-4 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
+                Date
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
-                Timing
+              <th className="px-4 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
+                Created
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -293,54 +293,39 @@ const StatementList: React.FC<StatementListProps> = ({ refreshTrigger }) => {
                 className="hover:bg-fd-dark transition-colors cursor-pointer"
                 onClick={() => setSelectedStatement(statement)}
               >
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex flex-col">
-                    <div className="text-sm font-medium text-fd-text">
+                <td className="px-4 py-4">
+                  <div className="flex flex-col max-w-xs">
+                    <div className="text-sm font-medium text-fd-text truncate">
                       {statement.statementId}
                     </div>
-                    <div className="text-sm text-fd-text-muted">
-                      {statement.fileName}
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex flex-col">
-                    <div className="text-sm font-medium text-fd-text">
-                      {statement.ccpName}
-                    </div>
-                    <div className="text-sm text-fd-text-muted">
+                    <div className="text-xs text-fd-text-muted truncate">
                       {statement.accountNumber}
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex flex-col">
-                    <div className="text-sm text-fd-text">
-                      {new Date(statement.statementDate).toLocaleDateString()}
-                    </div>
-                    <div className="text-sm text-fd-text-muted">
-                      {formatFileSize(statement.fileSize)} {statement.format}
-                    </div>
+                <td className="px-4 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-fd-text">
+                    {statement.ccpName}
+                  </div>
+                  <div className="text-xs text-fd-text-muted">
+                    {statement.currency}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(statement.status)}`}>
+                <td className="px-4 py-4 whitespace-nowrap">
+                  <div className="text-sm text-fd-text">
+                    {new Date(statement.statementDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </div>
+                </td>
+                <td className="px-4 py-4 whitespace-nowrap">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(statement.status)}`}>
                     <span className="mr-1">{getStatusIcon(statement.status)}</span>
                     {statement.status}
-                    {statement.retryCount > 0 && (
-                      <span className="ml-1">({statement.retryCount})</span>
-                    )}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-fd-text-muted">
-                  <div className="flex flex-col">
-                    <div>Created: {formatDateTime(statement.createdAt)}</div>
-                    {statement.processedAt && (
-                      <div>Processed: {formatDateTime(statement.processedAt)}</div>
-                    )}
-                  </div>
+                <td className="px-4 py-4 whitespace-nowrap text-sm text-fd-text-muted">
+                  {formatDateTime(statement.createdAt).replace(', ', '\n').split('\n')[0]}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                <td className="px-4 py-4 whitespace-nowrap text-sm">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -348,7 +333,7 @@ const StatementList: React.FC<StatementListProps> = ({ refreshTrigger }) => {
                     }}
                     className="text-fd-green hover:text-fd-green/80 font-medium"
                   >
-                    View Details
+                    View
                   </button>
                 </td>
               </tr>

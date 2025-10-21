@@ -177,16 +177,6 @@ const SaCcrDashboard: React.FC = () => {
                 </div>
             )}
 
-            {/* Debug Info */}
-            <div className="bg-blue-900/30 border border-blue-500 rounded-lg p-3 mb-6">
-                <h4 className="text-blue-300 font-medium text-sm">Debug Info</h4>
-                <div className="text-blue-200 text-xs mt-1 space-y-1">
-                    <div>Netting Sets Count: {nettingSets.length}</div>
-                    <div>Has Error: {error ? 'Yes' : 'No'}</div>
-                    <div>API URL: {apiUrl('/v1/sa-ccr/netting-sets')}</div>
-                </div>
-            </div>
-
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="bg-fd-darker border border-fd-border rounded-lg p-6">
