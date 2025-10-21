@@ -495,7 +495,7 @@ if ($null -ne $productId) {
         Invoke-ScanUpload `
             -EngagementId $engagementId `
             -ScanType "Dependency Check Scan" `
-            -FilePath (Join-Path $ProjectRoot "backend\target\dependency-check-report.json") `
+            -FilePath (Join-Path $ProjectRoot "backend\target\security-reports\dependency-check-report.xml") `
             -ScanDisplayName "OWASP Dependency Check" `
             -Headers $headers | Out-Null
         
@@ -594,7 +594,7 @@ if ($null -ne $productId) {
         Invoke-ScanUpload `
             -EngagementId $engagementId `
             -ScanType "Dependency Check Scan" `
-            -FilePath (Join-Path $ProjectRoot "gateway\target\dependency-check-report.json") `
+            -FilePath (Join-Path $ProjectRoot "gateway\target\security-reports\dependency-check-report.xml") `
             -ScanDisplayName "OWASP Dependency Check" `
             -Headers $headers | Out-Null
     }
@@ -640,7 +640,7 @@ if ($null -ne $productId) {
         Invoke-ScanUpload `
             -EngagementId $engagementId `
             -ScanType "Dependency Check Scan" `
-            -FilePath (Join-Path $ProjectRoot "risk-engine\target\dependency-check-report.json") `
+            -FilePath (Join-Path $ProjectRoot "risk-engine\target\security-reports\dependency-check-report.xml") `
             -ScanDisplayName "OWASP Dependency Check" `
             -Headers $headers | Out-Null
     }

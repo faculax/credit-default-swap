@@ -1,0 +1,42 @@
+[
+ {
+  "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+  "StartLine": 35,
+  "EndLine": 35,
+  "StartColumn": 24,
+  "EndColumn": 65,
+  "Match": "PASSWORD=w3A3gwvbcHGc8mHJQO5Fu40D50k5crp5\r",
+  "Secret": "w3A3gwvbcHGc8mHJQO5Fu40D50k5crp5",
+  "File": "backend/Dockerfile",
+  "SymlinkFile": "",
+  "Commit": "fa909de5b6414afb298f0229718802cebdbd9e23",
+  "Entropy": 4.35141,
+  "Author": "AndrewOS95",
+  "Email": "cata112233@gmail.com",
+  "Date": "2025-10-21T00:35:37Z",
+  "Message": "Merge latest changes from main into epic_8_margin_clearing_and_capital\n\nResolved conflicts:\n- frontend/build/asset-manifest.json (accepted main version)\n- frontend/build/index.html (accepted main version)\n- frontend/src/components/trade-detail-modal/TradeDetailModal.tsx (accepted main version with enhanced features)\n- frontend/build/static/* files (resolved build artifacts)\n\nMain branch updates merged:\n- Enhanced TradeDetailModal with lifecycle, cashflow, and credit event tabs\n- Updated CDSTradeForm with improved validation\n- New CashflowPanel component\n- Updated LifecycleTimeline component\n- Risk measures panel improvements\n- Integration test updates\n\ncommit 6c19886ff7b2396978192bb4ccdce878e8d7c587\nAuthor: AndrewOS95 \u003ccata112233@gmail.com\u003e\nDate:   Tue Oct 21 01:34:29 2025 +0100\n\nfeat: Epic 8 Story 2 - Automated margin statement generation with SA-CCR integration\n\n- Implemented automated margin statement generation from cleared trades\n- Added MarginPosition entity with VM/IM breakdown\n- Integrated SA-CCR EAD calculations for Initial Margin (IM = EAD  8%)\n- Created AutomatedMarginStatementService with database persistence\n- Fixed CORS architecture (gateway-only CorsWebFilter)\n- Added duplicate checking (409 Conflict) for statement generation\n- Populated MTM values for cleared trades (realistic VM calculations)\n- Created MarginPositionsModal UI component for user-friendly position viewing\n- Fixed position API response format to match frontend expectations\n- Added jurisdiction-based filtering for SA-CCR dashboard\n- Updated gateway API routing and CORS configuration\n- Comprehensive testing and validation",
+  "Tags": [],
+  "RuleID": "generic-api-key",
+  "Fingerprint": "fa909de5b6414afb298f0229718802cebdbd9e23:backend/Dockerfile:generic-api-key:35"
+ },
+ {
+  "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+  "StartLine": 31,
+  "EndLine": 32,
+  "StartColumn": 24,
+  "EndColumn": 1,
+  "Match": "PASSWORD=w3A3gwvbcHGc8mHJQO5Fu40D50k5crp5",
+  "Secret": "w3A3gwvbcHGc8mHJQO5Fu40D50k5crp5",
+  "File": "backend/Dockerfile",
+  "SymlinkFile": "",
+  "Commit": "128676afe3eda393490208b1d6d76a6311dbb4c7",
+  "Entropy": 4.35141,
+  "Author": "Facundo Laxalde",
+  "Email": "facundo.laxalde@gmail.com",
+  "Date": "2025-09-29T11:15:41Z",
+  "Message": "initial commit",
+  "Tags": [],
+  "RuleID": "generic-api-key",
+  "Fingerprint": "128676afe3eda393490208b1d6d76a6311dbb4c7:backend/Dockerfile:generic-api-key:31"
+ }
+]

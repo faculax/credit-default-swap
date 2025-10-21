@@ -70,34 +70,19 @@ paths = [
 ]
 
 # Regex patterns to allowlist (false positives)
-[[allowlist.regexes]]
-description = "Test/example passwords"
-regex = '''(test|example|dummy|fake|mock|sample|placeholder)'''
+# Note: These are plain regex strings that will be matched against findings
+regexes = [
+    '''(test|example|dummy|fake|mock|sample|placeholder)''',  # Test/example passwords
+    '''(your|my|our|their)[-_]?(password|secret|key|token)''',  # Placeholder values
+    '''(TODO|FIXME|XXX|NOTE):''',  # Documentation and comments
+    '''admin.*admin''',  # Default admin credentials in docs/comments
+    '''\$\{[A-Z_]+\}''',  # Environment variable references
+    '''(sk|pk)_(test|live)_[0-9a-zA-Z]{24,}example''',  # Generic examples
+]
 
-[[allowlist.regexes]]
-description = "Placeholder values"
-regex = '''(your|my|our|their)[-_]?(password|secret|key|token)'''
-
-[[allowlist.regexes]]
-description = "Documentation and comments"
-regex = '''(TODO|FIXME|XXX|NOTE):'''
-
-[[allowlist.regexes]]
-description = "Default admin credentials in docs/comments"
-regex = '''admin.*admin'''
-
-[[allowlist.regexes]]
-description = "Environment variable references"
-regex = '''\$\{[A-Z_]+\}'''
-
-[[allowlist.regexes]]
-description = "Generic examples"
-regex = '''(sk|pk)_(test|live)_[0-9a-zA-Z]{24,}example'''
-
-# Stop words - don't flag these
-[[allowlist.stopwords]]
+# Stop words - common words that shouldn't trigger alerts by themselves
 stopwords = [
-    "password",  # The word itself in variable names
+    "password",
     "secret",
     "token",
     "key",

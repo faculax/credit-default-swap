@@ -8,7 +8,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.0</version>
+        <version>3.4.1</version>
         <relativePath/>
     </parent>
 
@@ -22,6 +22,10 @@
         <java.version>21</java.version>
         <sonar.organization>ayodeleoladeji</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <!-- Override vulnerable dependency versions -->
+        <postgresql.version>42.7.4</postgresql.version>
+        <tomcat.version>10.1.40</tomcat.version>
+        <spring-framework.version>6.2.1</spring-framework.version>
     </properties>
 
     <dependencies>
@@ -193,7 +197,7 @@
             <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
-                <version>9.0.9</version>
+                <version>12.1.8</version>
                 <configuration>
                     <format>ALL</format>
                     <outputDirectory>${project.build.directory}/security-reports</outputDirectory>
@@ -202,6 +206,11 @@
                     <skipSystemScope>true</skipSystemScope>
                     <skipProvidedScope>true</skipProvidedScope>
                     <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+                    <!-- NVD API 2.0 Configuration (from settings.xml server) -->
+                    <nvdApiServerId>nvd-api</nvdApiServerId>
+                    <nvdApiDelay>8000</nvdApiDelay>
+                    <nvdValidForHours>${nvd.api.validForHours}</nvdValidForHours>
+                    <nvdMaxRetryCount>5</nvdMaxRetryCount>
                 </configuration>
                 <executions>
                     <execution>
