@@ -56,4 +56,3 @@ ENV LOGGING_LEVEL_APP=DEBUG
 
 # Run the app
 ENTRYPOINT ["java", "-Xmx512m", "-Xms256m", "-jar", "app.jar"]
-
