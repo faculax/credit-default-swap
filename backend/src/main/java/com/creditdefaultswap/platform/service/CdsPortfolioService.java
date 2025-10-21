@@ -23,6 +23,13 @@ public class CdsPortfolioService {
     private static final Logger logger = LoggerFactory.getLogger(CdsPortfolioService.class);
     private static final BigDecimal PERCENT_TOLERANCE = new BigDecimal("0.05"); // 5% tolerance for percent weights
     
+    /**
+     * Sanitize input for logging to prevent CRLF injection (CWE-117)
+     */
+    private String sanitizeForLog(Object obj) {
+        return obj == null ? "null" : obj.toString().replaceAll("[\r\n]", "_");
+    }
+    
     private final CdsPortfolioRepository portfolioRepository;
     private final CdsPortfolioConstituentRepository constituentRepository;
     private final CDSTradeRepository tradeRepository;
@@ -39,7 +46,7 @@ public class CdsPortfolioService {
     
     @Transactional
     public CdsPortfolio createPortfolio(String name, String description) {
-        logger.info("Creating portfolio: {}", name);
+        logger.info("Creating portfolio: {}", sanitizeForLog(name));
         
         // Check if portfolio with same name already exists
         if (portfolioRepository.existsByNameIgnoreCase(name)) {
@@ -62,7 +69,7 @@ public class CdsPortfolioService {
     
     @Transactional
     public CdsPortfolio updatePortfolio(Long id, String name, String description) {
-        logger.info("Updating portfolio: {}", id);
+        logger.info("Updating portfolio: {}", sanitizeForLog(id));
         
         CdsPortfolio portfolio = portfolioRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Portfolio not found: " + id));
@@ -81,13 +88,13 @@ public class CdsPortfolioService {
     
     @Transactional
     public void deletePortfolio(Long id) {
-        logger.info("Deleting portfolio: {}", id);
+        logger.info("Deleting portfolio: {}", sanitizeForLog(id));
         portfolioRepository.deleteById(id);
     }
     
     @Transactional
     public List<CdsPortfolioConstituent> attachTrades(Long portfolioId, AttachTradesRequest request) {
-        logger.info("Attaching {} trades to portfolio: {}", request.getTrades().size(), portfolioId);
+        logger.info("Attaching {} trades to portfolio: {}", sanitizeForLog(request.getTrades().size()), sanitizeForLog(portfolioId));
         
         CdsPortfolio portfolio = portfolioRepository.findById(portfolioId)
                 .orElseThrow(() -> new IllegalArgumentException("Portfolio not found: " + portfolioId));
@@ -126,7 +133,7 @@ public class CdsPortfolioService {
     
     @Transactional
     public void detachConstituent(Long portfolioId, Long constituentId) {
-        logger.info("Detaching constituent {} from portfolio {}", constituentId, portfolioId);
+        logger.info("Detaching constituent {} from portfolio {}", sanitizeForLog(constituentId), sanitizeForLog(portfolioId));
         
         CdsPortfolioConstituent constituent = constituentRepository.findById(constituentId)
                 .orElseThrow(() -> new IllegalArgumentException("Constituent not found: " + constituentId));
@@ -158,7 +165,7 @@ public class CdsPortfolioService {
             
             BigDecimal diff = sumPercent.subtract(BigDecimal.ONE).abs();
             if (diff.compareTo(PERCENT_TOLERANCE) > 0) {
-                logger.warn("Percent weights sum to {} (expected 1.0 ± {})", sumPercent, PERCENT_TOLERANCE);
+                logger.warn("Percent weights sum to {} (expected 1.0 ± {})", sanitizeForLog(sumPercent), sanitizeForLog(PERCENT_TOLERANCE));
                 throw new IllegalArgumentException(
                         "Percent weights must sum to 1.0 (±" + PERCENT_TOLERANCE + "), got: " + sumPercent);
             }
