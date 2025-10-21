@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
@@ -60,7 +61,7 @@ public class OreProcessManager {
                 }
                 
                 int exitCode = process.exitValue();
-                String output = new String(process.getInputStream().readAllBytes());
+                String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
                 
                 if (exitCode == 0) {
                     // Extract key metrics from ORE output
