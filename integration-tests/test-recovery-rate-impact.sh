@@ -16,15 +16,44 @@ NC='\033[0m' # No Color
 TESTS_PASSED=0
 TESTS_FAILED=0
 
-# URLs
-BACKEND_URL="${BACKEND_URL:-http://localhost:8080}"
-RISK_ENGINE_URL="${RISK_ENGINE_URL:-http://localhost:8082}"
-TRADE_API="${BACKEND_URL}/api/cds-trades"
-RISK_API="${RISK_ENGINE_URL}/api/risk"
-
 # Trade IDs
 TRADE_ID_LOW_RECOVERY=""
 TRADE_ID_HIGH_RECOVERY=""
+
+# Environment selection - Interactive prompt
+select_environment() {
+    echo ""
+    printf "${BLUE}================================${NC}\n"
+    printf "${BLUE}Select target environment:${NC}\n"
+    printf "${BLUE}================================${NC}\n"
+    echo "  1) Localhost"
+    echo "  2) Render (Production)"
+    echo ""
+    read -p "Enter choice (1 or 2) [1]: " choice
+    choice=${choice:-1}
+    
+    case $choice in
+        1)
+            BACKEND_URL="http://localhost:8080"
+            RISK_ENGINE_URL="http://localhost:8082"
+            ENVIRONMENT="localhost"
+            ;;
+        2)
+            BACKEND_URL="https://credit-default-swap-backend.onrender.com"
+            RISK_ENGINE_URL="https://credit-default-swap-risk-engine.onrender.com"
+            ENVIRONMENT="render"
+            ;;
+        *)
+            printf "${RED}Invalid choice. Defaulting to localhost.${NC}\n"
+            BACKEND_URL="http://localhost:8080"
+            RISK_ENGINE_URL="http://localhost:8082"
+            ENVIRONMENT="localhost"
+            ;;
+    esac
+    
+    TRADE_API="${BACKEND_URL}/api/cds-trades"
+    RISK_API="${RISK_ENGINE_URL}/api/risk"
+}
 
 # Helper functions
 print_header() {
@@ -291,7 +320,11 @@ cleanup() {
 
 # Main test flow
 main() {
+    # Interactive environment selection
+    select_environment
+    
     print_header "Recovery Rate Impact Integration Test"
+    print_info "Environment: ${ENVIRONMENT}"
     print_info "Backend URL: ${BACKEND_URL}"
     print_info "Risk Engine URL: ${RISK_ENGINE_URL}"
     
