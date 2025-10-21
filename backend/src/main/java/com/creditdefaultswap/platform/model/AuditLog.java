@@ -46,7 +46,10 @@ public class AuditLog {
         CREDIT_EVENT,
         CASH_SETTLEMENT,
         PHYSICAL_SETTLEMENT,
-        TRADE
+        TRADE,
+        SIMM_CALCULATION,
+        SACCR_CALCULATION,
+        MARGIN_STATEMENT
     }
     
     public enum AuditAction {

@@ -25,6 +25,16 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, trade, on
     });
   };
 
+  const formatRestructuringClause = (clause: string) => {
+    const labels: { [key: string]: string } = {
+      'NO_RESTRUCTURING': 'No R',
+      'MODIFIED_RESTRUCTURING': 'Mod R',
+      'MODIFIED_MODIFIED_RESTRUCTURING': 'Mod Mod R',
+      'FULL_RESTRUCTURING': 'Full R'
+    };
+    return labels[clause] || clause.replace(/_/g, ' ');
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-fd-darker rounded-lg shadow-fd border border-fd-border p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
@@ -123,7 +133,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, trade, on
             <div className="pt-2 border-t border-fd-border">
               <div className="flex justify-between">
                 <span className="text-fd-text-muted">Restructuring Clause:</span>
-                <span className="text-fd-text">{trade.restructuringClause.replace(/_/g, ' ')}</span>
+                <span className="text-fd-text">{formatRestructuringClause(trade.restructuringClause)}</span>
               </div>
             </div>
           )}
