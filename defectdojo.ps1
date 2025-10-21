@@ -201,13 +201,28 @@ function Scan-JavaService {
         New-Item -ItemType Directory -Force -Path "target/security-reports" | Out-Null
         
         Write-Host ""
+        Write-Info "Running OWASP Dependency Check..."
+        & mvn org.owasp:dependency-check-maven:check "-Dformat=JSON" "-DprettyPrint=true"
+        
+        if (Test-Path "target/dependency-check-report.json") {
+            Copy-Item "target/dependency-check-report.json" "target/security-reports/" -Force
+            Write-Success "OWASP Dependency Check complete"
+        }
+        
+        Write-Host ""
         Write-Info "Running SpotBugs security analysis..."
-        mvn compile spotbugs:spotbugs `
-            -Dspotbugs.xmlOutput=true `
-            -Dspotbugs.xmlOutputDirectory=target
+        & mvn compile spotbugs:spotbugs "-Dspotbugs.xmlOutput=true" "-Dspotbugs.xmlOutputDirectory=target"
         
         if (Test-Path "target/spotbugsXml.xml") {
             Write-Success "SpotBugs analysis complete"
+        }
+        
+        Write-Host ""
+        Write-Info "Running Checkstyle..."
+        & mvn checkstyle:checkstyle
+        if (Test-Path "target/checkstyle-result.xml") {
+            Copy-Item "target/checkstyle-result.xml" "target/security-reports/" -Force
+            Write-Success "Checkstyle complete"
         }
         
         Write-Success "$ServiceName scans completed!"
@@ -241,10 +256,7 @@ function Run-SecurityScan {
         
         Write-Host ""
         Write-Info "Running OWASP Dependency Check..."
-        mvn org.owasp:dependency-check-maven:check `
-            -DdataDirectory=./dependency-check-data `
-            -Dformat=JSON `
-            -DprettyPrint=true
+        & mvn org.owasp:dependency-check-maven:check "-Dformat=JSON" "-DprettyPrint=true"
         
         if (Test-Path "target/dependency-check-report.json") {
             Copy-Item "target/dependency-check-report.json" "target/security-reports/" -Force
@@ -253,14 +265,12 @@ function Run-SecurityScan {
         
         Write-Host ""
         Write-Info "Running SpotBugs security analysis..."
-        mvn compile spotbugs:spotbugs `
-            -Dspotbugs.xmlOutput=true `
-            -Dspotbugs.xmlOutputDirectory=target
+        & mvn compile spotbugs:spotbugs "-Dspotbugs.xmlOutput=true" "-Dspotbugs.xmlOutputDirectory=target"
         Write-Success "SpotBugs analysis complete"
         
         Write-Host ""
         Write-Info "Running Checkstyle..."
-        mvn checkstyle:checkstyle
+        & mvn checkstyle:checkstyle
         if (Test-Path "target/checkstyle-result.xml") {
             Copy-Item "target/checkstyle-result.xml" "target/security-reports/" -Force
             Write-Success "Checkstyle complete"
@@ -386,11 +396,9 @@ function Run-SecurityScan {
             }
             
             # Run gitleaks (exit code 1 means secrets found, which is OK for reporting)
-            $gitleaksProcess = Start-Process -FilePath "gitleaks" `
-                -ArgumentList $gitleaksArgs `
-                -NoNewWindow `
-                -Wait `
-                -PassThru
+            # Capture output but don't fail on exit code 1
+            $gitleaksOutput = gitleaks detect --source . --config=.gitleaks.toml --report-path security-reports/gitleaks-report.json --report-format json --verbose 2>&1
+            $gitleaksExitCode = $LASTEXITCODE
             
             if (Test-Path "security-reports/gitleaks-report.json") {
                 Write-Success "Gitleaks scan complete"
@@ -398,21 +406,22 @@ function Run-SecurityScan {
                 # Show summary
                 try {
                     $gitleaksContent = Get-Content "security-reports/gitleaks-report.json" -Raw
-                    if ($gitleaksContent -and $gitleaksContent.Trim() -ne "" -and $gitleaksContent -ne "null") {
+                    if ($gitleaksContent -and $gitleaksContent.Trim() -ne "" -and $gitleaksContent -ne "null" -and $gitleaksContent -ne "[]") {
                         $gitleaksData = $gitleaksContent | ConvertFrom-Json
-                        if ($gitleaksData) {
+                        if ($gitleaksData -and $gitleaksData.Count -gt 0) {
                             $secretCount = ($gitleaksData | Measure-Object).Count
-                            if ($secretCount -gt 0) {
-                                Write-Host "  [!] Found $secretCount potential secret(s)!" -ForegroundColor Red
-                                Write-Host "  Review: security-reports/gitleaks-report.json" -ForegroundColor Yellow
-                            } else {
-                                Write-Host "  [OK] No secrets detected" -ForegroundColor Green
+                            Write-Host "  ⚠️  Found $secretCount potential secret(s)!" -ForegroundColor Red
+                            Write-Host "  Review: security-reports/gitleaks-report.json" -ForegroundColor Yellow
+                            
+                            # Show first few findings
+                            $gitleaksData | Select-Object -First 3 | ForEach-Object {
+                                Write-Host "    • $($_.File):$($_.StartLine) - $($_.RuleID)" -ForegroundColor Yellow
                             }
                         } else {
-                            Write-Host "  [OK] No secrets detected" -ForegroundColor Green
+                            Write-Host "  ✓ No secrets detected" -ForegroundColor Green
                         }
                     } else {
-                        Write-Host "  [OK] No secrets detected" -ForegroundColor Green
+                        Write-Host "  ✓ No secrets detected" -ForegroundColor Green
                     }
                 } catch {
                     Write-Host "  Scan completed (see report for details)" -ForegroundColor Gray
@@ -432,11 +441,27 @@ function Run-SecurityScan {
     Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Green
     Write-Host ""
     Write-Info "Results saved to:"
-    Write-Host "  Backend:        backend/target/spotbugsXml.xml"
-    Write-Host "  Frontend:       frontend/eslint-security.json, retire-report.json"
-    Write-Host "  Gateway:        gateway/target/spotbugsXml.xml"
-    Write-Host "  Risk-Engine:    risk-engine/target/spotbugsXml.xml"
-    Write-Host "  Secret Scanning: security-reports/gitleaks-report.json" -ForegroundColor Yellow
+    Write-Host "  Backend:" -ForegroundColor Cyan
+    Write-Host "    - SpotBugs:    backend/target/spotbugsXml.xml" -ForegroundColor Gray
+    Write-Host "    - OWASP:       backend/target/dependency-check-report.json" -ForegroundColor Gray
+    Write-Host "    - Checkstyle:  backend/target/checkstyle-result.xml" -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "  Frontend:" -ForegroundColor Cyan
+    Write-Host "    - ESLint:      frontend/eslint-security.json" -ForegroundColor Gray
+    Write-Host "    - Retire.js:   frontend/retire-report.json" -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "  Gateway:" -ForegroundColor Cyan
+    Write-Host "    - SpotBugs:    gateway/target/spotbugsXml.xml" -ForegroundColor Gray
+    Write-Host "    - OWASP:       gateway/target/dependency-check-report.json" -ForegroundColor Gray
+    Write-Host "    - Checkstyle:  gateway/target/checkstyle-result.xml" -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "  Risk-Engine:" -ForegroundColor Cyan
+    Write-Host "    - SpotBugs:    risk-engine/target/spotbugsXml.xml" -ForegroundColor Gray
+    Write-Host "    - OWASP:       risk-engine/target/dependency-check-report.json" -ForegroundColor Gray
+    Write-Host "    - Checkstyle:  risk-engine/target/checkstyle-result.xml" -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "  Secret Scanning:" -ForegroundColor Cyan
+    Write-Host "    - Gitleaks:    security-reports/gitleaks-report.json" -ForegroundColor Gray
     Write-Host ""
     Write-Info "Next step: Run './defectdojo.ps1 upload-components' to upload results to DefectDojo"
 }
