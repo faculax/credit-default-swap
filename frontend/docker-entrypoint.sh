@@ -22,6 +22,20 @@ replace_env_vars() {
     echo "Environment variable substitution complete"
 }
 
+# Function to configure nginx gateway proxy URL dynamically
+configure_nginx_gateway() {
+    echo "Configuring nginx gateway proxy..."
+    
+    # Get gateway URL from environment or use default Docker Compose service name
+    GATEWAY_URL=${GATEWAY_URL:-"http://gateway:8081"}
+    echo "Using GATEWAY_URL: $GATEWAY_URL"
+    
+    # Replace the placeholder in nginx config
+    sed -i "s|GATEWAY_URL_PLACEHOLDER|$GATEWAY_URL|g" /etc/nginx/nginx.conf
+    
+    echo "Nginx gateway configuration complete"
+}
+
 # Function to update version endpoint with build information
 update_version_endpoint() {
     echo "Updating version endpoint with build information..."
@@ -49,7 +63,8 @@ update_version_endpoint() {
     echo "Version endpoint updated successfully"
 }
 
-# Run the replacement functions
+# Run the configuration functions
+configure_nginx_gateway
 replace_env_vars
 update_version_endpoint
 
