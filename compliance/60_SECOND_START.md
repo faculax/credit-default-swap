@@ -6,6 +6,10 @@
 # Windows
 ./defectdojo.ps1 start
 
+First Time run
+./defectdojo.ps1 start
+./defectdojo.ps1 init
+
 # Linux/Mac
 cd compliance && make start
 ```
@@ -23,7 +27,7 @@ cd compliance && make start
 ```powershell
 # Windows
 ./defectdojo.ps1 scan
-./defectdojo.ps1 upload
+./defectdojo.ps1 upload-components
 
 # Linux/Mac
 cd compliance
