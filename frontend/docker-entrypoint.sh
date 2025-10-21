@@ -10,10 +10,9 @@ replace_env_vars() {
     
     # Find all JavaScript files in the build directory
     find /usr/share/nginx/html -name "*.js" -type f | while read file; do
-        # Replace production URLs with the target URL first
-        sed -i "s|https://fxtrading-gateway-fnhnhybfhzdubycz.uksouth-01.azurewebsites.net/api|$API_URL|g" "$file"
+        # Replace the hardcoded Render gateway URL with the configured API_URL
         sed -i "s|https://credit-default-swap-gateway.onrender.com/api|$API_URL|g" "$file"
-        # Only replace localhost if API_URL is different (avoid replacing with itself)
+        # Replace localhost gateway URL if different from API_URL
         if [ "$API_URL" != "/api" ]; then
             sed -i "s|http://localhost:8081/api|$API_URL|g" "$file"
         fi
@@ -26,7 +25,10 @@ replace_env_vars() {
 configure_nginx_gateway() {
     echo "Configuring nginx gateway proxy..."
     
-    # Get gateway URL from environment or use default Docker Compose service name
+    # Get gateway URL from environment with smart defaults:
+    # - For Render: use full Render URL 
+    # - For Docker Compose: use service name
+    # Default to Docker Compose service name if not set
     GATEWAY_URL=${GATEWAY_URL:-"http://gateway:8081"}
     echo "Using GATEWAY_URL: $GATEWAY_URL"
     
@@ -64,7 +66,6 @@ update_version_endpoint() {
 }
 
 # Run the configuration functions
-configure_nginx_gateway
 replace_env_vars
 update_version_endpoint
 
