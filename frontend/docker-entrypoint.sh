@@ -4,36 +4,17 @@
 replace_env_vars() {
     echo "Replacing environment variables in built files..."
     
-    # Get the API_BASE_URL from environment or use default relative path
-    API_URL=${REACT_APP_API_BASE_URL:-"/api"}
+    # Get the API_BASE_URL from environment or use default
+    API_URL=${REACT_APP_API_BASE_URL:-"https://fxtrading-gateway-fnhnhybfhzdubycz.uksouth-01.azurewebsites.net/api"}
     echo "Using REACT_APP_API_BASE_URL: $API_URL"
     
     # Find all JavaScript files in the build directory
     find /usr/share/nginx/html -name "*.js" -type f | while read file; do
-        # Replace production URLs with the target URL first
-        sed -i "s|https://fxtrading-gateway-fnhnhybfhzdubycz.uksouth-01.azurewebsites.net/api|$API_URL|g" "$file"
-        sed -i "s|https://credit-default-swap-gateway.onrender.com/api|$API_URL|g" "$file"
-        # Only replace localhost if API_URL is different (avoid replacing with itself)
-        if [ "$API_URL" != "/api" ]; then
-            sed -i "s|http://localhost:8081/api|$API_URL|g" "$file"
-        fi
+        # Replace the API_BASE_URL placeholder with actual value
+        sed -i "s|http://localhost:8081/api|$API_URL|g" "$file"
     done
     
     echo "Environment variable substitution complete"
-}
-
-# Function to configure nginx gateway proxy URL dynamically
-configure_nginx_gateway() {
-    echo "Configuring nginx gateway proxy..."
-    
-    # Get gateway URL from environment or use default Docker Compose service name
-    GATEWAY_URL=${GATEWAY_URL:-"http://gateway:8081"}
-    echo "Using GATEWAY_URL: $GATEWAY_URL"
-    
-    # Replace the placeholder in nginx config
-    sed -i "s|GATEWAY_URL_PLACEHOLDER|$GATEWAY_URL|g" /etc/nginx/nginx.conf
-    
-    echo "Nginx gateway configuration complete"
 }
 
 # Function to update version endpoint with build information
@@ -45,7 +26,7 @@ update_version_endpoint() {
     BUILD_TIMESTAMP=$(date +%s)
     VERSION=${REACT_APP_VERSION:-"1.0.0"}
     ENVIRONMENT=${NODE_ENV:-"production"}
-    API_URL=${REACT_APP_API_BASE_URL:-"/api"}
+    API_URL=${REACT_APP_API_BASE_URL:-"https://fxtrading-gateway-fnhnhybfhzdubycz.uksouth-01.azurewebsites.net/api"}
     
     echo "Build Time: $BUILD_TIME"
     echo "Build Timestamp: $BUILD_TIMESTAMP"
@@ -63,8 +44,7 @@ update_version_endpoint() {
     echo "Version endpoint updated successfully"
 }
 
-# Run the configuration functions
-configure_nginx_gateway
+# Run the replacement functions
 replace_env_vars
 update_version_endpoint
 
