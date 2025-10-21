@@ -1,19 +1,21 @@
 package com.creditdefaultswap.platform.simulation;
 
-import java.util.Random;
+import java.security.SecureRandom;
 
 /**
  * Default time simulator using Gaussian one-factor copula model
  */
 public class DefaultTimeSimulator {
     
-    private final Random random;
+    private final SecureRandom random;
     private final double[] betas;
     private final double[][] survivalCurves;  // [entity][time points]
     private final double[] timePoints;        // horizons in years
     
     public DefaultTimeSimulator(long seed, double[] betas, double[][] survivalCurves, double[] timePoints) {
-        this.random = new Random(seed);
+        // Use SecureRandom for production Monte Carlo simulations (CWE-330)
+        this.random = new SecureRandom();
+        this.random.setSeed(seed);  // Seed for reproducibility
         this.betas = betas;
         this.survivalCurves = survivalCurves;
         this.timePoints = timePoints;
