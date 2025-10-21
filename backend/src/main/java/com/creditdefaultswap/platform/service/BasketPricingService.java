@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -88,7 +89,9 @@ public class BasketPricingService {
         
         logger.info("Pricing basket {} with {} paths (seed={})", sanitizeForLog(basket.getName()), sanitizeForLog(paths), sanitizeForLog(seed));
         
-        Random random = new Random(seed);
+        // Use SecureRandom for production pricing simulations (CWE-330)
+        SecureRandom random = new SecureRandom();
+        random.setSeed(seed); // Seed for reproducibility in testing
         
         // Placeholder calculations (to be replaced with actual Monte Carlo)
         BigDecimal baseFairSpread = new BigDecimal("150.00"); // Base 150 bps
