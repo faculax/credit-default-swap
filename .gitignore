@@ -4,5 +4,10 @@ frontend/node_modules/
 backend/target/
 gateway/target/
 risk-engine/target/
+
+# IDE folders
 .vscode/
+.idea/
+
+# OS files
 .DS_Store
