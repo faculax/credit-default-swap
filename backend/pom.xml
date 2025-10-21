@@ -23,7 +23,7 @@
         <sonar.organization>ayodeleoladeji</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <!-- Override vulnerable dependency versions -->
-        <postgresql.version>42.7.4</postgresql.version>
+        <postgresql.version>42.7.7</postgresql.version>
     <tomcat.version>10.1.48</tomcat.version>
         <spring-framework.version>6.2.1</spring-framework.version>
     </properties>

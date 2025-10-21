@@ -34,6 +34,13 @@ public class PortfolioPricingService {
     private static final Logger logger = LoggerFactory.getLogger(PortfolioPricingService.class);
     private static final String DEFAULT_SECTOR = "UNCLASSIFIED";
     
+    /**
+     * Sanitize input for logging to prevent CRLF injection (CWE-117)
+     */
+    private String sanitizeForLog(Object obj) {
+        return obj == null ? "null" : obj.toString().replaceAll("[\r\n]", "_");
+    }
+    
     private final CdsPortfolioRepository portfolioRepository;
     private final CdsPortfolioConstituentRepository constituentRepository;
     private final PortfolioRiskCacheRepository riskCacheRepository;
@@ -62,7 +69,7 @@ public class PortfolioPricingService {
     
     @Transactional
     public PortfolioPricingResponse pricePortfolio(Long portfolioId, LocalDate valuationDate) {
-        logger.info("Pricing portfolio {} for valuation date {}", portfolioId, valuationDate);
+        logger.info("Pricing portfolio {} for valuation date {}", sanitizeForLog(portfolioId), sanitizeForLog(valuationDate));
         
         CdsPortfolio portfolio = portfolioRepository.findById(portfolioId)
                 .orElseThrow(() -> new IllegalArgumentException("Portfolio not found: " + portfolioId));

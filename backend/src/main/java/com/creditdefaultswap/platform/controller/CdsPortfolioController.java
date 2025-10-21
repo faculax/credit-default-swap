@@ -130,7 +130,7 @@ public class CdsPortfolioController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            logger.error("Error updating portfolio {}", id, e);
+            logger.error("Error updating portfolio {}", sanitizeForLog(id), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to update portfolio"));
         }
@@ -145,7 +145,7 @@ public class CdsPortfolioController {
             portfolioService.deletePortfolio(id);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
-            logger.error("Error deleting portfolio {}", id, e);
+            logger.error("Error deleting portfolio {}", sanitizeForLog(id), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to delete portfolio"));
         }
@@ -164,7 +164,7 @@ public class CdsPortfolioController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            logger.error("Error attaching trades to portfolio {}", id, e);
+            logger.error("Error attaching trades to portfolio {}", sanitizeForLog(id), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to attach trades"));
         }
@@ -183,7 +183,7 @@ public class CdsPortfolioController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            logger.error("Error detaching constituent {} from portfolio {}", constituentId, id, e);
+            logger.error("Error detaching constituent {} from portfolio {}", sanitizeForLog(constituentId), sanitizeForLog(id), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to detach constituent"));
         }
@@ -198,7 +198,7 @@ public class CdsPortfolioController {
             List<CdsPortfolioConstituent> constituents = portfolioService.getActiveConstituents(id);
             return ResponseEntity.ok(constituents);
         } catch (Exception e) {
-            logger.error("Error fetching constituents for portfolio {}", id, e);
+            logger.error("Error fetching constituents for portfolio {}", sanitizeForLog(id), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -216,7 +216,7 @@ public class CdsPortfolioController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            logger.error("Error pricing portfolio {}", id, e);
+            logger.error("Error pricing portfolio {}", sanitizeForLog(id), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to price portfolio: " + e.getMessage()));
         }
@@ -232,7 +232,7 @@ public class CdsPortfolioController {
                     .map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {
-            logger.error("Error fetching risk summary for portfolio {}", id, e);
+            logger.error("Error fetching risk summary for portfolio {}", sanitizeForLog(id), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -260,7 +260,7 @@ public class CdsPortfolioController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            logger.error("Error attaching bond to portfolio {}", id, e);
+            logger.error("Error attaching bond to portfolio {}", sanitizeForLog(id), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to attach bond: " + e.getMessage()));
         }
@@ -277,7 +277,7 @@ public class CdsPortfolioController {
             bondService.removeBond(id, bondId);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
-            logger.error("Error removing bond {} from portfolio {}", bondId, id, e);
+            logger.error("Error removing bond {} from portfolio {}", sanitizeForLog(bondId), sanitizeForLog(id), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to remove bond: " + e.getMessage()));
         }
@@ -292,7 +292,7 @@ public class CdsPortfolioController {
             List<BondPortfolioConstituent> bonds = bondService.getPortfolioBonds(id);
             return ResponseEntity.ok(bonds);
         } catch (Exception e) {
-            logger.error("Error fetching bonds for portfolio {}", id, e);
+            logger.error("Error fetching bonds for portfolio {}", sanitizeForLog(id), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -320,7 +320,7 @@ public class CdsPortfolioController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            logger.error("Error attaching basket to portfolio {}", id, e);
+            logger.error("Error attaching basket to portfolio {}", sanitizeForLog(id), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to attach basket: " + e.getMessage()));
         }
@@ -337,7 +337,7 @@ public class CdsPortfolioController {
             basketService.removeBasket(id, basketId);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
-            logger.error("Error removing basket {} from portfolio {}", basketId, id, e);
+            logger.error("Error removing basket {} from portfolio {}", sanitizeForLog(basketId), sanitizeForLog(id), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to remove basket: " + e.getMessage()));
         }
@@ -352,7 +352,7 @@ public class CdsPortfolioController {
             List<BasketPortfolioConstituent> baskets = basketService.getPortfolioBaskets(id);
             return ResponseEntity.ok(baskets);
         } catch (Exception e) {
-            logger.error("Error fetching baskets for portfolio {}", id, e);
+            logger.error("Error fetching baskets for portfolio {}", sanitizeForLog(id), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

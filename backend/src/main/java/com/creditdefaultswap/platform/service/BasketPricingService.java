@@ -26,6 +26,13 @@ public class BasketPricingService {
     
     private static final Logger logger = LoggerFactory.getLogger(BasketPricingService.class);
     
+    /**
+     * Sanitize input for logging to prevent CRLF injection (CWE-117)
+     */
+    private String sanitizeForLog(Object obj) {
+        return obj == null ? "null" : obj.toString().replaceAll("[\r\n]", "_");
+    }
+    
     @Autowired
     private BasketDefinitionRepository basketRepository;
     
@@ -79,7 +86,7 @@ public class BasketPricingService {
     private void simulatePricing(BasketDefinition basket, int paths, long seed, 
                                   BasketPricingResponse response, BasketPricingRequest request) {
         
-        logger.info("Pricing basket {} with {} paths (seed={})", basket.getName(), paths, seed);
+        logger.info("Pricing basket {} with {} paths (seed={})", sanitizeForLog(basket.getName()), sanitizeForLog(paths), sanitizeForLog(seed));
         
         Random random = new Random(seed);
         
@@ -165,6 +172,6 @@ public class BasketPricingService {
             }
         }
         
-        logger.info("Basket {} pricing complete: fair spread = {} bps", basket.getName(), fairSpread);
+        logger.info("Basket {} pricing complete: fair spread = {} bps", sanitizeForLog(basket.getName()), sanitizeForLog(fairSpread));
     }
 }
