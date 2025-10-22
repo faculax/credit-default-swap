@@ -5,20 +5,22 @@ USER root
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install Node.js 20.x (LTS), PostgreSQL, Redis, nginx, and supervisor
+# Install Node.js 20.x (LTS) first, then other packages
+# NodeSource script must run BEFORE installing nodejs package
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     gnupg \
     ca-certificates \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y --no-install-recommends \
+    curl \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
     nodejs \
     postgresql \
     postgresql-client \
     redis-server \
     nginx \
     supervisor \
-    curl \
     locales \
     && npm install -g yarn \
     && apt-get clean \
