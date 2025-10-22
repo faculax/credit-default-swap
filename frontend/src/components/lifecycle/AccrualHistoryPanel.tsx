@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { lifecycleService } from '../../services/lifecycleService';
 import { AccrualEvent } from '../../types/lifecycle';
 
@@ -27,16 +27,16 @@ export const AccrualHistoryPanel: React.FC<Props> = ({ tradeId }) => {
     }
   };
 
-  const loadCumulative = async () => {
+  const loadCumulative = useCallback(async () => {
     try {
       const cum = await lifecycleService.getCumulativeAccrual(tradeId);
       setCumulative(cum);
     } catch {}
-  };
+  }, [tradeId]);
 
   useEffect(() => {
     loadCumulative();
-  }, [tradeId, loadCumulative]);
+  }, [loadCumulative]);
 
   return (
     <div className="space-y-4">
