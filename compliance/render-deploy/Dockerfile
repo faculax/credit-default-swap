@@ -25,10 +25,12 @@ RUN mkdir -p /var/log/supervisor \
     /run/nginx \
     /app/pgdata \
     /app/backups \
-    /app/logs && \
+    /app/logs \
+    /app/static \
+    /app/media && \
     chown -R postgres:postgres /app/pgdata /app/logs /run/postgresql && \
     chmod 0700 /app/pgdata && \
-    chmod 0755 /app/logs
+    chmod 0755 /app/logs /app/static /app/media
 
 # Set DOJO_ROOT to match DefectDojo official image
 ENV DOJO_ROOT=/app
