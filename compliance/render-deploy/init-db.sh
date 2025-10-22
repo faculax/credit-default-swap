@@ -46,6 +46,15 @@ su - postgres -c "psql -h 127.0.0.1" <<-EOSQL
     ALTER USER defectdojo CREATEDB;
 EOSQL
 
+# Grant schema permissions on the defectdojo database
+su - postgres -c "psql -h 127.0.0.1 -d defectdojo" <<-EOSQL
+    GRANT ALL ON SCHEMA public TO defectdojo;
+    GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO defectdojo;
+    GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO defectdojo;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO defectdojo;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO defectdojo;
+EOSQL
+
 # Stop PostgreSQL
 kill $PG_PID
 wait $PG_PID || true
@@ -59,7 +68,6 @@ export DD_ALLOWED_HOSTS="${DD_ALLOWED_HOSTS:-*}"
 export DD_DEBUG="${DD_DEBUG:-False}"
 export DD_ADMIN_USER="${DD_ADMIN_USER:-admin}"
 export DD_ADMIN_PASSWORD="${DD_ADMIN_PASSWORD:-admin}"
-export DD_ADMIN_MAIL="${DD_ADMIN_MAIL:-admin@defectdojo.local}"
 export DD_INITIALIZE="${DD_INITIALIZE:-true}"
 
 # Start PostgreSQL and Redis for migrations
@@ -88,24 +96,24 @@ if [ "${DD_INITIALIZE}" = "true" ]; then
     python manage.py collectstatic --noinput --clear
     
     echo "Creating initial data..."
-    python manage.py loaddata initial_banner_conf || true
-    python manage.py loaddata initial_system_settings || true
-    python manage.py loaddata product_type || true
-    python manage.py loaddata test_type || true
-    python manage.py loaddata development_environment || true
-    python manage.py loaddata system_settings || true
-    python manage.py loaddata benchmark_type || true
-    python manage.py loaddata benchmark_category || true
-    python manage.py loaddata benchmark_requirement || true
-    python manage.py loaddata language_type || true
-    python manage.py loaddata objects_review || true
-    python manage.py loaddata regulation || true
+    python manage.py loaddata initial_banner_conf
+    python manage.py loaddata initial_system_settings
+    python manage.py loaddata product_type
+    python manage.py loaddata test_type
+    python manage.py loaddata development_environment
+    python manage.py loaddata system_settings
+    python manage.py loaddata benchmark_type
+    python manage.py loaddata benchmark_category
+    python manage.py loaddata benchmark_requirement
+    python manage.py loaddata language_type
+    python manage.py loaddata objects_review
+    python manage.py loaddata regulation
     
     echo "Creating superuser..."
-    python manage.py createsuperuser --noinput --username "${DD_ADMIN_USER}" --email "${DD_ADMIN_MAIL}" || echo "Superuser already exists"
+    python manage.py createsuperuser --noinput --username "${DD_ADMIN_USER}" --email "${DD_ADMIN_MAIL:-admin@defectdojo.local}" || echo "Superuser already exists"
     
     echo "Installing sample data..."
-    python manage.py loaddata initial_surveys || true
+    python manage.py loaddata initial_surveys || echo "Surveys already loaded"
 fi
 
 # Stop temporary services
