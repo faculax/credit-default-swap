@@ -2,14 +2,16 @@ FROM defectdojo/defectdojo-django:latest
 
 USER root
 
-# Install PostgreSQL, Redis, nginx, and supervisor
-RUN apk add --no-cache \
+# Install PostgreSQL, Redis, nginx, and supervisor (Debian-based)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
     postgresql \
     postgresql-client \
-    redis \
+    redis-server \
     nginx \
-    supervisor \
-    bash
+    supervisor && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Create necessary directories
 RUN mkdir -p /var/log/supervisor \
@@ -18,12 +20,15 @@ RUN mkdir -p /var/log/supervisor \
     /var/lib/postgresql/data \
     /app/media
 
+# Create postgres user if it doesn't exist
+RUN useradd -r -s /bin/bash postgres || true
+
 # Set permissions for PostgreSQL
 RUN chown -R postgres:postgres /var/lib/postgresql/data /run/postgresql && \
     chmod 0700 /var/lib/postgresql/data
 
 # Initialize PostgreSQL database as postgres user
-RUN su-exec postgres initdb -D /var/lib/postgresql/data
+RUN su postgres -c "initdb -D /var/lib/postgresql/data"
 
 # Copy configuration files
 COPY supervisord.conf /etc/supervisord.conf
