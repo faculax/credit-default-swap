@@ -29,6 +29,11 @@ public class SimulationService {
     private static final SecureRandom secureRandom = new SecureRandom();
     private static final int MAX_PATHS = 200000;
     private static final int MIN_PATHS = 100;
+    
+    // Security: Sanitize log parameters to prevent CRLF injection attacks (CWE-117)
+    private String sanitizeForLog(Object obj) {
+        return obj == null ? "null" : obj.toString().replaceAll("[\r\n]", "_");
+    }
     private static final double DEFAULT_BETA = 0.35;
     private static final double DEFAULT_RECOVERY = 0.40;
     
@@ -160,7 +165,7 @@ public class SimulationService {
             run.setCompletedAt(LocalDateTime.now());
             simulationRunRepository.save(run);
             
-            log.info("Simulation {} canceled", runId);
+            log.info("Simulation {} canceled", sanitizeForLog(runId));
         }
     }
     
@@ -222,7 +227,7 @@ public class SimulationService {
             for (int path = 0; path < request.getPaths(); path++) {
                 // Check for cancellation
                 if (run.isCancelRequested()) {
-                    log.info("Simulation {} canceled at path {}", run.getRunId(), path);
+                    log.info("Simulation {} canceled at path {}", sanitizeForLog(run.getRunId()), path);
                     return;
                 }
                 
@@ -277,10 +282,10 @@ public class SimulationService {
             run.setRuntimeMs(endTime - startTime);
             simulationRunRepository.save(run);
             
-            log.info("Simulation {} completed in {} ms", run.getRunId(), endTime - startTime);
+            log.info("Simulation {} completed in {} ms", sanitizeForLog(run.getRunId()), endTime - startTime);
             
         } catch (Exception e) {
-            log.error("Simulation {} failed", run.getRunId(), e);
+            log.error("Simulation {} failed: {}", sanitizeForLog(run.getRunId()), sanitizeForLog(e.getMessage()), e);
             run.setStatus(SimulationStatus.FAILED);
             run.setErrorMessage(e.getMessage());
             run.setCompletedAt(LocalDateTime.now());
@@ -340,7 +345,7 @@ public class SimulationService {
         
         for (int i = 0; i < numEntities; i++) {
             CDSTrade trade = constituents.get(i).getTrade();
-            log.info("Entity {} spread: {} bps", trade.getReferenceEntity(), trade.getSpread());
+            log.info("Entity {} spread: {} bps", sanitizeForLog(trade.getReferenceEntity()), trade.getSpread());
             double spread = trade.getSpread().doubleValue() / 10000.0;  // bps to decimal
             double hazardRate = spread / (1.0 - DEFAULT_RECOVERY);
             

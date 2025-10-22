@@ -32,6 +32,11 @@ public class SaCcrController {
     
     private static final Logger logger = LoggerFactory.getLogger(SaCcrController.class);
     
+    // Security: Sanitize log parameters to prevent CRLF injection attacks (CWE-117)
+    private String sanitizeForLog(Object obj) {
+        return obj == null ? "null" : obj.toString().replaceAll("[\r\n]", "_");
+    }
+    
     @Autowired
     private SaCcrCalculationService calculationService;
     
@@ -58,7 +63,7 @@ public class SaCcrController {
             @RequestParam(value = "jurisdiction", defaultValue = "US") String jurisdiction) {
         
         try {
-            logger.info("Received SA-CCR calculation request for jurisdiction: {} as of {}", jurisdiction, valuationDate);
+            logger.info("Received SA-CCR calculation request for jurisdiction: {} as of {}", sanitizeForLog(jurisdiction), valuationDate);
             
             List<SaCcrCalculation> calculations = calculationService.calculateAllExposures(valuationDate, jurisdiction);
             
@@ -72,7 +77,7 @@ public class SaCcrController {
             ));
             
         } catch (Exception e) {
-            logger.error("Error during SA-CCR calculation: {}", e.getMessage(), e);
+            logger.error("Error during SA-CCR calculation: {}", sanitizeForLog(e.getMessage()), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of(
                         "status", "ERROR",
@@ -110,7 +115,7 @@ public class SaCcrController {
             ));
             
         } catch (Exception e) {
-            logger.error("Error calculating exposure for netting set {}: {}", nettingSetId, e.getMessage(), e);
+            logger.error("Error calculating exposure for netting set {}: {}", sanitizeForLog(nettingSetId), sanitizeForLog(e.getMessage()), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("status", "ERROR", "message", e.getMessage()));
         }
@@ -131,7 +136,7 @@ public class SaCcrController {
                     .body(Map.of("status", "ERROR", "message", "Method not yet implemented"));
             
         } catch (Exception e) {
-            logger.error("Error retrieving latest exposure for netting set {}: {}", nettingSetId, e.getMessage(), e);
+            logger.error("Error retrieving latest exposure for netting set {}: {}", sanitizeForLog(nettingSetId), sanitizeForLog(e.getMessage()), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("status", "ERROR", "message", e.getMessage()));
         }
@@ -154,7 +159,7 @@ public class SaCcrController {
                     .body(Map.of("status", "ERROR", "message", "Method not yet implemented"));
             
         } catch (Exception e) {
-            logger.error("Error retrieving calculation history for netting set {}: {}", nettingSetId, e.getMessage(), e);
+            logger.error("Error retrieving calculation history for netting set {}: {}", sanitizeForLog(nettingSetId), sanitizeForLog(e.getMessage()), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("status", "ERROR", "message", e.getMessage()));
         }
@@ -177,7 +182,7 @@ public class SaCcrController {
             ));
             
         } catch (Exception e) {
-            logger.error("Error retrieving netting sets: {}", e.getMessage(), e);
+            logger.error("Error retrieving netting sets: {}", sanitizeForLog(e.getMessage()), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("status", "ERROR", "message", e.getMessage()));
         }
@@ -202,7 +207,7 @@ public class SaCcrController {
             ));
             
         } catch (Exception e) {
-            logger.error("Error retrieving netting set {}: {}", id, e.getMessage(), e);
+            logger.error("Error retrieving netting set {}: {}", sanitizeForLog(id), sanitizeForLog(e.getMessage()), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("status", "ERROR", "message", e.getMessage()));
         }
@@ -224,7 +229,7 @@ public class SaCcrController {
                     ));
             
         } catch (Exception e) {
-            logger.error("Error creating netting set: {}", e.getMessage(), e);
+            logger.error("Error creating netting set: {}", sanitizeForLog(e.getMessage()), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("status", "ERROR", "message", e.getMessage()));
         }
@@ -261,7 +266,7 @@ public class SaCcrController {
             ));
             
         } catch (Exception e) {
-            logger.error("Error retrieving supervisory parameters: {}", e.getMessage(), e);
+            logger.error("Error retrieving supervisory parameters: {}", sanitizeForLog(e.getMessage()), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("status", "ERROR", "message", e.getMessage()));
         }
@@ -283,7 +288,7 @@ public class SaCcrController {
                     ));
             
         } catch (Exception e) {
-            logger.error("Error creating supervisory parameter: {}", e.getMessage(), e);
+            logger.error("Error creating supervisory parameter: {}", sanitizeForLog(e.getMessage()), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("status", "ERROR", "message", e.getMessage()));
         }
@@ -311,7 +316,7 @@ public class SaCcrController {
             ));
             
         } catch (Exception e) {
-            logger.error("Error getting system status: {}", e.getMessage(), e);
+            logger.error("Error getting system status: {}", sanitizeForLog(e.getMessage()), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("status", "ERROR", "message", e.getMessage()));
         }
@@ -335,7 +340,7 @@ public class SaCcrController {
             ));
             
         } catch (Exception e) {
-            logger.error("Error getting supported jurisdictions: {}", e.getMessage(), e);
+            logger.error("Error getting supported jurisdictions: {}", sanitizeForLog(e.getMessage()), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("status", "ERROR", "message", e.getMessage()));
         }
@@ -381,7 +386,7 @@ public class SaCcrController {
             ));
             
         } catch (Exception e) {
-            logger.error("Error getting jurisdiction details for {}: {}", jurisdiction, e.getMessage(), e);
+            logger.error("Error getting jurisdiction details for {}: {}", sanitizeForLog(jurisdiction), sanitizeForLog(e.getMessage()), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("status", "ERROR", "message", e.getMessage()));
         }
@@ -423,7 +428,7 @@ public class SaCcrController {
             ));
             
         } catch (Exception e) {
-            logger.error("Error comparing jurisdictions: {}", e.getMessage(), e);
+            logger.error("Error comparing jurisdictions: {}", sanitizeForLog(e.getMessage()), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("status", "ERROR", "message", e.getMessage()));
         }
@@ -444,7 +449,7 @@ public class SaCcrController {
                         .body(Map.of("status", "ERROR", "message", "Unsupported jurisdiction: " + jurisdiction));
             }
             
-            logger.info("Calculating SA-CCR exposure for jurisdiction: {} as of {}", jurisdiction, valuationDate);
+            logger.info("Calculating SA-CCR exposure for jurisdiction: {} as of {}", sanitizeForLog(jurisdiction), valuationDate);
             
             List<SaCcrCalculation> calculations;
             if (nettingSetId != null) {
@@ -474,7 +479,7 @@ public class SaCcrController {
             ));
             
         } catch (Exception e) {
-            logger.error("Error calculating SA-CCR exposure for jurisdiction {}: {}", jurisdiction, e.getMessage(), e);
+            logger.error("Error calculating SA-CCR exposure for jurisdiction {}: {}", sanitizeForLog(jurisdiction), sanitizeForLog(e.getMessage()), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of(
                         "status", "ERROR",

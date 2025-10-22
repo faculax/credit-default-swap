@@ -30,6 +30,11 @@ public class DashboardAggregationService {
     
     private static final Logger logger = LoggerFactory.getLogger(DashboardAggregationService.class);
     
+    // Security: Sanitize log parameters to prevent CRLF injection attacks (CWE-117)
+    private String sanitizeForLog(Object obj) {
+        return obj == null ? "null" : obj.toString().replaceAll("[\r\n]", "_");
+    }
+    
     @Autowired
     private MarginStatementRepository marginStatementRepository;
     
@@ -78,7 +83,7 @@ public class DashboardAggregationService {
             return dashboardData;
             
         } catch (Exception e) {
-            logger.error("Error in getDashboardData for date {}: {}", asOfDate, e.getMessage(), e);
+            logger.error("Error in getDashboardData for date {}: {}", asOfDate, sanitizeForLog(e.getMessage()), e);
             
             // Return a basic dashboard with mock data on error
             DashboardData fallbackData = new DashboardData();
@@ -182,7 +187,7 @@ public class DashboardAggregationService {
             try {
                 calculations = saCcrCalculationService.calculateAllExposures(asOfDate, "US");
             } catch (Exception e) {
-                logger.warn("Could not calculate SA-CCR exposures for {}: {}", asOfDate, e.getMessage());
+                logger.warn("Could not calculate SA-CCR exposures for {}: {}", asOfDate, sanitizeForLog(e.getMessage()));
                 calculations = new ArrayList<>();
             }
         }
@@ -463,7 +468,7 @@ public class DashboardAggregationService {
                 
             } catch (Exception e) {
                 logger.warn("Could not retrieve detailed results for calculation {}: {}", 
-                           calc.getCalculationId(), e.getMessage());
+                           sanitizeForLog(calc.getCalculationId()), sanitizeForLog(e.getMessage()));
                 
                 // Fallback to repository-based lookup
                 List<SimmCalculationResult> results = simmCalculationResultRepository.findByCalculationId(calc.getId());
@@ -497,7 +502,7 @@ public class DashboardAggregationService {
         return simmData;
         
         } catch (Exception e) {
-            logger.error("Error retrieving SIMM calculations for date {}: {}", asOfDate, e.getMessage(), e);
+            logger.error("Error retrieving SIMM calculations for date {}: {}", asOfDate, sanitizeForLog(e.getMessage()), e);
             logger.info("Falling back to mock SIMM data due to error");
             return getMockSimmCalculations(asOfDate);
         }
