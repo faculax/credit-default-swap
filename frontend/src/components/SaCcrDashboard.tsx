@@ -56,6 +56,14 @@ const SaCcrDashboard: React.FC = () => {
         loadNettingSets();
     }, []);
 
+    // Load calculations when jurisdiction or valuation date changes
+    useEffect(() => {
+        if (calculationRequest.valuationDate) {
+            loadCalculations();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [calculationRequest.jurisdiction, calculationRequest.valuationDate]);
+
     const loadNettingSets = async () => {
         console.log('Loading netting sets...');
         setError(null);
@@ -80,6 +88,33 @@ const SaCcrDashboard: React.FC = () => {
         } catch (err) {
             console.error('Fetch error:', err);
             setError('Error connecting to SA-CCR service');
+        }
+    };
+
+    const loadCalculations = async () => {
+        if (!calculationRequest.valuationDate || !calculationRequest.jurisdiction) {
+            return;
+        }
+        
+        console.log('Loading calculations for:', calculationRequest);
+        try {
+            const url = apiUrl(`/v1/sa-ccr/exposures?valuationDate=${calculationRequest.valuationDate}&jurisdiction=${calculationRequest.jurisdiction}`);
+            
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data.status === 'SUCCESS') {
+                console.log('Loaded calculations:', data.calculations?.length);
+                setCalculations(data.calculations || []);
+            } else {
+                // No error shown if no calculations exist - just empty table
+                console.log('No calculations found:', data.message);
+                setCalculations([]);
+            }
+        } catch (err) {
+            console.error('Error loading calculations:', err);
+            // Don't show error for missing calculations, just empty state
+            setCalculations([]);
         }
     };
 
@@ -125,9 +160,9 @@ const SaCcrDashboard: React.FC = () => {
         return num.toFixed(decimals);
     };
 
-    // Filter calculations by selected jurisdiction
+    // Calculations are already filtered by jurisdiction from API
     const getFilteredCalculations = () => {
-        return calculations.filter(calc => calc.jurisdiction === calculationRequest.jurisdiction);
+        return calculations;
     };
 
     const getTotalExposure = () => {
@@ -152,17 +187,6 @@ const SaCcrDashboard: React.FC = () => {
                     <p className="text-fd-text-secondary mt-1">
                         Basel III Standardized Approach for Counterparty Credit Risk
                     </p>
-                </div>
-                <div className="flex items-center space-x-4">
-                    <button
-                        onClick={loadNettingSets}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                    >
-                        Refresh Netting Sets
-                    </button>
-                    <div className="text-sm text-fd-text-secondary">
-                        Last Updated: {new Date().toLocaleString()}
-                    </div>
                 </div>
             </div>
 

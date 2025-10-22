@@ -1,18 +1,10 @@
 import React, { useState } from 'react';
-import StatementUpload from './StatementUpload';
 import StatementList from './StatementList';
 import AutomatedStatementGenerator from './AutomatedStatementGenerator';
 
 const MarginStatementsPage: React.FC = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [activeTab, setActiveTab] = useState<'generate' | 'upload' | 'list'>('generate');
-
-  const handleUploadSuccess = (statementId: number) => {
-    // Trigger refresh of the statement list
-    setRefreshTrigger(prev => prev + 1);
-    // Switch to list view to see the uploaded statement
-    setActiveTab('list');
-  };
+  const [activeTab, setActiveTab] = useState<'generate' | 'list'>('generate');
 
   const handleUploadError = (error: string) => {
     console.error('Upload error:', error);
@@ -54,19 +46,6 @@ const MarginStatementsPage: React.FC = () => {
               <span>Auto Generate</span>
             </button>
             <button
-              onClick={() => setActiveTab('upload')}
-              className={`px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 ${
-                activeTab === 'upload'
-                  ? 'bg-blue-500 text-white'
-                  : 'text-fd-text-muted hover:text-fd-text hover:bg-fd-border/50'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-              </svg>
-              <span>Upload Statement</span>
-            </button>
-            <button
               onClick={() => setActiveTab('list')}
               className={`px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 ${
                 activeTab === 'list'
@@ -88,14 +67,9 @@ const MarginStatementsPage: React.FC = () => {
             <AutomatedStatementGenerator 
               onGenerationSuccess={() => {
                 setRefreshTrigger(prev => prev + 1);
-                setActiveTab('list');
+                // Don't switch tabs - keep user on current view
               }}
               onGenerationError={handleUploadError}
-            />
-          ) : activeTab === 'upload' ? (
-            <StatementUpload 
-              onUploadSuccess={handleUploadSuccess}
-              onUploadError={handleUploadError}
             />
           ) : (
             <StatementList refreshTrigger={refreshTrigger} />

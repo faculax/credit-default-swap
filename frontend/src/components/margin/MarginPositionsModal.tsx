@@ -306,37 +306,49 @@ const MarginPositionsModal: React.FC<MarginPositionsModalProps> = ({
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-fd-dark divide-y divide-fd-border">
-                      {positions.map((position) => (
-                        <tr key={position.id} className="hover:bg-fd-darker/50 transition-colors">
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            <div className={`inline-flex items-center space-x-2 px-3 py-1.5 rounded-lg border ${getPositionTypeColor(position.positionType)}`}>
-                              {getPositionTypeIcon(position.positionType)}
-                              <span className="text-sm font-medium">
-                                {formatPositionType(position.positionType)}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            <div className="text-fd-text font-semibold">
-                              {formatCurrency(position.amount, position.currency)}
-                            </div>
-                            <div className="text-xs text-fd-text-muted">{position.currency}</div>
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            <div className="text-sm text-fd-text font-mono">{position.nettingSetId || '-'}</div>
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            <div className="text-sm text-fd-text">{position.portfolioCode || '-'}</div>
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            <div className="text-sm text-fd-text">{position.productClass || '-'}</div>
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            <div className="text-sm text-fd-text">{formatDate(position.effectiveDate)}</div>
-                          </td>
-                        </tr>
-                      ))}
+                    <tbody className="bg-fd-dark">
+                      {positions.map((position, index) => {
+                        const isLastInGroup = index < positions.length - 1 && 
+                          positions[index + 1]?.nettingSetId !== position.nettingSetId;
+                        
+                        return (
+                          <React.Fragment key={position.id}>
+                            <tr className="hover:bg-fd-darker/50 transition-colors border-b border-fd-border/30">
+                              <td className="px-4 py-4 whitespace-nowrap">
+                                <div className={`inline-flex items-center space-x-2 px-3 py-1.5 rounded-lg border ${getPositionTypeColor(position.positionType)}`}>
+                                  {getPositionTypeIcon(position.positionType)}
+                                  <span className="text-sm font-medium">
+                                    {formatPositionType(position.positionType)}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-4 whitespace-nowrap">
+                                <div className="text-fd-text font-semibold">
+                                  {formatCurrency(position.amount, position.currency)}
+                                </div>
+                                <div className="text-xs text-fd-text-muted">{position.currency}</div>
+                              </td>
+                              <td className="px-4 py-4 whitespace-nowrap">
+                                <div className="text-sm text-fd-text font-mono">{position.nettingSetId || '-'}</div>
+                              </td>
+                              <td className="px-4 py-4 whitespace-nowrap">
+                                <div className="text-sm text-fd-text">{position.portfolioCode || '-'}</div>
+                              </td>
+                              <td className="px-4 py-4 whitespace-nowrap">
+                                <div className="text-sm text-fd-text">{position.productClass || '-'}</div>
+                              </td>
+                              <td className="px-4 py-4 whitespace-nowrap">
+                                <div className="text-sm text-fd-text">{formatDate(position.effectiveDate)}</div>
+                              </td>
+                            </tr>
+                            {isLastInGroup && (
+                              <tr className="bg-fd-darker/80">
+                                <td colSpan={6} className="h-3"></td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

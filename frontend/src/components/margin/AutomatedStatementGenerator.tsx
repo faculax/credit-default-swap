@@ -25,6 +25,7 @@ const AutomatedStatementGenerator: React.FC<{
   const [generatedStatements, setGeneratedStatements] = useState<GeneratedMarginStatement[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
 
   const generateStatements = async () => {
     setIsGenerating(true);
@@ -51,10 +52,27 @@ const AutomatedStatementGenerator: React.FC<{
         throw new Error(result.message || result.error || `HTTP error! status: ${response.status}`);
       }
 
-      if (result.success && result.generatedStatements) {
-        setGeneratedStatements(result.generatedStatements);
-        setShowResults(true);
+      if (result.success) {
+        // Show success notification
+        setShowSuccessNotification(true);
+        
+        // Auto-hide notification after 3 seconds
+        setTimeout(() => {
+          setShowSuccessNotification(false);
+        }, 3000);
+        
+        // Trigger refresh for statement list (but don't switch tabs)
         onGenerationSuccess();
+        
+        // Set results if available for display
+        if (result.generatedStatements) {
+          setGeneratedStatements(result.generatedStatements);
+          setShowResults(true);
+        } else if (result.generatedStatement) {
+          // Handle single statement response (new consolidated format)
+          setGeneratedStatements([result.generatedStatement]);
+          setShowResults(true);
+        }
       } else {
         throw new Error(result.error || 'Generation failed');
       }
@@ -79,6 +97,41 @@ const AutomatedStatementGenerator: React.FC<{
 
   return (
     <div className="space-y-6">
+      {/* Success Notification Toast */}
+      {showSuccessNotification && (
+        <div className="fixed top-4 right-4 z-50 animate-slide-in-right">
+          <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-4 shadow-lg backdrop-blur-sm min-w-[320px]">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 bg-green-500/30 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold text-green-300 mb-1">Statement Generated Successfully!</h4>
+                <p className="text-sm text-green-200/80">
+                  Margin statement created for {selectedDate}
+                </p>
+                <p className="text-xs text-green-200/60 mt-1">
+                  View details in Statement History tab
+                </p>
+              </div>
+              <button
+                onClick={() => setShowSuccessNotification(false)}
+                className="flex-shrink-0 text-green-400/60 hover:text-green-400 transition-colors"
+                aria-label="Dismiss notification"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Generation Controls */}
       <div className="bg-fd-darker rounded-lg border border-fd-border p-6">
         <div className="flex items-center space-x-3 mb-6">

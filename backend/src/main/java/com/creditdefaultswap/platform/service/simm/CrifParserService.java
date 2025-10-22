@@ -51,17 +51,19 @@ public class CrifParserService {
         "IR", "FX", "EQ", "CO", "CR_Q", "CR_NQ"
     );
     
-    private static final Map<String, String> RISK_TYPE_TO_CLASS_MAPPING = Map.of(
-        "Risk_IRCurve", "IR",
-        "Risk_IRVol", "IR",
-        "Risk_FX", "FX",
-        "Risk_FXVol", "FX",
-        "Risk_Equity", "EQ",
-        "Risk_EquityVol", "EQ",
-        "Risk_Commodity", "CO",
-        "Risk_CommodityVol", "CO",
-        "Risk_CreditQ", "CR_Q",
-        "Risk_CreditNonQ", "CR_NQ"
+    private static final Map<String, String> RISK_TYPE_TO_CLASS_MAPPING = Map.ofEntries(
+        Map.entry("Risk_IRCurve", "IR"),
+        Map.entry("Risk_IRVol", "IR"),
+        Map.entry("Risk_Inflation", "IR"),
+        Map.entry("Risk_FX", "FX"),
+        Map.entry("Risk_FXVol", "FX"),
+        Map.entry("Risk_Equity", "EQ"),
+        Map.entry("Risk_EquityVol", "EQ"),
+        Map.entry("Risk_Commodity", "CO"),
+        Map.entry("Risk_CommodityVol", "CO"),
+        Map.entry("Risk_CreditQ", "CR_Q"),
+        Map.entry("Risk_CreditNonQ", "CR_NQ"),
+        Map.entry("Risk_BaseCorr", "CR_Q")
     );
     
     private static final Pattern CURRENCY_PATTERN = Pattern.compile("^[A-Z]{3}$");
