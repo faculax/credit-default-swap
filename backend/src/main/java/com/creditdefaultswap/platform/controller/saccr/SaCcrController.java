@@ -160,6 +160,36 @@ public class SaCcrController {
         }
     }
     
+    /**
+     * Get SA-CCR calculations by date and jurisdiction
+     */
+    @GetMapping("/exposures")
+    public ResponseEntity<?> getCalculationsByDateAndJurisdiction(
+            @RequestParam("valuationDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate valuationDate,
+            @RequestParam(value = "jurisdiction", defaultValue = "US") String jurisdiction) {
+        
+        try {
+            logger.info("Retrieving SA-CCR calculations for date: {} and jurisdiction: {}", valuationDate, jurisdiction);
+            
+            List<SaCcrCalculation> calculations = calculationRepository
+                .findByCalculationDateAndJurisdictionOrderByNettingSetId(valuationDate, jurisdiction);
+            
+            return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "message", "SA-CCR calculations retrieved successfully",
+                "calculationCount", calculations.size(),
+                "valuationDate", valuationDate,
+                "jurisdiction", jurisdiction,
+                "calculations", calculations
+            ));
+            
+        } catch (Exception e) {
+            logger.error("Error retrieving SA-CCR calculations: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("status", "ERROR", "message", e.getMessage()));
+        }
+    }
+    
     // ========== Netting Set Management Endpoints ==========
     
     /**

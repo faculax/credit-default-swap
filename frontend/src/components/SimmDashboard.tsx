@@ -46,6 +46,10 @@ const SimmDashboard: React.FC = () => {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [portfolioId, setPortfolioId] = useState<string>('');
 
+  // Auto-generation State
+  const [generatePortfolioId, setGeneratePortfolioId] = useState<string>('');
+  const [generateValuationDate, setGenerateValuationDate] = useState<string>(new Date().toISOString().split('T')[0]);
+
   // Calculation State
   const [calculationPortfolio, setCalculationPortfolio] = useState<string>('');
   const [calculationDate, setCalculationDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -95,9 +99,10 @@ const SimmDashboard: React.FC = () => {
 
     const formData = new FormData();
     formData.append('file', uploadFile);
-    if (portfolioId) {
-      formData.append('portfolioId', portfolioId);
-    }
+    
+    // Use portfolioId if provided, otherwise use file name without extension
+    const fileNameToUse = portfolioId || uploadFile.name.replace(/\.[^/.]+$/, '');
+    formData.append('portfolioId', fileNameToUse);
 
     try {
       const response = await fetch('/api/simm/crif/upload', {
@@ -108,9 +113,18 @@ const SimmDashboard: React.FC = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess(`File uploaded successfully. Upload ID: ${data.uploadId || 'Generated'}`);
-        // Refresh the uploads list from server
-        loadCrifUploads();
+        // Check if the processing was successful (not just upload accepted)
+        if (data.status === 'FAILED') {
+          // File was uploaded but processing failed
+          const errorDetails = data.errors && data.errors.length > 0
+            ? data.errors.map((e: any) => `Line ${e.lineNumber}: ${e.message}`).join('\n')
+            : 'Unknown validation error';
+          setError(`File upload failed validation:\n${errorDetails}\n\nValid: ${data.validRecords}, Errors: ${data.errorRecords}`);
+        } else {
+          setSuccess(`File uploaded successfully. Upload ID: ${data.uploadId}. Valid records: ${data.validRecords}`);
+        }
+        // Refresh the uploads list from server (with small delay to ensure DB is updated)
+        setTimeout(() => loadCrifUploads(), 500);
         setUploadFile(null);
         setPortfolioId('');
       } else {
@@ -123,9 +137,72 @@ const SimmDashboard: React.FC = () => {
     }
   };
 
+  const handleGenerateFromTrades = async () => {
+    if (!generatePortfolioId) {
+      setError('Please enter a file name');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/simm/crif/generate-from-portfolio', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `portfolioId=${encodeURIComponent(generatePortfolioId)}&valuationDate=${generateValuationDate}`,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess(`Generated ${data.sensitivityCount} CRIF sensitivities from trades. Upload ID: ${data.uploadId}`);
+        setTimeout(() => loadCrifUploads(), 500);
+        setGeneratePortfolioId('');
+      } else {
+        setError(data.error || 'Generation failed');
+      }
+    } catch (err) {
+      setError('Generation failed: ' + (err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteUpload = async (uploadId: string) => {
+    if (!window.confirm('Are you sure you want to delete this CRIF upload?\n\nThis will also delete:\n• All associated sensitivities\n• All SIMM calculations using this upload\n\nThis action cannot be undone.')) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/simm/crif/upload/${uploadId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const msg = `Upload deleted successfully. ${data.deletedSensitivities || 0} sensitivities and ${data.deletedCalculations || 0} calculations removed.`;
+        setSuccess(msg);
+        setTimeout(() => loadCrifUploads(), 500);
+      } else {
+        setError(data.error || 'Delete failed');
+      }
+    } catch (err) {
+      setError('Delete failed: ' + (err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCalculation = async () => {
     if (!calculationPortfolio) {
-      setError('Please enter a portfolio ID');
+      setError('Please enter a file name');
       return;
     }
 
@@ -148,7 +225,7 @@ const SimmDashboard: React.FC = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess(`✅ Calculation completed successfully! ID: ${data.calculationId || 'Generated'} | Total IM: ${data.totalInitialMargin ? '$' + (data.totalInitialMargin / 1000000).toFixed(1) + 'M' : 'N/A'}`);
+        setSuccess(`Calculation completed successfully! ID: ${data.calculationId || 'Generated'} | Total IM: ${data.totalInitialMargin ? '$' + (data.totalInitialMargin / 1000000).toFixed(1) + 'M' : 'N/A'}`);
         loadCalculations();
         setCalculationPortfolio('');
         
@@ -312,13 +389,13 @@ const SimmDashboard: React.FC = () => {
             
             <div className="mb-4">
               <label className="block text-sm font-medium text-fd-text mb-2">
-                Portfolio ID (optional)
+                CRIF File name
               </label>
               <input
                 type="text"
                 value={portfolioId}
                 onChange={(e) => setPortfolioId(e.target.value)}
-                placeholder="Enter portfolio ID"
+                placeholder="Enter CRIF file name"
                 className="w-full p-3 bg-fd-input border border-fd-border rounded-md text-fd-text placeholder-fd-text-muted focus:ring-fd-green focus:border-fd-green"
               />
             </div>
@@ -376,6 +453,55 @@ const SimmDashboard: React.FC = () => {
             </button>
           </div>
 
+          {/* Auto-Generate from Trades - Hidden */}
+          {false && (
+          <div className="bg-fd-darker rounded-lg border border-fd-border p-6">
+            <h2 className="text-xl font-semibold text-fd-text mb-4">
+              <span className="mr-2">⚡</span>
+              Auto-Generate from Trades
+            </h2>
+            <p className="text-sm text-fd-text-muted mb-4">
+              Automatically generate CRIF sensitivities from existing CDS trades in your portfolio.
+              No manual CSV file creation required.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-fd-text mb-2">
+                  Portfolio ID
+                </label>
+                <input
+                  type="text"
+                  value={generatePortfolioId}
+                  onChange={(e) => setGeneratePortfolioId(e.target.value)}
+                  placeholder="e.g., LCH-HOUSE-001-GBP"
+                  className="w-full p-3 bg-fd-input border border-fd-border rounded-md text-fd-text placeholder-fd-text-muted focus:ring-fd-green focus:border-fd-green"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-fd-text mb-2">
+                  Valuation Date
+                </label>
+                <input
+                  type="date"
+                  value={generateValuationDate}
+                  onChange={(e) => setGenerateValuationDate(e.target.value)}
+                  className="w-full p-3 bg-fd-input border border-fd-border rounded-md text-fd-text focus:ring-fd-green focus:border-fd-green"
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={handleGenerateFromTrades}
+              disabled={!generatePortfolioId || loading}
+              className="w-full bg-blue-500 text-white py-3 px-4 rounded-md hover:bg-blue-600 disabled:bg-fd-border disabled:cursor-not-allowed font-medium"
+            >
+              {loading ? 'Generating...' : '⚡ Generate CRIF from Trades'}
+            </button>
+          </div>
+          )}
+
           {/* Upload History */}
           {uploads.length > 0 && (
             <div className="bg-fd-darker rounded-lg border border-fd-border p-6">
@@ -401,9 +527,19 @@ const SimmDashboard: React.FC = () => {
                         )}
                       </p>
                     </div>
-                    <div className="flex items-center">
-                      {getStatusIcon(upload.status)}
-                      <span className="ml-2 text-sm font-medium text-fd-text">{upload.status || 'Unknown'}</span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center">
+                        {getStatusIcon(upload.status)}
+                        <span className="ml-2 text-sm font-medium text-fd-text">{upload.status || 'Unknown'}</span>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteUpload(upload.uploadId)}
+                        disabled={loading}
+                        className="px-3 py-1 text-sm bg-red-500/20 text-red-400 rounded-md hover:bg-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border-none outline-none focus:outline-none focus:ring-0 focus:border-none"
+                        title="Delete upload"
+                      >
+                        🗑️ Delete
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -421,13 +557,13 @@ const SimmDashboard: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div>
                 <label className="block text-sm font-medium text-fd-text mb-2">
-                  Portfolio ID
+                  File name
                 </label>
                 <input
                   type="text"
                   value={calculationPortfolio}
                   onChange={(e) => setCalculationPortfolio(e.target.value)}
-                  placeholder="Enter portfolio ID"
+                  placeholder="Enter CRIF file name"
                   className="w-full p-3 bg-fd-input border border-fd-border rounded-md text-fd-text placeholder-fd-text-muted focus:ring-fd-green focus:border-fd-green"
                 />
               </div>

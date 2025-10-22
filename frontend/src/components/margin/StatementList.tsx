@@ -307,9 +307,6 @@ const StatementList: React.FC<StatementListProps> = ({ refreshTrigger }) => {
                   <div className="text-sm font-medium text-fd-text">
                     {statement.ccpName}
                   </div>
-                  <div className="text-xs text-fd-text-muted">
-                    {statement.currency}
-                  </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
                   <div className="text-sm text-fd-text">
@@ -387,10 +384,6 @@ const StatementList: React.FC<StatementListProps> = ({ refreshTrigger }) => {
                   <span className="text-fd-text ml-2 font-mono">{selectedStatement.statementId}</span>
                 </div>
                 <div>
-                  <span className="text-fd-text-muted">CCP:</span>
-                  <span className="text-fd-text ml-2">{selectedStatement.ccpName}</span>
-                </div>
-                <div>
                   <span className="text-fd-text-muted">Member Firm:</span>
                   <span className="text-fd-text ml-2">{selectedStatement.memberFirm}</span>
                 </div>
@@ -401,18 +394,6 @@ const StatementList: React.FC<StatementListProps> = ({ refreshTrigger }) => {
                 <div>
                   <span className="text-fd-text-muted">Date:</span>
                   <span className="text-fd-text ml-2">{new Date(selectedStatement.statementDate).toLocaleDateString()}</span>
-                </div>
-                <div>
-                  <span className="text-fd-text-muted">Currency:</span>
-                  <span className="text-fd-text ml-2">{selectedStatement.currency}</span>
-                </div>
-                <div>
-                  <span className="text-fd-text-muted">Format:</span>
-                  <span className="text-fd-text ml-2">{selectedStatement.format}</span>
-                </div>
-                <div>
-                  <span className="text-fd-text-muted">File Size:</span>
-                  <span className="text-fd-text ml-2">{formatFileSize(selectedStatement.fileSize)}</span>
                 </div>
               </div>
 

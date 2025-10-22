@@ -2,13 +2,25 @@
 -- Creates tables for managing margin statements, collateral ledger, and processing status
 
 -- Statement processing status enum type
-CREATE TYPE statement_status AS ENUM ('PENDING', 'PROCESSING', 'PROCESSED', 'FAILED', 'DISPUTED', 'RETRYING');
+DO $$ BEGIN
+    CREATE TYPE statement_status AS ENUM ('PENDING', 'PROCESSING', 'PROCESSED', 'FAILED', 'DISPUTED', 'RETRYING');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Statement format enum type  
-CREATE TYPE statement_format AS ENUM ('CSV', 'XML', 'JSON', 'PROPRIETARY');
+DO $$ BEGIN
+    CREATE TYPE statement_format AS ENUM ('CSV', 'XML', 'JSON', 'PROPRIETARY');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Collateral position type enum
-CREATE TYPE position_type AS ENUM ('VARIATION_MARGIN', 'INITIAL_MARGIN', 'EXCESS_COLLATERAL');
+DO $$ BEGIN
+    CREATE TYPE position_type AS ENUM ('VARIATION_MARGIN', 'INITIAL_MARGIN', 'EXCESS_COLLATERAL');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Main margin statements table
 CREATE TABLE margin_statements (

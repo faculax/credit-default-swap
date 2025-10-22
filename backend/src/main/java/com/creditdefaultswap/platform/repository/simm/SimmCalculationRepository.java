@@ -1,6 +1,7 @@
 package com.creditdefaultswap.platform.repository.simm;
 
 import com.creditdefaultswap.platform.model.simm.SimmCalculation;
+import com.creditdefaultswap.platform.model.simm.CrifUpload;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -32,6 +33,11 @@ public interface SimmCalculationRepository extends JpaRepository<SimmCalculation
      * Find calculation by calculation ID
      */
     Optional<SimmCalculation> findByCalculationId(String calculationId);
+    
+    /**
+     * Find calculations by CRIF upload
+     */
+    List<SimmCalculation> findByUpload(CrifUpload upload);
     
     /**
      * Find calculations within date range

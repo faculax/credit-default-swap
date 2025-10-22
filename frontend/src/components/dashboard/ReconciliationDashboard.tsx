@@ -133,11 +133,10 @@ const ReconciliationDashboard: React.FC = () => {
   const getDataFreshnessStatus = (timestamp: string) => {
     const now = new Date();
     const dataTime = new Date(timestamp);
-    const diffMinutes = (now.getTime() - dataTime.getTime()) / (1000 * 60);
+    const diffHours = (now.getTime() - dataTime.getTime()) / (1000 * 60 * 60);
     
-    if (diffMinutes < 30) return { status: 'Fresh', color: 'text-green-400' };
-    if (diffMinutes < 60) return { status: 'Recent', color: 'text-yellow-400' };
-    return { status: 'Stale', color: 'text-red-400' };
+    if (diffHours < 24) return { status: 'Fresh', color: 'text-green-400' };
+    return { status: 'Stale', color: 'text-yellow-400' };
   };
 
   const handleTabChange = (tab: 'overview' | 'margin' | 'saccr' | 'simm') => {

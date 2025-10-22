@@ -40,31 +40,134 @@ public class AutomatedMarginStatementService {
     private SimmCalculationResultRepository simmResultRepository;
 
     /**
-     * Generate VM/IM statements for all active netting sets
+     * Generate single consolidated VM/IM statement for all active netting sets for the day
      */
     @Transactional(readOnly = true)
-    public List<GeneratedMarginStatement> generateDailyStatements(LocalDate statementDate) {
-        log.info("Generating automated VM/IM statements for date: {}", statementDate);
+    public GeneratedMarginStatement generateDailyStatement(LocalDate statementDate) {
+        log.info("Generating consolidated automated VM/IM statement for date: {}", statementDate);
         
         // Get all active cleared trades grouped by netting set
         Map<String, List<CDSTrade>> tradesByNettingSet = getActiveTradesByNettingSet();
         
-        List<GeneratedMarginStatement> statements = new ArrayList<>();
+        if (tradesByNettingSet.isEmpty()) {
+            log.warn("No active cleared trades with netting sets found for date: {}", statementDate);
+            // Return empty consolidated statement
+            return GeneratedMarginStatement.builder()
+                    .statementId(generateConsolidatedStatementId(statementDate))
+                    .statementDate(statementDate)
+                    .nettingSetId("CONSOLIDATED")
+                    .ccpName("MULTI-CCP")
+                    .ccpMemberId("CONSOLIDATED")
+                    .clearingAccount("CONSOLIDATED")
+                    .currency("USD")
+                    .tradeCount(0)
+                    .totalNotional(BigDecimal.ZERO)
+                    .variationMarginNet(BigDecimal.ZERO)
+                    .initialMarginRequired(BigDecimal.ZERO)
+                    .initialMarginPosted(BigDecimal.ZERO)
+                    .initialMarginExcess(BigDecimal.ZERO)
+                    .generatedAt(LocalDate.now())
+                    .source("AUTOMATED_GENERATION")
+                    .underlyingTrades(new ArrayList<>())
+                    .nettingSetBreakdowns(new ArrayList<>())
+                    .build();
+        }
+        
+        // Generate individual breakdowns for each netting set
+        List<NettingSetBreakdown> breakdowns = new ArrayList<>();
+        BigDecimal totalVM = BigDecimal.ZERO;
+        BigDecimal totalIMRequired = BigDecimal.ZERO;
+        BigDecimal totalIMPosted = BigDecimal.ZERO;
+        BigDecimal totalNotional = BigDecimal.ZERO;
+        int totalTradeCount = 0;
+        List<Long> allTradeIds = new ArrayList<>();
+        
+        // Determine primary CCP (most trades) for statement header
+        String primaryCcp = null;
+        String primaryCurrency = null;
+        int maxTrades = 0;
         
         for (Map.Entry<String, List<CDSTrade>> entry : tradesByNettingSet.entrySet()) {
             String nettingSetId = entry.getKey();
             List<CDSTrade> trades = entry.getValue();
             
-            GeneratedMarginStatement statement = generateStatementForNettingSet(
-                nettingSetId, trades, statementDate
-            );
-            statements.add(statement);
+            // Extract CCP info from trades
+            CDSTrade sampleTrade = trades.get(0);
+            String ccpName = sampleTrade.getCcpName();
+            String ccpMemberId = sampleTrade.getCcpMemberId();
+            String clearingAccount = sampleTrade.getClearingAccount();
+            String currency = sampleTrade.getCurrency();
+            
+            // Track primary CCP
+            if (trades.size() > maxTrades) {
+                maxTrades = trades.size();
+                primaryCcp = ccpName;
+                primaryCurrency = currency;
+            }
+            
+            // Calculate VM for this netting set
+            BigDecimal vm = calculateVariationMargin(trades, statementDate);
+            
+            // Calculate IM for this netting set
+            MarginComponents im = calculateInitialMargin(nettingSetId, statementDate);
+            
+            // Calculate notional for this netting set
+            BigDecimal notional = calculateTotalNotional(trades);
+            
+            // Create breakdown for this netting set
+            NettingSetBreakdown breakdown = NettingSetBreakdown.builder()
+                    .nettingSetId(nettingSetId)
+                    .ccpName(ccpName)
+                    .ccpMemberId(ccpMemberId)
+                    .clearingAccount(clearingAccount)
+                    .currency(currency)
+                    .tradeCount(trades.size())
+                    .totalNotional(notional)
+                    .variationMarginNet(vm)
+                    .initialMarginRequired(im.getRequired())
+                    .initialMarginPosted(im.getPosted())
+                    .initialMarginExcess(im.getExcess())
+                    .tradeIds(trades.stream().map(CDSTrade::getId).collect(Collectors.toList()))
+                    .build();
+            
+            breakdowns.add(breakdown);
+            
+            // Aggregate totals
+            totalVM = totalVM.add(vm);
+            totalIMRequired = totalIMRequired.add(im.getRequired());
+            totalIMPosted = totalIMPosted.add(im.getPosted());
+            totalNotional = totalNotional.add(notional);
+            totalTradeCount += trades.size();
+            allTradeIds.addAll(trades.stream().map(CDSTrade::getId).collect(Collectors.toList()));
         }
         
-        log.info("Generated {} VM/IM statements for {} netting sets", 
-                 statements.size(), tradesByNettingSet.size());
+        BigDecimal totalIMExcess = totalIMPosted.subtract(totalIMRequired);
         
-        return statements;
+        // Build consolidated statement
+        GeneratedMarginStatement statement = GeneratedMarginStatement.builder()
+                .statementId(generateConsolidatedStatementId(statementDate))
+                .statementDate(statementDate)
+                .nettingSetId("CONSOLIDATED")
+                .ccpName(primaryCcp != null ? primaryCcp : "MULTI-CCP")
+                .ccpMemberId("CONSOLIDATED")
+                .clearingAccount("CONSOLIDATED")
+                .currency(primaryCurrency != null ? primaryCurrency : "USD")
+                .tradeCount(totalTradeCount)
+                .totalNotional(totalNotional)
+                .variationMarginNet(totalVM)
+                .initialMarginRequired(totalIMRequired)
+                .initialMarginPosted(totalIMPosted)
+                .initialMarginExcess(totalIMExcess)
+                .generatedAt(LocalDate.now())
+                .source("AUTOMATED_GENERATION")
+                .underlyingTrades(allTradeIds)
+                .nettingSetBreakdowns(breakdowns)
+                .build();
+
+        log.info("Generated consolidated statement for {} netting sets: {} trades, VM={}, IM={}", 
+                 tradesByNettingSet.size(), totalTradeCount, totalVM, totalIMRequired);
+                  
+        return statement;
     }
 
     /**
@@ -194,12 +297,19 @@ public class AutomatedMarginStatementService {
     }
 
     /**
-     * Generate unique statement ID
+     * Generate unique statement ID for individual netting set (kept for backward compatibility)
      */
     private String generateStatementId(String nettingSetId, LocalDate statementDate) {
         return String.format("AUTO-VM-IM-%s-%s", 
                             nettingSetId, 
                             statementDate.toString());
+    }
+    
+    /**
+     * Generate unique consolidated statement ID for daily statement
+     */
+    private String generateConsolidatedStatementId(LocalDate statementDate) {
+        return String.format("AUTO-VM-IM-DAILY-%s", statementDate.toString());
     }
 
     /**
@@ -211,6 +321,26 @@ public class AutomatedMarginStatementService {
         private BigDecimal required;
         private BigDecimal posted;
         private BigDecimal excess;
+    }
+
+    /**
+     * Breakdown of margin details for a specific netting set
+     */
+    @lombok.Builder
+    @lombok.Data
+    public static class NettingSetBreakdown {
+        private String nettingSetId;
+        private String ccpName;
+        private String ccpMemberId;
+        private String clearingAccount;
+        private String currency;
+        private Integer tradeCount;
+        private BigDecimal totalNotional;
+        private BigDecimal variationMarginNet;
+        private BigDecimal initialMarginRequired;
+        private BigDecimal initialMarginPosted;
+        private BigDecimal initialMarginExcess;
+        private List<Long> tradeIds;
     }
 
     /**
@@ -235,5 +365,6 @@ public class AutomatedMarginStatementService {
         private LocalDate generatedAt;
         private String source;
         private List<Long> underlyingTrades;
+        private List<NettingSetBreakdown> nettingSetBreakdowns; // Detailed breakdown by netting set
     }
 }

@@ -232,7 +232,8 @@ public class MarginStatementController {
     }
     
     /**
-     * Generate automated VM/IM statements using existing CCP data and netting sets
+     * Generate automated VM/IM statement using existing CCP data and netting sets
+     * Now generates a single consolidated statement per day with netting set breakdowns
      */
     @PostMapping("/actions/generate-automated")
     public ResponseEntity<?> generateAutomatedStatements(
@@ -245,9 +246,9 @@ public class MarginStatementController {
                 statementDate = LocalDate.now();
             }
             
-            logger.info("Generating automated margin statements for date: {}", statementDate);
+            logger.info("Generating automated margin statement for date: {}", statementDate);
             
-            // Check if statements already exist for this date and delete them
+            // Check if statement already exists for this date and delete it
             final LocalDate finalDate = statementDate;
             List<MarginStatement> existingStatements = statementRepository.findAll().stream()
                     .filter(s -> s.getStatementDate().equals(finalDate))
@@ -255,41 +256,115 @@ public class MarginStatementController {
                     .collect(Collectors.toList());
             
             if (!existingStatements.isEmpty()) {
-                logger.info("Found {} existing automated statements for date {}, deleting them before regenerating", 
+                logger.info("Found {} existing automated statement(s) for date {}, deleting before regenerating", 
                            existingStatements.size(), statementDate);
                 statementRepository.deleteAll(existingStatements);
-                logger.info("Deleted {} existing automated statements", existingStatements.size());
+                logger.info("Deleted {} existing automated statement(s)", existingStatements.size());
             }
             
-            // Generate statements using existing netting set data
-            List<AutomatedMarginStatementService.GeneratedMarginStatement> generated = 
-                    automatedMarginService.generateDailyStatements(statementDate);
+            // Generate single consolidated statement using existing netting set data
+            AutomatedMarginStatementService.GeneratedMarginStatement generated = 
+                    automatedMarginService.generateDailyStatement(statementDate);
             
-            // Persist each generated statement to database and build DTOs (keeping generated data)
-            List<Map<String, Object>> statementDTOs = generated.stream()
-                    .map(gen -> {
-                        MarginStatement saved = convertAndSaveStatement(gen);
-                        return convertToStatementDTO(saved, gen);
-                    })
-                    .collect(Collectors.toList());
+            // Persist the consolidated statement to database
+            MarginStatement saved = convertAndSaveConsolidatedStatement(generated);
+            Map<String, Object> statementDTO = convertToStatementDTO(saved, generated);
             
-            logger.info("Successfully generated and saved {} margin statements", generated.size());
+            logger.info("Successfully generated and saved consolidated margin statement for {} netting sets", 
+                       generated.getNettingSetBreakdowns() != null ? generated.getNettingSetBreakdowns().size() : 0);
             
             return ResponseEntity.ok(Map.of(
                     "success", true,
-                    "message", "Automated margin statements generated successfully",
+                    "message", "Automated margin statement generated successfully",
                     "statementDate", statementDate,
-                    "count", generated.size(),
-                    "generatedStatements", statementDTOs
+                    "nettingSetCount", generated.getNettingSetBreakdowns() != null ? generated.getNettingSetBreakdowns().size() : 0,
+                    "generatedStatement", statementDTO
             ));
             
         } catch (Exception e) {
-            logger.error("Error generating automated statements: {}", e.getMessage(), e);
+            logger.error("Error generating automated statement: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "success", false,
-                    "error", "Failed to generate automated statements: " + e.getMessage()
+                    "error", "Failed to generate automated statement: " + e.getMessage()
             ));
         }
+    }
+    
+    /**
+     * Convert generated consolidated statement to entity and save to database with positions
+     */
+    private MarginStatement convertAndSaveConsolidatedStatement(
+            AutomatedMarginStatementService.GeneratedMarginStatement generated) {
+        
+        MarginStatement statement = new MarginStatement();
+        statement.setStatementId(generated.getStatementId());
+        statement.setCcpName(generated.getCcpName());
+        statement.setMemberFirm(generated.getCcpMemberId() != null ? generated.getCcpMemberId() : "CONSOLIDATED");
+        statement.setAccountNumber(generated.getClearingAccount() != null ? generated.getClearingAccount() : "CONSOLIDATED");
+        statement.setStatementDate(generated.getStatementDate());
+        statement.setCurrency(generated.getCurrency() != null ? generated.getCurrency() : "USD");
+        statement.setStatementFormat(MarginStatement.StatementFormat.JSON);
+        statement.setFileName("automated-" + generated.getStatementId() + ".json");
+        statement.setStatus(MarginStatement.StatementStatus.PROCESSED);
+        statement.setVariationMargin(generated.getVariationMarginNet());
+        statement.setInitialMargin(generated.getInitialMarginRequired());
+        
+        // Save statement first to get ID for positions
+        MarginStatement savedStatement = statementRepository.save(statement);
+        
+        // Create margin positions for each netting set breakdown
+        createConsolidatedMarginPositions(savedStatement, generated);
+        
+        return savedStatement;
+    }
+    
+    /**
+     * Create margin positions for consolidated statement (one position per netting set)
+     */
+    private void createConsolidatedMarginPositions(MarginStatement statement, 
+            AutomatedMarginStatementService.GeneratedMarginStatement generated) {
+        
+        if (generated.getNettingSetBreakdowns() == null || generated.getNettingSetBreakdowns().isEmpty()) {
+            logger.warn("No netting set breakdowns found for statement: {}", statement.getStatementId());
+            return;
+        }
+        
+        // Create positions for each netting set breakdown
+        for (AutomatedMarginStatementService.NettingSetBreakdown breakdown : generated.getNettingSetBreakdowns()) {
+            // Create Variation Margin position for this netting set
+            if (breakdown.getVariationMarginNet().compareTo(BigDecimal.ZERO) != 0) {
+                MarginPosition vmPosition = new MarginPosition();
+                vmPosition.setStatement(statement);
+                vmPosition.setPositionType(MarginPosition.PositionType.VARIATION_MARGIN);
+                vmPosition.setAmount(breakdown.getVariationMarginNet());
+                vmPosition.setCurrency(breakdown.getCurrency());
+                vmPosition.setEffectiveDate(statement.getStatementDate());
+                vmPosition.setAccountNumber(breakdown.getClearingAccount());
+                vmPosition.setPortfolioCode(breakdown.getNettingSetId());
+                vmPosition.setProductClass("CREDIT_DERIVATIVES");
+                vmPosition.setNettingSetId(breakdown.getNettingSetId());
+                positionRepository.save(vmPosition);
+            }
+            
+            // Create Initial Margin position for this netting set
+            if (breakdown.getInitialMarginRequired().compareTo(BigDecimal.ZERO) != 0) {
+                MarginPosition imPosition = new MarginPosition();
+                imPosition.setStatement(statement);
+                imPosition.setPositionType(MarginPosition.PositionType.INITIAL_MARGIN);
+                imPosition.setAmount(breakdown.getInitialMarginRequired());
+                imPosition.setCurrency(breakdown.getCurrency());
+                imPosition.setEffectiveDate(statement.getStatementDate());
+                imPosition.setAccountNumber(breakdown.getClearingAccount());
+                imPosition.setPortfolioCode(breakdown.getNettingSetId());
+                imPosition.setProductClass("CREDIT_DERIVATIVES");
+                imPosition.setNettingSetId(breakdown.getNettingSetId());
+                positionRepository.save(imPosition);
+            }
+        }
+        
+        logger.info("Created {} margin positions for {} netting sets", 
+                   generated.getNettingSetBreakdowns().size() * 2, 
+                   generated.getNettingSetBreakdowns().size());
     }
     
     /**

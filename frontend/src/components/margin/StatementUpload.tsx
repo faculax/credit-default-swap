@@ -32,6 +32,7 @@ const StatementUpload: React.FC<StatementUploadProps> = ({ onUploadSuccess, onUp
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -164,6 +165,12 @@ const StatementUpload: React.FC<StatementUploadProps> = ({ onUploadSuccess, onUp
 
       setSuccess(`Statement uploaded successfully! ID: ${result.statementId}`);
       
+      // Show success notification toast
+      setShowSuccessNotification(true);
+      setTimeout(() => {
+        setShowSuccessNotification(false);
+      }, 3000);
+      
       // Reset form
       setSelectedFile(null);
       setFormData({
@@ -205,6 +212,38 @@ const StatementUpload: React.FC<StatementUploadProps> = ({ onUploadSuccess, onUp
 
   return (
     <div className="bg-fd-darker rounded-lg border border-fd-border p-6">
+      {/* Success Notification Toast */}
+      {showSuccessNotification && (
+        <div className="fixed top-4 right-4 z-50 animate-slide-in-right">
+          <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-4 shadow-lg backdrop-blur-sm min-w-[320px]">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 bg-green-500/30 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold text-green-300 mb-1">Statement Uploaded Successfully!</h4>
+                <p className="text-sm text-green-200/80">
+                  {success}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowSuccessNotification(false)}
+                className="flex-shrink-0 text-green-400/60 hover:text-green-400 transition-colors"
+                aria-label="Dismiss notification"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="flex items-center space-x-3 mb-6">
         <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
           <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -376,17 +415,6 @@ const StatementUpload: React.FC<StatementUploadProps> = ({ onUploadSuccess, onUp
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
               </svg>
               <span className="text-red-400 text-sm">{error}</span>
-            </div>
-          </div>
-        )}
-
-        {success && (
-          <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-3">
-            <div className="flex items-center space-x-2">
-              <svg className="w-5 h-5 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-              <span className="text-green-400 text-sm">{success}</span>
             </div>
           </div>
         )}
