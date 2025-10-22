@@ -165,20 +165,28 @@ python3 manage.py collectstatic --noinput --clear || {
     exit 1
 }
 
-# Copy components directory to static (DefectDojo's JS dependencies)
-if [ -d /app/components ]; then
-    echo "==> Copying components to static directory..."
-    # Create symlinks instead of copying to save space and time
-    for component in /app/components/*; do
-        component_name=$(basename "$component")
-        if [ ! -e "/app/static/$component_name" ]; then
-            ln -sf "$component" "/app/static/$component_name"
-            echo "  Linked: $component_name"
+# Link node_modules packages to static (DefectDojo's JS dependencies)
+if [ -d /app/components/node_modules ]; then
+    echo "==> Linking node_modules packages to static directory..."
+    
+    # Symlink each package from node_modules to static root
+    # This makes /static/jquery/ point to /app/components/node_modules/jquery/
+    for package in /app/components/node_modules/*; do
+        package_name=$(basename "$package")
+        
+        # Skip hidden files and directories
+        if [[ "$package_name" != .* ]]; then
+            if [ ! -e "/app/static/$package_name" ]; then
+                ln -sf "$package" "/app/static/$package_name"
+                echo "  Linked: $package_name"
+            fi
         fi
     done
-    echo "Components linked successfully"
+    
+    echo "Node modules linked successfully"
+    echo "Total packages linked: $(find /app/static -maxdepth 1 -type l | wc -l)"
 else
-    echo "WARNING: /app/components directory not found"
+    echo "WARNING: /app/components/node_modules directory not found"
 fi
 
 # Verify static files were collected
