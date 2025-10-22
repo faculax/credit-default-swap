@@ -99,9 +99,10 @@ const SimmDashboard: React.FC = () => {
 
     const formData = new FormData();
     formData.append('file', uploadFile);
-    if (portfolioId) {
-      formData.append('portfolioId', portfolioId);
-    }
+    
+    // Use portfolioId if provided, otherwise use file name without extension
+    const fileNameToUse = portfolioId || uploadFile.name.replace(/\.[^/.]+$/, '');
+    formData.append('portfolioId', fileNameToUse);
 
     try {
       const response = await fetch('/api/simm/crif/upload', {
@@ -138,7 +139,7 @@ const SimmDashboard: React.FC = () => {
 
   const handleGenerateFromTrades = async () => {
     if (!generatePortfolioId) {
-      setError('Please enter a portfolio ID');
+      setError('Please enter a file name');
       return;
     }
 
@@ -201,7 +202,7 @@ const SimmDashboard: React.FC = () => {
 
   const handleCalculation = async () => {
     if (!calculationPortfolio) {
-      setError('Please enter a portfolio ID');
+      setError('Please enter a file name');
       return;
     }
 
@@ -224,7 +225,7 @@ const SimmDashboard: React.FC = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess(`✅ Calculation completed successfully! ID: ${data.calculationId || 'Generated'} | Total IM: ${data.totalInitialMargin ? '$' + (data.totalInitialMargin / 1000000).toFixed(1) + 'M' : 'N/A'}`);
+        setSuccess(`Calculation completed successfully! ID: ${data.calculationId || 'Generated'} | Total IM: ${data.totalInitialMargin ? '$' + (data.totalInitialMargin / 1000000).toFixed(1) + 'M' : 'N/A'}`);
         loadCalculations();
         setCalculationPortfolio('');
         
@@ -388,13 +389,13 @@ const SimmDashboard: React.FC = () => {
             
             <div className="mb-4">
               <label className="block text-sm font-medium text-fd-text mb-2">
-                Portfolio ID (optional)
+                CRIF File name
               </label>
               <input
                 type="text"
                 value={portfolioId}
                 onChange={(e) => setPortfolioId(e.target.value)}
-                placeholder="Enter portfolio ID"
+                placeholder="Enter CRIF file name"
                 className="w-full p-3 bg-fd-input border border-fd-border rounded-md text-fd-text placeholder-fd-text-muted focus:ring-fd-green focus:border-fd-green"
               />
             </div>
@@ -556,13 +557,13 @@ const SimmDashboard: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div>
                 <label className="block text-sm font-medium text-fd-text mb-2">
-                  Portfolio ID
+                  File name
                 </label>
                 <input
                   type="text"
                   value={calculationPortfolio}
                   onChange={(e) => setCalculationPortfolio(e.target.value)}
-                  placeholder="Enter portfolio ID"
+                  placeholder="Enter CRIF file name"
                   className="w-full p-3 bg-fd-input border border-fd-border rounded-md text-fd-text placeholder-fd-text-muted focus:ring-fd-green focus:border-fd-green"
                 />
               </div>

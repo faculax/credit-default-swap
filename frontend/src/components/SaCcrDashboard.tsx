@@ -57,9 +57,10 @@ const SaCcrDashboard: React.FC = () => {
     }, []);
 
     // Load calculations when jurisdiction or valuation date changes
+    // Auto-recalculate if no calculations exist for the selected jurisdiction
     useEffect(() => {
         if (calculationRequest.valuationDate) {
-            loadCalculations();
+            loadCalculationsAndAutoRecalculate();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [calculationRequest.jurisdiction, calculationRequest.valuationDate]);
@@ -91,7 +92,7 @@ const SaCcrDashboard: React.FC = () => {
         }
     };
 
-    const loadCalculations = async () => {
+    const loadCalculationsAndAutoRecalculate = async () => {
         if (!calculationRequest.valuationDate || !calculationRequest.jurisdiction) {
             return;
         }
@@ -103,17 +104,19 @@ const SaCcrDashboard: React.FC = () => {
             const response = await fetch(url);
             const data = await response.json();
             
-            if (data.status === 'SUCCESS') {
-                console.log('Loaded calculations:', data.calculations?.length);
-                setCalculations(data.calculations || []);
+            if (data.status === 'SUCCESS' && data.calculations && data.calculations.length > 0) {
+                console.log('Loaded calculations:', data.calculations.length);
+                setCalculations(data.calculations);
             } else {
-                // No error shown if no calculations exist - just empty table
-                console.log('No calculations found:', data.message);
+                // No calculations found - auto-trigger calculation
+                console.log('No calculations found for jurisdiction', calculationRequest.jurisdiction, '- auto-calculating...');
                 setCalculations([]);
+                
+                // Auto-trigger calculation in the background
+                await calculateExposures();
             }
         } catch (err) {
             console.error('Error loading calculations:', err);
-            // Don't show error for missing calculations, just empty state
             setCalculations([]);
         }
     };

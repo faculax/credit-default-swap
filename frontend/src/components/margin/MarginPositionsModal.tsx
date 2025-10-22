@@ -296,9 +296,6 @@ const MarginPositionsModal: React.FC<MarginPositionsModalProps> = ({
                           Netting Set
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
-                          Portfolio
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
                           Product Class
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
@@ -332,9 +329,6 @@ const MarginPositionsModal: React.FC<MarginPositionsModalProps> = ({
                                 <div className="text-sm text-fd-text font-mono">{position.nettingSetId || '-'}</div>
                               </td>
                               <td className="px-4 py-4 whitespace-nowrap">
-                                <div className="text-sm text-fd-text">{position.portfolioCode || '-'}</div>
-                              </td>
-                              <td className="px-4 py-4 whitespace-nowrap">
                                 <div className="text-sm text-fd-text">{position.productClass || '-'}</div>
                               </td>
                               <td className="px-4 py-4 whitespace-nowrap">
@@ -343,7 +337,7 @@ const MarginPositionsModal: React.FC<MarginPositionsModalProps> = ({
                             </tr>
                             {isLastInGroup && (
                               <tr className="bg-fd-darker/80">
-                                <td colSpan={6} className="h-3"></td>
+                                <td colSpan={5} className="h-3"></td>
                               </tr>
                             )}
                           </React.Fragment>

@@ -97,37 +97,29 @@ const AutomatedStatementGenerator: React.FC<{
 
   return (
     <div className="space-y-6">
-      {/* Success Notification Toast */}
+      {/* Success Notification */}
       {showSuccessNotification && (
-        <div className="fixed top-4 right-4 z-50 animate-slide-in-right">
-          <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-4 shadow-lg backdrop-blur-sm min-w-[320px]">
-            <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0">
-                <div className="w-10 h-10 bg-green-500/30 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                </div>
-              </div>
-              <div className="flex-1">
-                <h4 className="font-semibold text-green-300 mb-1">Statement Generated Successfully!</h4>
-                <p className="text-sm text-green-200/80">
-                  Margin statement created for {selectedDate}
-                </p>
-                <p className="text-xs text-green-200/60 mt-1">
-                  View details in Statement History tab
-                </p>
-              </div>
-              <button
-                onClick={() => setShowSuccessNotification(false)}
-                className="flex-shrink-0 text-green-400/60 hover:text-green-400 transition-colors"
-                aria-label="Dismiss notification"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-              </button>
+        <div className="fixed top-4 right-4 z-[60] animate-fade-in">
+          <div className="bg-fd-dark border-2 border-fd-green rounded-lg shadow-lg p-4 flex items-start gap-3 min-w-[320px] max-w-[480px]">
+            <div className="flex-shrink-0 mt-0.5">
+              <svg className="w-6 h-6 text-fd-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
             </div>
+                          <div className="flex-1">
+                <h4 className="text-fd-text font-semibold mb-1">Success!</h4>
+                <p className="text-fd-text-muted text-sm leading-relaxed">
+                  Margin statement created
+                </p>
+              </div>
+            <button
+              onClick={() => setShowSuccessNotification(false)}
+              className="flex-shrink-0 text-fd-text-muted hover:text-fd-text transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
           </div>
         </div>
       )}
