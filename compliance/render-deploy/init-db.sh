@@ -3,6 +3,18 @@ set -e
 
 echo "Starting DefectDojo initialization..."
 
+# Initialize PostgreSQL if not already initialized
+if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
+    echo "Initializing PostgreSQL database..."
+    chown -R postgres:postgres /var/lib/postgresql/data
+    chmod 0700 /var/lib/postgresql/data
+    su - postgres -c "/usr/lib/postgresql/*/bin/initdb -D /var/lib/postgresql/data"
+fi
+
+# Configure PostgreSQL to listen on localhost
+echo "host all all 127.0.0.1/32 trust" >> /var/lib/postgresql/data/pg_hba.conf
+echo "listen_addresses = '127.0.0.1'" >> /var/lib/postgresql/data/postgresql.conf
+
 # Start PostgreSQL temporarily to set it up
 su - postgres -c "/usr/lib/postgresql/*/bin/postgres -D /var/lib/postgresql/data" &
 PG_PID=$!
@@ -19,11 +31,17 @@ for i in {1..30}; do
     sleep 2
 done
 
-# Create database and user
+# Create database and user if not exists
 echo "Setting up database..."
 su - postgres -c "psql -h 127.0.0.1" <<-EOSQL
-    CREATE DATABASE defectdojo;
-    CREATE USER defectdojo WITH PASSWORD 'defectdojo';
+    SELECT 'CREATE DATABASE defectdojo' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'defectdojo')\gexec
+    DO \$\$
+    BEGIN
+        IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'defectdojo') THEN
+            CREATE USER defectdojo WITH PASSWORD 'defectdojo';
+        END IF;
+    END
+    \$\$;
     GRANT ALL PRIVILEGES ON DATABASE defectdojo TO defectdojo;
     ALTER USER defectdojo CREATEDB;
 EOSQL

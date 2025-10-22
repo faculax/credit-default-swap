@@ -24,15 +24,11 @@ RUN mkdir -p /var/log/supervisor \
 RUN useradd -r -s /bin/bash postgres || true
 
 # Set permissions for PostgreSQL
-RUN chown -R postgres:postgres /var/lib/postgresql/data /run/postgresql && \
-    chmod 0700 /var/lib/postgresql/data
-
-# Initialize PostgreSQL database as postgres user
-RUN su postgres -c "initdb -D /var/lib/postgresql/data"
+RUN chown -R postgres:postgres /var/lib/postgresql /run/postgresql
 
 # Copy configuration files
 COPY supervisord.conf /etc/supervisord.conf
-COPY nginx.conf /etc/nginx/http.d/default.conf
+COPY nginx.conf /etc/nginx/sites-available/default
 COPY init-db.sh /docker-entrypoint.sh
 
 RUN chmod +x /docker-entrypoint.sh
