@@ -19,13 +19,16 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/* \
     && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
 
-# Create necessary directories
+# Create necessary directories with proper permissions
 RUN mkdir -p /var/log/supervisor \
     /run/postgresql \
     /run/nginx \
     /app/pgdata \
     /app/backups \
-    /app/logs
+    /app/logs && \
+    chown -R postgres:postgres /app/pgdata /app/logs /run/postgresql && \
+    chmod 0700 /app/pgdata && \
+    chmod 0755 /app/logs
 
 # Set DOJO_ROOT to match DefectDojo official image
 ENV DOJO_ROOT=/app
@@ -40,10 +43,6 @@ COPY health-check.sh /health-check.sh
 RUN chmod +x /docker-entrypoint.sh /health-check.sh && \
     rm -f /etc/nginx/sites-enabled/default && \
     ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
-
-# Set permissions for PostgreSQL
-RUN chown -R postgres:postgres /app/pgdata /run/postgresql && \
-    chmod 0700 /app/pgdata
 
 # Expose port
 EXPOSE 10000

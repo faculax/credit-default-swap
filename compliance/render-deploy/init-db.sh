@@ -61,11 +61,15 @@ echo "==> Cleaning up stale lock files..."
 rm -f /app/pgdata/postmaster.pid
 rm -f /run/postgresql/.s.PGSQL.5432*
 
+# Ensure directories exist with proper permissions
+mkdir -p /app/pgdata /app/logs /app/backups /run/postgresql
+chown -R postgres:postgres /app/pgdata /app/logs /run/postgresql
+chmod 0700 /app/pgdata
+chmod 0755 /app/logs
+
 # Initialize PostgreSQL if needed
 if [ ! -f /app/pgdata/PG_VERSION ]; then
     echo "==> Initializing PostgreSQL database cluster..."
-    chown -R postgres:postgres /app/pgdata /run/postgresql
-    chmod 0700 /app/pgdata
     
     # Use C locale for maximum compatibility
     su - postgres -c "/usr/lib/postgresql/15/bin/initdb -D /app/pgdata -E UTF8 --locale=C" || {
