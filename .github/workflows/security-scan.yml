@@ -1,0 +1,463 @@
+name: Security Compliance Scanning
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - security-compliance
+  pull_request:
+    branches:
+      - main
+      - dev
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      upload_to_defectdojo:
+        description: 'Upload results to DefectDojo'
+        required: false
+        type: boolean
+        default: true
+
+env:
+  DEFECTDOJO_URL: ${{ secrets.DEFECTDOJO_URL || 'https://defectdojo-s74m.onrender.com' }}
+  DEFECTDOJO_USERNAME: ${{ secrets.DEFECTDOJO_USERNAME || 'admin' }}
+  DEFECTDOJO_PASSWORD: ${{ secrets.DEFECTDOJO_PASSWORD }}
+  PRODUCT_NAME: 'Credit Default Swap Platform'
+
+jobs:
+  # ============================================================================
+  # Backend Security Scanning (Java/Maven)
+  # ============================================================================
+  backend-security-scan:
+    name: Backend Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better analysis
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      
+      - name: Create security reports directory
+        run: |
+          mkdir -p backend/target/security-reports
+      
+      - name: Run OWASP Dependency Check
+        working-directory: backend
+        run: |
+          echo "🔍 Running OWASP Dependency Check..."
+          mvn org.owasp:dependency-check-maven:check \
+            -Dformat=JSON \
+            -DprettyPrint=true \
+            -DfailBuildOnCVSS=0
+          
+          if [ -f target/dependency-check-report.json ]; then
+            cp target/dependency-check-report.json target/security-reports/
+            echo "✅ OWASP Dependency Check complete"
+          fi
+      
+      - name: Run SpotBugs Security Analysis
+        working-directory: backend
+        run: |
+          echo "🔍 Running SpotBugs..."
+          mvn compile spotbugs:spotbugs \
+            -Dspotbugs.xmlOutput=true \
+            -Dspotbugs.xmlOutputDirectory=target \
+            -Dspotbugs.failOnError=false
+          
+          if [ -f target/spotbugsXml.xml ]; then
+            echo "✅ SpotBugs analysis complete"
+          fi
+      
+      - name: Run Checkstyle
+        working-directory: backend
+        run: |
+          echo "🔍 Running Checkstyle..."
+          mvn checkstyle:checkstyle -Dcheckstyle.failOnViolation=false
+          
+          if [ -f target/checkstyle-result.xml ]; then
+            cp target/checkstyle-result.xml target/security-reports/
+            echo "✅ Checkstyle complete"
+          fi
+      
+      - name: Upload Backend Scan Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-security-reports
+          path: |
+            backend/target/dependency-check-report.json
+            backend/target/spotbugsXml.xml
+            backend/target/checkstyle-result.xml
+          retention-days: 30
+  
+  # ============================================================================
+  # Gateway Security Scanning (Java/Maven)
+  # ============================================================================
+  gateway-security-scan:
+    name: Gateway Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      
+      - name: Create security reports directory
+        run: mkdir -p gateway/target/security-reports
+      
+      - name: Run OWASP Dependency Check
+        working-directory: gateway
+        run: |
+          mvn org.owasp:dependency-check-maven:check \
+            -Dformat=JSON \
+            -DprettyPrint=true \
+            -DfailBuildOnCVSS=0
+          
+          [ -f target/dependency-check-report.json ] && \
+            cp target/dependency-check-report.json target/security-reports/
+      
+      - name: Run SpotBugs
+        working-directory: gateway
+        run: |
+          mvn compile spotbugs:spotbugs \
+            -Dspotbugs.xmlOutput=true \
+            -Dspotbugs.xmlOutputDirectory=target \
+            -Dspotbugs.failOnError=false
+      
+      - name: Run Checkstyle
+        working-directory: gateway
+        run: |
+          mvn checkstyle:checkstyle -Dcheckstyle.failOnViolation=false
+          [ -f target/checkstyle-result.xml ] && \
+            cp target/checkstyle-result.xml target/security-reports/
+      
+      - name: Upload Gateway Scan Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: gateway-security-reports
+          path: |
+            gateway/target/dependency-check-report.json
+            gateway/target/spotbugsXml.xml
+            gateway/target/checkstyle-result.xml
+          retention-days: 30
+  
+  # ============================================================================
+  # Risk Engine Security Scanning (Java/Maven)
+  # ============================================================================
+  risk-engine-security-scan:
+    name: Risk Engine Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      
+      - name: Create security reports directory
+        run: mkdir -p risk-engine/target/security-reports
+      
+      - name: Run OWASP Dependency Check
+        working-directory: risk-engine
+        run: |
+          mvn org.owasp:dependency-check-maven:check \
+            -Dformat=JSON \
+            -DprettyPrint=true \
+            -DfailBuildOnCVSS=0
+          
+          [ -f target/dependency-check-report.json ] && \
+            cp target/dependency-check-report.json target/security-reports/
+      
+      - name: Run SpotBugs
+        working-directory: risk-engine
+        run: |
+          mvn compile spotbugs:spotbugs \
+            -Dspotbugs.xmlOutput=true \
+            -Dspotbugs.xmlOutputDirectory=target \
+            -Dspotbugs.failOnError=false
+      
+      - name: Run Checkstyle
+        working-directory: risk-engine
+        run: |
+          mvn checkstyle:checkstyle -Dcheckstyle.failOnViolation=false
+          [ -f target/checkstyle-result.xml ] && \
+            cp target/checkstyle-result.xml target/security-reports/
+      
+      - name: Upload Risk Engine Scan Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: risk-engine-security-reports
+          path: |
+            risk-engine/target/dependency-check-report.json
+            risk-engine/target/spotbugsXml.xml
+            risk-engine/target/checkstyle-result.xml
+          retention-days: 30
+  
+  # ============================================================================
+  # Frontend Security Scanning (Node.js/npm)
+  # ============================================================================
+  frontend-security-scan:
+    name: Frontend Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+      
+      - name: Run npm audit
+        working-directory: frontend
+        run: |
+          echo "🔍 Running npm audit..."
+          npm audit --json > audit-npm.json || true
+          echo "✅ NPM audit complete"
+      
+      - name: Run ESLint Security Scan
+        working-directory: frontend
+        run: |
+          echo "🔍 Running ESLint security scan..."
+          npx eslint . \
+            --plugin security \
+            --format json \
+            --output-file eslint-security.json \
+            || true
+          echo "✅ ESLint security scan complete"
+      
+      - name: Run Retire.js
+        working-directory: frontend
+        run: |
+          echo "🔍 Running Retire.js..."
+          npx retire \
+            --outputformat json \
+            --outputpath retire-report.json \
+            --path . \
+            || true
+          echo "✅ Retire.js scan complete"
+      
+      - name: Upload Frontend Scan Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-security-reports
+          path: |
+            frontend/audit-npm.json
+            frontend/eslint-security.json
+            frontend/retire-report.json
+          retention-days: 30
+  
+  # ============================================================================
+  # Secret Scanning with Gitleaks
+  # ============================================================================
+  secret-scanning:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for secret scanning
+      
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+        with:
+          config-path: .gitleaks.toml
+      
+      - name: Upload Gitleaks Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-report
+          path: gitleaks-report.json
+          retention-days: 30
+  
+  # ============================================================================
+  # Upload Results to DefectDojo
+  # ============================================================================
+  upload-to-defectdojo:
+    name: Upload to DefectDojo
+    runs-on: ubuntu-latest
+    needs:
+      - backend-security-scan
+      - gateway-security-scan
+      - risk-engine-security-scan
+      - frontend-security-scan
+      - secret-scanning
+    if: |
+      always() && 
+      (github.event_name == 'push' || 
+       github.event_name == 'schedule' ||
+       (github.event_name == 'workflow_dispatch' && inputs.upload_to_defectdojo))
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Download all scan artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: scan-results
+      
+      - name: List downloaded artifacts
+        run: |
+          echo "📦 Downloaded scan results:"
+          find scan-results -type f
+      
+      - name: Set up Python for DefectDojo upload
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install DefectDojo CLI dependencies
+        run: |
+          pip install requests python-dateutil
+      
+      - name: Upload scans to DefectDojo
+        env:
+          DEFECTDOJO_URL: ${{ env.DEFECTDOJO_URL }}
+          DEFECTDOJO_USERNAME: ${{ env.DEFECTDOJO_USERNAME }}
+          DEFECTDOJO_PASSWORD: ${{ env.DEFECTDOJO_PASSWORD }}
+        run: |
+          python compliance/scripts/upload-to-defectdojo.py \
+            --url "$DEFECTDOJO_URL" \
+            --username "$DEFECTDOJO_USERNAME" \
+            --password "$DEFECTDOJO_PASSWORD" \
+            --product "$PRODUCT_NAME" \
+            --engagement "Security Scan - $(date +'%Y-%m-%d %H:%M')" \
+            --scan-dir scan-results \
+            --component-tags
+      
+      - name: Generate scan summary
+        if: always()
+        run: |
+          echo "## Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔐 **Scan Date:** $(date +'%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "📊 **DefectDojo:** $DEFECTDOJO_URL" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Scanned Components" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Backend (OWASP, SpotBugs, Checkstyle)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Gateway (OWASP, SpotBugs, Checkstyle)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Risk Engine (OWASP, SpotBugs, Checkstyle)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Frontend (npm audit, ESLint, Retire.js)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Secrets (Gitleaks)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📈 **View results:** [$DEFECTDOJO_URL/dashboard]($DEFECTDOJO_URL/dashboard)" >> $GITHUB_STEP_SUMMARY
+  
+  # ============================================================================
+  # Security Gate - Fail on Critical Issues
+  # ============================================================================
+  security-gate:
+    name: Security Quality Gate
+    runs-on: ubuntu-latest
+    needs:
+      - backend-security-scan
+      - gateway-security-scan
+      - risk-engine-security-scan
+      - frontend-security-scan
+      - secret-scanning
+    if: always()
+    
+    steps:
+      - name: Download all scan artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: scan-results
+      
+      - name: Analyze scan results
+        id: analyze
+        run: |
+          echo "🔍 Analyzing security scan results..."
+          
+          # Initialize counters
+          CRITICAL=0
+          HIGH=0
+          SECRETS=0
+          
+          # Check OWASP reports for critical/high vulnerabilities
+          for owasp in scan-results/*/dependency-check-report.json; do
+            if [ -f "$owasp" ]; then
+              echo "Checking $owasp..."
+              # Count critical and high severity issues
+              CRIT=$(jq '[.dependencies[]?.vulnerabilities[]? | select(.severity=="CRITICAL")] | length' "$owasp" 2>/dev/null || echo "0")
+              HIGH_COUNT=$(jq '[.dependencies[]?.vulnerabilities[]? | select(.severity=="HIGH")] | length' "$owasp" 2>/dev/null || echo "0")
+              CRITICAL=$((CRITICAL + CRIT))
+              HIGH=$((HIGH + HIGH_COUNT))
+            fi
+          done
+          
+          # Check Gitleaks for secrets
+          if [ -f "scan-results/gitleaks-report/gitleaks-report.json" ]; then
+            SECRETS=$(jq 'length' scan-results/gitleaks-report/gitleaks-report.json 2>/dev/null || echo "0")
+          fi
+          
+          echo "critical_count=$CRITICAL" >> $GITHUB_OUTPUT
+          echo "high_count=$HIGH" >> $GITHUB_OUTPUT
+          echo "secrets_count=$SECRETS" >> $GITHUB_OUTPUT
+          
+          echo "📊 Security Findings:"
+          echo "  🔴 Critical: $CRITICAL"
+          echo "  🟠 High: $HIGH"
+          echo "  🔑 Secrets: $SECRETS"
+      
+      - name: Security gate decision
+        run: |
+          CRITICAL=${{ steps.analyze.outputs.critical_count }}
+          HIGH=${{ steps.analyze.outputs.high_count }}
+          SECRETS=${{ steps.analyze.outputs.secrets_count }}
+          
+          echo "## Security Quality Gate" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Severity | Count | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔴 Critical | $CRITICAL | $([ $CRITICAL -eq 0 ] && echo '✅ Pass' || echo '⚠️  Review Required') |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🟠 High | $HIGH | $([ $HIGH -eq 0 ] && echo '✅ Pass' || echo 'ℹ️ Informational') |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔑 Secrets | $SECRETS | $([ $SECRETS -eq 0 ] && echo '✅ Pass' || echo '❌ Action Required') |" >> $GITHUB_STEP_SUMMARY
+          
+          # Fail if secrets found (always block)
+          if [ "$SECRETS" -gt 0 ]; then
+            echo "❌ SECURITY GATE FAILED: Secrets detected!"
+            echo "::error::Found $SECRETS potential secret(s) in the codebase"
+            exit 1
+          fi
+          
+          # Warn on critical vulnerabilities (don't block for now)
+          if [ "$CRITICAL" -gt 0 ]; then
+            echo "⚠️  WARNING: Found $CRITICAL critical vulnerabilities"
+            echo "::warning::Review critical vulnerabilities in DefectDojo"
+          fi
+          
+          echo "✅ Security gate passed"
