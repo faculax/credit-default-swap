@@ -6,7 +6,8 @@ services:
     region: oregon
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    healthCheckPath: /login
+    healthCheckPath: /health-check.sh
+    autoDeploy: false
     envVars:
       - key: DD_SECRET_KEY
         generateValue: true
@@ -21,7 +22,9 @@ services:
       - key: DD_ADMIN_USER
         value: "admin"
       - key: DD_ADMIN_PASSWORD
-        value: "admin"
+        sync: false
+      - key: DD_ADMIN_MAIL
+        value: "admin@defectdojo.local"
       - key: DD_SESSION_COOKIE_SECURE
         value: "True"
       - key: DD_CSRF_COOKIE_SECURE
@@ -34,9 +37,13 @@ services:
         value: "Lax"
       - key: DD_CSRF_COOKIE_SAMESITE
         value: "Lax"
+      - key: DD_INITIALIZE
+        value: "true"
       - key: PORT
         value: "10000"
+      - key: DB_PASSWORD
+        generateValue: true
     disk:
       name: defectdojo-data
-      mountPath: /var/lib/postgresql/data
+      mountPath: /app/pgdata
       sizeGB: 10

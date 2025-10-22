@@ -1,0 +1,26 @@
+# Documentation
+README.md
+*.md
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files
+*.test
+test_*
+
+# Temporary files
+*.tmp
+*.log
+*.pid

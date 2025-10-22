@@ -1,40 +1,70 @@
-FROM defectdojo/defectdojo-django:latest
+# Use Ubuntu base to build self-contained DefectDojo
+FROM ubuntu:22.04
 
-USER root
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    DD_VERSION=2.36.0 \
+    DOJO_ROOT=/opt/django-DefectDojo
 
-# Install PostgreSQL, Redis, nginx, and supervisor (Debian-based)
+# Install system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    postgresql \
-    postgresql-client \
+    python3.10 \
+    python3-pip \
+    python3-dev \
+    build-essential \
+    libpq-dev \
+    postgresql-14 \
+    postgresql-client-14 \
     redis-server \
     nginx \
-    supervisor && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    supervisor \
+    git \
+    curl \
+    libssl-dev \
+    libffi-dev \
+    libxml2-dev \
+    libxslt1-dev \
+    libjpeg-dev \
+    zlib1g-dev \
+    wkhtmltopdf \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Create necessary directories
-RUN mkdir -p /var/log/supervisor \
-    /run/postgresql \
-    /run/nginx \
-    /var/lib/postgresql/data \
-    /app/media
+# Create application directory
+RUN mkdir -p ${DOJO_ROOT} /var/log/supervisor /run/postgresql /run/nginx
 
-# Create postgres user if it doesn't exist
-RUN useradd -r -s /bin/bash postgres || true
+# Clone DefectDojo
+RUN git clone --branch ${DD_VERSION} --depth 1 https://github.com/DefectDojo/django-DefectDojo.git ${DOJO_ROOT}
 
-# Set permissions for PostgreSQL
-RUN chown -R postgres:postgres /var/lib/postgresql /run/postgresql
+# Install Python dependencies
+WORKDIR ${DOJO_ROOT}
+RUN pip3 install --no-cache-dir -r requirements.txt && \
+    pip3 install --no-cache-dir uwsgi psycopg2-binary
+
+# Create media and static directories
+RUN mkdir -p ${DOJO_ROOT}/media ${DOJO_ROOT}/static
+
+# Set up PostgreSQL to NOT use Render's disk mount (use tmpfs for data, persistent for backups)
+RUN mkdir -p /app/pgdata /app/backups /app/logs
 
 # Copy configuration files
-COPY supervisord.conf /etc/supervisord.conf
+COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY nginx.conf /etc/nginx/sites-available/default
+COPY uwsgi.ini ${DOJO_ROOT}/uwsgi.ini
 COPY init-db.sh /docker-entrypoint.sh
+COPY health-check.sh /health-check.sh
 
-RUN chmod +x /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh /health-check.sh && \
+    rm -f /etc/nginx/sites-enabled/default && \
+    ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
-# Expose port (Render uses PORT environment variable, defaults to 10000)
+# Set permissions
+RUN chown -R postgres:postgres /app/pgdata /run/postgresql && \
+    chmod 0700 /app/pgdata
+
+# Expose port
 EXPOSE 10000
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
