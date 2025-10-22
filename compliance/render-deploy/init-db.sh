@@ -142,19 +142,24 @@ echo "==> Starting Redis..."
 
 wait_for_service "Redis" "redis-cli -h 127.0.0.1 ping | grep -q PONG" || exit 1
 
+# Ensure static and media directories exist
+mkdir -p /app/static /app/media
+chmod 0755 /app/static /app/media
+
+# Always collect static files on startup
+echo "==> Collecting static files..."
+cd /app
+python3 manage.py collectstatic --noinput --clear || {
+    echo "ERROR: Static file collection failed"
+    exit 1
+}
+
 # Run Django initialization on first run
 if [ "${DD_INITIALIZE}" = "true" ] && [ ! -f /app/pgdata/.django_initialized ]; then
     echo "==> Running Django migrations..."
-    cd /app
     
     python3 manage.py migrate --noinput || {
         echo "ERROR: Migrations failed"
-        exit 1
-    }
-    
-    echo "==> Collecting static files..."
-    python3 manage.py collectstatic --noinput --clear || {
-        echo "ERROR: Static file collection failed"
         exit 1
     }
     
