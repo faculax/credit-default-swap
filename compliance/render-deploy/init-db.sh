@@ -148,19 +148,15 @@ wait_for_service "Redis" "redis-cli -h 127.0.0.1 ping | grep -q PONG" || exit 1
 mkdir -p /app/static /app/media
 chmod 0755 /app/static /app/media
 
+# Set Django environment variables for static files BEFORE running collectstatic
+export DD_STATIC_ROOT='/app/static'
+export DD_MEDIA_ROOT='/app/media'
+export DD_STATIC_URL='/static/'
+export DD_MEDIA_URL='/media/'
+
 # Always collect static files on startup
 echo "==> Collecting static files..."
 cd /app
-
-# Show current Django static files settings
-echo "==> Checking Django static files configuration..."
-python3 manage.py shell <<PYEOF
-from django.conf import settings
-print(f"STATIC_ROOT: {settings.STATIC_ROOT}")
-print(f"STATIC_URL: {settings.STATIC_URL}")
-print(f"MEDIA_ROOT: {settings.MEDIA_ROOT}")
-print(f"MEDIA_URL: {settings.MEDIA_URL}")
-PYEOF
 
 python3 manage.py collectstatic --noinput --clear || {
     echo "ERROR: Static file collection failed"
@@ -169,7 +165,13 @@ python3 manage.py collectstatic --noinput --clear || {
 
 # Verify static files were collected
 echo "==> Verifying static files..."
-ls -la /app/static/ | head -20 || echo "No static directory found"
+if [ -d /app/static ]; then
+    echo "Static directory contents:"
+    ls -lah /app/static | head -20
+    echo "Total files collected: $(find /app/static -type f | wc -l)"
+else
+    echo "ERROR: Static directory not found!"
+fi
 echo "==> Static file collection complete"
 
 # Run Django initialization on first run
