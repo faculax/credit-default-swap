@@ -138,7 +138,7 @@ wait_for_service "Redis" "redis-cli -h 127.0.0.1 ping | grep -q PONG" || exit 1
 # Run Django initialization on first run
 if [ "${DD_INITIALIZE}" = "true" ] && [ ! -f /app/pgdata/.django_initialized ]; then
     echo "==> Running Django migrations..."
-    cd /opt/django-DefectDojo
+    cd /app
     
     python3 manage.py migrate --noinput || {
         echo "ERROR: Migrations failed"
