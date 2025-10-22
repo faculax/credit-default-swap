@@ -5,9 +5,14 @@ USER root
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install PostgreSQL, Redis, nginx, and supervisor
+# Install Node.js 20.x (LTS), PostgreSQL, Redis, nginx, and supervisor
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+    gnupg \
+    ca-certificates \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y --no-install-recommends \
+    nodejs \
     postgresql \
     postgresql-client \
     redis-server \
@@ -15,6 +20,7 @@ RUN apt-get update && \
     supervisor \
     curl \
     locales \
+    && npm install -g yarn \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
@@ -34,6 +40,15 @@ RUN mkdir -p /var/log/supervisor \
 
 # Set DOJO_ROOT to match DefectDojo official image
 ENV DOJO_ROOT=/app
+
+# Install node_modules - DefectDojo frontend dependencies
+# The official DefectDojo image expects these in /app/components/node_modules
+WORKDIR /app/components
+COPY package.json yarn.lock* ./
+RUN yarn install --production --frozen-lockfile && \
+    yarn cache clean
+
+WORKDIR /app
 
 # Copy configuration files
 COPY supervisord.conf /etc/supervisor/supervisord.conf
