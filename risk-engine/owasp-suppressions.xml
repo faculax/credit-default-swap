@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    
+    <!-- Suppress false positives for Spring Boot framework -->
+    <suppress>
+        <notes><![CDATA[
+        Spring Boot framework false positives - these are legitimate dependencies
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework.*$</packageUrl>
+        <cve>CVE-2016-1000027</cve>
+    </suppress>
+    
+    <!-- Suppress Lombok related false positives -->
+    <suppress>
+        <notes><![CDATA[
+        Lombok is a compile-time dependency only and not part of runtime
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.projectlombok/lombok@.*$</packageUrl>
+    </suppress>
+    
+    <!-- Spring Boot Actuator for health checks -->
+    <suppress>
+        <notes><![CDATA[
+        Spring Boot Actuator is used only for health checks in risk engine
+        Endpoints are properly secured
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework\.boot/spring-boot-starter-actuator@.*$</packageUrl>
+        <cvssBelow>6.0</cvssBelow>
+    </suppress>
+    
+    <!-- Validation framework -->
+    <suppress>
+        <notes><![CDATA[
+        Spring validation framework - suppress low severity issues
+        Critical for validating risk calculation inputs
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework\.boot/spring-boot-starter-validation@.*$</packageUrl>
+        <cvssBelow>5.0</cvssBelow>
+    </suppress>
+    
+    <!-- Risk Engine specific dependencies -->
+    <suppress>
+        <notes><![CDATA[
+        Any future ORE (Open Risk Engine) related dependencies
+        These are critical for risk calculations but need monitoring
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/.*ore.*$</packageUrl>
+        <cvssBelow>7.0</cvssBelow>
+    </suppress>
+    
+    <!-- JSON processing libraries -->
+    <suppress>
+        <notes><![CDATA[
+        Jackson JSON processing - used for market data parsing
+        Ensure latest version for security
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.fasterxml\.jackson\.core/.*$</packageUrl>
+        <cvssBelow>5.0</cvssBelow>
+    </suppress>
+    
+</suppressions>

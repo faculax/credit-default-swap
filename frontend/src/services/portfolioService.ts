@@ -57,7 +57,7 @@ export interface BasketPortfolioConstituent {
     triggerType?: string;
     kthToDefault?: number;
     numberOfConstituents: number;
-    notional: number;  // Backend returns 'notional', not 'totalNotional'
+    notional: number; // Backend returns 'notional', not 'totalNotional'
     maturityDate: string;
     currency: string;
   };
@@ -86,18 +86,18 @@ export interface PortfolioPricingResponse {
     accrued: number;
     premiumLegPv: number;
     protectionLegPv: number;
-    
+
     // Spread and sensitivity metrics
     fairSpreadBpsWeighted: number;
     cs01: number;
     rec01: number;
     jtd: number;
-    
+
     // Notional and premium metrics
     totalNotional?: number;
     upfrontPremium?: number;
     totalPaidCoupons?: number;
-    
+
     // Position metrics
     tradeCount?: number;
     netProtectionBought?: number;
@@ -132,31 +132,31 @@ export const portfolioService = {
     const response = await fetch(PORTFOLIO_BASE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, description })
+      body: JSON.stringify({ name, description }),
     });
-    
+
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Failed to create portfolio');
     }
-    
+
     return response.json();
   },
 
   async getAllPortfolios(): Promise<CdsPortfolio[]> {
     const response = await fetch(PORTFOLIO_BASE_URL);
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch portfolios');
     }
-    
+
     const text = await response.text();
-    
+
     // Check if response is empty
     if (!text || text.trim() === '') {
       return [];
     }
-    
+
     try {
       return JSON.parse(text);
     } catch (error) {
@@ -167,13 +167,13 @@ export const portfolioService = {
 
   async getPortfolioById(id: number): Promise<CdsPortfolio> {
     const response = await fetch(`${PORTFOLIO_BASE_URL}/${id}`);
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch portfolio');
     }
-    
+
     const text = await response.text();
-    
+
     try {
       return JSON.parse(text);
     } catch (error) {
@@ -186,48 +186,54 @@ export const portfolioService = {
     const response = await fetch(`${PORTFOLIO_BASE_URL}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, description })
+      body: JSON.stringify({ name, description }),
     });
-    
+
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Failed to update portfolio');
     }
-    
+
     return response.json();
   },
 
   async deletePortfolio(id: number): Promise<void> {
     const response = await fetch(`${PORTFOLIO_BASE_URL}/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to delete portfolio');
     }
   },
 
   // Constituent management
-  async attachTrades(portfolioId: number, request: AttachTradesRequest): Promise<CdsPortfolioConstituent[]> {
+  async attachTrades(
+    portfolioId: number,
+    request: AttachTradesRequest
+  ): Promise<CdsPortfolioConstituent[]> {
     const response = await fetch(`${PORTFOLIO_BASE_URL}/${portfolioId}/constituents`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(request)
+      body: JSON.stringify(request),
     });
-    
+
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Failed to attach trades');
     }
-    
+
     return response.json();
   },
 
   async detachConstituent(portfolioId: number, constituentId: number): Promise<void> {
-    const response = await fetch(`${PORTFOLIO_BASE_URL}/${portfolioId}/constituents/${constituentId}`, {
-      method: 'DELETE'
-    });
-    
+    const response = await fetch(
+      `${PORTFOLIO_BASE_URL}/${portfolioId}/constituents/${constituentId}`,
+      {
+        method: 'DELETE',
+      }
+    );
+
     if (!response.ok) {
       throw new Error('Failed to detach constituent');
     }
@@ -235,18 +241,18 @@ export const portfolioService = {
 
   async getConstituents(portfolioId: number): Promise<CdsPortfolioConstituent[]> {
     const response = await fetch(`${PORTFOLIO_BASE_URL}/${portfolioId}/constituents`);
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch constituents');
     }
-    
+
     const text = await response.text();
-    
+
     // Check if response is empty
     if (!text || text.trim() === '') {
       return [];
     }
-    
+
     try {
       return JSON.parse(text);
     } catch (error) {
@@ -256,50 +262,61 @@ export const portfolioService = {
   },
 
   // Pricing
-  async pricePortfolio(portfolioId: number, valuationDate: string): Promise<PortfolioPricingResponse> {
-    const response = await fetch(`${PORTFOLIO_BASE_URL}/${portfolioId}/price?valuationDate=${valuationDate}`, {
-      method: 'POST'
-    });
-    
+  async pricePortfolio(
+    portfolioId: number,
+    valuationDate: string
+  ): Promise<PortfolioPricingResponse> {
+    const response = await fetch(
+      `${PORTFOLIO_BASE_URL}/${portfolioId}/price?valuationDate=${valuationDate}`,
+      {
+        method: 'POST',
+      }
+    );
+
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Failed to price portfolio');
     }
-    
+
     return response.json();
   },
 
   async getRiskSummary(portfolioId: number): Promise<PortfolioPricingResponse> {
     const response = await fetch(`${PORTFOLIO_BASE_URL}/${portfolioId}/risk-summary`);
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch risk summary');
     }
-    
+
     return response.json();
   },
 
   // Bond management
-  async attachBond(portfolioId: number, bondId: number, weightType: string = 'NOTIONAL', weightValue: number = 1.0): Promise<BondPortfolioConstituent> {
+  async attachBond(
+    portfolioId: number,
+    bondId: number,
+    weightType: string = 'NOTIONAL',
+    weightValue: number = 1.0
+  ): Promise<BondPortfolioConstituent> {
     const response = await fetch(`${PORTFOLIO_BASE_URL}/${portfolioId}/bonds`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bondId, weightType, weightValue })
+      body: JSON.stringify({ bondId, weightType, weightValue }),
     });
-    
+
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Failed to attach bond');
     }
-    
+
     return response.json();
   },
 
   async removeBond(portfolioId: number, bondId: number): Promise<void> {
     const response = await fetch(`${PORTFOLIO_BASE_URL}/${portfolioId}/bonds/${bondId}`, {
-      method: 'DELETE'
+      method: 'DELETE',
     });
-    
+
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Failed to remove bond');
@@ -308,17 +325,17 @@ export const portfolioService = {
 
   async getPortfolioBonds(portfolioId: number): Promise<BondPortfolioConstituent[]> {
     const response = await fetch(`${PORTFOLIO_BASE_URL}/${portfolioId}/bonds`);
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch portfolio bonds');
     }
-    
+
     const text = await response.text();
-    
+
     if (!text || text.trim() === '') {
       return [];
     }
-    
+
     try {
       return JSON.parse(text);
     } catch (error) {
@@ -328,26 +345,31 @@ export const portfolioService = {
   },
 
   // Basket management
-  async attachBasket(portfolioId: number, basketId: number, weightType: string = 'NOTIONAL', weightValue: number = 1.0): Promise<BasketPortfolioConstituent> {
+  async attachBasket(
+    portfolioId: number,
+    basketId: number,
+    weightType: string = 'NOTIONAL',
+    weightValue: number = 1.0
+  ): Promise<BasketPortfolioConstituent> {
     const response = await fetch(`${PORTFOLIO_BASE_URL}/${portfolioId}/baskets`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ basketId, weightType, weightValue })
+      body: JSON.stringify({ basketId, weightType, weightValue }),
     });
-    
+
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Failed to attach basket');
     }
-    
+
     return response.json();
   },
 
   async removeBasket(portfolioId: number, basketId: number): Promise<void> {
     const response = await fetch(`${PORTFOLIO_BASE_URL}/${portfolioId}/baskets/${basketId}`, {
-      method: 'DELETE'
+      method: 'DELETE',
     });
-    
+
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Failed to remove basket');
@@ -356,22 +378,22 @@ export const portfolioService = {
 
   async getPortfolioBaskets(portfolioId: number): Promise<BasketPortfolioConstituent[]> {
     const response = await fetch(`${PORTFOLIO_BASE_URL}/${portfolioId}/baskets`);
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch portfolio baskets');
     }
-    
+
     const text = await response.text();
-    
+
     if (!text || text.trim() === '') {
       return [];
     }
-    
+
     try {
       return JSON.parse(text);
     } catch (error) {
       console.error('Failed to parse baskets response:', text.substring(0, 500));
       throw new Error('Invalid response format from server');
     }
-  }
+  },
 };

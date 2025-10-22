@@ -8,7 +8,11 @@ interface BasketListProps {
   refreshTrigger?: number;
 }
 
-const BasketList: React.FC<BasketListProps> = ({ onSelectBasket, onCreateClick, refreshTrigger }) => {
+const BasketList: React.FC<BasketListProps> = ({
+  onSelectBasket,
+  onCreateClick,
+  refreshTrigger,
+}) => {
   const [baskets, setBaskets] = useState<Basket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,7 +71,9 @@ const BasketList: React.FC<BasketListProps> = ({ onSelectBasket, onCreateClick, 
 
       {baskets.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-fd-text-muted">No baskets found. Create your first basket to get started.</p>
+          <p className="text-fd-text-muted">
+            No baskets found. Create your first basket to get started.
+          </p>
         </div>
       ) : (
         <div className="bg-fd-darker border border-fd-border rounded-lg overflow-hidden">
@@ -99,10 +105,7 @@ const BasketList: React.FC<BasketListProps> = ({ onSelectBasket, onCreateClick, 
             </thead>
             <tbody className="divide-y divide-fd-border">
               {baskets.map((basket) => (
-                <tr
-                  key={basket.id}
-                  className="hover:bg-fd-dark transition-colors"
-                >
+                <tr key={basket.id} className="hover:bg-fd-dark transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-fd-text">
                     {basket.name}
                   </td>

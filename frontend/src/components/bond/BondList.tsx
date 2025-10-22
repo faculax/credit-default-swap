@@ -28,7 +28,7 @@ const BondList: React.FC = () => {
   };
 
   const handleBondCreated = (newBond: Bond) => {
-    setBonds(prev => [...prev, newBond]);
+    setBonds((prev) => [...prev, newBond]);
   };
 
   const formatCurrency = (amount: number, currency: string) => {
@@ -36,7 +36,7 @@ const BondList: React.FC = () => {
       style: 'currency',
       currency: currency,
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
@@ -58,7 +58,11 @@ const BondList: React.FC = () => {
         <div className="flex">
           <div className="flex-shrink-0">
             <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                clipRule="evenodd"
+              />
             </svg>
           </div>
           <div className="ml-3">
@@ -152,17 +156,18 @@ const BondList: React.FC = () => {
               {bonds.map((bond) => (
                 <tr key={bond.id} className="cursor-pointer hover:bg-fd-dark transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-fd-text">
-                      {bond.isin || 'N/A'}
-                    </div>
+                    <div className="text-sm font-medium text-fd-text">{bond.isin || 'N/A'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-fd-text">{bond.issuer}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-fd-text">
-                      {bond.seniority === 'SR_UNSEC' ? 'Sr. Unsec.' : 
-                       bond.seniority === 'SR_SEC' ? 'Sr. Sec.' : 'Subord.'}
+                      {bond.seniority === 'SR_UNSEC'
+                        ? 'Sr. Unsec.'
+                        : bond.seniority === 'SR_SEC'
+                          ? 'Sr. Sec.'
+                          : 'Subord.'}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -171,9 +176,7 @@ const BondList: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-fd-text">
-                      {formatPercent(bond.couponRate)}
-                    </div>
+                    <div className="text-sm text-fd-text">{formatPercent(bond.couponRate)}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-fd-text">{bond.maturityDate}</div>
@@ -201,10 +204,7 @@ const BondList: React.FC = () => {
       />
 
       {selectedBondId && (
-        <BondDetailView
-          bondId={selectedBondId}
-          onClose={() => setSelectedBondId(null)}
-        />
+        <BondDetailView bondId={selectedBondId} onClose={() => setSelectedBondId(null)} />
       )}
     </div>
   );

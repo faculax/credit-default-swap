@@ -1,0 +1,642 @@
+﻿#!/usr/bin/env pwsh
+# ===============================================================================
+# DefectDojo Security Scan Uploader (PowerShell)
+# ===============================================================================
+# This script uploads security scan results to DefectDojo
+# Supports: OWASP Dependency Check, SpotBugs, Checkstyle, PMD
+# ===============================================================================
+
+param(
+    [string]$DefectDojoUrl = "http://localhost:8081",
+    [string]$Username = "admin",
+    [string]$Password = "admin",
+    [string]$ProductName = "Credit Default Swap Platform",
+    [string]$EngagementName = "Security Scan - $(Get-Date -Format 'yyyy-MM-dd HH:mm')",
+    [string]$ProjectRoot = "",
+    [switch]$GroupByComponent = $true,  # Create separate engagements per component
+    [switch]$Verbose
+)
+
+$ErrorActionPreference = "Stop"
+
+# Determine project root
+if ([string]::IsNullOrEmpty($ProjectRoot)) {
+    # Try to find project root by looking for pom.xml or package.json
+    $currentDir = Get-Location
+    if (Test-Path "backend/pom.xml") {
+        $ProjectRoot = $currentDir
+    } elseif (Test-Path "../../backend/pom.xml") {
+        $ProjectRoot = (Get-Item "../../").FullName
+    } elseif (Test-Path "../backend/pom.xml") {
+        $ProjectRoot = (Get-Item "../").FullName
+    } else {
+        Write-Host "Could not find project root. Please run from project root or specify -ProjectRoot" -ForegroundColor Red
+        exit 1
+    }
+}
+
+# ANSI color codes for Windows PowerShell
+$ColorGreen = ""
+$ColorYellow = ""
+$ColorRed = ""
+$ColorBlue = ""
+$ColorReset = ""
+
+function Write-ColorOutput {
+    param([string]$Message, [string]$Color = $ColorReset)
+    Write-Host "${Color}${Message}"
+}
+
+function Write-Step {
+    param([string]$Message)
+    Write-ColorOutput "▶ $Message" $ColorBlue
+}
+
+function Write-Success {
+    param([string]$Message)
+    Write-ColorOutput "✓ $Message" $ColorGreen
+}
+
+function Write-Warning {
+    param([string]$Message)
+    Write-ColorOutput "⚠ $Message" $ColorYellow
+}
+
+function Write-Error {
+    param([string]$Message)
+    Write-ColorOutput "✗ $Message" $ColorRed
+}
+
+# ===============================================================================
+# Step 1: Get API Token
+# ===============================================================================
+Write-Step "Authenticating with DefectDojo..."
+
+try {
+    $authBody = @{
+        username = $Username
+        password = $Password
+    } | ConvertTo-Json
+
+    $authResponse = Invoke-RestMethod -Uri "$DefectDojoUrl/api/v2/api-token-auth/" `
+        -Method Post `
+        -ContentType "application/json" `
+        -Body $authBody
+
+    $token = $authResponse.token
+
+    if ([string]::IsNullOrEmpty($token)) {
+        Write-Error "Failed to obtain API token"
+        exit 1
+    }
+
+    Write-Success "Authentication successful"
+    if ($Verbose) {
+        Write-Host "  Token: $($token.Substring(0, 10))..."
+    }
+} catch {
+    Write-Error "Authentication failed: $($_.Exception.Message)"
+    Write-Warning "Make sure DefectDojo is running: docker-compose -f compliance/docker-compose.defectdojo.yml up -d"
+    exit 1
+}
+
+$headers = @{
+    "Authorization" = "Token $token"
+}
+
+# ===============================================================================
+# Step 2: Get or Create Product
+# ===============================================================================
+Write-Step "Checking for product '$ProductName'..."
+
+$productId = $null
+
+try {
+    $encodedProductName = [System.Web.HttpUtility]::UrlEncode($ProductName)
+    if ($Verbose) {
+        Write-Host "  Searching: $DefectDojoUrl/api/v2/products/?name=$encodedProductName"
+    }
+    
+    $productsResponse = Invoke-RestMethod -Uri "$DefectDojoUrl/api/v2/products/?name=$encodedProductName" `
+        -Method Get `
+        -Headers $headers
+
+    if ($Verbose) {
+        Write-Host "  Found $($productsResponse.count) product(s)"
+    }
+
+    if ($productsResponse.count -gt 0) {
+        $productId = $productsResponse.results[0].id
+        Write-Success "Found existing product (ID: $productId)"
+    }
+} catch {
+    Write-Warning "Error searching for product: $($_.Exception.Message)"
+    if ($Verbose -and $_.Exception.Response) {
+        try {
+            $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
+            $responseBody = $reader.ReadToEnd()
+            Write-Host "  API Response: $responseBody" -ForegroundColor Yellow
+        } catch {}
+    }
+}
+
+# If product not found, create it
+if ($null -eq $productId) {
+    Write-Step "Creating new product..."
+    
+    $productBody = @{
+        name = $ProductName
+        description = "Credit Default Swap platform - Spring Boot microservices with PostgreSQL"
+        prod_type = 1
+    } | ConvertTo-Json
+
+    if ($Verbose) {
+        Write-Host "  Product payload: $productBody"
+    }
+
+    try {
+        $productResponse = Invoke-RestMethod -Uri "$DefectDojoUrl/api/v2/products/" `
+            -Method Post `
+            -Headers $headers `
+            -ContentType "application/json" `
+            -Body $productBody
+
+        $productId = $productResponse.id
+        Write-Success "Created new product (ID: $productId)"
+    } catch {
+        Write-Error "Failed to create product: $($_.Exception.Message)"
+        if ($_.Exception.Response) {
+            try {
+                $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
+                $responseBody = $reader.ReadToEnd()
+                Write-Host "API Error Response: $responseBody" -ForegroundColor Red
+            } catch {
+                Write-Host "Could not read error response" -ForegroundColor Red
+            }
+        }
+        exit 1
+    }
+}
+
+# Verify we have a product ID
+if ($null -eq $productId) {
+    Write-Error "Failed to get or create product"
+    exit 1
+}
+
+# ===============================================================================
+# Step 3: Create Engagements (Per Component or Single)
+# ===============================================================================
+$scanDate = Get-Date -Format "yyyy-MM-dd"
+$uploadedCount = 0
+
+# Define component-based scan mappings
+$componentScans = @{
+    "Backend" = @(
+        @{
+            File = Join-Path $ProjectRoot "backend\target\security-reports\dependency-check-report.json"
+            ScanType = "Dependency Check Scan"
+            Description = "OWASP Dependency Check"
+            Required = $true
+        },
+        @{
+            File = Join-Path $ProjectRoot "backend\target\spotbugsXml.xml"
+            ScanType = "SpotBugs Scan"
+            Description = "SpotBugs Security Analysis"
+            Required = $true
+        },
+        @{
+            File = Join-Path $ProjectRoot "backend\target\security-reports\checkstyle-result.xml"
+            ScanType = "Generic Findings Import"
+            Description = "Checkstyle Code Quality"
+            Required = $false
+        },
+        @{
+            File = Join-Path $ProjectRoot "backend\target\security-reports\pmd.xml"
+            ScanType = "PMD Scan"
+            Description = "PMD Code Analysis"
+            Required = $false
+        }
+    )
+    "Frontend" = @(
+        @{
+            File = Join-Path $ProjectRoot "frontend\audit-npm.json"
+            ScanType = "NPM Audit Scan"
+            Description = "NPM Audit"
+            Required = $false
+        },
+        @{
+            File = Join-Path $ProjectRoot "frontend\eslint-security.json"
+            ScanType = "ESLint Scan"
+            Description = "ESLint Security"
+            Required = $false
+        },
+        @{
+            File = Join-Path $ProjectRoot "frontend\retire-report.json"
+            ScanType = "Retire.js Scan"
+            Description = "Retire.js"
+            Required = $false
+        }
+    )
+    "Gateway" = @(
+        @{
+            File = Join-Path $ProjectRoot "gateway\target\security-reports\dependency-check-report.json"
+            ScanType = "Dependency Check Scan"
+            Description = "OWASP Dependency Check"
+            Required = $false
+        },
+        @{
+            File = Join-Path $ProjectRoot "gateway\target\spotbugsXml.xml"
+            ScanType = "SpotBugs Scan"
+            Description = "SpotBugs Security Analysis"
+            Required = $false
+        }
+    )
+    "Risk-Engine" = @(
+        @{
+            File = Join-Path $ProjectRoot "risk-engine\target\security-reports\dependency-check-report.json"
+            ScanType = "Dependency Check Scan"
+            Description = "OWASP Dependency Check"
+            Required = $false
+        },
+        @{
+            File = Join-Path $ProjectRoot "risk-engine\target\spotbugsXml.xml"
+            ScanType = "SpotBugs Scan"
+            Description = "SpotBugs Security Analysis"
+            Required = $false
+        }
+    )
+}
+
+# Function to create engagement for a component
+function New-ComponentEngagement {
+    param(
+        [string]$ComponentName,
+        [int]$ProductId,
+        [hashtable]$Headers
+    )
+    
+    $today = Get-Date -Format "yyyy-MM-dd"
+    $engagementName = "$ComponentName - Security Scan - $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
+    
+    try {
+        $engagementBody = @{
+            product = $ProductId
+            name = $engagementName
+            description = "Security scan for $ComponentName component"
+            target_start = $today
+            target_end = $today
+            status = "In Progress"
+            engagement_type = "CI/CD"
+            tags = @($ComponentName.ToLower())
+        } | ConvertTo-Json
+
+        $engagementResponse = Invoke-RestMethod -Uri "$DefectDojoUrl/api/v2/engagements/" `
+            -Method Post `
+            -Headers $Headers `
+            -ContentType "application/json" `
+            -Body $engagementBody
+
+        return $engagementResponse.id
+    } catch {
+        Write-Error "Failed to create engagement for $ComponentName : $($_.Exception.Message)"
+        return $null
+    }
+}
+
+# Function to upload a single scan
+function Upload-Scan {
+    param(
+        [hashtable]$Mapping,
+        [int]$EngagementId
+    )
+    
+    $filePath = $Mapping.File
+    
+    if (Test-Path $filePath) {
+        Write-Step "Uploading $($Mapping.Description)..."
+        
+        if ($Verbose) {
+            $fileSize = (Get-Item $filePath).Length
+            Write-Host "  File: $filePath ($fileSize bytes)"
+            Write-Host "  Scan Type: $($Mapping.ScanType)"
+        }
+        
+        try {
+            # Create multipart form data
+            $boundary = [System.Guid]::NewGuid().ToString()
+            $LF = "`r`n"
+            
+            $fileBytes = [System.IO.File]::ReadAllBytes($filePath)
+            $fileContent = [System.Text.Encoding]::GetEncoding("iso-8859-1").GetString($fileBytes)
+            
+            $bodyLines = @(
+                "--$boundary",
+                "Content-Disposition: form-data; name=`"scan_type`"",
+                "",
+                $Mapping.ScanType,
+                "--$boundary",
+                "Content-Disposition: form-data; name=`"file`"; filename=`"$(Split-Path -Leaf $filePath)`"",
+                "Content-Type: application/octet-stream",
+                "",
+                $fileContent,
+                "--$boundary",
+                "Content-Disposition: form-data; name=`"engagement`"",
+                "",
+                $EngagementId,
+                "--$boundary",
+                "Content-Disposition: form-data; name=`"verified`"",
+                "",
+                "true",
+                "--$boundary",
+                "Content-Disposition: form-data; name=`"active`"",
+                "",
+                "true",
+                "--$boundary",
+                "Content-Disposition: form-data; name=`"scan_date`"",
+                "",
+                $scanDate,
+                "--$boundary",
+                "Content-Disposition: form-data; name=`"minimum_severity`"",
+                "",
+                "Info",
+                "--$boundary--"
+            ) -join $LF
+            
+            $uploadHeaders = $headers.Clone()
+            $uploadHeaders["Content-Type"] = "multipart/form-data; boundary=$boundary"
+            
+            $uploadResponse = Invoke-RestMethod -Uri "$DefectDojoUrl/api/v2/import-scan/" `
+                -Method Post `
+                -Headers $uploadHeaders `
+                -Body ([System.Text.Encoding]::GetEncoding("iso-8859-1").GetBytes($bodyLines))
+            
+            $findingsCount = 0
+            if ($uploadResponse.statistics) {
+                $newFindings = if ($uploadResponse.statistics.findings_new) { $uploadResponse.statistics.findings_new } else { 0 }
+                $reactivatedFindings = if ($uploadResponse.statistics.findings_reactivated) { $uploadResponse.statistics.findings_reactivated } else { 0 }
+                $findingsCount = $newFindings + $reactivatedFindings
+            }
+            
+            Write-Success "Uploaded $($Mapping.Description) - Test ID: $($uploadResponse.test)"
+            Write-Host "  📊 Findings imported: $findingsCount" -ForegroundColor Cyan
+            
+            if ($Verbose -and $uploadResponse.statistics) {
+                $closedFindings = if ($uploadResponse.statistics.findings_closed) { $uploadResponse.statistics.findings_closed } else { 0 }
+                Write-Host "  New: $newFindings, Reactivated: $reactivatedFindings, Closed: $closedFindings" -ForegroundColor Gray
+            }
+            $script:uploadedCount++
+            
+        } catch {
+            $errorMsg = $_.Exception.Message
+            Write-Warning "Failed to upload $($Mapping.Description): $errorMsg"
+            
+            # Try to get detailed error response
+            if ($_.Exception.Response) {
+                try {
+                    $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
+                    $responseBody = $reader.ReadToEnd()
+                    Write-Host "  API Error Details: $responseBody" -ForegroundColor Red
+                } catch {
+                    Write-Host "  (Could not read error details)" -ForegroundColor Yellow
+                }
+            }
+            
+            # Mark as critical error if required
+            if ($Mapping.Required) {
+                Write-Host "  ⚠️ This scan is marked as required" -ForegroundColor Yellow
+            }
+        }
+    } else {
+        if ($Mapping.Required) {
+            Write-Warning "Required file not found: $filePath"
+        } else {
+            if ($Verbose) {
+                Write-Host "  Optional file not found: $filePath" -ForegroundColor Gray
+            }
+        }
+    }
+}
+
+# ===============================================================================
+# Step 4: Upload Scan Results by Component
+# ===============================================================================
+
+Write-Step "Uploading scan results..."
+Write-Host ""
+
+if ($GroupByComponent) {
+    Write-Host "📦 Organizing scans by component..." -ForegroundColor Cyan
+    Write-Host ""
+    
+    foreach ($componentName in $componentScans.Keys) {
+        $scans = $componentScans[$componentName]
+        
+        # Check if any scan files exist for this component
+        $hasScans = $false
+        foreach ($scan in $scans) {
+            if (Test-Path $scan.File) {
+                $hasScans = $true
+                break
+            }
+        }
+        
+        if (-not $hasScans) {
+            if ($Verbose) {
+                Write-Host "  ⊘ Skipping $componentName (no scan files found)" -ForegroundColor Gray
+            }
+            continue
+        }
+        
+        Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+        Write-Host " $componentName Component" -ForegroundColor Cyan
+        Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+        Write-Host ""
+        
+        # Create engagement for this component
+        Write-Step "Creating engagement for $componentName..."
+        $engagementId = New-ComponentEngagement -ComponentName $componentName -ProductId $productId -Headers $headers
+        
+        if ($null -eq $engagementId) {
+            Write-Warning "Skipping $componentName - failed to create engagement"
+            continue
+        }
+        
+        Write-Success "Created engagement (ID: $engagementId)"
+        
+        # Upload scans for this component
+        foreach ($mapping in $scans) {
+            Upload-Scan -Mapping $mapping -EngagementId $engagementId
+        }
+        
+        Write-Host ""
+    }
+} else {
+    # Legacy mode: single engagement for all scans
+    Write-Step "Creating single engagement for all components..."
+    
+    $today = Get-Date -Format "yyyy-MM-dd"
+    $engagementBody = @{
+        product = $productId
+        name = $EngagementName
+        description = "Automated security scan from local development environment"
+        target_start = $today
+        target_end = $today
+        status = "In Progress"
+        engagement_type = "CI/CD"
+    } | ConvertTo-Json
+
+    try {
+        $engagementResponse = Invoke-RestMethod -Uri "$DefectDojoUrl/api/v2/engagements/" `
+            -Method Post `
+            -Headers $headers `
+            -ContentType "application/json" `
+            -Body $engagementBody
+
+        $engagementId = $engagementResponse.id
+        Write-Success "Created engagement (ID: $engagementId)"
+        
+        # Upload all scans to single engagement
+        foreach ($componentName in $componentScans.Keys) {
+            foreach ($mapping in $componentScans[$componentName]) {
+                Upload-Scan -Mapping $mapping -EngagementId $engagementId
+            }
+        }
+    } catch {
+        Write-Error "Failed to create engagement: $($_.Exception.Message)"
+        exit 1
+    }
+}
+
+# Function to upload a single scan
+function Upload-Scan {
+    param(
+        [hashtable]$Mapping,
+        [int]$EngagementId
+    )
+    
+    $filePath = $Mapping.File
+    
+    if (Test-Path $filePath) {
+        Write-Step "Uploading $($mapping.Description)..."
+        
+        if ($Verbose) {
+            $fileSize = (Get-Item $filePath).Length
+            Write-Host "  File: $filePath ($fileSize bytes)"
+            Write-Host "  Scan Type: $($mapping.ScanType)"
+        }
+        
+        try {
+            # Create multipart form data
+            $boundary = [System.Guid]::NewGuid().ToString()
+            $LF = "`r`n"
+            
+            $fileBytes = [System.IO.File]::ReadAllBytes($filePath)
+            $fileContent = [System.Text.Encoding]::GetEncoding("iso-8859-1").GetString($fileBytes)
+            
+            $bodyLines = @(
+                "--$boundary",
+                "Content-Disposition: form-data; name=`"scan_type`"",
+                "",
+                $mapping.ScanType,
+                "--$boundary",
+                "Content-Disposition: form-data; name=`"file`"; filename=`"$($mapping.File)`"",
+                "Content-Type: application/octet-stream",
+                "",
+                $fileContent,
+                "--$boundary",
+                "Content-Disposition: form-data; name=`"engagement`"",
+                "",
+                $engagementId,
+                "--$boundary",
+                "Content-Disposition: form-data; name=`"verified`"",
+                "",
+                "true",
+                "--$boundary",
+                "Content-Disposition: form-data; name=`"active`"",
+                "",
+                "true",
+                "--$boundary",
+                "Content-Disposition: form-data; name=`"scan_date`"",
+                "",
+                $scanDate,
+                "--$boundary",
+                "Content-Disposition: form-data; name=`"minimum_severity`"",
+                "",
+                "Info",
+                "--$boundary--"
+            ) -join $LF
+            
+            $uploadHeaders = $headers.Clone()
+            $uploadHeaders["Content-Type"] = "multipart/form-data; boundary=$boundary"
+            
+            $uploadResponse = Invoke-RestMethod -Uri "$DefectDojoUrl/api/v2/import-scan/" `
+                -Method Post `
+                -Headers $uploadHeaders `
+                -Body ([System.Text.Encoding]::GetEncoding("iso-8859-1").GetBytes($bodyLines))
+            
+            $findingsCount = 0
+            if ($uploadResponse.statistics) {
+                $newFindings = if ($uploadResponse.statistics.findings_new) { $uploadResponse.statistics.findings_new } else { 0 }
+                $reactivatedFindings = if ($uploadResponse.statistics.findings_reactivated) { $uploadResponse.statistics.findings_reactivated } else { 0 }
+                $findingsCount = $newFindings + $reactivatedFindings
+            }
+            
+            Write-Success "Uploaded $($mapping.Description) - Test ID: $($uploadResponse.test)"
+            Write-Host "  📊 Findings imported: $findingsCount" -ForegroundColor Cyan
+            
+            if ($Verbose -and $uploadResponse.statistics) {
+                $closedFindings = if ($uploadResponse.statistics.findings_closed) { $uploadResponse.statistics.findings_closed } else { 0 }
+                Write-Host "  New: $newFindings, Reactivated: $reactivatedFindings, Closed: $closedFindings" -ForegroundColor Gray
+            }
+            $uploadedCount++
+            
+        } catch {
+            $errorMsg = $_.Exception.Message
+            Write-Warning "Failed to upload $($mapping.Description): $errorMsg"
+            
+            # Try to get detailed error response
+            if ($_.Exception.Response) {
+                try {
+                    $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
+                    $responseBody = $reader.ReadToEnd()
+                    Write-Host "  API Error Details: $responseBody" -ForegroundColor Red
+                } catch {
+                    Write-Host "  (Could not read error details)" -ForegroundColor Yellow
+                }
+            }
+            
+            # Mark as critical error if required
+            if ($mapping.Required) {
+                Write-Host "  ⚠️ This scan is marked as required" -ForegroundColor Yellow
+            }
+        }
+    } else {
+        if ($mapping.Required) {
+            Write-Warning "Required file not found: $filePath"
+        } else {
+            if ($Verbose) {
+                Write-Host "  Optional file not found: $filePath" -ForegroundColor Gray
+            }
+        }
+    }
+}
+
+# ===============================================================================
+# Summary
+# ===============================================================================
+Write-Host ""
+Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+Write-Host " DEFECTDOJO UPLOAD COMPLETE" -ForegroundColor Cyan
+Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+Write-Host ""
+Write-Success "Uploaded $uploadedCount scan report(s)"
+Write-Host ""
+Write-Host "📊 View Results:" -ForegroundColor Yellow
+Write-Host "   URL: $DefectDojoUrl/engagement/$engagementId" -ForegroundColor White
+Write-Host ""
+Write-Host "🔐 Login Credentials:" -ForegroundColor Yellow
+Write-Host "   Username: $Username" -ForegroundColor White
+Write-Host "   Password: $Password" -ForegroundColor White
+Write-Host ""
+Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan

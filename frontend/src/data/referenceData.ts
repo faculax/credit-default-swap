@@ -8,7 +8,7 @@ export const SECTORS = [
   { code: 'CONSUMER', name: 'Consumer Discretionary' },
   { code: 'INDUSTRIALS', name: 'Industrials' },
   { code: 'UTILITIES', name: 'Utilities' },
-  { code: 'MATERIALS', name: 'Materials' }
+  { code: 'MATERIALS', name: 'Materials' },
 ];
 
 export const REFERENCE_ENTITIES = [
@@ -26,7 +26,7 @@ export const REFERENCE_ENTITIES = [
   { code: 'NFLX', name: 'Netflix Inc.', sector: 'TECH' },
   { code: 'META', name: 'Meta Platforms Inc.', sector: 'TECH' },
   { code: 'NVDA', name: 'NVIDIA Corporation', sector: 'TECH' },
-  { code: 'AMD', name: 'Advanced Micro Devices Inc.', sector: 'TECH' }
+  { code: 'AMD', name: 'Advanced Micro Devices Inc.', sector: 'TECH' },
 ];
 
 export const COUNTERPARTIES = [
@@ -39,7 +39,7 @@ export const COUNTERPARTIES = [
   { code: 'UBS', name: 'UBS Securities LLC' },
   { code: 'CREDIT_SUISSE', name: 'Credit Suisse Securities (USA) LLC' },
   { code: 'BOA', name: 'BofA Securities Inc.' },
-  { code: 'WELLS_FARGO', name: 'Wells Fargo Securities LLC' }
+  { code: 'WELLS_FARGO', name: 'Wells Fargo Securities LLC' },
 ];
 
 export const CURRENCIES = [
@@ -49,27 +49,30 @@ export const CURRENCIES = [
   { code: 'JPY', name: 'Japanese Yen' },
   { code: 'CHF', name: 'Swiss Franc' },
   { code: 'CAD', name: 'Canadian Dollar' },
-  { code: 'AUD', name: 'Australian Dollar' }
+  { code: 'AUD', name: 'Australian Dollar' },
 ];
 
 export const PREMIUM_FREQUENCIES = [
   { value: 'QUARTERLY', label: 'Quarterly' },
   { value: 'SEMI_ANNUAL', label: 'Semi-Annual' },
-  { value: 'ANNUAL', label: 'Annual' }
+  { value: 'ANNUAL', label: 'Annual' },
 ];
 
 export const DAY_COUNT_CONVENTIONS = [
   { value: 'ACT_360', label: 'Actual/360' },
   { value: 'ACT_365', label: 'Actual/365' },
   { value: '30_360', label: '30/360' },
-  { value: 'ACT_ACT', label: 'Actual/Actual' }
+  { value: 'ACT_ACT', label: 'Actual/Actual' },
 ];
 
 export const RESTRUCTURING_CLAUSES = [
   { value: 'NO_RESTRUCTURING', label: 'No Restructuring (No R)' },
   { value: 'MODIFIED_RESTRUCTURING', label: 'Modified Restructuring (Mod R)' },
-  { value: 'MODIFIED_MODIFIED_RESTRUCTURING', label: 'Modified Modified Restructuring (Mod Mod R)' },
-  { value: 'FULL_RESTRUCTURING', label: 'Full Restructuring (Full R)' }
+  {
+    value: 'MODIFIED_MODIFIED_RESTRUCTURING',
+    label: 'Modified Modified Restructuring (Mod Mod R)',
+  },
+  { value: 'FULL_RESTRUCTURING', label: 'Full Restructuring (Full R)' },
 ];
 
 export const PAYMENT_CALENDARS = [
@@ -77,7 +80,7 @@ export const PAYMENT_CALENDARS = [
   { value: 'LON', label: 'London' },
   { value: 'TARGET', label: 'TARGET (Europe)' },
   { value: 'TOK', label: 'Tokyo' },
-  { value: 'SYD', label: 'Sydney' }
+  { value: 'SYD', label: 'Sydney' },
 ];
 
 export const TRADE_STATUSES = [

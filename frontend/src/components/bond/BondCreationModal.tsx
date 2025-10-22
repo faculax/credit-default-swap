@@ -15,18 +15,18 @@ interface FormErrors {
 const SENIORITY_OPTIONS = [
   { value: 'SR_UNSEC', label: 'Senior Unsecured' },
   { value: 'SR_SEC', label: 'Senior Secured' },
-  { value: 'SUBORD', label: 'Subordinated' }
+  { value: 'SUBORD', label: 'Subordinated' },
 ];
 
 const COUPON_FREQUENCY_OPTIONS = [
   { value: 'ANNUAL', label: 'Annual' },
   { value: 'SEMI_ANNUAL', label: 'Semi-Annual' },
-  { value: 'QUARTERLY', label: 'Quarterly' }
+  { value: 'QUARTERLY', label: 'Quarterly' },
 ];
 
 const DAY_COUNT_OPTIONS = [
   { value: 'ACT_ACT', label: 'ACT/ACT' },
-  { value: 'THIRTY_360', label: '30/360' }
+  { value: 'THIRTY_360', label: '30/360' },
 ];
 
 const CURRENCY_OPTIONS = ['USD', 'EUR', 'GBP', 'JPY'];
@@ -39,7 +39,7 @@ const BondCreationModal: React.FC<BondCreationModalProps> = ({ isOpen, onClose, 
     seniority: 'SR_UNSEC',
     settlementDays: 2,
     faceValue: 100,
-    priceConvention: 'CLEAN'
+    priceConvention: 'CLEAN',
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -49,11 +49,11 @@ const BondCreationModal: React.FC<BondCreationModalProps> = ({ isOpen, onClose, 
   // Auto-populate sector when issuer changes
   useEffect(() => {
     if (!userModifiedSector && formData.issuer) {
-      const entity = REFERENCE_ENTITIES.find(e => e.code === formData.issuer);
+      const entity = REFERENCE_ENTITIES.find((e) => e.code === formData.issuer);
       if (entity?.sector) {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          sector: entity.sector
+          sector: entity.sector,
         }));
       }
     }
@@ -86,8 +86,11 @@ const BondCreationModal: React.FC<BondCreationModalProps> = ({ isOpen, onClose, 
       newErrors.maturityDate = 'Maturity date is required';
     }
 
-    if (formData.issueDate && formData.maturityDate && 
-        new Date(formData.issueDate) >= new Date(formData.maturityDate)) {
+    if (
+      formData.issueDate &&
+      formData.maturityDate &&
+      new Date(formData.issueDate) >= new Date(formData.maturityDate)
+    ) {
       newErrors.maturityDate = 'Maturity date must be after issue date';
     }
 
@@ -101,15 +104,15 @@ const BondCreationModal: React.FC<BondCreationModalProps> = ({ isOpen, onClose, 
       setUserModifiedSector(true);
     }
 
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
 
     if (errors[field]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [field]: ''
+        [field]: '',
       }));
     }
   };
@@ -143,7 +146,7 @@ const BondCreationModal: React.FC<BondCreationModalProps> = ({ isOpen, onClose, 
       seniority: 'SR_UNSEC',
       settlementDays: 2,
       faceValue: 100,
-      priceConvention: 'CLEAN'
+      priceConvention: 'CLEAN',
     });
     setErrors({});
     setUserModifiedSector(false);
@@ -152,20 +155,29 @@ const BondCreationModal: React.FC<BondCreationModalProps> = ({ isOpen, onClose, 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-fd-darker rounded-lg shadow-xl border border-fd-border max-w-4xl w-full max-h-[90vh] overflow-y-auto m-4" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-fd-darker rounded-lg shadow-xl border border-fd-border max-w-4xl w-full max-h-[90vh] overflow-y-auto m-4"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="sticky top-0 bg-fd-darker border-b border-fd-border px-6 py-4 flex justify-between items-center z-10">
-          <h2 className="text-xl font-semibold text-fd-text">
-            Create New Bond
-          </h2>
+          <h2 className="text-xl font-semibold text-fd-text">Create New Bond</h2>
           <button
             onClick={onClose}
             className="text-fd-text-muted hover:text-fd-text transition-colors"
             aria-label="Close modal"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -173,7 +185,6 @@ const BondCreationModal: React.FC<BondCreationModalProps> = ({ isOpen, onClose, 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
             {/* Issuer & Credit Info Section */}
             <div className="md:col-span-2">
               <h3 className="text-sm font-semibold text-fd-text-muted uppercase tracking-wide mb-4">
@@ -209,23 +220,23 @@ const BondCreationModal: React.FC<BondCreationModalProps> = ({ isOpen, onClose, 
                 onChange={(e) => handleInputChange('seniority', e.target.value)}
                 className="w-full px-3 py-2 bg-fd-dark border border-fd-border text-fd-text rounded-md focus:outline-none focus:ring-2 focus:ring-fd-green focus:border-transparent"
               >
-                {SENIORITY_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                {SENIORITY_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-fd-text mb-1">
-                Sector
-              </label>
+              <label className="block text-sm font-medium text-fd-text mb-1">Sector</label>
               <select
                 value={formData.sector || ''}
                 onChange={(e) => handleInputChange('sector', e.target.value)}
                 className="w-full px-3 py-2 bg-fd-dark border border-fd-border text-fd-text rounded-md focus:outline-none focus:ring-2 focus:ring-fd-green focus:border-transparent"
               >
                 <option value="">Auto-suggested from issuer</option>
-                {SECTORS.map(sector => (
+                {SECTORS.map((sector) => (
                   <option key={sector.code} value={sector.code}>
                     {sector.name}
                   </option>
@@ -234,9 +245,7 @@ const BondCreationModal: React.FC<BondCreationModalProps> = ({ isOpen, onClose, 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-fd-text mb-1">
-                ISIN
-              </label>
+              <label className="block text-sm font-medium text-fd-text mb-1">ISIN</label>
               <input
                 type="text"
                 value={formData.isin || ''}
@@ -263,8 +272,10 @@ const BondCreationModal: React.FC<BondCreationModalProps> = ({ isOpen, onClose, 
                 onChange={(e) => handleInputChange('currency', e.target.value)}
                 className="w-full px-3 py-2 bg-fd-dark border border-fd-border text-fd-text rounded-md focus:outline-none focus:ring-2 focus:ring-fd-green focus:border-transparent"
               >
-                {CURRENCY_OPTIONS.map(curr => (
-                  <option key={curr} value={curr}>{curr}</option>
+                {CURRENCY_OPTIONS.map((curr) => (
+                  <option key={curr} value={curr}>
+                    {curr}
+                  </option>
                 ))}
               </select>
             </div>
@@ -295,7 +306,9 @@ const BondCreationModal: React.FC<BondCreationModalProps> = ({ isOpen, onClose, 
                 className={`w-full px-3 py-2 bg-fd-dark border ${errors.couponRate ? 'border-red-500' : 'border-fd-border'} text-fd-text rounded-md focus:outline-none focus:ring-2 focus:ring-fd-green focus:border-transparent placeholder-fd-text-muted`}
                 placeholder="e.g., 0.045 for 4.5%"
               />
-              {errors.couponRate && <p className="mt-1 text-sm text-red-400">{errors.couponRate}</p>}
+              {errors.couponRate && (
+                <p className="mt-1 text-sm text-red-400">{errors.couponRate}</p>
+              )}
             </div>
 
             <div>
@@ -307,8 +320,10 @@ const BondCreationModal: React.FC<BondCreationModalProps> = ({ isOpen, onClose, 
                 onChange={(e) => handleInputChange('couponFrequency', e.target.value)}
                 className="w-full px-3 py-2 bg-fd-dark border border-fd-border text-fd-text rounded-md focus:outline-none focus:ring-2 focus:ring-fd-green focus:border-transparent"
               >
-                {COUPON_FREQUENCY_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                {COUPON_FREQUENCY_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -322,8 +337,10 @@ const BondCreationModal: React.FC<BondCreationModalProps> = ({ isOpen, onClose, 
                 onChange={(e) => handleInputChange('dayCount', e.target.value)}
                 className="w-full px-3 py-2 bg-fd-dark border border-fd-border text-fd-text rounded-md focus:outline-none focus:ring-2 focus:ring-fd-green focus:border-transparent"
               >
-                {DAY_COUNT_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                {DAY_COUNT_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -358,13 +375,13 @@ const BondCreationModal: React.FC<BondCreationModalProps> = ({ isOpen, onClose, 
                 onChange={(e) => handleInputChange('maturityDate', e.target.value)}
                 className={`w-full px-3 py-2 bg-fd-dark border ${errors.maturityDate ? 'border-red-500' : 'border-fd-border'} text-fd-text rounded-md focus:outline-none focus:ring-2 focus:ring-fd-green focus:border-transparent`}
               />
-              {errors.maturityDate && <p className="mt-1 text-sm text-red-400">{errors.maturityDate}</p>}
+              {errors.maturityDate && (
+                <p className="mt-1 text-sm text-red-400">{errors.maturityDate}</p>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-fd-text mb-1">
-                Settlement Days
-              </label>
+              <label className="block text-sm font-medium text-fd-text mb-1">Settlement Days</label>
               <input
                 type="number"
                 value={formData.settlementDays || ''}
@@ -374,9 +391,7 @@ const BondCreationModal: React.FC<BondCreationModalProps> = ({ isOpen, onClose, 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-fd-text mb-1">
-                Face Value
-              </label>
+              <label className="block text-sm font-medium text-fd-text mb-1">Face Value</label>
               <input
                 type="number"
                 step="0.01"

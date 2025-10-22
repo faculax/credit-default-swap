@@ -8,7 +8,7 @@ export interface CouponPeriod {
   paymentDate: string;
   accrualDays: number;
   notionalAmount: number;
-  couponAmount?: number;  // Calculated: notional × spread × (days/360)
+  couponAmount?: number; // Calculated: notional × spread × (days/360)
   dayCountConvention: string;
   businessDayConvention: string;
   createdAt: string;

@@ -31,7 +31,10 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
     paymentCalendar: 'NYC',
     tradeStatus: 'PENDING',
     recoveryRate: 40,
+<<<<<<< HEAD
     settlementType: 'CASH'
+=======
+>>>>>>> 689d737 (feat: add comprehensive security and quality analysis)
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -69,7 +72,7 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
     if (!formData.referenceEntity) {
       newErrors.referenceEntity = 'Reference Entity is required';
     }
-    
+
     if (formData.referenceEntity && !formData.obligation?.id) {
       newErrors.obligation = 'Obligation is required';
     }
@@ -107,13 +110,19 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
     }
 
     // Date validations
-    if (formData.effectiveDate && formData.maturityDate && 
-        new Date(formData.effectiveDate) >= new Date(formData.maturityDate)) {
+    if (
+      formData.effectiveDate &&
+      formData.maturityDate &&
+      new Date(formData.effectiveDate) >= new Date(formData.maturityDate)
+    ) {
       newErrors.maturityDate = 'Maturity Date must be after Effective Date';
     }
 
-    if (formData.tradeDate && formData.effectiveDate && 
-        new Date(formData.tradeDate) > new Date(formData.effectiveDate)) {
+    if (
+      formData.tradeDate &&
+      formData.effectiveDate &&
+      new Date(formData.tradeDate) > new Date(formData.effectiveDate)
+    ) {
       newErrors.effectiveDate = 'Effective Date must be on or after Trade Date';
     }
 
@@ -122,32 +131,32 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
   };
 
   const handleInputChange = (field: keyof CDSTrade, value: any) => {
-    setFormData(prev => {
+    setFormData((prev) => {
       const updates: Partial<CDSTrade> = {};
-      
+
       // Handle obligation specially - convert to nested object
       if (field === 'obligation') {
         updates.obligation = value ? { id: value } : undefined;
       } else {
         updates[field] = value as any;
       }
-      
+
       // Clear obligation when reference entity changes
       if (field === 'referenceEntity' && prev.referenceEntity !== value) {
         updates.obligation = undefined;
       }
-      
+
       return {
         ...prev,
-        ...updates
+        ...updates,
       };
     });
 
     // Clear error for this field when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [field]: ''
+        [field]: '',
       }));
     }
   };
@@ -167,7 +176,7 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
   const handleNotionalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value.replace(/,/g, ''); // Remove commas
     const numValue = parseFloat(rawValue);
-    
+
     if (!isNaN(numValue) || rawValue === '') {
       handleInputChange('notionalAmount', rawValue === '' ? undefined : numValue);
     }
@@ -175,7 +184,7 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -191,7 +200,7 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
     setTimeout(() => {
       onSubmit(formData as CDSTrade);
       setIsSubmitting(false);
-      
+
       // Reset form
       setFormData({
         tradeDate: new Date().toISOString().split('T')[0],
@@ -202,65 +211,70 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
         paymentCalendar: 'NYC',
         tradeStatus: 'PENDING',
         recoveryRate: 40,
+<<<<<<< HEAD
         settlementType: 'CASH'
+=======
+>>>>>>> 689d737 (feat: add comprehensive security and quality analysis)
       });
     }, 1000);
   };
 
   const inputClassName = (fieldName: string) => {
-    const baseClass = "w-full px-3 py-2 bg-fd-input border rounded-md text-fd-text placeholder-fd-text-muted focus:outline-none focus:ring-2 focus:ring-fd-green focus:border-fd-green";
-    const errorClass = "border-red-500";
-    const normalClass = "border-fd-border";
-    
+    const baseClass =
+      'w-full px-3 py-2 bg-fd-input border rounded-md text-fd-text placeholder-fd-text-muted focus:outline-none focus:ring-2 focus:ring-fd-green focus:border-fd-green';
+    const errorClass = 'border-red-500';
+    const normalClass = 'border-fd-border';
+
     return `${baseClass} ${errors[fieldName] ? errorClass : normalClass}`;
   };
 
   const selectClassName = (fieldName: string) => {
-    const baseClass = "w-full px-3 py-2 bg-fd-input border rounded-md text-fd-text focus:outline-none focus:ring-2 focus:ring-fd-green focus:border-fd-green";
-    const errorClass = "border-red-500";
-    const normalClass = "border-fd-border";
-    
+    const baseClass =
+      'w-full px-3 py-2 bg-fd-input border rounded-md text-fd-text focus:outline-none focus:ring-2 focus:ring-fd-green focus:border-fd-green';
+    const errorClass = 'border-red-500';
+    const normalClass = 'border-fd-border';
+
     return `${baseClass} ${errors[fieldName] ? errorClass : normalClass}`;
   };
 
   const generateRandomData = () => {
     // Helper function to get random item from array
     const getRandomItem = (array: any[]) => array[Math.floor(Math.random() * array.length)];
-    
+
     // Helper function to get random date within a range (days offset from today)
     const getRandomDate = (startDays: number, endDays: number) => {
       const start = new Date();
       start.setDate(start.getDate() + startDays);
       const end = new Date();
       end.setDate(end.getDate() + endDays);
-      
+
       const randomTime = start.getTime() + Math.random() * (end.getTime() - start.getTime());
       return new Date(randomTime).toISOString().split('T')[0];
     };
-    
+
     // Generate trades that started in the PAST for demo purposes
     // This allows demonstrating coupon payments immediately
-    
+
     // Trade date: 24-48 months ago (2-4 years in the past) for more coupons
     const tradeDate = getRandomDate(-365 * 4, -365 * 2);
-    
+
     // Effective date: 1-7 days after trade date (still in the past)
     const tradeDateObj = new Date(tradeDate);
     const effectiveDaysOffset = Math.floor(Math.random() * 7) + 1;
     const effectiveDateObj = new Date(tradeDateObj);
     effectiveDateObj.setDate(effectiveDateObj.getDate() + effectiveDaysOffset);
     const effectiveDate = effectiveDateObj.toISOString().split('T')[0];
-    
+
     // Maturity date: 2-5 years from TODAY (in the future)
     const maturityDate = getRandomDate(365 * 2, 365 * 5);
-    
+
     // Accrual start date: same as effective date
     const accrualStartDate = effectiveDate;
-    
+
     // Generate round notional amounts (5M, 10M, 20M, 50M, 100M, 200M, 500M)
     const roundNotionals = [5000000, 10000000, 20000000, 50000000, 100000000, 200000000, 500000000];
     const notionalAmount = getRandomItem(roundNotionals);
-    
+
     const randomData: Partial<CDSTrade> = {
       referenceEntity: getRandomItem(REFERENCE_ENTITIES).code,
       counterparty: getRandomItem(COUNTERPARTIES).code,
@@ -277,8 +291,12 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
       restructuringClause: Math.random() > 0.3 ? getRandomItem(RESTRUCTURING_CLAUSES).value : '', // 70% chance of having a clause
       paymentCalendar: getRandomItem(PAYMENT_CALENDARS).value,
       tradeStatus: 'ACTIVE', // Always generate ACTIVE trades for demo purposes
+<<<<<<< HEAD
       recoveryRate: 40,  // Default recovery rate
       settlementType: getRandomItem(SETTLEMENT_METHODS).value
+=======
+      recoveryRate: 40, // Default recovery rate
+>>>>>>> 689d737 (feat: add comprehensive security and quality analysis)
     };
     setFormData(randomData);
     setErrors({}); // Clear any existing errors
@@ -289,7 +307,7 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-fd-text">New CDS Trade Entry</h2>
       </div>
-      
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Row 1: Reference Entity, Counterparty, Currency */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -362,7 +380,12 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
               </label>
               <select
                 value={formData.obligation?.id || ''}
-                onChange={(e) => handleInputChange('obligation', e.target.value ? Number(e.target.value) : undefined)}
+                onChange={(e) =>
+                  handleInputChange(
+                    'obligation',
+                    e.target.value ? Number(e.target.value) : undefined
+                  )
+                }
                 className={selectClassName('obligation')}
                 disabled={loadingBonds}
               >
@@ -371,14 +394,14 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
                 {!loadingBonds && availableBonds.length === 0 && (
                   <option value="">No bonds available for {formData.referenceEntity}</option>
                 )}
-                {!loadingBonds && availableBonds.map((bond) => (
-                  <option key={bond.id} value={bond.id}>
-                    {bond.isin ? `${bond.isin} - ` : ''}
-                    {bond.issuer} {bond.seniority} - 
-                    Coupon: {bond.couponRate}% - 
-                    Maturity: {new Date(bond.maturityDate).toLocaleDateString()}
-                  </option>
-                ))}
+                {!loadingBonds &&
+                  availableBonds.map((bond) => (
+                    <option key={bond.id} value={bond.id}>
+                      {bond.isin ? `${bond.isin} - ` : ''}
+                      {bond.issuer} {bond.seniority} - Coupon: {bond.couponRate}% - Maturity:{' '}
+                      {new Date(bond.maturityDate).toLocaleDateString()}
+                    </option>
+                  ))}
               </select>
               <p className="text-xs text-fd-text-muted mt-1">
                 Select a specific bond from {formData.referenceEntity}
@@ -418,9 +441,7 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
               className={inputClassName('spread')}
               placeholder="e.g., 100"
             />
-            {errors.spread && (
-              <p className="text-red-500 text-sm mt-1">{errors.spread}</p>
-            )}
+            {errors.spread && <p className="text-red-500 text-sm mt-1">{errors.spread}</p>}
           </div>
 
           <div>
@@ -489,9 +510,7 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
               onChange={(e) => handleInputChange('tradeDate', e.target.value)}
               className={inputClassName('tradeDate')}
             />
-            {errors.tradeDate && (
-              <p className="text-red-500 text-sm mt-1">{errors.tradeDate}</p>
-            )}
+            {errors.tradeDate && <p className="text-red-500 text-sm mt-1">{errors.tradeDate}</p>}
           </div>
 
           <div>
@@ -597,9 +616,7 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
           </div>
 
           <div>
-            <label className="block text-fd-text font-medium mb-2">
-              Restructuring Clause
-            </label>
+            <label className="block text-fd-text font-medium mb-2">Restructuring Clause</label>
             <select
               value={formData.restructuringClause || ''}
               onChange={(e) => handleInputChange('restructuringClause', e.target.value)}
@@ -652,7 +669,7 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
                 buySellProtection: 'BUY',
                 paymentCalendar: 'NYC',
                 tradeStatus: 'PENDING',
-                recoveryRate: 40
+                recoveryRate: 40,
               });
               setErrors({});
             }}

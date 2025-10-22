@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
 import { REFERENCE_ENTITIES } from '../../data/referenceData';
 
-export type CreditEventType = 'BANKRUPTCY' | 'FAILURE_TO_PAY' | 'RESTRUCTURING' | 'OBLIGATION_DEFAULT' | 'REPUDIATION_MORATORIUM' | 'PAYOUT';
+export type CreditEventType =
+  | 'BANKRUPTCY'
+  | 'FAILURE_TO_PAY'
+  | 'RESTRUCTURING'
+  | 'OBLIGATION_DEFAULT'
+  | 'REPUDIATION_MORATORIUM'
+  | 'PAYOUT';
 export type SettlementMethod = 'CASH' | 'PHYSICAL';
 
 export interface CreateCreditEventRequest {
@@ -46,19 +52,19 @@ const CreditEventModal: React.FC<CreditEventModalProps> = ({
     eventDate: getTodayDate(),
     noticeDate: getTodayDate(),
     settlementMethod: 'PHYSICAL',
-    comments: ''
+    comments: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const eventTypeOptions: { value: CreditEventType; label: string }[] = [
     { value: 'RESTRUCTURING', label: 'Restructuring' },
-    { value: 'BANKRUPTCY', label: 'Bankruptcy' }
+    { value: 'BANKRUPTCY', label: 'Bankruptcy' },
   ];
 
   const settlementMethodOptions: { value: SettlementMethod; label: string }[] = [
     { value: 'PHYSICAL', label: 'Physical Settlement' },
-    { value: 'CASH', label: 'Cash Settlement' }
+    { value: 'CASH', label: 'Cash Settlement' },
   ];
 
   const validateForm = (): boolean => {
@@ -90,7 +96,7 @@ const CreditEventModal: React.FC<CreditEventModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -103,7 +109,7 @@ const CreditEventModal: React.FC<CreditEventModalProps> = ({
         eventDate: getTodayDate(),
         noticeDate: getTodayDate(),
         settlementMethod: 'PHYSICAL',
-        comments: ''
+        comments: '',
       });
       setErrors({});
       onClose();
@@ -113,16 +119,16 @@ const CreditEventModal: React.FC<CreditEventModalProps> = ({
   };
 
   const handleInputChange = (field: keyof CreateCreditEventRequest, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
-    
+
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [field]: ''
+        [field]: '',
       }));
     }
   };
@@ -133,16 +139,19 @@ const CreditEventModal: React.FC<CreditEventModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-fd-darker rounded-lg shadow-fd border border-fd-border p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-fd-text">
-            Record Credit Event
-          </h2>
+          <h2 className="text-xl font-semibold text-fd-text">Record Credit Event</h2>
           <button
             onClick={onClose}
             className="text-fd-text-muted hover:text-fd-text transition-colors"
             disabled={isLoading}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -183,9 +192,7 @@ const CreditEventModal: React.FC<CreditEventModalProps> = ({
                 </option>
               ))}
             </select>
-            {errors.eventType && (
-              <p className="mt-1 text-sm text-red-400">{errors.eventType}</p>
-            )}
+            {errors.eventType && <p className="mt-1 text-sm text-red-400">{errors.eventType}</p>}
           </div>
 
           <div>
@@ -202,9 +209,7 @@ const CreditEventModal: React.FC<CreditEventModalProps> = ({
               }`}
               disabled={isLoading}
             />
-            {errors.eventDate && (
-              <p className="mt-1 text-sm text-red-400">{errors.eventDate}</p>
-            )}
+            {errors.eventDate && <p className="mt-1 text-sm text-red-400">{errors.eventDate}</p>}
           </div>
 
           <div>
@@ -221,13 +226,14 @@ const CreditEventModal: React.FC<CreditEventModalProps> = ({
               }`}
               disabled={isLoading}
             />
-            {errors.noticeDate && (
-              <p className="mt-1 text-sm text-red-400">{errors.noticeDate}</p>
-            )}
+            {errors.noticeDate && <p className="mt-1 text-sm text-red-400">{errors.noticeDate}</p>}
           </div>
 
           <div>
-            <label htmlFor="settlementMethod" className="block text-sm font-medium text-fd-text mb-1">
+            <label
+              htmlFor="settlementMethod"
+              className="block text-sm font-medium text-fd-text mb-1"
+            >
               Settlement Method *
             </label>
             <select

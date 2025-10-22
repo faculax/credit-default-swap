@@ -66,12 +66,8 @@ export const CouponSchedulePanel: React.FC<Props> = ({ tradeId, autoGenerate = f
           </button>
         </div>
       </div>
-      {loading && (
-        <div className="text-fd-text-muted text-sm">Loading schedule...</div>
-      )}
-      {error && (
-        <div className="text-red-400 text-sm">{error}</div>
-      )}
+      {loading && <div className="text-fd-text-muted text-sm">Loading schedule...</div>}
+      {error && <div className="text-red-400 text-sm">{error}</div>}
       {!loading && periods.length === 0 && !error && (
         <div className="text-fd-text-muted text-sm">No coupon periods yet. Generate schedule.</div>
       )}
@@ -88,13 +84,15 @@ export const CouponSchedulePanel: React.FC<Props> = ({ tradeId, autoGenerate = f
               </tr>
             </thead>
             <tbody>
-              {periods.map(p => (
+              {periods.map((p) => (
                 <tr key={p.id} className="border-t border-fd-border hover:bg-fd-darker/50">
                   <td className="px-3 py-2 text-fd-text font-mono">{p.periodStartDate}</td>
                   <td className="px-3 py-2 text-fd-text font-mono">{p.periodEndDate}</td>
                   <td className="px-3 py-2 text-fd-text font-mono">{p.paymentDate}</td>
                   <td className="px-3 py-2 text-fd-text-muted">{p.accrualDays}</td>
-                  <td className="px-3 py-2 text-fd-green font-medium">{p.notionalAmount.toLocaleString()}</td>
+                  <td className="px-3 py-2 text-fd-green font-medium">
+                    {p.notionalAmount.toLocaleString()}
+                  </td>
                 </tr>
               ))}
             </tbody>

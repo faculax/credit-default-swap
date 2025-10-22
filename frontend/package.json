@@ -14,15 +14,31 @@
     "typescript": "^4.9.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
     "autoprefixer": "^10.4.0",
+    "eslint-plugin-security": "^1.7.1",
     "postcss": "^8.4.0",
+    "prettier": "^3.0.0",
     "tailwindcss": "^3.3.0"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:security": "eslint src --ext .ts,.tsx --config .eslintrc.security.js",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write src/**/*.{ts,tsx,css,md}",
+    "format:check": "prettier --check src/**/*.{ts,tsx,css,md}",
+    "audit:security": "npm audit --audit-level=moderate",
+    "security:full": "npm run lint:security && npm run audit:security && npm run type-check",
+    "pre-commit": "npm run format:check && npm run lint && npm run type-check"
   },
   "eslintConfig": {
     "extends": [

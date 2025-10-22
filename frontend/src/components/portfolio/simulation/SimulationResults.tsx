@@ -22,9 +22,10 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
   const isFailed = simulation.status === 'FAILED';
 
   // For display, use the horizon with most data (prefer 5Y, then 3Y, then 1Y)
-  const displayHorizon = simulation.horizons?.find(h => h.tenor === '5Y') 
-    || simulation.horizons?.find(h => h.tenor === '3Y')
-    || simulation.horizons?.[0];
+  const displayHorizon =
+    simulation.horizons?.find((h) => h.tenor === '5Y') ||
+    simulation.horizons?.find((h) => h.tenor === '3Y') ||
+    simulation.horizons?.[0];
 
   return (
     <div className="space-y-6">
@@ -51,19 +52,19 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
           </div>
           <div>
             <span className="text-fd-text-muted">Paths:</span>
-            <p className="text-fd-text font-medium">{simulation.paths?.toLocaleString() || 'N/A'}</p>
+            <p className="text-fd-text font-medium">
+              {simulation.paths?.toLocaleString() || 'N/A'}
+            </p>
           </div>
           <div>
             <span className="text-fd-text-muted">Horizons:</span>
             <p className="text-fd-text font-medium">
-              {simulation.horizons?.map(h => h.tenor).join(', ') || 'N/A'}
+              {simulation.horizons?.map((h) => h.tenor).join(', ') || 'N/A'}
             </p>
           </div>
           <div>
             <span className="text-fd-text-muted">Seed:</span>
-            <p className="text-fd-text font-medium">
-              {simulation.seedUsed ?? 'Random'}
-            </p>
+            <p className="text-fd-text font-medium">{simulation.seedUsed ?? 'Random'}</p>
           </div>
         </div>
 
@@ -176,7 +177,9 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({
         <div className="bg-fd-darker rounded-lg border border-fd-border p-8 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fd-green mx-auto mb-4"></div>
           <p className="text-fd-text-muted">
-            {simulation.status === 'QUEUED' ? 'Simulation queued...' : 'Running Monte Carlo simulation...'}
+            {simulation.status === 'QUEUED'
+              ? 'Simulation queued...'
+              : 'Running Monte Carlo simulation...'}
           </p>
           <p className="text-fd-text-muted text-sm mt-2">
             This may take a minute or two depending on the number of paths
