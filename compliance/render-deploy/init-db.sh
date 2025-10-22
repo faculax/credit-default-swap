@@ -165,6 +165,22 @@ python3 manage.py collectstatic --noinput --clear || {
     exit 1
 }
 
+# Copy components directory to static (DefectDojo's JS dependencies)
+if [ -d /app/components ]; then
+    echo "==> Copying components to static directory..."
+    # Create symlinks instead of copying to save space and time
+    for component in /app/components/*; do
+        component_name=$(basename "$component")
+        if [ ! -e "/app/static/$component_name" ]; then
+            ln -sf "$component" "/app/static/$component_name"
+            echo "  Linked: $component_name"
+        fi
+    done
+    echo "Components linked successfully"
+else
+    echo "WARNING: /app/components directory not found"
+fi
+
 # Verify static files were collected
 echo "==> Verifying static files..."
 echo "DD_STATIC_ROOT is set to: ${DD_STATIC_ROOT}"
@@ -189,34 +205,19 @@ if [ -d /app/static ]; then
     
     # Test specific file paths that the browser is requesting
     echo ""
-    echo "Testing requested file paths:"
-    for file in "jquery/dist/jquery.js" "jszip/dist/jszip.min.js" "moment/min/moment.min.js"; do
-        if [ -f "/app/static/$file" ]; then
-            echo "✓ /app/static/$file exists"
+    echo "Verifying browser-requested file paths:"
+    for file in "jquery/dist/jquery.js" "jszip/dist/jszip.min.js" "moment/min/moment.min.js" "bootstrap/dist/css/bootstrap.min.css"; do
+        if [ -f "/app/static/$file" ] || [ -L "/app/static/$file" ]; then
+            echo "✓ $file"
         else
-            echo "✗ /app/static/$file MISSING"
+            echo "✗ $file MISSING"
         fi
     done
     
-    # Check for components directory (DefectDojo uses bower components)
+    # List all top-level directories in static (including symlinks)
     echo ""
-    echo "Checking for components directory..."
-    if [ -d "/app/components" ]; then
-        echo "Found /app/components - listing contents:"
-        ls -1 /app/components/ | head -10
-    else
-        echo "No /app/components directory"
-    fi
-    
-    # Search for jquery in the entire /app directory
-    echo ""
-    echo "Searching for jquery in /app..."
-    find /app -name "jquery.js" -o -name "jquery.min.js" 2>/dev/null | grep -v node_modules | head -10
-    
-    # List all top-level directories in static
-    echo ""
-    echo "Top-level static directories:"
-    ls -1 /app/static/ | head -20
+    echo "Static directory contents (with symlinks):"
+    ls -lah /app/static/ | head -30
 else
     echo "ERROR: Static directory not found at /app/static!"
     echo "Checking what exists in /app:"
