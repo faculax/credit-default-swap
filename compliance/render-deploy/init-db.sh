@@ -31,7 +31,9 @@ echo "export DD_SESSION_COOKIE_SECURE='${DD_SESSION_COOKIE_SECURE:-True}'" >> /e
 echo "export DD_CSRF_COOKIE_SECURE='${DD_CSRF_COOKIE_SECURE:-True}'" >> /etc/environment.dd
 echo "export DD_DEBUG='${DD_DEBUG}'" >> /etc/environment.dd
 echo "export DD_STATIC_ROOT='/app/static'" >> /etc/environment.dd
+echo "export DD_STATIC_URL='/static/'" >> /etc/environment.dd
 echo "export DD_MEDIA_ROOT='/app/media'" >> /etc/environment.dd
+echo "export DD_MEDIA_URL='/media/'" >> /etc/environment.dd
 echo "export C_FORCE_ROOT='true'" >> /etc/environment.dd
 
 chmod 600 /etc/environment.dd
@@ -165,12 +167,29 @@ python3 manage.py collectstatic --noinput --clear || {
 
 # Verify static files were collected
 echo "==> Verifying static files..."
+echo "DD_STATIC_ROOT is set to: ${DD_STATIC_ROOT}"
+echo "DD_STATIC_URL is set to: ${DD_STATIC_URL}"
+
 if [ -d /app/static ]; then
-    echo "Static directory contents:"
+    echo "Static directory exists!"
+    echo "Contents of /app/static:"
     ls -lah /app/static | head -20
-    echo "Total files collected: $(find /app/static -type f | wc -l)"
+    echo ""
+    echo "Looking for jquery:"
+    find /app/static -name "jquery.js" -o -name "jquery.min.js" 2>/dev/null | head -5
+    echo ""
+    echo "Total files collected: $(find /app/static -type f 2>/dev/null | wc -l)"
+    echo "Directory permissions:"
+    ls -ld /app/static
+    
+    # Fix permissions to ensure nginx can read
+    echo "Fixing permissions for nginx..."
+    chmod -R 755 /app/static
+    chown -R root:root /app/static
 else
-    echo "ERROR: Static directory not found!"
+    echo "ERROR: Static directory not found at /app/static!"
+    echo "Checking what exists in /app:"
+    ls -la /app/ | grep -E "(static|media)"
 fi
 echo "==> Static file collection complete"
 
