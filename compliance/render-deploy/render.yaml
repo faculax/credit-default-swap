@@ -22,8 +22,6 @@ services:
         value: "admin"
       - key: DD_ADMIN_PASSWORD
         value: "admin"
-      - key: DD_INITIALIZE
-        value: "true"
       - key: DD_SESSION_COOKIE_SECURE
         value: "True"
       - key: DD_CSRF_COOKIE_SECURE
