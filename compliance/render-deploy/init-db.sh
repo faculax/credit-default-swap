@@ -169,22 +169,25 @@ python3 manage.py collectstatic --noinput --clear || {
 if [ -d /app/components/node_modules ]; then
     echo "==> Linking node_modules packages to static directory..."
     
-    # Symlink each package from node_modules to static root
-    # This makes /static/jquery/ point to /app/components/node_modules/jquery/
-    for package in /app/components/node_modules/*; do
+    # Count packages
+    package_count=0
+    
+    # Use find to avoid glob issues and iterate through each package
+    find /app/components/node_modules -maxdepth 1 -mindepth 1 -type d | while read -r package; do
         package_name=$(basename "$package")
         
-        # Skip hidden files and directories
-        if [[ "$package_name" != .* ]]; then
+        # Skip hidden files and directories, and .bin
+        if [[ "$package_name" != .* ]] && [[ "$package_name" != ".bin" ]]; then
             if [ ! -e "/app/static/$package_name" ]; then
                 ln -sf "$package" "/app/static/$package_name"
                 echo "  Linked: $package_name"
+                package_count=$((package_count + 1))
             fi
         fi
     done
     
     echo "Node modules linked successfully"
-    echo "Total packages linked: $(find /app/static -maxdepth 1 -type l | wc -l)"
+    echo "Total symlinks in static: $(find /app/static -maxdepth 1 -type l 2>/dev/null | wc -l)"
 else
     echo "WARNING: /app/components/node_modules directory not found"
 fi
