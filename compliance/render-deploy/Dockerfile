@@ -28,6 +28,8 @@ RUN apt-get update && \
     libjpeg-dev \
     zlib1g-dev \
     wkhtmltopdf \
+    default-libmysqlclient-dev \
+    pkg-config \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
