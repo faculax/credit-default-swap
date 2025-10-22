@@ -1,133 +1,183 @@
 #!/bin/bash
 set -e
 
-echo "Starting DefectDojo initialization..."
+echo "==> Starting DefectDojo all-in-one initialization..."
 
-# Clean up any stale PostgreSQL lock files
-rm -f /var/lib/postgresql/data/postmaster.pid
-rm -f /run/postgresql/.s.PGSQL.5432
-rm -f /run/postgresql/.s.PGSQL.5432.lock
-
-# Initialize PostgreSQL if not already initialized
-if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
-    echo "Initializing PostgreSQL database..."
-    chown -R postgres:postgres /var/lib/postgresql/data
-    chmod 0700 /var/lib/postgresql/data
-    su - postgres -c "/usr/lib/postgresql/*/bin/initdb -D /var/lib/postgresql/data"
-fi
-
-# Configure PostgreSQL to listen on localhost
-echo "host all all 127.0.0.1/32 trust" >> /var/lib/postgresql/data/pg_hba.conf
-echo "listen_addresses = '127.0.0.1'" >> /var/lib/postgresql/data/postgresql.conf
-
-# Start PostgreSQL temporarily to set it up
-su - postgres -c "/usr/lib/postgresql/*/bin/postgres -D /var/lib/postgresql/data" &
-PG_PID=$!
-
-# Wait for PostgreSQL to be ready
-echo "Waiting for PostgreSQL to start..."
-sleep 5
-for i in {1..30}; do
-    if su - postgres -c "pg_isready -h 127.0.0.1" > /dev/null 2>&1; then
-        echo "PostgreSQL is ready"
-        break
-    fi
-    echo "Waiting for PostgreSQL... ($i/30)"
-    sleep 2
-done
-
-# Create database and user if not exists
-echo "Setting up database..."
-su - postgres -c "psql -h 127.0.0.1" <<-EOSQL
-    SELECT 'CREATE DATABASE defectdojo' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'defectdojo')\gexec
-    DO \$\$
-    BEGIN
-        IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'defectdojo') THEN
-            CREATE USER defectdojo WITH PASSWORD 'defectdojo';
-        END IF;
-    END
-    \$\$;
-    GRANT ALL PRIVILEGES ON DATABASE defectdojo TO defectdojo;
-    ALTER USER defectdojo CREATEDB;
-EOSQL
-
-# Grant schema permissions on the defectdojo database
-su - postgres -c "psql -h 127.0.0.1 -d defectdojo" <<-EOSQL
-    GRANT ALL ON SCHEMA public TO defectdojo;
-    GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO defectdojo;
-    GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO defectdojo;
-    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO defectdojo;
-    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO defectdojo;
-EOSQL
-
-# Stop PostgreSQL
-kill $PG_PID
-wait $PG_PID || true
-
-# Set environment variables for DefectDojo
-export DD_DATABASE_URL="postgresql://defectdojo:defectdojo@127.0.0.1:5432/defectdojo"
-export DD_CELERY_BROKER_URL="redis://127.0.0.1:6379/0"
+# Set default environment variables
 export DD_SECRET_KEY="${DD_SECRET_KEY:-zzz-change-this-in-production-zzz}"
 export DD_CREDENTIAL_AES_256_KEY="${DD_CREDENTIAL_AES_256_KEY:-yyy-change-this-credential-key-yyy}"
 export DD_ALLOWED_HOSTS="${DD_ALLOWED_HOSTS:-*}"
 export DD_DEBUG="${DD_DEBUG:-False}"
 export DD_ADMIN_USER="${DD_ADMIN_USER:-admin}"
 export DD_ADMIN_PASSWORD="${DD_ADMIN_PASSWORD:-admin}"
+export DD_ADMIN_MAIL="${DD_ADMIN_MAIL:-admin@defectdojo.local}"
 export DD_INITIALIZE="${DD_INITIALIZE:-true}"
 
-# Start PostgreSQL and Redis for migrations
-echo "Starting PostgreSQL and Redis for initialization..."
-su - postgres -c "/usr/lib/postgresql/*/bin/postgres -D /var/lib/postgresql/data" &
-PG_PID=$!
-/usr/bin/redis-server --daemonize yes --bind 127.0.0.1 --port 6379
+# Generate secure database password if not set
+export DB_PASSWORD="${DB_PASSWORD:-$(openssl rand -base64 32 | tr -d '=+/' | cut -c1-32)}"
 
-# Wait for services
-sleep 5
-for i in {1..30}; do
-    if su - postgres -c "pg_isready -h 127.0.0.1" > /dev/null 2>&1; then
-        echo "PostgreSQL is ready for migrations"
-        break
-    fi
-    sleep 2
-done
+# Set database connection details
+export DD_DATABASE_URL="postgresql://defectdojo:${DB_PASSWORD}@127.0.0.1:5432/defectdojo"
+export DD_CELERY_BROKER_URL="redis://127.0.0.1:6379/0"
 
-# Run Django migrations and initialization
-if [ "${DD_INITIALIZE}" = "true" ]; then
-    echo "Running Django migrations..."
-    cd /app
-    python manage.py migrate --noinput
+# Export for supervisord programs
+echo "export DD_DATABASE_URL='${DD_DATABASE_URL}'" > /etc/environment.dd
+echo "export DD_CELERY_BROKER_URL='${DD_CELERY_BROKER_URL}'" >> /etc/environment.dd
+echo "export DD_SECRET_KEY='${DD_SECRET_KEY}'" >> /etc/environment.dd
+echo "export DD_CREDENTIAL_AES_256_KEY='${DD_CREDENTIAL_AES_256_KEY}'" >> /etc/environment.dd
+echo "export DD_ALLOWED_HOSTS='${DD_ALLOWED_HOSTS}'" >> /etc/environment.dd
+echo "export DD_CSRF_TRUSTED_ORIGINS='${DD_CSRF_TRUSTED_ORIGINS}'" >> /etc/environment.dd
+echo "export DD_SESSION_COOKIE_SECURE='${DD_SESSION_COOKIE_SECURE:-True}'" >> /etc/environment.dd
+echo "export DD_CSRF_COOKIE_SECURE='${DD_CSRF_COOKIE_SECURE:-True}'" >> /etc/environment.dd
+echo "export DD_DEBUG='${DD_DEBUG}'" >> /etc/environment.dd
+echo "export C_FORCE_ROOT='true'" >> /etc/environment.dd
+
+chmod 600 /etc/environment.dd
+
+# Function to wait for service with retry
+wait_for_service() {
+    local service=$1
+    local check_command=$2
+    local max_attempts=60
+    local attempt=1
     
-    echo "Collecting static files..."
-    python manage.py collectstatic --noinput --clear
+    echo "==> Waiting for ${service}..."
+    while [ $attempt -le $max_attempts ]; do
+        if eval "$check_command" > /dev/null 2>&1; then
+            echo "==> ${service} is ready!"
+            return 0
+        fi
+        echo "    Waiting for ${service}... (${attempt}/${max_attempts})"
+        sleep 2
+        attempt=$((attempt + 1))
+    done
     
-    echo "Creating initial data..."
-    python manage.py loaddata initial_banner_conf
-    python manage.py loaddata initial_system_settings
-    python manage.py loaddata product_type
-    python manage.py loaddata test_type
-    python manage.py loaddata development_environment
-    python manage.py loaddata system_settings
-    python manage.py loaddata benchmark_type
-    python manage.py loaddata benchmark_category
-    python manage.py loaddata benchmark_requirement
-    python manage.py loaddata language_type
-    python manage.py loaddata objects_review
-    python manage.py loaddata regulation
+    echo "ERROR: ${service} failed to start after ${max_attempts} attempts"
+    return 1
+}
+
+# Clean up any stale lock files
+echo "==> Cleaning up stale lock files..."
+rm -f /app/pgdata/postmaster.pid
+rm -f /run/postgresql/.s.PGSQL.5432*
+
+# Initialize PostgreSQL if needed
+if [ ! -f /app/pgdata/PG_VERSION ]; then
+    echo "==> Initializing PostgreSQL database cluster..."
+    chown -R postgres:postgres /app/pgdata /run/postgresql
+    chmod 0700 /app/pgdata
     
-    echo "Creating superuser..."
-    python manage.py createsuperuser --noinput --username "${DD_ADMIN_USER}" --email "${DD_ADMIN_MAIL:-admin@defectdojo.local}" || echo "Superuser already exists"
+    su - postgres -c "/usr/lib/postgresql/14/bin/initdb -D /app/pgdata -E UTF8 --locale=en_US.UTF-8" || {
+        echo "ERROR: PostgreSQL initialization failed"
+        exit 1
+    }
     
-    echo "Installing sample data..."
-    python manage.py loaddata initial_surveys || echo "Surveys already loaded"
+    # Configure PostgreSQL
+    echo "==> Configuring PostgreSQL..."
+    cat >> /app/pgdata/postgresql.conf <<EOF
+listen_addresses = '127.0.0.1'
+port = 5432
+max_connections = 100
+shared_buffers = 128MB
+EOF
+    
+    cat > /app/pgdata/pg_hba.conf <<EOF
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+local   all             postgres                                peer
+host    all             all             127.0.0.1/32            md5
+host    all             all             ::1/128                 md5
+EOF
+    
+    echo "==> PostgreSQL initialization complete"
 fi
 
-# Stop temporary services
-kill $PG_PID 2>/dev/null || true
-redis-cli shutdown 2>/dev/null || true
-wait $PG_PID || true
-sleep 2
+# Start PostgreSQL
+echo "==> Starting PostgreSQL..."
+su - postgres -c "/usr/lib/postgresql/14/bin/pg_ctl -D /app/pgdata -l /app/logs/postgresql.log start" || {
+    echo "ERROR: Failed to start PostgreSQL"
+    cat /app/logs/postgresql.log
+    exit 1
+}
 
-echo "Initialization complete. Starting services..."
+# Wait for PostgreSQL
+wait_for_service "PostgreSQL" "su - postgres -c 'pg_isready -h 127.0.0.1'" || exit 1
 
-# Execute the command passed to the script (supervisord)
+# Create database and user on first run
+if [ ! -f /app/pgdata/.db_initialized ]; then
+    echo "==> Creating database and user..."
+    su - postgres -c "psql -h 127.0.0.1" <<-EOSQL || {
+        echo "ERROR: Database creation failed"
+        exit 1
+    }
+    CREATE USER defectdojo WITH PASSWORD '${DB_PASSWORD}';
+    CREATE DATABASE defectdojo OWNER defectdojo;
+    GRANT ALL PRIVILEGES ON DATABASE defectdojo TO defectdojo;
+    ALTER USER defectdojo CREATEDB;
+EOSQL
+    
+    # Grant schema permissions
+    su - postgres -c "psql -h 127.0.0.1 -d defectdojo" <<-EOSQL
+    GRANT ALL ON SCHEMA public TO defectdojo;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO defectdojo;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO defectdojo;
+EOSQL
+    
+    touch /app/pgdata/.db_initialized
+    echo "==> Database created successfully"
+fi
+
+# Start Redis
+echo "==> Starting Redis..."
+/usr/bin/redis-server --daemonize yes --bind 127.0.0.1 --port 6379 --loglevel notice || {
+    echo "ERROR: Failed to start Redis"
+    exit 1
+}
+
+wait_for_service "Redis" "redis-cli -h 127.0.0.1 ping | grep -q PONG" || exit 1
+
+# Run Django initialization on first run
+if [ "${DD_INITIALIZE}" = "true" ] && [ ! -f /app/pgdata/.django_initialized ]; then
+    echo "==> Running Django migrations..."
+    cd /opt/django-DefectDojo
+    
+    python3 manage.py migrate --noinput || {
+        echo "ERROR: Migrations failed"
+        exit 1
+    }
+    
+    echo "==> Collecting static files..."
+    python3 manage.py collectstatic --noinput --clear || {
+        echo "ERROR: Static file collection failed"
+        exit 1
+    }
+    
+    echo "==> Loading initial data..."
+    for fixture in initial_banner_conf initial_system_settings product_type test_type \
+                   development_environment system_settings benchmark_type benchmark_category \
+                   benchmark_requirement language_type objects_review regulation; do
+        python3 manage.py loaddata $fixture || echo "Warning: Failed to load $fixture"
+    done
+    
+    echo "==> Creating superuser..."
+    python3 manage.py shell <<PYEOF || echo "Warning: Superuser creation failed"
+from django.contrib.auth.models import User
+if not User.objects.filter(username='${DD_ADMIN_USER}').exists():
+    User.objects.create_superuser('${DD_ADMIN_USER}', '${DD_ADMIN_MAIL}', '${DD_ADMIN_PASSWORD}')
+    print('Superuser created')
+else:
+    print('Superuser already exists')
+PYEOF
+    
+    python3 manage.py loaddata initial_surveys || echo "Warning: Surveys already loaded"
+    
+    touch /app/pgdata/.django_initialized
+    echo "==> Django initialization complete"
+fi
+
+# Create flag file for health checks
+echo "ready" > /tmp/init_complete
+
+echo "==> Initialization complete. Starting supervisord..."
+
+# Execute supervisord
 exec "$@"

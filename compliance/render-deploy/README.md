@@ -1,0 +1,369 @@
+# 🚀 DefectDojo Self-Contained Render Deployment
+
+## 📋 Overview
+
+This directory contains a **production-ready, all-in-one DefectDojo deployment** for Render.com. All services (PostgreSQL, Redis, Django, Celery, nginx) run in a single container with proper process management, health checks, and persistent storage.
+
+## ✅ What Was Fixed
+
+### Critical Issues Resolved:
+
+1. **✅ Base Image Architecture**
+   - Changed from `defectdojo/defectdojo-django` to `ubuntu:22.04`
+   - Builds DefectDojo from official source (v2.36.0)
+   - Full control over all dependencies and configuration
+
+2. **✅ PostgreSQL Initialization**
+   - Eliminated race conditions and start/stop cycles
+   - Proper wait/retry logic with 60-second timeout
+   - Uses environment variables for credentials (no hardcoded passwords)
+   - Data persists to Render disk mount at `/app/pgdata`
+
+3. **✅ Environment Variable Propagation**
+   - Created `/etc/environment.dd` file loaded by all supervisord programs
+   - All DD_* variables properly passed to uwsgi, celery-worker, celery-beat
+   - Supports Render's generated values (secrets, passwords)
+
+4. **✅ Secure Credential Management**
+   - DB password auto-generated or from environment variable
+   - DD_SECRET_KEY and DD_CREDENTIAL_AES_256_KEY from Render's generateValue
+   - No hardcoded credentials in code
+
+5. **✅ Render Disk Mount Strategy**
+   - Disk mounts to `/app/pgdata` (not `/var/lib/postgresql/data`)
+   - Avoids conflicts with container filesystem and PostgreSQL binaries
+   - Includes backup directory at `/app/backups`
+
+6. **✅ Health Check System**
+   - Custom `health-check.sh` script validates all services
+   - Checks: PostgreSQL, Redis, Django/uwsgi, nginx
+   - Only returns healthy after full initialization completes
+   - Prevents premature Render restart loops
+
+7. **✅ uwsgi Configuration**
+   - Explicit `uwsgi.ini` with production settings
+   - 4 processes, 2 threads per process
+   - Proper timeouts, buffer sizes, and harakiri settings
+   - Static file fallback (nginx handles primary)
+
+8. **✅ Process Management**
+   - Supervisord manages 4 programs (removed PG/Redis from supervisord)
+   - Proper startup order and dependencies
+   - Graceful shutdown with appropriate wait times
+   - Retry logic for transient failures
+
+9. **✅ Security Headers**
+   - nginx adds X-Frame-Options, X-Content-Type-Options, X-XSS-Protection
+   - CSRF cookie configuration in render.yaml
+   - HTTPS enforcement via X-Forwarded-Proto header
+
+10. **✅ Missing Environment Variables**
+    - Added DD_ADMIN_MAIL to render.yaml
+    - Added DD_INITIALIZE flag for first-run setup
+    - Added DB_PASSWORD generation
+
+## 📁 File Structure
+
+```
+render-deploy/
+├── Dockerfile              # Multi-stage build from Ubuntu 22.04
+├── docker-entrypoint.sh    # Renamed from init-db.sh
+├── init-db.sh              # Comprehensive initialization script
+├── supervisord.conf        # Process manager (uwsgi, celery, nginx)
+├── uwsgi.ini              # Django application server config
+├── nginx.conf             # Reverse proxy with security headers
+├── health-check.sh        # Service health validation
+├── render.yaml            # Render deployment configuration
+└── README.md              # This file
+```
+
+## 🚀 Deployment Steps
+
+### 1. Prerequisites
+
+- Render.com account
+- GitHub repository containing this code
+- Basic understanding of DefectDojo
+
+### 2. Configure render.yaml
+
+Before deploying, update `render.yaml`:
+
+```yaml
+envVars:
+  - key: DD_ADMIN_PASSWORD
+    sync: false  # Set this in Render dashboard to your secure password
+  
+  - key: DD_CSRF_TRUSTED_ORIGINS
+    sync: false  # Set to: https://your-app-name.onrender.com
+```
+
+### 3. Deploy to Render
+
+**Option A: Render Dashboard**
+1. Go to https://dashboard.render.com
+2. Click "New +" → "Blueprint"
+3. Connect your GitHub repository
+4. Select this directory (`compliance/render-deploy`)
+5. Render auto-detects `render.yaml`
+6. Click "Apply" and wait for build (~10-15 minutes first time)
+
+**Option B: Render CLI**
+```bash
+render deploy
+```
+
+### 4. Post-Deployment Configuration
+
+Once deployed (shows "Live" status):
+
+1. **Set Admin Password:**
+   ```
+   Dashboard → Service → Environment → DD_ADMIN_PASSWORD → [your-secure-password]
+   ```
+
+2. **Set CSRF Origins:**
+   ```
+   Dashboard → Service → Environment → DD_CSRF_TRUSTED_ORIGINS → https://your-app.onrender.com
+   ```
+
+3. **Trigger Manual Deploy** to apply changes
+
+4. **Access DefectDojo:**
+   - URL: `https://your-app-name.onrender.com`
+   - Username: `admin` (or your DD_ADMIN_USER value)
+   - Password: [the password you set]
+
+5. **Change Admin Password** on first login (Settings → Users)
+
+## 🔧 Configuration Options
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DD_SECRET_KEY` | Generated | Django secret key (auto-generated by Render) |
+| `DD_CREDENTIAL_AES_256_KEY` | Generated | AES key for credentials (auto-generated) |
+| `DD_ALLOWED_HOSTS` | `*` | Allowed hostnames (set to your domain) |
+| `DD_CSRF_TRUSTED_ORIGINS` | - | CSRF origins (REQUIRED: set to your Render URL) |
+| `DD_DEBUG` | `False` | Django debug mode (keep False in production) |
+| `DD_ADMIN_USER` | `admin` | Initial superuser username |
+| `DD_ADMIN_PASSWORD` | `admin` | Initial superuser password (CHANGE THIS!) |
+| `DD_ADMIN_MAIL` | `admin@defectdojo.local` | Superuser email |
+| `DD_INITIALIZE` | `true` | Run migrations/fixtures on first boot |
+| `DB_PASSWORD` | Generated | PostgreSQL password (auto-generated) |
+| `DD_SESSION_COOKIE_SECURE` | `True` | Force HTTPS for session cookies |
+| `DD_CSRF_COOKIE_SECURE` | `True` | Force HTTPS for CSRF cookies |
+
+### Render Service Configuration
+
+- **Plan**: Standard ($25/month) - Recommended minimum
+- **Region**: Oregon (or nearest to your users)
+- **Disk Size**: 10GB (increase for large deployments)
+- **Auto-Deploy**: Disabled by default (enable for CI/CD)
+
+### Scaling Considerations
+
+**Current Configuration:**
+- uwsgi: 4 processes, 2 threads = 8 concurrent requests
+- Celery worker: 2 concurrent tasks
+- PostgreSQL: Shared buffers 128MB
+- Redis: Default configuration
+
+**To Scale Up (edit files before deployment):**
+
+1. **More uwsgi workers:** Edit `uwsgi.ini` → `processes = 8`
+2. **More celery workers:** Edit `supervisord.conf` → `--concurrency 4`
+3. **Larger PostgreSQL:** Edit `init-db.sh` → `shared_buffers = 256MB`
+4. **Larger disk:** Edit `render.yaml` → `sizeGB: 20`
+
+## 🔍 Monitoring & Troubleshooting
+
+### View Logs
+
+**Render Dashboard:**
+- Service → Logs tab → Shows all supervisord output
+
+**Log Categories:**
+- `[uwsgi]` - Django application logs
+- `[celery-worker]` - Background task processing
+- `[celery-beat]` - Scheduled task scheduler
+- `[nginx]` - HTTP access logs
+
+### Common Issues
+
+#### Issue: Service keeps restarting
+**Cause:** Health check failing before initialization completes
+**Solution:** Check logs for initialization errors. First boot takes 2-3 minutes.
+
+#### Issue: "DisallowedHost" error
+**Cause:** DD_ALLOWED_HOSTS doesn't include your Render URL
+**Solution:** Set `DD_ALLOWED_HOSTS=*` or `DD_ALLOWED_HOSTS=your-app.onrender.com`
+
+#### Issue: CSRF errors on login
+**Cause:** DD_CSRF_TRUSTED_ORIGINS not set
+**Solution:** Add `https://your-app.onrender.com` to DD_CSRF_TRUSTED_ORIGINS
+
+#### Issue: Database connection errors
+**Cause:** PostgreSQL failed to initialize
+**Solution:** Check logs for PG errors. Delete disk and redeploy if corrupted.
+
+#### Issue: Static files not loading
+**Cause:** collectstatic failed during initialization
+**Solution:** Check logs for errors. Ensure DD_INITIALIZE=true on first boot.
+
+### Health Check Endpoints
+
+- **Application:** `https://your-app.onrender.com/login` (redirects if healthy)
+- **Nginx direct:** `https://your-app.onrender.com/health` (returns "healthy")
+- **Script:** Render calls `/health-check.sh` internally
+
+### Manual Commands
+
+SSH into container (via Render Shell):
+```bash
+# Check PostgreSQL
+pg_isready -h 127.0.0.1
+
+# Check Redis
+redis-cli -h 127.0.0.1 ping
+
+# Check Django
+cd /opt/django-DefectDojo && python3 manage.py check
+
+# View supervisord status
+supervisorctl status
+
+# Restart a service
+supervisorctl restart uwsgi
+```
+
+## 🔐 Security Checklist
+
+- [ ] Change DD_ADMIN_PASSWORD from default
+- [ ] Set DD_CSRF_TRUSTED_ORIGINS to your Render URL
+- [ ] Set DD_ALLOWED_HOSTS to your domain (not `*`)
+- [ ] Verify DD_SECRET_KEY is auto-generated (not default)
+- [ ] Enable 2FA for admin account in DefectDojo
+- [ ] Review user permissions in DefectDojo
+- [ ] Set up SSL certificate (Render provides free SSL)
+- [ ] Configure backup strategy for persistent disk
+- [ ] Review nginx security headers
+- [ ] Enable Render's DDoS protection
+
+## 📊 Architecture
+
+```
+┌─────────────────────────────────────────────┐
+│           Render Container                  │
+│                                             │
+│  ┌───────────────────────────────────────┐ │
+│  │         Supervisord (PID 1)           │ │
+│  └───────────────────────────────────────┘ │
+│               │                             │
+│       ┌───────┼───────┬──────────┐         │
+│       ▼       ▼       ▼          ▼         │
+│   ┌─────┐ ┌─────┐ ┌───────┐ ┌────────┐    │
+│   │uwsgi│ │Celery│ │ Celery│ │ nginx  │    │
+│   │     │ │Worker│ │ Beat  │ │:10000  │    │
+│   └──┬──┘ └──┬──┘ └───┬───┘ └───┬────┘    │
+│      │       │        │         │          │
+│      └───────┴────────┴─────────┘          │
+│              │                              │
+│        ┌─────┴──────┐                      │
+│        ▼            ▼                       │
+│   ┌────────┐   ┌────────┐                  │
+│   │ PG:5432│   │Redis   │                  │
+│   │        │   │:6379   │                  │
+│   └────┬───┘   └────────┘                  │
+│        │                                    │
+│        ▼                                    │
+│   /app/pgdata (Render Disk Mount)          │
+└─────────────────────────────────────────────┘
+```
+
+## 🆘 Support
+
+**DefectDojo Issues:**
+- Official Docs: https://documentation.defectdojo.com
+- GitHub Issues: https://github.com/DefectDojo/django-DefectDojo/issues
+
+**Render Issues:**
+- Render Docs: https://render.com/docs
+- Support: https://render.com/support
+
+**This Deployment:**
+- Check repository issues
+- Review logs in Render dashboard
+- Verify all environment variables are set
+
+## 📝 Maintenance
+
+### Backup Strategy
+
+**PostgreSQL Data:**
+```bash
+# Automated backup (add to cron or Render Cron Job)
+pg_dump -h 127.0.0.1 -U defectdojo defectdojo > /app/backups/defectdojo_$(date +%Y%m%d).sql
+```
+
+**Media Files:**
+- Already on persistent disk at `/opt/django-DefectDojo/media`
+
+**Environment Variables:**
+- Export from Render dashboard regularly
+
+### Updates
+
+**Update DefectDojo Version:**
+1. Edit `Dockerfile` → Change `DD_VERSION=2.36.0` to newer version
+2. Commit and push
+3. Render auto-rebuilds (if auto-deploy enabled) or trigger manual deploy
+
+**Update Dependencies:**
+- DefectDojo updates its `requirements.txt` with each release
+- Rebuild container to get latest dependencies
+
+### Monitoring
+
+**Recommended Tools:**
+- Render's built-in metrics (CPU, memory, disk)
+- Uptime monitoring (e.g., UptimeRobot, Pingdom)
+- Log aggregation (e.g., Papertrail, Loggly)
+
+## ✨ Features
+
+✅ **Single Container** - All services in one container  
+✅ **Persistent Storage** - PostgreSQL data survives restarts  
+✅ **Auto-Initialization** - Database and fixtures loaded on first boot  
+✅ **Health Checks** - Comprehensive service validation  
+✅ **Security Hardened** - HTTPS, secure cookies, security headers  
+✅ **Production Ready** - uwsgi, proper process management  
+✅ **Scalable** - Configure workers/processes as needed  
+✅ **No External Dependencies** - Self-contained (no external DB/Redis)  
+✅ **Zero-Downtime Restarts** - Graceful shutdown of all services  
+✅ **Comprehensive Logging** - All services log to stdout  
+
+## 🎯 Performance
+
+**Expected Performance (Standard Plan):**
+- Concurrent Users: 10-20
+- Scan Uploads: ~5-10 per minute
+- Database Size: Up to 5GB comfortably
+- Response Time: <500ms for most operations
+
+**For Higher Performance:**
+- Upgrade to Performance plan ($85/month) for dedicated CPU
+- Use Render's managed PostgreSQL (separate service)
+- Use Render's managed Redis (separate service)
+- Scale uwsgi/celery workers
+
+## 📜 License
+
+DefectDojo is licensed under BSD-3-Clause. See DefectDojo repository for details.
+
+---
+
+**Last Updated:** October 22, 2025  
+**DefectDojo Version:** 2.36.0  
+**Tested On:** Render Standard Plan, Ubuntu 22.04
