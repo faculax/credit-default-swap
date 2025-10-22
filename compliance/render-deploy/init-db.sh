@@ -67,7 +67,7 @@ if [ ! -f /app/pgdata/PG_VERSION ]; then
     chown -R postgres:postgres /app/pgdata /run/postgresql
     chmod 0700 /app/pgdata
     
-    su - postgres -c "/usr/lib/postgresql/14/bin/initdb -D /app/pgdata -E UTF8 --locale=en_US.UTF-8" || {
+    su - postgres -c "/usr/lib/postgresql/15/bin/initdb -D /app/pgdata -E UTF8 --locale=en_US.UTF-8" || {
         echo "ERROR: PostgreSQL initialization failed"
         exit 1
     }
@@ -93,7 +93,7 @@ fi
 
 # Start PostgreSQL
 echo "==> Starting PostgreSQL..."
-su - postgres -c "/usr/lib/postgresql/14/bin/pg_ctl -D /app/pgdata -l /app/logs/postgresql.log start" || {
+su - postgres -c "/usr/lib/postgresql/15/bin/pg_ctl -D /app/pgdata -l /app/logs/postgresql.log start" || {
     echo "ERROR: Failed to start PostgreSQL"
     cat /app/logs/postgresql.log
     exit 1

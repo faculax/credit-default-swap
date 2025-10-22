@@ -8,8 +8,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Install PostgreSQL, Redis, nginx, and supervisor
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    postgresql-14 \
-    postgresql-client-14 \
+    postgresql \
+    postgresql-client \
     redis-server \
     nginx \
     supervisor \
