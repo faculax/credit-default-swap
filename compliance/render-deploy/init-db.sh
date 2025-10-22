@@ -30,6 +30,8 @@ echo "export DD_CSRF_TRUSTED_ORIGINS='${DD_CSRF_TRUSTED_ORIGINS}'" >> /etc/envir
 echo "export DD_SESSION_COOKIE_SECURE='${DD_SESSION_COOKIE_SECURE:-True}'" >> /etc/environment.dd
 echo "export DD_CSRF_COOKIE_SECURE='${DD_CSRF_COOKIE_SECURE:-True}'" >> /etc/environment.dd
 echo "export DD_DEBUG='${DD_DEBUG}'" >> /etc/environment.dd
+echo "export DD_STATIC_ROOT='/app/static'" >> /etc/environment.dd
+echo "export DD_MEDIA_ROOT='/app/media'" >> /etc/environment.dd
 echo "export C_FORCE_ROOT='true'" >> /etc/environment.dd
 
 chmod 600 /etc/environment.dd
@@ -149,10 +151,26 @@ chmod 0755 /app/static /app/media
 # Always collect static files on startup
 echo "==> Collecting static files..."
 cd /app
+
+# Show current Django static files settings
+echo "==> Checking Django static files configuration..."
+python3 manage.py shell <<PYEOF
+from django.conf import settings
+print(f"STATIC_ROOT: {settings.STATIC_ROOT}")
+print(f"STATIC_URL: {settings.STATIC_URL}")
+print(f"MEDIA_ROOT: {settings.MEDIA_ROOT}")
+print(f"MEDIA_URL: {settings.MEDIA_URL}")
+PYEOF
+
 python3 manage.py collectstatic --noinput --clear || {
     echo "ERROR: Static file collection failed"
     exit 1
 }
+
+# Verify static files were collected
+echo "==> Verifying static files..."
+ls -la /app/static/ | head -20 || echo "No static directory found"
+echo "==> Static file collection complete"
 
 # Run Django initialization on first run
 if [ "${DD_INITIALIZE}" = "true" ] && [ ! -f /app/pgdata/.django_initialized ]; then
