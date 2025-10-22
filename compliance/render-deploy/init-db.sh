@@ -186,11 +186,33 @@ if [ -d /app/static ]; then
     echo "Fixing permissions for nginx..."
     chmod -R 755 /app/static
     chown -R root:root /app/static
+    
+    # Test specific file paths that the browser is requesting
+    echo ""
+    echo "Testing requested file paths:"
+    for file in "jquery/dist/jquery.js" "jszip/dist/jszip.min.js" "moment/min/moment.min.js"; do
+        if [ -f "/app/static/$file" ]; then
+            echo "✓ /app/static/$file exists"
+        else
+            echo "✗ /app/static/$file MISSING"
+        fi
+    done
+    
+    # List all top-level directories in static
+    echo ""
+    echo "Top-level static directories:"
+    ls -1 /app/static/ | head -20
 else
     echo "ERROR: Static directory not found at /app/static!"
     echo "Checking what exists in /app:"
     ls -la /app/ | grep -E "(static|media)"
 fi
+
+# Ensure media directory exists with proper permissions
+mkdir -p /app/media
+chmod -R 755 /app/media
+chown -R root:root /app/media
+
 echo "==> Static file collection complete"
 
 # Run Django initialization on first run
