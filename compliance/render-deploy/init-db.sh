@@ -198,6 +198,21 @@ if [ -d /app/static ]; then
         fi
     done
     
+    # Check for components directory (DefectDojo uses bower components)
+    echo ""
+    echo "Checking for components directory..."
+    if [ -d "/app/components" ]; then
+        echo "Found /app/components - listing contents:"
+        ls -1 /app/components/ | head -10
+    else
+        echo "No /app/components directory"
+    fi
+    
+    # Search for jquery in the entire /app directory
+    echo ""
+    echo "Searching for jquery in /app..."
+    find /app -name "jquery.js" -o -name "jquery.min.js" 2>/dev/null | grep -v node_modules | head -10
+    
     # List all top-level directories in static
     echo ""
     echo "Top-level static directories:"
@@ -212,6 +227,14 @@ fi
 mkdir -p /app/media
 chmod -R 755 /app/media
 chown -R root:root /app/media
+
+# Test nginx configuration
+echo ""
+echo "==> Testing nginx configuration..."
+nginx -t || {
+    echo "ERROR: nginx configuration test failed"
+    exit 1
+}
 
 echo "==> Static file collection complete"
 
