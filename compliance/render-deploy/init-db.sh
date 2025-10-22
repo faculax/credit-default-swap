@@ -160,50 +160,25 @@ export DD_MEDIA_URL='/media/'
 echo "==> Collecting static files..."
 cd /app
 
-python3 manage.py collectstatic --noinput --clear || {
+# Verify STATICFILES_DIRS is configured correctly
+echo "Checking Django static files configuration..."
+python3 -c "
+from dojo.settings import settings
+import os
+print('STATIC_ROOT:', settings.STATIC_ROOT)
+print('STATICFILES_DIRS:', settings.STATICFILES_DIRS)
+for dir in settings.STATICFILES_DIRS:
+    print(f'  - {dir} (exists: {os.path.exists(dir)})')
+    if os.path.exists(dir):
+        print(f'    Contents: {len(os.listdir(dir))} items')
+" || echo "Warning: Could not check settings"
+
+echo ""
+echo "Running collectstatic (without --clear to preserve files)..."
+python3 manage.py collectstatic --noinput || {
     echo "ERROR: Static file collection failed"
     exit 1
 }
-
-# Link node_modules packages to static (DefectDojo's JS dependencies)
-echo "==> Checking for node_modules..."
-if [ -d /app/components/node_modules ]; then
-    echo "Found /app/components/node_modules"
-    
-    # List first 10 packages for debugging
-    echo "Sample packages in node_modules:"
-    ls -1 /app/components/node_modules | head -10
-    
-    echo ""
-    echo "==> Linking node_modules packages to static directory..."
-    
-    # Use ls to list directories, then iterate
-    ls -1 /app/components/node_modules | while IFS= read -r package_name; do
-        # Check if it's a directory and not .bin
-        if [ -d "/app/components/node_modules/$package_name" ] && [ "$package_name" != ".bin" ]; then
-            target="/app/static/$package_name"
-            source="/app/components/node_modules/$package_name"
-            
-            # Remove existing if present
-            rm -rf "$target" 2>/dev/null || true
-            
-            # Create symlink
-            if ln -sf "$source" "$target"; then
-                echo "  ✓ $package_name"
-            fi
-        fi
-    done
-    
-    # Count total symlinks created
-    total_links=$(find /app/static -maxdepth 1 -type l 2>/dev/null | wc -l)
-    echo ""
-    echo "Node modules linking complete"
-    echo "Total symlinks in static: $total_links"
-else
-    echo "WARNING: /app/components/node_modules directory not found"
-    echo "Checking /app/components contents:"
-    ls -la /app/components/ 2>/dev/null || echo "Directory doesn't exist"
-fi
 
 # Verify static files were collected
 echo "==> Verifying static files..."
