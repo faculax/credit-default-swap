@@ -110,15 +110,17 @@ wait_for_service "PostgreSQL" "su - postgres -c 'pg_isready -h 127.0.0.1'" || ex
 # Create database and user on first run
 if [ ! -f /app/pgdata/.db_initialized ]; then
     echo "==> Creating database and user..."
-    su - postgres -c "psql -h 127.0.0.1" <<-EOSQL || {
-        echo "ERROR: Database creation failed"
-        exit 1
-    }
+    su - postgres -c "psql -h 127.0.0.1" <<-EOSQL
     CREATE USER defectdojo WITH PASSWORD '${DB_PASSWORD}';
     CREATE DATABASE defectdojo OWNER defectdojo;
     GRANT ALL PRIVILEGES ON DATABASE defectdojo TO defectdojo;
     ALTER USER defectdojo CREATEDB;
 EOSQL
+    
+    if [ $? -ne 0 ]; then
+        echo "ERROR: Database creation failed"
+        exit 1
+    fi
     
     # Grant schema permissions
     su - postgres -c "psql -h 127.0.0.1 -d defectdojo" <<-EOSQL
