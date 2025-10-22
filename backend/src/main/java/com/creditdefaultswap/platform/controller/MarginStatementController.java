@@ -31,6 +31,11 @@ public class MarginStatementController {
     
     private static final Logger logger = LoggerFactory.getLogger(MarginStatementController.class);
     
+    // Security: Sanitize log parameters to prevent CRLF injection attacks (CWE-117)
+    private String sanitizeForLog(Object obj) {
+        return obj == null ? "null" : obj.toString().replaceAll("[\r\n]", "_");
+    }
+    
     private final MarginStatementService statementService;
     private final AutomatedMarginStatementService automatedMarginService;
     private final MarginStatementRepository statementRepository;
@@ -245,7 +250,7 @@ public class MarginStatementController {
                 statementDate = LocalDate.now();
             }
             
-            logger.info("Generating automated margin statements for date: {}", statementDate);
+            logger.info("Generating automated margin statements for date: {}", sanitizeForLog(statementDate));
             
             // Check if statements already exist for this date and delete them
             final LocalDate finalDate = statementDate;
@@ -256,9 +261,9 @@ public class MarginStatementController {
             
             if (!existingStatements.isEmpty()) {
                 logger.info("Found {} existing automated statements for date {}, deleting them before regenerating", 
-                           existingStatements.size(), statementDate);
+                           sanitizeForLog(existingStatements.size()), sanitizeForLog(statementDate));
                 statementRepository.deleteAll(existingStatements);
-                logger.info("Deleted {} existing automated statements", existingStatements.size());
+                logger.info("Deleted {} existing automated statements", sanitizeForLog(existingStatements.size()));
             }
             
             // Generate statements using existing netting set data
@@ -273,7 +278,7 @@ public class MarginStatementController {
                     })
                     .collect(Collectors.toList());
             
-            logger.info("Successfully generated and saved {} margin statements", generated.size());
+            logger.info("Successfully generated and saved {} margin statements", sanitizeForLog(generated.size()));
             
             return ResponseEntity.ok(Map.of(
                     "success", true,
@@ -398,7 +403,7 @@ public class MarginStatementController {
                 statementDate = LocalDate.now();
             }
             
-            logger.info("Getting automated margin generation summary for date: {}", statementDate);
+            logger.info("Getting automated margin generation summary for date: {}", sanitizeForLog(statementDate));
             
             // Mock response showing available netting sets for generation
             return ResponseEntity.ok(Map.of(

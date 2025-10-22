@@ -22,6 +22,11 @@ public class DashboardController {
     
     private static final Logger logger = LoggerFactory.getLogger(DashboardController.class);
     
+    // Security: Sanitize log parameters to prevent CRLF injection attacks (CWE-117)
+    private String sanitizeForLog(Object obj) {
+        return obj == null ? "null" : obj.toString().replaceAll("[\r\n]", "_");
+    }
+    
     @Autowired
     private DashboardAggregationService dashboardAggregationService;
     
@@ -39,7 +44,7 @@ public class DashboardController {
                 asOfDate = LocalDate.now();
             }
             
-            logger.info("Retrieving reconciliation dashboard data for date: {}", asOfDate);
+            logger.info("Retrieving reconciliation dashboard data for date: {}", sanitizeForLog(asOfDate));
             
             DashboardAggregationService.DashboardData dashboardData = 
                     dashboardAggregationService.getDashboardData(asOfDate);
