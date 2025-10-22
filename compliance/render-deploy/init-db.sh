@@ -59,7 +59,60 @@ export DD_ALLOWED_HOSTS="${DD_ALLOWED_HOSTS:-*}"
 export DD_DEBUG="${DD_DEBUG:-False}"
 export DD_ADMIN_USER="${DD_ADMIN_USER:-admin}"
 export DD_ADMIN_PASSWORD="${DD_ADMIN_PASSWORD:-admin}"
+export DD_ADMIN_MAIL="${DD_ADMIN_MAIL:-admin@defectdojo.local}"
 export DD_INITIALIZE="${DD_INITIALIZE:-true}"
+
+# Start PostgreSQL and Redis for migrations
+echo "Starting PostgreSQL and Redis for initialization..."
+su - postgres -c "/usr/lib/postgresql/*/bin/postgres -D /var/lib/postgresql/data" &
+PG_PID=$!
+/usr/bin/redis-server --daemonize yes --bind 127.0.0.1 --port 6379
+
+# Wait for services
+sleep 5
+for i in {1..30}; do
+    if su - postgres -c "pg_isready -h 127.0.0.1" > /dev/null 2>&1; then
+        echo "PostgreSQL is ready for migrations"
+        break
+    fi
+    sleep 2
+done
+
+# Run Django migrations and initialization
+if [ "${DD_INITIALIZE}" = "true" ]; then
+    echo "Running Django migrations..."
+    cd /app
+    python manage.py migrate --noinput
+    
+    echo "Collecting static files..."
+    python manage.py collectstatic --noinput --clear
+    
+    echo "Creating initial data..."
+    python manage.py loaddata initial_banner_conf || true
+    python manage.py loaddata initial_system_settings || true
+    python manage.py loaddata product_type || true
+    python manage.py loaddata test_type || true
+    python manage.py loaddata development_environment || true
+    python manage.py loaddata system_settings || true
+    python manage.py loaddata benchmark_type || true
+    python manage.py loaddata benchmark_category || true
+    python manage.py loaddata benchmark_requirement || true
+    python manage.py loaddata language_type || true
+    python manage.py loaddata objects_review || true
+    python manage.py loaddata regulation || true
+    
+    echo "Creating superuser..."
+    python manage.py createsuperuser --noinput --username "${DD_ADMIN_USER}" --email "${DD_ADMIN_MAIL}" || echo "Superuser already exists"
+    
+    echo "Installing sample data..."
+    python manage.py loaddata initial_surveys || true
+fi
+
+# Stop temporary services
+kill $PG_PID 2>/dev/null || true
+redis-cli shutdown 2>/dev/null || true
+wait $PG_PID || true
+sleep 2
 
 echo "Initialization complete. Starting services..."
 
