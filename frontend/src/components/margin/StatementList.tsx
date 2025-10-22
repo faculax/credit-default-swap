@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { apiUrl } from '../../config/api';
 import MarginPositionsModal from './MarginPositionsModal';
 
 interface MarginStatement {
@@ -94,6 +93,7 @@ const StatementList: React.FC<StatementListProps> = ({ refreshTrigger }) => {
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
+    // eslint-disable-next-line security/detect-object-injection
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
