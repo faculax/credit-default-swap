@@ -166,41 +166,43 @@ python3 manage.py collectstatic --noinput --clear || {
 }
 
 # Link node_modules packages to static (DefectDojo's JS dependencies)
+echo "==> Checking for node_modules..."
 if [ -d /app/components/node_modules ]; then
+    echo "Found /app/components/node_modules"
+    
+    # List first 10 packages for debugging
+    echo "Sample packages in node_modules:"
+    ls -1 /app/components/node_modules | head -10
+    
+    echo ""
     echo "==> Linking node_modules packages to static directory..."
     
-    # Change to node_modules directory
-    cd /app/components/node_modules
-    
-    # List all directories (packages)
-    package_count=0
-    for package_name in */; do
-        # Remove trailing slash
-        package_name="${package_name%/}"
-        
-        # Skip .bin directory
-        if [ "$package_name" != ".bin" ]; then
+    # Use ls to list directories, then iterate
+    ls -1 /app/components/node_modules | while IFS= read -r package_name; do
+        # Check if it's a directory and not .bin
+        if [ -d "/app/components/node_modules/$package_name" ] && [ "$package_name" != ".bin" ]; then
             target="/app/static/$package_name"
+            source="/app/components/node_modules/$package_name"
             
-            # Remove existing symlink or directory if it exists
-            if [ -e "$target" ] || [ -L "$target" ]; then
-                rm -rf "$target"
-            fi
+            # Remove existing if present
+            rm -rf "$target" 2>/dev/null || true
             
             # Create symlink
-            ln -sf "/app/components/node_modules/$package_name" "$target"
-            echo "  Linked: $package_name"
-            package_count=$((package_count + 1))
+            if ln -sf "$source" "$target"; then
+                echo "  ✓ $package_name"
+            fi
         fi
     done
     
-    echo "Node modules linked: $package_count packages"
-    echo "Total symlinks in static: $(find /app/static -maxdepth 1 -type l 2>/dev/null | wc -l)"
-    
-    # Return to /app
-    cd /app
+    # Count total symlinks created
+    total_links=$(find /app/static -maxdepth 1 -type l 2>/dev/null | wc -l)
+    echo ""
+    echo "Node modules linking complete"
+    echo "Total symlinks in static: $total_links"
 else
     echo "WARNING: /app/components/node_modules directory not found"
+    echo "Checking /app/components contents:"
+    ls -la /app/components/ 2>/dev/null || echo "Directory doesn't exist"
 fi
 
 # Verify static files were collected
