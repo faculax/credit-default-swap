@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: defectdojo
+    env: docker
+    plan: standard
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /login
+    envVars:
+      - key: DD_SECRET_KEY
+        generateValue: true
+      - key: DD_CREDENTIAL_AES_256_KEY
+        generateValue: true
+      - key: DD_ALLOWED_HOSTS
+        value: "*"
+      - key: DD_DEBUG
+        value: "False"
+      - key: DD_ADMIN_USER
+        value: "admin"
+      - key: DD_ADMIN_PASSWORD
+        value: "admin"
+      - key: DD_INITIALIZE
+        value: "true"
+      - key: PORT
+        value: "10000"
+    disk:
+      name: defectdojo-data
+      mountPath: /var/lib/postgresql/data
+      sizeGB: 10
