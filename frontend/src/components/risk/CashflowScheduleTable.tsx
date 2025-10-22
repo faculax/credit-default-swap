@@ -8,9 +8,7 @@ interface Props {
 const CashflowScheduleTable: React.FC<Props> = ({ cashflows }) => {
   if (!cashflows || cashflows.length === 0) {
     return (
-      <div className="text-fd-text-muted text-sm text-center py-4">
-        No cashflow data available
-      </div>
+      <div className="text-fd-text-muted text-sm text-center py-4">No cashflow data available</div>
     );
   }
 
@@ -67,8 +65,8 @@ const CashflowScheduleTable: React.FC<Props> = ({ cashflows }) => {
         </thead>
         <tbody>
           {cashflows.map((cf, index) => (
-            <tr 
-              key={index} 
+            <tr
+              key={index}
               className="border-b border-fd-border hover:bg-fd-dark transition-colors"
             >
               <td className="py-2 px-3 text-fd-text-muted">{cf.cashflowNo || index + 1}</td>
@@ -78,18 +76,28 @@ const CashflowScheduleTable: React.FC<Props> = ({ cashflows }) => {
                   {cf.flowType || 'Payment'}
                 </span>
               </td>
-              <td className="py-2 px-3 font-mono text-right">{formatCurrency(cf.amount, currency)}</td>
+              <td className="py-2 px-3 font-mono text-right">
+                {formatCurrency(cf.amount, currency)}
+              </td>
               <td className="py-2 px-3 font-mono text-right">{formatPercent(cf.coupon)}</td>
               <td className="py-2 px-3 font-mono text-right">{formatNumber(cf.accrual, 4)}</td>
-              <td className="py-2 px-3 font-mono text-right">{formatNumber(cf.discountFactor, 6)}</td>
-              <td className="py-2 px-3 font-mono text-right font-medium">{formatCurrency(cf.presentValue, currency)}</td>
-              <td className="py-2 px-3 font-mono text-right text-fd-text-muted">{formatCurrency(cf.presentValueBase, 'USD')}</td>
+              <td className="py-2 px-3 font-mono text-right">
+                {formatNumber(cf.discountFactor, 6)}
+              </td>
+              <td className="py-2 px-3 font-mono text-right font-medium">
+                {formatCurrency(cf.presentValue, currency)}
+              </td>
+              <td className="py-2 px-3 font-mono text-right text-fd-text-muted">
+                {formatCurrency(cf.presentValueBase, 'USD')}
+              </td>
             </tr>
           ))}
         </tbody>
         <tfoot>
           <tr className="border-t-2 border-fd-border bg-fd-dark font-semibold">
-            <td colSpan={7} className="py-2 px-3 text-right">Total PV:</td>
+            <td colSpan={7} className="py-2 px-3 text-right">
+              Total PV:
+            </td>
             <td className="py-2 px-3 font-mono text-right">
               {formatCurrency(
                 cashflows.reduce((sum, cf) => sum + (cf.presentValue || 0), 0),
@@ -105,7 +113,7 @@ const CashflowScheduleTable: React.FC<Props> = ({ cashflows }) => {
           </tr>
         </tfoot>
       </table>
-      
+
       {/* Accrual Period Details */}
       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
         <div className="bg-fd-dark rounded p-3">
@@ -114,7 +122,9 @@ const CashflowScheduleTable: React.FC<Props> = ({ cashflows }) => {
             {cashflows.slice(0, 3).map((cf, idx) => (
               <div key={idx} className="flex justify-between text-fd-text-muted">
                 <span>Period {idx + 1}:</span>
-                <span>{formatDate(cf.accrualStartDate)} → {formatDate(cf.accrualEndDate)}</span>
+                <span>
+                  {formatDate(cf.accrualStartDate)} → {formatDate(cf.accrualEndDate)}
+                </span>
               </div>
             ))}
             {cashflows.length > 3 && (
@@ -124,7 +134,7 @@ const CashflowScheduleTable: React.FC<Props> = ({ cashflows }) => {
             )}
           </div>
         </div>
-        
+
         <div className="bg-fd-dark rounded p-3">
           <h5 className="font-semibold text-fd-text mb-2">Summary</h5>
           <div className="space-y-1">
@@ -134,7 +144,9 @@ const CashflowScheduleTable: React.FC<Props> = ({ cashflows }) => {
             </div>
             <div className="flex justify-between text-fd-text-muted">
               <span>Notional:</span>
-              <span className="text-fd-text font-medium">{formatCurrency(cashflows[0]?.notional, currency)}</span>
+              <span className="text-fd-text font-medium">
+                {formatCurrency(cashflows[0]?.notional, currency)}
+              </span>
             </div>
             <div className="flex justify-between text-fd-text-muted">
               <span>Average Coupon:</span>

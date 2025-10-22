@@ -20,7 +20,7 @@ const BasketDetailView: React.FC<BasketDetailViewProps> = ({ basket, onClose }) 
     try {
       const result = await basketService.priceBasket(basket.id!, {
         paths: 50000,
-        includeSensitivities: true
+        includeSensitivities: true,
       });
       setPricingResult(result);
       setShowSensitivities(true);
@@ -37,7 +37,7 @@ const BasketDetailView: React.FC<BasketDetailViewProps> = ({ basket, onClose }) 
       style: 'currency',
       currency: currency,
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      maximumFractionDigits: 2,
     }).format(value);
   };
 
@@ -60,17 +60,19 @@ const BasketDetailView: React.FC<BasketDetailViewProps> = ({ basket, onClose }) 
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-fd-darker rounded-lg shadow-xl border border-fd-border max-w-6xl w-full max-h-[90vh] overflow-y-auto m-4" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-fd-darker rounded-lg shadow-xl border border-fd-border max-w-6xl w-full max-h-[90vh] overflow-y-auto m-4"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="sticky top-0 bg-fd-darker border-b border-fd-border px-6 py-4 flex justify-between items-center z-10">
           <div>
-            <h2 className="text-xl font-semibold text-fd-text">
-              {basket.name}
-            </h2>
-            <p className="text-sm text-fd-text-muted mt-1">
-              {getTypeLabel(basket.type)}
-            </p>
+            <h2 className="text-xl font-semibold text-fd-text">{basket.name}</h2>
+            <p className="text-sm text-fd-text-muted mt-1">{getTypeLabel(basket.type)}</p>
           </div>
           <button
             onClick={onClose}
@@ -78,7 +80,12 @@ const BasketDetailView: React.FC<BasketDetailViewProps> = ({ basket, onClose }) 
             aria-label="Close modal"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -115,9 +122,7 @@ const BasketDetailView: React.FC<BasketDetailViewProps> = ({ basket, onClose }) 
             >
               {isPricing ? 'Pricing...' : pricingResult ? 'Reprice' : 'Price Basket'}
             </button>
-            {pricingError && (
-              <p className="mt-2 text-sm text-red-400">{pricingError}</p>
-            )}
+            {pricingError && <p className="mt-2 text-sm text-red-400">{pricingError}</p>}
           </div>
 
           {/* Pricing Results */}
@@ -129,7 +134,9 @@ const BasketDetailView: React.FC<BasketDetailViewProps> = ({ basket, onClose }) 
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="bg-fd-dark border border-fd-border rounded-lg p-4">
-                    <p className="text-xs text-fd-text-muted uppercase tracking-wide">Fair Spread</p>
+                    <p className="text-xs text-fd-text-muted uppercase tracking-wide">
+                      Fair Spread
+                    </p>
                     <p className="text-2xl font-bold text-fd-green mt-2">
                       {formatBps(pricingResult.fairSpreadBps)}
                     </p>
@@ -141,7 +148,9 @@ const BasketDetailView: React.FC<BasketDetailViewProps> = ({ basket, onClose }) 
                     </p>
                   </div>
                   <div className="bg-fd-dark border border-fd-border rounded-lg p-4">
-                    <p className="text-xs text-fd-text-muted uppercase tracking-wide">Protection PV</p>
+                    <p className="text-xs text-fd-text-muted uppercase tracking-wide">
+                      Protection PV
+                    </p>
                     <p className="text-2xl font-bold text-fd-text mt-2">
                       {formatCurrency(pricingResult.protectionLegPv, basket.currency)}
                     </p>
@@ -188,21 +197,27 @@ const BasketDetailView: React.FC<BasketDetailViewProps> = ({ basket, onClose }) 
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-fd-dark border border-fd-border rounded-lg p-4">
-                      <p className="text-xs text-fd-text-muted uppercase tracking-wide">Spread DV01</p>
+                      <p className="text-xs text-fd-text-muted uppercase tracking-wide">
+                        Spread DV01
+                      </p>
                       <p className="text-lg font-semibold text-fd-text mt-2">
                         {formatCurrency(pricingResult.sensitivities.spreadDv01, basket.currency)}
                       </p>
                       <p className="text-xs text-fd-text-muted mt-1">Per 1bp parallel shift</p>
                     </div>
                     <div className="bg-fd-dark border border-fd-border rounded-lg p-4">
-                      <p className="text-xs text-fd-text-muted uppercase tracking-wide">Correlation Beta</p>
+                      <p className="text-xs text-fd-text-muted uppercase tracking-wide">
+                        Correlation Beta
+                      </p>
                       <p className="text-lg font-semibold text-fd-text mt-2">
                         {pricingResult.sensitivities.correlationBeta?.toFixed(4) || 'N/A'}
                       </p>
                       <p className="text-xs text-fd-text-muted mt-1">Per 1% correlation shift</p>
                     </div>
                     <div className="bg-fd-dark border border-fd-border rounded-lg p-4">
-                      <p className="text-xs text-fd-text-muted uppercase tracking-wide">Recovery01</p>
+                      <p className="text-xs text-fd-text-muted uppercase tracking-wide">
+                        Recovery01
+                      </p>
                       <p className="text-lg font-semibold text-fd-text mt-2">
                         {formatCurrency(pricingResult.sensitivities.recovery01, basket.currency)}
                       </p>
@@ -243,18 +258,14 @@ const BasketDetailView: React.FC<BasketDetailViewProps> = ({ basket, onClose }) 
                 <tbody className="divide-y divide-fd-border">
                   {basket.constituents.map((constituent, idx) => (
                     <tr key={idx} className="hover:bg-fd-darker transition-colors">
-                      <td className="px-4 py-3 text-sm text-fd-text">
-                        {constituent.issuer}
-                      </td>
+                      <td className="px-4 py-3 text-sm text-fd-text">{constituent.issuer}</td>
                       <td className="px-4 py-3 text-sm text-fd-text">
                         {((constituent.weight || 0) * 100).toFixed(2)}%
                       </td>
+                      <td className="px-4 py-3 text-sm text-fd-text">{constituent.seniority}</td>
                       <td className="px-4 py-3 text-sm text-fd-text">
-                        {constituent.seniority}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-fd-text">
-                        {constituent.recoveryOverride 
-                          ? `${(constituent.recoveryOverride * 100).toFixed(1)}%` 
+                        {constituent.recoveryOverride
+                          ? `${(constituent.recoveryOverride * 100).toFixed(1)}%`
                           : 'Default'}
                       </td>
                       <td className="px-4 py-3 text-sm text-fd-text-muted">

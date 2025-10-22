@@ -16,12 +16,12 @@ class BasketService {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(basket),
     });
-    
+
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || 'Failed to create basket');
     }
-    
+
     return response.json();
   }
 
@@ -30,11 +30,11 @@ class BasketService {
    */
   async getAllBaskets(): Promise<Basket[]> {
     const response = await fetch(this.baseUrl);
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch baskets');
     }
-    
+
     return response.json();
   }
 
@@ -43,14 +43,14 @@ class BasketService {
    */
   async getBasketById(id: number): Promise<Basket> {
     const response = await fetch(`${this.baseUrl}/${id}`);
-    
+
     if (!response.ok) {
       if (response.status === 404) {
         throw new Error(`Basket not found: ${id}`);
       }
       throw new Error('Failed to fetch basket');
     }
-    
+
     return response.json();
   }
 
@@ -63,12 +63,12 @@ class BasketService {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(basket),
     });
-    
+
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || 'Failed to update basket');
     }
-    
+
     return response.json();
   }
 
@@ -77,7 +77,7 @@ class BasketService {
    */
   async priceBasket(id: number, request?: BasketPricingRequest): Promise<BasketPricingResult> {
     const params = new URLSearchParams();
-    
+
     if (request?.valuationDate) {
       params.append('valuationDate', request.valuationDate);
     }
@@ -93,18 +93,18 @@ class BasketService {
     if (request?.includeEtlTimeline !== undefined) {
       params.append('includeEtlTimeline', request.includeEtlTimeline.toString());
     }
-    
+
     const url = `${this.baseUrl}/${id}/price${params.toString() ? '?' + params.toString() : ''}`;
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
     });
-    
+
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || 'Failed to price basket');
     }
-    
+
     return response.json();
   }
 
@@ -115,7 +115,7 @@ class BasketService {
     const response = await fetch(`${this.baseUrl}/${id}`, {
       method: 'DELETE',
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to delete basket');
     }

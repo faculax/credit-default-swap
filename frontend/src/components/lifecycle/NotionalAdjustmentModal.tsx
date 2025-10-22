@@ -9,11 +9,16 @@ interface Props {
   onCreated: (adj: NotionalAdjustment) => void;
 }
 
-export const NotionalAdjustmentModal: React.FC<Props> = ({ tradeId, isOpen, onClose, onCreated }) => {
+export const NotionalAdjustmentModal: React.FC<Props> = ({
+  tradeId,
+  isOpen,
+  onClose,
+  onCreated,
+}) => {
   const [form, setForm] = useState<NotionalAdjustmentPayload>({
     adjustmentDate: new Date().toISOString().substring(0, 10),
     adjustmentType: 'REDUCTION',
-    adjustmentAmount: 0
+    adjustmentAmount: 0,
   });
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,7 +27,7 @@ export const NotionalAdjustmentModal: React.FC<Props> = ({ tradeId, isOpen, onCl
   if (!isOpen) return null;
 
   const updateField = (field: keyof NotionalAdjustmentPayload, value: any) => {
-    setForm(f => ({ ...f, [field]: value }));
+    setForm((f) => ({ ...f, [field]: value }));
   };
 
   const submit = async () => {
@@ -46,7 +51,14 @@ export const NotionalAdjustmentModal: React.FC<Props> = ({ tradeId, isOpen, onCl
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-fd-text font-semibold text-lg">Notional Adjustment</h3>
           <button onClick={onClose} className="text-fd-text-muted hover:text-fd-text">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
           </button>
         </div>
 
@@ -56,7 +68,7 @@ export const NotionalAdjustmentModal: React.FC<Props> = ({ tradeId, isOpen, onCl
             <input
               type="date"
               value={form.adjustmentDate}
-              onChange={e => updateField('adjustmentDate', e.target.value)}
+              onChange={(e) => updateField('adjustmentDate', e.target.value)}
               className="w-full bg-fd-dark border border-fd-border rounded px-2 py-1 text-fd-text text-sm"
             />
           </div>
@@ -64,7 +76,7 @@ export const NotionalAdjustmentModal: React.FC<Props> = ({ tradeId, isOpen, onCl
             <label className="block text-xs text-fd-text-muted mb-1">Adjustment Type</label>
             <select
               value={form.adjustmentType}
-              onChange={e => updateField('adjustmentType', e.target.value)}
+              onChange={(e) => updateField('adjustmentType', e.target.value)}
               className="w-full bg-fd-dark border border-fd-border rounded px-2 py-1 text-fd-text text-sm"
             >
               <option value="REDUCTION">Reduction</option>
@@ -80,7 +92,7 @@ export const NotionalAdjustmentModal: React.FC<Props> = ({ tradeId, isOpen, onCl
                 min={0}
                 step="0.01"
                 value={form.adjustmentAmount}
-                onChange={e => updateField('adjustmentAmount', parseFloat(e.target.value))}
+                onChange={(e) => updateField('adjustmentAmount', parseFloat(e.target.value))}
                 className="w-full bg-fd-dark border border-fd-border rounded px-2 py-1 text-fd-text text-sm"
               />
             </div>
@@ -89,7 +101,7 @@ export const NotionalAdjustmentModal: React.FC<Props> = ({ tradeId, isOpen, onCl
             <label className="block text-xs text-fd-text-muted mb-1">Reason (optional)</label>
             <textarea
               value={reason}
-              onChange={e => setReason(e.target.value)}
+              onChange={(e) => setReason(e.target.value)}
               rows={3}
               className="w-full bg-fd-dark border border-fd-border rounded px-2 py-1 text-fd-text text-sm resize-none"
             />
@@ -101,12 +113,16 @@ export const NotionalAdjustmentModal: React.FC<Props> = ({ tradeId, isOpen, onCl
           <button
             onClick={onClose}
             className="px-4 py-2 text-sm bg-fd-dark border border-fd-border rounded text-fd-text-muted hover:text-fd-text"
-          >Cancel</button>
+          >
+            Cancel
+          </button>
           <button
             disabled={loading}
             onClick={submit}
             className="px-5 py-2 text-sm bg-fd-green text-fd-dark rounded font-medium hover:bg-fd-green-hover disabled:opacity-40"
-          >{loading ? 'Saving...' : 'Submit'}</button>
+          >
+            {loading ? 'Saving...' : 'Submit'}
+          </button>
         </div>
       </div>
     </div>

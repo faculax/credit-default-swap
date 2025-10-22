@@ -24,7 +24,7 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
     { name: 'Backend Service', status: 'UNKNOWN' },
     { name: 'CDS Risk Engine', status: 'UNKNOWN' },
     { name: 'Open Source Risk Engine (ORE)', status: 'UNKNOWN' },
-    { name: 'React Frontend', status: 'UNKNOWN' }
+    { name: 'React Frontend', status: 'UNKNOWN' },
   ]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
@@ -35,10 +35,10 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
     try {
       const response = await fetch(`${API_BASE_URL}/health/status`);
       const data = await response.json();
-      
+
       // Generate dummy status for additional services
       const generateDummyResponseTime = () => Math.floor(Math.random() * 15) + 5; // 5-20ms
-      
+
       const updatedServices: ServiceStatus[] = [
         // PostgreSQL - inferred from backend status
         {
@@ -46,16 +46,16 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
           status: data.backendStatus?.status === 'UP' ? 'ONLINE' : 'OFFLINE',
           responseTime: data.backendStatus?.responseTime,
           lastChecked: new Date().toLocaleTimeString(),
-          error: data.backendStatus?.status !== 'UP' ? 'Database connection issues' : undefined
+          error: data.backendStatus?.status !== 'UP' ? 'Database connection issues' : undefined,
         },
         // API Gateway
         {
-          name: 'API Gateway', 
+          name: 'API Gateway',
           status: data.status === 'UP' ? 'ONLINE' : 'OFFLINE',
           responseTime: 15, // Gateway response is usually fast
           lastChecked: new Date().toLocaleTimeString(),
           url: API_BASE_URL.replace('/api', ''), // Remove /api suffix for display
-          error: data.status !== 'UP' ? 'Gateway unavailable' : undefined
+          error: data.status !== 'UP' ? 'Gateway unavailable' : undefined,
         },
         // Backend Service
         {
@@ -63,10 +63,12 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
           status: data.backendStatus?.status === 'UP' ? 'ONLINE' : 'OFFLINE',
           responseTime: data.backendStatus?.responseTime,
           lastChecked: new Date().toLocaleTimeString(),
-          url: data.backendStatus?.healthEndpoint ? 
-            `${API_BASE_URL.replace('/api', '')}${data.backendStatus.healthEndpoint}` : 
-            'Backend Service',
-          error: data.backendStatus?.error || (data.backendStatus?.status !== 'UP' ? 'Service unavailable' : undefined)
+          url: data.backendStatus?.healthEndpoint
+            ? `${API_BASE_URL.replace('/api', '')}${data.backendStatus.healthEndpoint}`
+            : 'Backend Service',
+          error:
+            data.backendStatus?.error ||
+            (data.backendStatus?.status !== 'UP' ? 'Service unavailable' : undefined),
         },
         // CDS Risk Engine (dummy health)
         {
@@ -74,7 +76,7 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
           status: 'ONLINE',
           responseTime: generateDummyResponseTime(),
           lastChecked: new Date().toLocaleTimeString(),
-          url: 'http://localhost:8082'
+          url: 'http://localhost:8082',
         },
         // Open Source Risk Engine - ORE (dummy health)
         {
@@ -82,7 +84,7 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
           status: 'ONLINE',
           responseTime: generateDummyResponseTime(),
           lastChecked: new Date().toLocaleTimeString(),
-          url: 'ore-engine'
+          url: 'ore-engine',
         },
         // React Frontend (dummy health)
         {
@@ -90,10 +92,10 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
           status: 'ONLINE',
           responseTime: generateDummyResponseTime(),
           lastChecked: new Date().toLocaleTimeString(),
-          url: 'http://localhost:3000'
-        }
+          url: 'http://localhost:3000',
+        },
       ];
-      
+
       setServices(updatedServices);
       setLastUpdated(new Date());
     } catch (error) {
@@ -101,11 +103,31 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
       // Mark gateway as offline, others as unknown
       setServices([
         { name: 'PostgreSQL Database', status: 'UNKNOWN', error: 'Cannot reach gateway' },
-        { name: 'API Gateway', status: 'OFFLINE', error: 'Connection failed', url: 'http://localhost:8081' },
+        {
+          name: 'API Gateway',
+          status: 'OFFLINE',
+          error: 'Connection failed',
+          url: 'http://localhost:8081',
+        },
         { name: 'Backend Service', status: 'UNKNOWN', error: 'Cannot reach gateway' },
-        { name: 'CDS Risk Engine', status: 'UNKNOWN', error: 'Cannot reach gateway', url: 'http://localhost:8082' },
-        { name: 'Open Source Risk Engine (ORE)', status: 'UNKNOWN', error: 'Cannot reach gateway', url: 'ore-engine' },
-        { name: 'React Frontend', status: 'UNKNOWN', error: 'Cannot reach gateway', url: 'http://localhost:3000' }
+        {
+          name: 'CDS Risk Engine',
+          status: 'UNKNOWN',
+          error: 'Cannot reach gateway',
+          url: 'http://localhost:8082',
+        },
+        {
+          name: 'Open Source Risk Engine (ORE)',
+          status: 'UNKNOWN',
+          error: 'Cannot reach gateway',
+          url: 'ore-engine',
+        },
+        {
+          name: 'React Frontend',
+          status: 'UNKNOWN',
+          error: 'Cannot reach gateway',
+          url: 'http://localhost:3000',
+        },
       ]);
     } finally {
       setIsRefreshing(false);
@@ -129,28 +151,36 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
 
   const getStatusColor = (status: ServiceStatus['status']) => {
     switch (status) {
-      case 'ONLINE': return 'text-fd-green';
-      case 'OFFLINE': return 'text-red-500';
-      case 'UNKNOWN': return 'text-fd-text-muted';
-      default: return 'text-fd-text-muted';
+      case 'ONLINE':
+        return 'text-fd-green';
+      case 'OFFLINE':
+        return 'text-red-500';
+      case 'UNKNOWN':
+        return 'text-fd-text-muted';
+      default:
+        return 'text-fd-text-muted';
     }
   };
 
   const getStatusBadgeColor = (status: ServiceStatus['status']) => {
     switch (status) {
-      case 'ONLINE': return 'bg-fd-green text-fd-dark';
-      case 'OFFLINE': return 'bg-red-500 text-white';
-      case 'UNKNOWN': return 'bg-fd-text-muted text-fd-dark';
-      default: return 'bg-fd-text-muted text-fd-dark';
+      case 'ONLINE':
+        return 'bg-fd-green text-fd-dark';
+      case 'OFFLINE':
+        return 'bg-red-500 text-white';
+      case 'UNKNOWN':
+        return 'bg-fd-text-muted text-fd-dark';
+      default:
+        return 'bg-fd-text-muted text-fd-dark';
     }
   };
 
-  const onlineCount = services.filter(s => s.status === 'ONLINE').length;
+  const onlineCount = services.filter((s) => s.status === 'ONLINE').length;
   const totalCount = services.length;
   const systemHealthPercentage = Math.round((onlineCount / totalCount) * 100);
-  const avgResponseTime = services
-    .filter(s => s.responseTime)
-    .reduce((acc, s) => acc + (s.responseTime || 0), 0) / services.filter(s => s.responseTime).length || 0;
+  const avgResponseTime =
+    services.filter((s) => s.responseTime).reduce((acc, s) => acc + (s.responseTime || 0), 0) /
+      services.filter((s) => s.responseTime).length || 0;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -178,10 +208,7 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
             >
               {isRefreshing ? 'Refreshing...' : 'Refresh Now'}
             </button>
-            <button
-              onClick={onClose}
-              className="text-fd-text-muted hover:text-fd-text"
-            >
+            <button onClick={onClose} className="text-fd-text-muted hover:text-fd-text">
               ✕
             </button>
           </div>
@@ -198,7 +225,9 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
               </div>
               <div className="flex items-center space-x-2">
                 <span className="text-2xl font-bold text-fd-text">{systemHealthPercentage}%</span>
-                <span className={`text-sm px-2 py-1 rounded ${systemHealthPercentage === 100 ? 'bg-fd-green text-fd-dark' : 'bg-red-500 text-white'}`}>
+                <span
+                  className={`text-sm px-2 py-1 rounded ${systemHealthPercentage === 100 ? 'bg-fd-green text-fd-dark' : 'bg-red-500 text-white'}`}
+                >
                   {systemHealthPercentage === 100 ? 'Good' : 'Issues'}
                 </span>
               </div>
@@ -209,7 +238,9 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
                 <div className="w-3 h-3 bg-fd-green rounded-full"></div>
                 <span className="text-fd-text-muted">Services Online</span>
               </div>
-              <span className="text-2xl font-bold text-fd-green">{onlineCount}/{totalCount}</span>
+              <span className="text-2xl font-bold text-fd-green">
+                {onlineCount}/{totalCount}
+              </span>
             </div>
 
             <div className="text-center">
@@ -230,10 +261,10 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
               </span>
             </div>
           </div>
-          
+
           {lastUpdated && (
             <p className="text-fd-text-muted text-sm mt-4">
-              Last updated: {lastUpdated.toLocaleTimeString()} 
+              Last updated: {lastUpdated.toLocaleTimeString()}
               <span className="text-fd-green ml-2">(Auto-refreshing every 5 seconds)</span>
             </p>
           )}
@@ -248,7 +279,9 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
                 <div className="flex justify-between items-start mb-3">
                   <h4 className="font-semibold text-fd-text">{service.name}</h4>
                   <div className="flex items-center space-x-2">
-                    <span className={`text-xs px-2 py-1 rounded font-medium ${getStatusBadgeColor(service.status)}`}>
+                    <span
+                      className={`text-xs px-2 py-1 rounded font-medium ${getStatusBadgeColor(service.status)}`}
+                    >
                       {service.status}
                     </span>
                     {service.status === 'ONLINE' && (
@@ -267,7 +300,7 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
                       <span className="text-fd-text font-mono text-xs">{service.url}</span>
                     </div>
                   )}
-                  
+
                   {service.responseTime && (
                     <div>
                       <span className="text-fd-text-muted">Response Time: </span>

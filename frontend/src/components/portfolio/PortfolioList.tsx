@@ -27,7 +27,7 @@ const PortfolioList: React.FC<PortfolioListProps> = ({ onPortfolioSelect }) => {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load portfolios';
       setError(errorMessage);
       console.error('Error loading portfolios:', err);
-      
+
       // Log additional details for debugging
       if (err instanceof Error && err.message.includes('Invalid response format')) {
         console.error('The server returned malformed JSON. Check backend logs for details.');
@@ -54,7 +54,7 @@ const PortfolioList: React.FC<PortfolioListProps> = ({ onPortfolioSelect }) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -72,7 +72,11 @@ const PortfolioList: React.FC<PortfolioListProps> = ({ onPortfolioSelect }) => {
         <div className="flex">
           <div className="flex-shrink-0">
             <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                clipRule="evenodd"
+              />
             </svg>
           </div>
           <div className="ml-3">
@@ -130,26 +134,43 @@ const PortfolioList: React.FC<PortfolioListProps> = ({ onPortfolioSelect }) => {
             />
           </svg>
           <h3 className="mt-2 text-sm font-medium text-fd-text">No portfolios found</h3>
-          <p className="mt-1 text-sm text-fd-text-muted">Create your first portfolio to get started.</p>
+          <p className="mt-1 text-sm text-fd-text-muted">
+            Create your first portfolio to get started.
+          </p>
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-fd-border">
             <thead className="bg-fd-dark">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider"
+                >
                   Name
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider"
+                >
                   Description
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider"
+                >
                   # Trades
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider"
+                >
                   Created
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider"
+                >
                   Updated
                 </th>
               </tr>
@@ -171,7 +192,7 @@ const PortfolioList: React.FC<PortfolioListProps> = ({ onPortfolioSelect }) => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-fd-text">
-                      {portfolio.constituents?.filter(c => c.active).length || 0}
+                      {portfolio.constituents?.filter((c) => c.active).length || 0}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

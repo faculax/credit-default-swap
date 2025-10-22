@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { BondPortfolioConstituent, BasketPortfolioConstituent, CdsPortfolioConstituent } from '../../services/portfolioService';
+import {
+  BondPortfolioConstituent,
+  BasketPortfolioConstituent,
+  CdsPortfolioConstituent,
+} from '../../services/portfolioService';
 
 interface EnhancedOverviewProps {
   portfolioId: number;
@@ -28,12 +32,12 @@ interface SectorExposure {
   instrumentCount: number;
 }
 
-const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({ 
-  portfolioId, 
-  cdsConstituents, 
+const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
+  portfolioId,
+  cdsConstituents,
   bondConstituents,
   basketConstituents,
-  pricingData 
+  pricingData,
 }) => {
   const [issuerExposures, setIssuerExposures] = useState<IssuerExposure[]>([]);
   const [sectorExposures, setSectorExposures] = useState<SectorExposure[]>([]);
@@ -48,7 +52,7 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
     const issuerMap = new Map<string, IssuerExposure>();
 
     // Process bonds
-    bondConstituents.forEach(bc => {
+    bondConstituents.forEach((bc) => {
       const issuer = bc.bond.issuer;
       if (!issuerMap.has(issuer)) {
         issuerMap.set(issuer, {
@@ -60,7 +64,7 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
           netCreditExposure: 0,
           hedgeRatio: 0,
           hedgeStatus: 'UNHEDGED',
-          recommendation: ''
+          recommendation: '',
         });
       }
       const exposure = issuerMap.get(issuer)!;
@@ -68,7 +72,7 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
     });
 
     // Process CDS
-    cdsConstituents.forEach(cc => {
+    cdsConstituents.forEach((cc) => {
       const issuer = cc.trade.referenceEntity;
       if (!issuerMap.has(issuer)) {
         issuerMap.set(issuer, {
@@ -80,11 +84,11 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
           netCreditExposure: 0,
           hedgeRatio: 0,
           hedgeStatus: 'UNHEDGED',
-          recommendation: ''
+          recommendation: '',
         });
       }
       const exposure = issuerMap.get(issuer)!;
-      
+
       // Assuming BUY = buying protection (short credit), SELL = selling protection (long credit)
       // This is a simplification - you may need to check actual buySell field
       exposure.cdsProtectionBought += cc.trade.notionalAmount;
@@ -92,12 +96,12 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
 
     // Calculate net exposures and recommendations
     const exposures: IssuerExposure[] = [];
-    issuerMap.forEach(exp => {
+    issuerMap.forEach((exp) => {
       exp.netCreditExposure = exp.bondNotional - exp.cdsProtectionBought + exp.cdsProtectionSold;
-      
+
       if (exp.bondNotional > 0) {
         exp.hedgeRatio = (exp.cdsProtectionBought / exp.bondNotional) * 100;
-        
+
         if (exp.hedgeRatio > 110) {
           exp.hedgeStatus = 'OVER_HEDGED';
           exp.recommendation = `Consider reducing CDS protection by $${((exp.cdsProtectionBought - exp.bondNotional) / 1000000).toFixed(1)}M`;
@@ -115,16 +119,18 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
         exp.hedgeStatus = 'UNHEDGED';
         exp.recommendation = `Consider buying $${(exp.cdsProtectionBought / 1000000).toFixed(1)}M in bonds to capture basis`;
       }
-      
+
       exposures.push(exp);
     });
 
-    setIssuerExposures(exposures.sort((a, b) => Math.abs(b.netCreditExposure) - Math.abs(a.netCreditExposure)));
+    setIssuerExposures(
+      exposures.sort((a, b) => Math.abs(b.netCreditExposure) - Math.abs(a.netCreditExposure))
+    );
 
     // Calculate sector exposures
     const sectorMap = new Map<string, { notional: number; count: number }>();
-    
-    bondConstituents.forEach(bc => {
+
+    bondConstituents.forEach((bc) => {
       const sector = getSectorFromIssuer(bc.bond.issuer);
       if (!sectorMap.has(sector)) {
         sectorMap.set(sector, { notional: 0, count: 0 });
@@ -134,7 +140,7 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
       sectorData.count++;
     });
 
-    cdsConstituents.forEach(cc => {
+    cdsConstituents.forEach((cc) => {
       const sector = getSectorFromIssuer(cc.trade.referenceEntity);
       if (!sectorMap.has(sector)) {
         sectorMap.set(sector, { notional: 0, count: 0 });
@@ -146,7 +152,7 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
 
     // Add baskets as "BASKET" sector for now
     // TODO: In future, unwind basket constituents to their actual sectors
-    basketConstituents.forEach(bc => {
+    basketConstituents.forEach((bc) => {
       const sector = 'BASKET';
       if (!sectorMap.has(sector)) {
         sectorMap.set(sector, { notional: 0, count: 0 });
@@ -160,13 +166,13 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
 
     const totalNotional = Array.from(sectorMap.values()).reduce((sum, s) => sum + s.notional, 0);
     const sectors: SectorExposure[] = [];
-    
+
     sectorMap.forEach((data, sector) => {
       sectors.push({
         sector,
         notional: data.notional,
         percentage: totalNotional > 0 ? (data.notional / totalNotional) * 100 : 0,
-        instrumentCount: data.count
+        instrumentCount: data.count,
       });
     });
 
@@ -175,10 +181,21 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
 
   const getSectorFromIssuer = (issuer: string): string => {
     const sectorMap: Record<string, string> = {
-      'AAPL': 'TECH', 'MSFT': 'TECH', 'AMZN': 'TECH', 'GOOGL': 'TECH',
-      'TSLA': 'TECH', 'NFLX': 'TECH', 'META': 'TECH', 'NVDA': 'TECH', 'AMD': 'TECH',
-      'JPM': 'FINANCIALS', 'BAC': 'FINANCIALS', 'WFC': 'FINANCIALS',
-      'GS': 'FINANCIALS', 'MS': 'FINANCIALS', 'C': 'FINANCIALS'
+      AAPL: 'TECH',
+      MSFT: 'TECH',
+      AMZN: 'TECH',
+      GOOGL: 'TECH',
+      TSLA: 'TECH',
+      NFLX: 'TECH',
+      META: 'TECH',
+      NVDA: 'TECH',
+      AMD: 'TECH',
+      JPM: 'FINANCIALS',
+      BAC: 'FINANCIALS',
+      WFC: 'FINANCIALS',
+      GS: 'FINANCIALS',
+      MS: 'FINANCIALS',
+      C: 'FINANCIALS',
     };
     return sectorMap[issuer] || 'OTHER';
   };
@@ -188,34 +205,50 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
   const getHedgeStatusColor = (status: string) => {
     switch (status) {
-      case 'BALANCED': return 'text-fd-green';
-      case 'UNDER_HEDGED': return 'text-yellow-400';
-      case 'OVER_HEDGED': return 'text-blue-400';
-      case 'UNHEDGED': return 'text-red-400';
-      default: return 'text-fd-text-muted';
+      case 'BALANCED':
+        return 'text-fd-green';
+      case 'UNDER_HEDGED':
+        return 'text-yellow-400';
+      case 'OVER_HEDGED':
+        return 'text-blue-400';
+      case 'UNHEDGED':
+        return 'text-red-400';
+      default:
+        return 'text-fd-text-muted';
     }
   };
 
   const getHedgeStatusBadge = (status: string) => {
     switch (status) {
-      case 'BALANCED': return 'bg-green-900/30 text-green-400 border-green-500';
-      case 'UNDER_HEDGED': return 'bg-yellow-900/30 text-yellow-400 border-yellow-500';
-      case 'OVER_HEDGED': return 'bg-blue-900/30 text-blue-400 border-blue-500';
-      case 'UNHEDGED': return 'bg-red-900/30 text-red-400 border-red-500';
-      default: return 'bg-fd-dark text-fd-text-muted border-fd-border';
+      case 'BALANCED':
+        return 'bg-green-900/30 text-green-400 border-green-500';
+      case 'UNDER_HEDGED':
+        return 'bg-yellow-900/30 text-yellow-400 border-yellow-500';
+      case 'OVER_HEDGED':
+        return 'bg-blue-900/30 text-blue-400 border-blue-500';
+      case 'UNHEDGED':
+        return 'bg-red-900/30 text-red-400 border-red-500';
+      default:
+        return 'bg-fd-dark text-fd-text-muted border-fd-border';
     }
   };
 
   const getSectorColor = (index: number) => {
     const colors = [
-      'bg-fd-green', 'bg-blue-500', 'bg-yellow-500', 'bg-purple-500',
-      'bg-pink-500', 'bg-indigo-500', 'bg-teal-500', 'bg-orange-500'
+      'bg-fd-green',
+      'bg-blue-500',
+      'bg-yellow-500',
+      'bg-purple-500',
+      'bg-pink-500',
+      'bg-indigo-500',
+      'bg-teal-500',
+      'bg-orange-500',
     ];
     return colors[index % colors.length];
   };
@@ -245,14 +278,17 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
               <div className="text-right">
                 <div className="text-fd-text font-medium">{formatCurrency(totalCdsNotional)}</div>
                 <div className="text-sm text-fd-text-muted">
-                  {totalNotional > 0 ? ((totalCdsNotional / totalNotional) * 100).toFixed(1) : 0}% • {cdsConstituents.length} positions
+                  {totalNotional > 0 ? ((totalCdsNotional / totalNotional) * 100).toFixed(1) : 0}% •{' '}
+                  {cdsConstituents.length} positions
                 </div>
               </div>
             </div>
             <div className="w-full bg-fd-dark rounded-full h-2">
-              <div 
+              <div
                 className="bg-fd-green h-2 rounded-full transition-all"
-                style={{ width: `${totalNotional > 0 ? (totalCdsNotional / totalNotional) * 100 : 0}%` }}
+                style={{
+                  width: `${totalNotional > 0 ? (totalCdsNotional / totalNotional) * 100 : 0}%`,
+                }}
               ></div>
             </div>
 
@@ -264,14 +300,17 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
               <div className="text-right">
                 <div className="text-fd-text font-medium">{formatCurrency(totalBondNotional)}</div>
                 <div className="text-sm text-fd-text-muted">
-                  {totalNotional > 0 ? ((totalBondNotional / totalNotional) * 100).toFixed(1) : 0}% • {bondConstituents.length} positions
+                  {totalNotional > 0 ? ((totalBondNotional / totalNotional) * 100).toFixed(1) : 0}%
+                  • {bondConstituents.length} positions
                 </div>
               </div>
             </div>
             <div className="w-full bg-fd-dark rounded-full h-2">
-              <div 
+              <div
                 className="bg-blue-500 h-2 rounded-full transition-all"
-                style={{ width: `${totalNotional > 0 ? (totalBondNotional / totalNotional) * 100 : 0}%` }}
+                style={{
+                  width: `${totalNotional > 0 ? (totalBondNotional / totalNotional) * 100 : 0}%`,
+                }}
               ></div>
             </div>
 
@@ -281,16 +320,21 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
                 <span className="text-fd-text">🗂️ Credit Baskets</span>
               </div>
               <div className="text-right">
-                <div className="text-fd-text font-medium">{formatCurrency(totalBasketNotional)}</div>
+                <div className="text-fd-text font-medium">
+                  {formatCurrency(totalBasketNotional)}
+                </div>
                 <div className="text-sm text-fd-text-muted">
-                  {totalNotional > 0 ? ((totalBasketNotional / totalNotional) * 100).toFixed(1) : 0}% • {basketConstituents.length} positions
+                  {totalNotional > 0 ? ((totalBasketNotional / totalNotional) * 100).toFixed(1) : 0}
+                  % • {basketConstituents.length} positions
                 </div>
               </div>
             </div>
             <div className="w-full bg-fd-dark rounded-full h-2">
-              <div 
+              <div
                 className="bg-purple-500 h-2 rounded-full transition-all"
-                style={{ width: `${totalNotional > 0 ? (totalBasketNotional / totalNotional) * 100 : 0}%` }}
+                style={{
+                  width: `${totalNotional > 0 ? (totalBasketNotional / totalNotional) * 100 : 0}%`,
+                }}
               ></div>
             </div>
           </div>
@@ -312,7 +356,7 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
                   </div>
                 </div>
                 <div className="w-full bg-fd-dark rounded-full h-1.5">
-                  <div 
+                  <div
                     className={`${getSectorColor(idx)} h-1.5 rounded-full transition-all`}
                     style={{ width: `${sector.percentage}%` }}
                   ></div>
@@ -327,11 +371,9 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
       <div className="bg-fd-darker border border-fd-border rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-fd-text">Net Credit Exposure by Issuer</h3>
-          <div className="text-sm text-fd-text-muted">
-            Showing bond positions vs CDS hedges
-          </div>
+          <div className="text-sm text-fd-text-muted">Showing bond positions vs CDS hedges</div>
         </div>
-        
+
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-fd-border">
             <thead>
@@ -347,7 +389,7 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-fd-border">
-              {issuerExposures.map(exp => (
+              {issuerExposures.map((exp) => (
                 <tr key={exp.issuer} className="hover:bg-fd-dark transition-colors">
                   <td className="px-4 py-3 text-sm font-medium text-fd-text">{exp.issuer}</td>
                   <td className="px-4 py-3 text-sm text-fd-text-muted">{exp.sector}</td>
@@ -357,17 +399,29 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
                   <td className="px-4 py-3 text-sm text-right text-fd-text">
                     {exp.cdsProtectionBought > 0 ? formatCurrency(exp.cdsProtectionBought) : '-'}
                   </td>
-                  <td className={`px-4 py-3 text-sm text-right font-medium ${
-                    exp.netCreditExposure > 0 ? 'text-red-400' : exp.netCreditExposure < 0 ? 'text-fd-green' : 'text-fd-text'
-                  }`}>
+                  <td
+                    className={`px-4 py-3 text-sm text-right font-medium ${
+                      exp.netCreditExposure > 0
+                        ? 'text-red-400'
+                        : exp.netCreditExposure < 0
+                          ? 'text-fd-green'
+                          : 'text-fd-text'
+                    }`}
+                  >
                     {formatCurrency(Math.abs(exp.netCreditExposure))}
-                    {exp.netCreditExposure > 0 ? ' Long' : exp.netCreditExposure < 0 ? ' Short' : ''}
+                    {exp.netCreditExposure > 0
+                      ? ' Long'
+                      : exp.netCreditExposure < 0
+                        ? ' Short'
+                        : ''}
                   </td>
                   <td className="px-4 py-3 text-sm text-center text-fd-text">
                     {exp.bondNotional > 0 ? `${exp.hedgeRatio.toFixed(0)}%` : 'N/A'}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium border ${getHedgeStatusBadge(exp.hedgeStatus)}`}>
+                    <span
+                      className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium border ${getHedgeStatusBadge(exp.hedgeStatus)}`}
+                    >
                       {exp.hedgeStatus.replace('_', ' ')}
                     </span>
                   </td>
@@ -395,18 +449,15 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
             {cdsConstituents.length + bondConstituents.length + basketConstituents.length}
           </div>
           <div className="text-xs text-fd-text-muted mt-1">
-            {cdsConstituents.length} CDS • {bondConstituents.length} Bonds • {basketConstituents.length} Baskets
+            {cdsConstituents.length} CDS • {bondConstituents.length} Bonds •{' '}
+            {basketConstituents.length} Baskets
           </div>
         </div>
 
         <div className="bg-fd-darker border border-fd-border rounded-lg p-4">
           <div className="text-sm text-fd-text-muted mb-1">Unique Issuers</div>
-          <div className="text-2xl font-semibold text-fd-text">
-            {issuerExposures.length}
-          </div>
-          <div className="text-xs text-fd-text-muted mt-1">
-            {sectorExposures.length} sectors
-          </div>
+          <div className="text-2xl font-semibold text-fd-text">{issuerExposures.length}</div>
+          <div className="text-xs text-fd-text-muted mt-1">{sectorExposures.length} sectors</div>
         </div>
 
         <div className="bg-fd-darker border border-fd-border rounded-lg p-4">
@@ -414,19 +465,19 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
           <div className="text-2xl font-semibold text-fd-text">
             {totalBondNotional > 0 ? ((totalCdsNotional / totalBondNotional) * 100).toFixed(0) : 0}%
           </div>
-          <div className="text-xs text-fd-text-muted mt-1">
-            CDS / Bond ratio
-          </div>
+          <div className="text-xs text-fd-text-muted mt-1">CDS / Bond ratio</div>
         </div>
 
         <div className="bg-fd-darker border border-fd-border rounded-lg p-4">
           <div className="text-sm text-fd-text-muted mb-1">Unhedged Exposure</div>
           <div className="text-2xl font-semibold text-red-400">
-            {issuerExposures.filter(e => e.hedgeStatus === 'UNHEDGED' || e.hedgeStatus === 'UNDER_HEDGED').length}
+            {
+              issuerExposures.filter(
+                (e) => e.hedgeStatus === 'UNHEDGED' || e.hedgeStatus === 'UNDER_HEDGED'
+              ).length
+            }
           </div>
-          <div className="text-xs text-fd-text-muted mt-1">
-            issuers need attention
-          </div>
+          <div className="text-xs text-fd-text-muted mt-1">issuers need attention</div>
         </div>
       </div>
     </div>

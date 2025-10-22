@@ -57,7 +57,7 @@ const BondDetailView: React.FC<BondDetailViewProps> = ({ bondId, onClose }) => {
       style: 'currency',
       currency: currency,
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      maximumFractionDigits: 2,
     }).format(amount);
   };
 
@@ -101,22 +101,33 @@ const BondDetailView: React.FC<BondDetailViewProps> = ({ bondId, onClose }) => {
   if (!bond) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-fd-darker rounded-lg shadow-xl border border-fd-border max-w-6xl w-full max-h-[90vh] overflow-y-auto m-4" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-fd-darker rounded-lg shadow-xl border border-fd-border max-w-6xl w-full max-h-[90vh] overflow-y-auto m-4"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="sticky top-0 bg-fd-darker border-b border-fd-border px-6 py-4 flex justify-between items-center z-10">
           <div>
-            <h2 className="text-xl font-semibold text-fd-text">
-              Bond Details
-            </h2>
-            <p className="text-sm text-fd-green">{bond.issuer} - {bond.isin || 'No ISIN'}</p>
+            <h2 className="text-xl font-semibold text-fd-text">Bond Details</h2>
+            <p className="text-sm text-fd-green">
+              {bond.issuer} - {bond.isin || 'No ISIN'}
+            </p>
           </div>
           <button
             onClick={onClose}
             className="text-fd-text-muted hover:text-fd-text transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -164,8 +175,11 @@ const BondDetailView: React.FC<BondDetailViewProps> = ({ bondId, onClose }) => {
                   <div>
                     <p className="text-xs text-fd-text-muted">Seniority</p>
                     <p className="font-medium text-fd-text">
-                      {bond.seniority === 'SR_UNSEC' ? 'Senior Unsecured' : 
-                       bond.seniority === 'SR_SEC' ? 'Senior Secured' : 'Subordinated'}
+                      {bond.seniority === 'SR_UNSEC'
+                        ? 'Senior Unsecured'
+                        : bond.seniority === 'SR_SEC'
+                          ? 'Senior Secured'
+                          : 'Subordinated'}
                     </p>
                   </div>
                   <div>
@@ -187,7 +201,9 @@ const BondDetailView: React.FC<BondDetailViewProps> = ({ bondId, onClose }) => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
                     <p className="text-xs text-fd-text-muted">Notional</p>
-                    <p className="font-medium text-fd-text">{formatCurrency(bond.notional, bond.currency)}</p>
+                    <p className="font-medium text-fd-text">
+                      {formatCurrency(bond.notional, bond.currency)}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-fd-text-muted">Coupon Rate</p>
@@ -196,8 +212,11 @@ const BondDetailView: React.FC<BondDetailViewProps> = ({ bondId, onClose }) => {
                   <div>
                     <p className="text-xs text-fd-text-muted">Frequency</p>
                     <p className="font-medium text-fd-text">
-                      {bond.couponFrequency === 'SEMI_ANNUAL' ? 'Semi-Annual' : 
-                       bond.couponFrequency === 'QUARTERLY' ? 'Quarterly' : 'Annual'}
+                      {bond.couponFrequency === 'SEMI_ANNUAL'
+                        ? 'Semi-Annual'
+                        : bond.couponFrequency === 'QUARTERLY'
+                          ? 'Quarterly'
+                          : 'Annual'}
                     </p>
                   </div>
                   <div>
@@ -310,7 +329,9 @@ const BondDetailView: React.FC<BondDetailViewProps> = ({ bondId, onClose }) => {
                       <div>
                         <p className="text-xs text-fd-text-muted">Accrued Interest</p>
                         <p className="text-lg font-bold text-fd-green">
-                          {pricing.accruedInterest !== undefined ? pricing.accruedInterest.toFixed(4) : 'N/A'}
+                          {pricing.accruedInterest !== undefined
+                            ? pricing.accruedInterest.toFixed(4)
+                            : 'N/A'}
                         </p>
                       </div>
                     </div>
@@ -318,24 +339,32 @@ const BondDetailView: React.FC<BondDetailViewProps> = ({ bondId, onClose }) => {
 
                   {/* Yields & Spreads */}
                   <div className="bg-fd-dark/50 p-4 rounded-lg border border-fd-border">
-                    <h4 className="text-sm font-semibold text-fd-text-muted mb-3">Yields & Spreads</h4>
+                    <h4 className="text-sm font-semibold text-fd-text-muted mb-3">
+                      Yields & Spreads
+                    </h4>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       <div>
                         <p className="text-xs text-fd-text-muted">Yield to Maturity</p>
                         <p className="text-lg font-bold text-fd-text">
-                          {pricing.yieldToMaturity !== undefined ? formatPercent(pricing.yieldToMaturity) : 'N/A'}
+                          {pricing.yieldToMaturity !== undefined
+                            ? formatPercent(pricing.yieldToMaturity)
+                            : 'N/A'}
                         </p>
                       </div>
                       <div>
                         <p className="text-xs text-fd-text-muted">Z-Spread</p>
                         <p className="text-lg font-bold text-fd-text">
-                          {pricing.zSpread !== undefined ? formatBasisPoints(pricing.zSpread) : 'N/A'}
+                          {pricing.zSpread !== undefined
+                            ? formatBasisPoints(pricing.zSpread)
+                            : 'N/A'}
                         </p>
                       </div>
                       <div>
                         <p className="text-xs text-fd-text-muted">Modified Duration</p>
                         <p className="text-lg font-bold text-fd-text">
-                          {pricing.sensitivities?.modifiedDuration !== undefined ? pricing.sensitivities.modifiedDuration.toFixed(4) : 'N/A'}
+                          {pricing.sensitivities?.modifiedDuration !== undefined
+                            ? pricing.sensitivities.modifiedDuration.toFixed(4)
+                            : 'N/A'}
                         </p>
                       </div>
                     </div>
@@ -343,18 +372,24 @@ const BondDetailView: React.FC<BondDetailViewProps> = ({ bondId, onClose }) => {
 
                   {/* Present Values */}
                   <div className="bg-fd-dark/50 p-4 rounded-lg border border-fd-border">
-                    <h4 className="text-sm font-semibold text-fd-text-muted mb-3">Present Values</h4>
+                    <h4 className="text-sm font-semibold text-fd-text-muted mb-3">
+                      Present Values
+                    </h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-xs text-fd-text-muted">Risk-Free PV</p>
                         <p className="text-lg font-bold text-fd-text">
-                          {pricing.pv !== undefined ? formatCurrency(pricing.pv, bond.currency) : 'N/A'}
+                          {pricing.pv !== undefined
+                            ? formatCurrency(pricing.pv, bond.currency)
+                            : 'N/A'}
                         </p>
                       </div>
                       <div>
                         <p className="text-xs text-fd-text-muted">Risky PV (with defaults)</p>
                         <p className="text-lg font-bold text-fd-text">
-                          {pricing.pvRisky !== undefined ? formatCurrency(pricing.pvRisky, bond.currency) : 'N/A'}
+                          {pricing.pvRisky !== undefined
+                            ? formatCurrency(pricing.pvRisky, bond.currency)
+                            : 'N/A'}
                         </p>
                       </div>
                     </div>
@@ -362,26 +397,34 @@ const BondDetailView: React.FC<BondDetailViewProps> = ({ bondId, onClose }) => {
 
                   {/* Sensitivities */}
                   <div className="bg-fd-dark/50 p-4 rounded-lg border border-fd-border">
-                    <h4 className="text-sm font-semibold text-fd-text-muted mb-3">Risk Sensitivities</h4>
+                    <h4 className="text-sm font-semibold text-fd-text-muted mb-3">
+                      Risk Sensitivities
+                    </h4>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       <div>
                         <p className="text-xs text-fd-text-muted">IR DV01</p>
                         <p className="text-lg font-bold text-fd-text">
-                          {pricing.sensitivities?.irDv01 !== undefined ? formatCurrency(pricing.sensitivities.irDv01, bond.currency) : 'N/A'}
+                          {pricing.sensitivities?.irDv01 !== undefined
+                            ? formatCurrency(pricing.sensitivities.irDv01, bond.currency)
+                            : 'N/A'}
                         </p>
                         <p className="text-xs text-fd-text-muted mt-1">1bp rate move</p>
                       </div>
                       <div>
                         <p className="text-xs text-fd-text-muted">Spread DV01</p>
                         <p className="text-lg font-bold text-fd-text">
-                          {pricing.sensitivities?.spreadDv01 !== undefined ? formatCurrency(pricing.sensitivities.spreadDv01, bond.currency) : 'N/A'}
+                          {pricing.sensitivities?.spreadDv01 !== undefined
+                            ? formatCurrency(pricing.sensitivities.spreadDv01, bond.currency)
+                            : 'N/A'}
                         </p>
                         <p className="text-xs text-fd-text-muted mt-1">1bp hazard move</p>
                       </div>
                       <div>
                         <p className="text-xs text-fd-text-muted">Jump to Default (JTD)</p>
                         <p className="text-lg font-bold text-fd-text">
-                          {pricing.sensitivities?.jtd !== undefined ? formatCurrency(pricing.sensitivities.jtd, bond.currency) : 'N/A'}
+                          {pricing.sensitivities?.jtd !== undefined
+                            ? formatCurrency(pricing.sensitivities.jtd, bond.currency)
+                            : 'N/A'}
                         </p>
                         <p className="text-xs text-fd-text-muted mt-1">Immediate default loss</p>
                       </div>
@@ -392,7 +435,9 @@ const BondDetailView: React.FC<BondDetailViewProps> = ({ bondId, onClose }) => {
 
               {!pricing && (
                 <div className="text-center py-8">
-                  <p className="text-fd-text-muted">Set pricing inputs above and click "Calculate Pricing" to view analytics</p>
+                  <p className="text-fd-text-muted">
+                    Set pricing inputs above and click "Calculate Pricing" to view analytics
+                  </p>
                 </div>
               )}
             </div>

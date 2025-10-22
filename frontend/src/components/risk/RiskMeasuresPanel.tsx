@@ -7,7 +7,7 @@ import { CouponPeriod } from '../../types/lifecycle';
 import { CDSTradeResponse } from '../../services/cdsTradeService';
 import { creditEventService } from '../../services/creditEventService';
 
-interface Props { 
+interface Props {
   tradeId: number;
   trade?: CDSTradeResponse; // Optional trade object for richer display
 }
@@ -34,7 +34,7 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
   const checkForPayoutEvent = async () => {
     try {
       const events = await creditEventService.getCreditEventsForTrade(tradeId);
-      const payoutExists = events.some(event => event.eventType === 'PAYOUT');
+      const payoutExists = events.some((event) => event.eventType === 'PAYOUT');
       setHasPayoutEvent(payoutExists);
     } catch (error) {
       console.error('Failed to check for payout events:', error);
@@ -43,27 +43,29 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
   };
 
   const loadRiskMeasures = async (customValuationDate?: string, forceRefresh: boolean = false) => {
-    if(!tradeId) return;
+    if (!tradeId) return;
     setLoading(true);
     try {
       // When forceRefresh is true, use customValuationDate directly (even if undefined)
       // Otherwise fall back to state's valuationDate
-      const dateToUse = forceRefresh ? customValuationDate : (customValuationDate || valuationDate);
+      const dateToUse = forceRefresh ? customValuationDate : customValuationDate || valuationDate;
       console.log(`🔍 DEBUG loadRiskMeasures called with:`, {
         customValuationDate,
         valuationDate,
         forceRefresh,
         dateToUse,
         tradeId,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
-      console.log(`Loading risk measures for trade ${tradeId} with valuation date: ${dateToUse || 'today'}...`);
+      console.log(
+        `Loading risk measures for trade ${tradeId} with valuation date: ${dateToUse || 'today'}...`
+      );
       const measures = await fetchRiskMeasures(tradeId, dateToUse);
-      console.log('Risk measures loaded:', { 
-        npv: measures.npv, 
-        currency: measures.currency, 
+      console.log('Risk measures loaded:', {
+        npv: measures.npv,
+        currency: measures.currency,
         timestamp: measures.valuationTimestamp,
-        loadedAt: new Date().toISOString() 
+        loadedAt: new Date().toISOString(),
       });
       setData(measures);
       setError(null);
@@ -76,7 +78,7 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
   };
 
   const loadCouponPeriods = async () => {
-    if(!tradeId) return;
+    if (!tradeId) return;
     try {
       console.log('Loading coupon periods for trade:', tradeId);
       const periods = await lifecycleService.getCouponSchedule(tradeId);
@@ -93,17 +95,17 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
     try {
       await lifecycleService.payCoupon(tradeId, periodId, payOnTime);
       console.log('Coupon paid successfully, reloading data...');
-      
+
       // Reload coupon periods to reflect payment
       await loadCouponPeriods();
-      
+
       // Trigger risk recalculation - CRITICAL: Clear old data first to force re-render
       setRecalculating(true);
       setData(null); // Force clear to ensure React detects the change
-      
+
       // Wait a bit to ensure backend has processed the payment
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       await loadRiskMeasures();
       console.log('Risk measures reloaded after coupon payment');
       setRecalculating(false);
@@ -120,16 +122,16 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
     try {
       await lifecycleService.unpayCoupon(tradeId, periodId);
       console.log('Coupon payment cancelled successfully, reloading data...');
-      
+
       // Reload coupon periods to reflect cancellation
       await loadCouponPeriods();
-      
+
       // Trigger risk recalculation
       setRecalculating(true);
       setData(null);
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       await loadRiskMeasures();
       console.log('Risk measures reloaded after coupon cancellation');
       setRecalculating(false);
@@ -158,10 +160,10 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
   const getBusinessDaysFromToday = (days: number): string => {
     const today = new Date();
     const target = new Date(today);
-    
+
     let addedDays = 0;
     let daysToAdd = days;
-    
+
     while (daysToAdd > 0) {
       target.setDate(target.getDate() + 1);
       const dayOfWeek = target.getDay();
@@ -171,14 +173,14 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
         daysToAdd--;
       }
     }
-    
+
     return target.toISOString().split('T')[0];
   };
 
   const handleQuickValuationDate = async (option: 'today' | 't+1' | 't+7' | 't+45') => {
     let newDate: string | undefined = undefined;
-    
-    switch(option) {
+
+    switch (option) {
       case 'today':
         newDate = undefined; // undefined means use backend's "today"
         break;
@@ -192,20 +194,24 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
         newDate = getBusinessDaysFromToday(45);
         break;
     }
-    
-    console.log(`🔍 DEBUG handleQuickValuationDate:`, { option, newDate, currentValuationDate: valuationDate });
-    
+
+    console.log(`🔍 DEBUG handleQuickValuationDate:`, {
+      option,
+      newDate,
+      currentValuationDate: valuationDate,
+    });
+
     // Update state first
     setValuationDate(newDate);
-    
+
     // Force a fresh fetch by clearing data first
     setData(null);
     setLoading(true);
     setError(null);
-    
+
     // Small delay to ensure state updates propagate
-    await new Promise(resolve => setTimeout(resolve, 10));
-    
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
     // Now fetch with the new date, passing forceRefresh=true to use newDate directly
     await loadRiskMeasures(newDate, true);
   };
@@ -216,8 +222,8 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
     checkForPayoutEvent();
   }, [tradeId]);
 
-  if(!tradeId) return <div className="text-fd-text">No trade selected</div>;
-  
+  if (!tradeId) return <div className="text-fd-text">No trade selected</div>;
+
   // Show payout message if PAYOUT event exists
   if (hasPayoutEvent) {
     return (
@@ -225,16 +231,28 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
         <div className="bg-fd-darker p-6 rounded-md border-2 border-fd-green">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 bg-fd-green/20 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-fd-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              <svg
+                className="w-6 h-6 text-fd-green"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
               </svg>
             </div>
             <div>
               <h3 className="text-fd-green font-semibold text-lg">CDS Protection Paid Out</h3>
-              <p className="text-fd-text-muted text-sm">A credit event has triggered payout - all risk measures are now zero</p>
+              <p className="text-fd-text-muted text-sm">
+                A credit event has triggered payout - all risk measures are now zero
+              </p>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
             <div className="bg-fd-dark rounded p-4">
               <div className="text-xs text-fd-text-muted mb-1">Net Present Value</div>
@@ -252,16 +270,27 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
 
           <div className="mt-6 bg-fd-dark rounded p-4">
             <div className="flex items-start gap-2">
-              <svg className="w-5 h-5 text-fd-green mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              <svg
+                className="w-5 h-5 text-fd-green mt-0.5 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
               </svg>
               <div className="text-sm text-fd-text-muted">
                 <p className="mb-2">
-                  This trade has experienced a credit event (Bankruptcy or Restructuring) resulting in payout. 
-                  The CDS contract has fulfilled its protection obligation.
+                  This trade has experienced a credit event (Bankruptcy or Restructuring) resulting
+                  in payout. The CDS contract has fulfilled its protection obligation.
                 </p>
                 <p>
-                  All risk exposures have been reduced to zero as the contract has settled and no further obligations remain.
+                  All risk exposures have been reduced to zero as the contract has settled and no
+                  further obligations remain.
                 </p>
               </div>
             </div>
@@ -270,8 +299,18 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
           {/* Paid Coupons Information */}
           <div className="mt-6 bg-fd-dark rounded p-4">
             <h4 className="text-fd-text font-semibold mb-3 flex items-center gap-2">
-              <svg className="w-5 h-5 text-fd-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+              <svg
+                className="w-5 h-5 text-fd-green"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                ></path>
               </svg>
               Coupon Payment History
             </h4>
@@ -279,81 +318,104 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
               <p className="text-fd-text-muted text-sm">
                 No coupon schedule was generated for this trade.
               </p>
-            ) : (() => {
-              const paidCoupons = couponPeriods.filter(p => p.paid === true);
-              if (paidCoupons.length === 0) {
+            ) : (
+              (() => {
+                const paidCoupons = couponPeriods.filter((p) => p.paid === true);
+                if (paidCoupons.length === 0) {
+                  return (
+                    <p className="text-fd-text-muted text-sm">
+                      No coupons were paid before the credit event occurred.
+                    </p>
+                  );
+                }
                 return (
-                  <p className="text-fd-text-muted text-sm">
-                    No coupons were paid before the credit event occurred.
-                  </p>
-                );
-              }
-              return (
-                <div className="space-y-2">
-                  <p className="text-fd-text text-sm mb-3">
-                    {paidCoupons.length} coupon{paidCoupons.length > 1 ? 's' : ''} paid before credit event:
-                  </p>
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {paidCoupons.map((period, index) => (
-                      <div key={period.id} className="bg-fd-darker rounded p-3 flex items-center justify-between border border-fd-border">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <svg className="w-4 h-4 text-fd-green" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path>
-                            </svg>
-                            <span className="text-fd-text text-sm font-medium">
-                              Period #{index + 1}
-                            </span>
-                            <span className="text-fd-text-muted text-xs">
-                              ({new Date(period.periodStartDate).toLocaleDateString()} - {new Date(period.periodEndDate).toLocaleDateString()})
-                            </span>
-                          </div>
-                          <div className="text-xs text-fd-text-muted mt-1">
-                            Payment Date: {new Date(period.paymentDate).toLocaleDateString()}
-                            {period.paidAt && (
-                              <span className="ml-2 text-fd-green">
-                                ✓ Paid: {new Date(period.paidAt).toLocaleDateString()}
+                  <div className="space-y-2">
+                    <p className="text-fd-text text-sm mb-3">
+                      {paidCoupons.length} coupon{paidCoupons.length > 1 ? 's' : ''} paid before
+                      credit event:
+                    </p>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {paidCoupons.map((period, index) => (
+                        <div
+                          key={period.id}
+                          className="bg-fd-darker rounded p-3 flex items-center justify-between border border-fd-border"
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <svg
+                                className="w-4 h-4 text-fd-green"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                  clipRule="evenodd"
+                                ></path>
+                              </svg>
+                              <span className="text-fd-text text-sm font-medium">
+                                Period #{index + 1}
                               </span>
-                            )}
+                              <span className="text-fd-text-muted text-xs">
+                                ({new Date(period.periodStartDate).toLocaleDateString()} -{' '}
+                                {new Date(period.periodEndDate).toLocaleDateString()})
+                              </span>
+                            </div>
+                            <div className="text-xs text-fd-text-muted mt-1">
+                              Payment Date: {new Date(period.paymentDate).toLocaleDateString()}
+                              {period.paidAt && (
+                                <span className="ml-2 text-fd-green">
+                                  ✓ Paid: {new Date(period.paidAt).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-fd-green font-mono font-semibold">
+                              {new Intl.NumberFormat('en-US', {
+                                style: 'currency',
+                                currency: data?.currency || 'USD',
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              }).format(period.couponAmount || 0)}
+                            </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-fd-green font-mono font-semibold">
-                            {new Intl.NumberFormat('en-US', {
-                              style: 'currency',
-                              currency: data?.currency || 'USD',
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            }).format(period.couponAmount || 0)}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              );
-            })()}
+                );
+              })()
+            )}
           </div>
         </div>
       </div>
     );
   }
-  
-  if(loading) return (
-    <div className="flex items-center gap-2 text-fd-text">
-      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-fd-green"></div>
-      <span>Calculating risk measures with ORE...</span>
-    </div>
-  );
-  if(error) return <div className="text-red-400" role="alert">Failed: {error}</div>;
-  if(!data) return null;
+
+  if (loading)
+    return (
+      <div className="flex items-center gap-2 text-fd-text">
+        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-fd-green"></div>
+        <span>Calculating risk measures with ORE...</span>
+      </div>
+    );
+  if (error)
+    return (
+      <div className="text-red-400" role="alert">
+        Failed: {error}
+      </div>
+    );
+  if (!data) return null;
 
   const formatValue = (value: number | null | undefined, decimals: number = 2): string => {
     if (value === null || value === undefined) return '-';
-    return typeof value === 'number' ? value.toLocaleString(undefined, {
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals,
-    }) : String(value);
+    return typeof value === 'number'
+      ? value.toLocaleString(undefined, {
+          minimumFractionDigits: decimals,
+          maximumFractionDigits: decimals,
+        })
+      : String(value);
   };
 
   const formatCurrency = (value: number | null | undefined, currency: string = 'USD'): string => {
@@ -398,7 +460,7 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
   // Find the next unpaid coupon (earliest payment date among unpaid)
   const getNextUnpaidCoupon = (): CouponPeriod | null => {
     const unpaidCoupons = couponPeriods
-      .filter(p => !p.paid)
+      .filter((p) => !p.paid)
       .sort((a, b) => new Date(a.paymentDate).getTime() - new Date(b.paymentDate).getTime());
     return unpaidCoupons.length > 0 ? unpaidCoupons[0] : null;
   };
@@ -406,14 +468,14 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
   // Find the most recently paid coupon (latest payment date among paid coupons)
   const getMostRecentlyPaidCoupon = (): CouponPeriod | null => {
     const paidCoupons = couponPeriods
-      .filter(p => p.paid)
+      .filter((p) => p.paid)
       .sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
     return paidCoupons.length > 0 ? paidCoupons[0] : null;
   };
 
   const nextUnpaidCoupon = getNextUnpaidCoupon();
   const mostRecentlyPaidCoupon = getMostRecentlyPaidCoupon();
-  
+
   const canPayCoupon = (period: CouponPeriod): boolean => {
     if (period.paid) return false;
     if (!nextUnpaidCoupon) return false;
@@ -428,39 +490,41 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
 
   // Calculate coupon statistics
   const totalCoupons = couponPeriods.length;
-  const paidCoupons = couponPeriods.filter(p => p.paid).length;
+  const paidCoupons = couponPeriods.filter((p) => p.paid).length;
   const unpaidCoupons = totalCoupons - paidCoupons;
   const totalPaidAmount = couponPeriods
-    .filter(p => p.paid && p.couponAmount)
+    .filter((p) => p.paid && p.couponAmount)
     .reduce((sum, p) => sum + (p.couponAmount || 0), 0);
 
   // Derive frequency and maturity from coupon periods
   const getScheduleDescription = () => {
     if (couponPeriods.length === 0) return '';
-    
+
     // Get maturity from last period
     const lastPeriod = couponPeriods[couponPeriods.length - 1];
     const maturityDate = new Date(lastPeriod.periodEndDate);
     const maturityYear = maturityDate.getFullYear();
     const maturityMonth = maturityDate.toLocaleDateString('en-US', { month: 'short' });
-    
+
     // Use trade's premium frequency if available
     let frequency = 'Periodic';
     if (trade?.premiumFrequency) {
       // Map the database values to display names
       const frequencyMap: Record<string, string> = {
-        'MONTHLY': 'Monthly',
-        'QUARTERLY': 'Quarterly',
-        'SEMI_ANNUAL': 'Semi-annual',
-        'ANNUAL': 'Annual'
+        MONTHLY: 'Monthly',
+        QUARTERLY: 'Quarterly',
+        SEMI_ANNUAL: 'Semi-annual',
+        ANNUAL: 'Annual',
       };
       frequency = frequencyMap[trade.premiumFrequency] || trade.premiumFrequency;
     } else if (couponPeriods.length > 1) {
       // Fall back to calculating from payment date intervals if trade data not available
       const firstPayment = new Date(couponPeriods[0].paymentDate);
       const secondPayment = new Date(couponPeriods[1].paymentDate);
-      const daysDiff = Math.round((secondPayment.getTime() - firstPayment.getTime()) / (1000 * 60 * 60 * 24));
-      
+      const daysDiff = Math.round(
+        (secondPayment.getTime() - firstPayment.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
       // More lenient ranges for CDS IMM schedules
       // Quarterly: ~91 days (3 months)
       // Semi-annual: ~182 days (6 months)
@@ -471,7 +535,7 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
       else if (daysDiff >= 170 && daysDiff <= 195) frequency = 'Semi-annual';
       else if (daysDiff >= 350 && daysDiff <= 375) frequency = 'Annual';
     }
-    
+
     return `${frequency} until ${maturityMonth} ${maturityYear}`;
   };
 
@@ -485,11 +549,16 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
         <div className="flex justify-between items-start mb-3">
           <h3 className="text-fd-green font-semibold flex items-center gap-2">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+              ></path>
             </svg>
             ORE Valuation
           </h3>
-          
+
           {/* Valuation Date Quick Selector */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-fd-text-muted">Valuation Date:</span>
@@ -499,7 +568,7 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
                 disabled={loading || recalculating}
                 className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
                   valuationDate === undefined || valuationDate === ''
-                    ? 'bg-fd-green text-fd-dark' 
+                    ? 'bg-fd-green text-fd-dark'
                     : 'bg-fd-dark text-fd-text hover:bg-fd-border'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
@@ -509,8 +578,8 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
                 onClick={() => handleQuickValuationDate('t+1')}
                 disabled={loading || recalculating}
                 className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
-                  valuationDate === getBusinessDaysFromToday(1) 
-                    ? 'bg-fd-green text-fd-dark' 
+                  valuationDate === getBusinessDaysFromToday(1)
+                    ? 'bg-fd-green text-fd-dark'
                     : 'bg-fd-dark text-fd-text hover:bg-fd-border'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
@@ -520,8 +589,8 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
                 onClick={() => handleQuickValuationDate('t+7')}
                 disabled={loading || recalculating}
                 className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
-                  valuationDate === getBusinessDaysFromToday(7) 
-                    ? 'bg-fd-green text-fd-dark' 
+                  valuationDate === getBusinessDaysFromToday(7)
+                    ? 'bg-fd-green text-fd-dark'
                     : 'bg-fd-dark text-fd-text hover:bg-fd-border'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
@@ -531,8 +600,8 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
                 onClick={() => handleQuickValuationDate('t+45')}
                 disabled={loading || recalculating}
                 className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
-                  valuationDate === getBusinessDaysFromToday(45) 
-                    ? 'bg-fd-green text-fd-dark' 
+                  valuationDate === getBusinessDaysFromToday(45)
+                    ? 'bg-fd-green text-fd-dark'
                     : 'bg-fd-dark text-fd-text hover:bg-fd-border'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
@@ -541,7 +610,7 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
             </div>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-fd-dark rounded p-3">
             <div className="text-xs text-fd-text-muted mb-1">Net Present Value</div>
@@ -551,7 +620,9 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
           </div>
           <div className="bg-fd-dark rounded p-3">
             <div className="text-xs text-fd-text-muted mb-1">Currency</div>
-            <div className="text-2xl font-bold text-fd-text font-mono">{data.currency || 'USD'}</div>
+            <div className="text-2xl font-bold text-fd-text font-mono">
+              {data.currency || 'USD'}
+            </div>
           </div>
           <div className="bg-fd-dark rounded p-3">
             <div className="text-xs text-fd-text-muted mb-1">Valuation Time</div>
@@ -567,11 +638,16 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
         <div className="bg-fd-darker p-4 rounded-md border border-fd-border">
           <h3 className="text-fd-green font-semibold mb-3 flex items-center gap-2">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+              ></path>
             </svg>
             CDS Valuation Breakdown
           </h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
             {data.jtd !== null && data.jtd !== undefined && (
               <div className="md:col-span-2 lg:col-span-4 bg-fd-dark rounded p-3 border-l-4 border-fd-green">
@@ -586,27 +662,39 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
             )}
             <div>
               <span className="text-fd-text-muted">Fair Spread (Clean):</span>
-              <div className="font-mono text-fd-text font-semibold">{formatBasisPoints(data.fairSpreadClean)}</div>
+              <div className="font-mono text-fd-text font-semibold">
+                {formatBasisPoints(data.fairSpreadClean)}
+              </div>
             </div>
             <div>
               <span className="text-fd-text-muted">Fair Spread (Dirty):</span>
-              <div className="font-mono text-fd-text font-semibold">{formatBasisPoints(data.fairSpreadDirty)}</div>
+              <div className="font-mono text-fd-text font-semibold">
+                {formatBasisPoints(data.fairSpreadDirty)}
+              </div>
             </div>
             <div>
               <span className="text-fd-text-muted">Protection Leg NPV:</span>
-              <div className="font-mono text-fd-text font-semibold">{formatCurrency(data.protectionLegNPV, data.currency)}</div>
+              <div className="font-mono text-fd-text font-semibold">
+                {formatCurrency(data.protectionLegNPV, data.currency)}
+              </div>
             </div>
             <div>
               <span className="text-fd-text-muted">Premium Leg NPV:</span>
-              <div className="font-mono text-fd-text font-semibold">{formatCurrency(data.premiumLegNPVClean, data.currency)}</div>
+              <div className="font-mono text-fd-text font-semibold">
+                {formatCurrency(data.premiumLegNPVClean, data.currency)}
+              </div>
             </div>
             <div>
               <span className="text-fd-text-muted">Accrued Premium:</span>
-              <div className="font-mono text-fd-text">{formatCurrency(data.accruedPremium, data.currency)}</div>
+              <div className="font-mono text-fd-text">
+                {formatCurrency(data.accruedPremium, data.currency)}
+              </div>
             </div>
             <div>
               <span className="text-fd-text-muted">Upfront Premium:</span>
-              <div className="font-mono text-fd-text">{formatCurrency(data.upfrontPremium, data.currency)}</div>
+              <div className="font-mono text-fd-text">
+                {formatCurrency(data.upfrontPremium, data.currency)}
+              </div>
             </div>
             <div>
               <span className="text-fd-text-muted">Coupon Leg BPS:</span>
@@ -614,12 +702,16 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
             </div>
             <div>
               <span className="text-fd-text-muted">Current Notional:</span>
-              <div className="font-mono text-fd-text">{formatCurrency(data.currentNotional, data.currency)}</div>
+              <div className="font-mono text-fd-text">
+                {formatCurrency(data.currentNotional, data.currency)}
+              </div>
             </div>
             {riskyPV01 !== null && (
               <div>
                 <span className="text-fd-text-muted">Risky PV01:</span>
-                <div className="font-mono text-fd-text font-semibold text-fd-green">{formatValue(riskyPV01, 6)}</div>
+                <div className="font-mono text-fd-text font-semibold text-fd-green">
+                  {formatValue(riskyPV01, 6)}
+                </div>
                 <div className="text-xs text-fd-text-muted mt-0.5">
                   {data.riskyAnnuity ? 'From ORE' : 'Calculated'}
                 </div>
@@ -634,7 +726,9 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
             {paidCoupons > 0 && (
               <div>
                 <span className="text-fd-text-muted">Total Paid Coupons:</span>
-                <div className="font-mono text-fd-green font-semibold">{formatCurrency(totalPaidAmount, data.currency)}</div>
+                <div className="font-mono text-fd-green font-semibold">
+                  {formatCurrency(totalPaidAmount, data.currency)}
+                </div>
               </div>
             )}
           </div>
@@ -642,18 +736,25 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
       )}
 
       {/* Credit Risk Profile (if available) */}
-      {(data.defaultProbabilities && data.defaultProbabilities.length > 0) && (
+      {data.defaultProbabilities && data.defaultProbabilities.length > 0 && (
         <div className="bg-fd-darker p-4 rounded-md border border-fd-border">
           <h3 className="text-fd-green font-semibold mb-3 flex items-center gap-2">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-1.964-1.333-2.732 0L3.268 16c-.77 1.333.192 3 1.732 3z"></path>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-1.964-1.333-2.732 0L3.268 16c-.77 1.333.192 3 1.732 3z"
+              ></path>
             </svg>
             Credit Risk Profile
           </h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <h4 className="text-sm font-medium text-fd-text mb-2">Default Probabilities by Period</h4>
+              <h4 className="text-sm font-medium text-fd-text mb-2">
+                Default Probabilities by Period
+              </h4>
               <div className="space-y-1 text-sm">
                 {data.defaultProbabilities.slice(0, 6).map((prob, idx) => (
                   <div key={idx} className="flex justify-between">
@@ -663,7 +764,7 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
                 ))}
               </div>
             </div>
-            
+
             {data.expectedLosses && data.expectedLosses.length > 0 && (
               <div>
                 <h4 className="text-sm font-medium text-fd-text mb-2">Expected Losses by Period</h4>
@@ -671,7 +772,9 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
                   {data.expectedLosses.slice(0, 6).map((loss, idx) => (
                     <div key={idx} className="flex justify-between">
                       <span className="text-fd-text-muted">Period {idx + 1}:</span>
-                      <span className="font-mono text-fd-text">{formatCurrency(loss, data.currency)}</span>
+                      <span className="font-mono text-fd-text">
+                        {formatCurrency(loss, data.currency)}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -686,7 +789,12 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
         <div className="bg-fd-darker p-4 rounded-md border border-fd-border">
           <h3 className="text-fd-green font-semibold mb-3 flex items-center gap-2">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+              ></path>
             </svg>
             Coupon Payment Schedule
             <span className="ml-auto text-sm font-normal text-fd-text-muted">
@@ -699,12 +807,10 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
               </span>
             )}
           </h3>
-          
+
           {/* Schedule description */}
-          <div className="mb-3 text-sm text-fd-text-muted italic">
-            {getScheduleDescription()}
-          </div>
-          
+          <div className="mb-3 text-sm text-fd-text-muted italic">{getScheduleDescription()}</div>
+
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-fd-text">
               <thead>
@@ -720,31 +826,46 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
               </thead>
               <tbody>
                 {couponPeriods.map((period) => (
-                  <tr 
-                    key={period.id} 
+                  <tr
+                    key={period.id}
                     className={`border-b border-fd-border hover:bg-fd-dark transition-colors ${period.paid ? 'opacity-60' : ''}`}
                   >
-                    <td className="py-2 px-3 font-mono">{new Date(period.paymentDate).toLocaleDateString()}</td>
+                    <td className="py-2 px-3 font-mono">
+                      {new Date(period.paymentDate).toLocaleDateString()}
+                    </td>
                     <td className="py-2 px-3 text-fd-text-muted">
-                      {new Date(period.periodStartDate).toLocaleDateString()} → {new Date(period.periodEndDate).toLocaleDateString()}
+                      {new Date(period.periodStartDate).toLocaleDateString()} →{' '}
+                      {new Date(period.periodEndDate).toLocaleDateString()}
                     </td>
                     <td className="py-2 px-3 font-mono text-right">{period.accrualDays}</td>
-                    <td className="py-2 px-3 font-mono text-right">{formatCurrency(period.notionalAmount, data?.currency)}</td>
                     <td className="py-2 px-3 font-mono text-right">
-                      {period.couponAmount ? formatCurrency(period.couponAmount, data?.currency) : '-'}
+                      {formatCurrency(period.notionalAmount, data?.currency)}
+                    </td>
+                    <td className="py-2 px-3 font-mono text-right">
+                      {period.couponAmount
+                        ? formatCurrency(period.couponAmount, data?.currency)
+                        : '-'}
                     </td>
                     <td className="py-2 px-3">
                       {period.paid ? (
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-500/20 text-green-400">
                           <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                           Paid
                         </span>
                       ) : (
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-500/20 text-yellow-400">
                           <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                           Unpaid
                         </span>
@@ -773,7 +894,7 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
                           </span>
                         </div>
                       )}
-                      
+
                       {/* Show payment timestamp for other paid coupons */}
                       {period.paid && !canUnpayCoupon(period) && period.paidAt && (
                         <span className="text-xs text-fd-text-muted">
@@ -793,8 +914,14 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
                         <div className="flex gap-1 justify-center">
                           <button
                             onClick={() => handlePayCoupon(period.id, true)}
-                            disabled={!canPayCoupon(period) || payingPeriodId === period.id || recalculating}
-                            title={!canPayCoupon(period) ? 'You must pay earlier coupons first' : 'Pay on the scheduled payment date'}
+                            disabled={
+                              !canPayCoupon(period) || payingPeriodId === period.id || recalculating
+                            }
+                            title={
+                              !canPayCoupon(period)
+                                ? 'You must pay earlier coupons first'
+                                : 'Pay on the scheduled payment date'
+                            }
                             className="px-2 py-1 text-xs bg-fd-green text-fd-dark rounded font-medium hover:bg-fd-green-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
                             {payingPeriodId === period.id ? (
@@ -809,8 +936,14 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
                           </button>
                           <button
                             onClick={() => handlePayCoupon(period.id, false)}
-                            disabled={!canPayCoupon(period) || payingPeriodId === period.id || recalculating}
-                            title={!canPayCoupon(period) ? 'You must pay earlier coupons first' : 'Pay now (backdated)'}
+                            disabled={
+                              !canPayCoupon(period) || payingPeriodId === period.id || recalculating
+                            }
+                            title={
+                              !canPayCoupon(period)
+                                ? 'You must pay earlier coupons first'
+                                : 'Pay now (backdated)'
+                            }
                             className="px-2 py-1 text-xs bg-blue-600 text-white rounded font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
                             {canPayCoupon(period) ? 'Pay Now' : '🔒'}
@@ -830,17 +963,17 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
               </tbody>
             </table>
           </div>
-          
+
           <div className="mt-3 text-xs text-fd-text-muted">
             <p>
-              💡 <strong>Tip:</strong> Coupons must be paid sequentially by payment date. 
-              Only the next unpaid coupon can be paid — earlier coupons must be settled before later ones.
-              <br />
-              • <strong>Pay On Time:</strong> Marks the coupon as paid on its scheduled payment date (no accrued premium).
-              <br />
-              • <strong>Pay Now:</strong> Marks the coupon as paid today (shows accrued premium if applicable).
-              <br />
-              • <strong>Cancel:</strong> Reverts the most recently paid coupon (for demo purposes only).
+              💡 <strong>Tip:</strong> Coupons must be paid sequentially by payment date. Only the
+              next unpaid coupon can be paid — earlier coupons must be settled before later ones.
+              <br />• <strong>Pay On Time:</strong> Marks the coupon as paid on its scheduled
+              payment date (no accrued premium).
+              <br />• <strong>Pay Now:</strong> Marks the coupon as paid today (shows accrued
+              premium if applicable).
+              <br />• <strong>Cancel:</strong> Reverts the most recently paid coupon (for demo
+              purposes only).
               <br />
               Paying or canceling a coupon will trigger a risk recalculation.
             </p>
@@ -851,8 +984,18 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
       {/* No coupon schedule message */}
       {couponPeriods.length === 0 && data && !loading && (
         <div className="bg-fd-darker p-4 rounded-md border border-dashed border-fd-border text-center">
-          <svg className="w-12 h-12 text-fd-text-muted mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          <svg
+            className="w-12 h-12 text-fd-text-muted mx-auto mb-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            ></path>
           </svg>
           <p className="text-fd-text-muted mb-4">
             No coupon schedule generated for this trade yet.
@@ -900,8 +1043,18 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
       {/* No data message */}
       {!hasCashflows && !hasCDSMetrics && (
         <div className="bg-fd-darker p-6 rounded-md border border-dashed border-fd-border text-center">
-          <svg className="w-12 h-12 text-fd-text-muted mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          <svg
+            className="w-12 h-12 text-fd-text-muted mx-auto mb-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            ></path>
           </svg>
           <p className="text-fd-text-muted">
             Additional CDS metrics and cashflow schedule will appear here once available.

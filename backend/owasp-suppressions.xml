@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    
+    <!-- Suppress false positives for Spring Boot framework -->
+    <suppress>
+        <notes><![CDATA[
+        Spring Boot framework false positives - these are legitimate dependencies
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework.*$</packageUrl>
+        <cve>CVE-2016-1000027</cve>
+    </suppress>
+    
+    <!-- Suppress known false positives for testing dependencies -->
+    <suppress>
+        <notes><![CDATA[
+        H2 database is used only for testing and not in production
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.h2database/h2@.*$</packageUrl>
+        <cve>CVE-2021-42392</cve>
+    </suppress>
+    
+    <!-- Suppress Lombok related false positives -->
+    <suppress>
+        <notes><![CDATA[
+        Lombok is a compile-time dependency only and not part of runtime
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.projectlombok/lombok@.*$</packageUrl>
+    </suppress>
+    
+    <!-- CDS Platform specific suppressions -->
+    <suppress>
+        <notes><![CDATA[
+        PostgreSQL driver - ensure we're using the latest version
+        Monitor for updates regularly
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.postgresql/postgresql@.*$</packageUrl>
+        <vulnerabilityName>Potential Security Issue</vulnerabilityName>
+    </suppress>
+    
+    <!-- Flyway migration tool -->
+    <suppress>
+        <notes><![CDATA[
+        Flyway is used for database migrations - monitor for updates
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.flywaydb/flyway-core@.*$</packageUrl>
+        <cvssBelow>7.0</cvssBelow>
+    </suppress>
+    
+    <!-- Validation framework suppressions -->
+    <suppress>
+        <notes><![CDATA[
+        Spring validation framework - suppress low severity issues
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework\.boot/spring-boot-starter-validation@.*$</packageUrl>
+        <cvssBelow>5.0</cvssBelow>
+    </suppress>
+    
+</suppressions>

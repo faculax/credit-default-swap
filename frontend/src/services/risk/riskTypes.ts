@@ -54,11 +54,11 @@ export interface MarketDataSnapshot {
 export interface RiskMeasures {
   tradeId: number;
   valuationTimestamp: string;
-  
+
   // Core ORE fields
   npv?: number | null;
   currency?: string;
-  
+
   // Real CDS-specific fields from ORE
   fairSpreadClean?: number | null;
   fairSpreadDirty?: number | null;
@@ -72,19 +72,19 @@ export interface RiskMeasures {
   originalNotional?: number | null;
   riskyAnnuity?: number | null;
   jtd?: number | null; // Jump-to-default exposure
-  
+
   // Credit risk arrays
   defaultProbabilities?: number[] | null;
   expectedLosses?: number[] | null;
   accrualStartDates?: string[] | null;
   accrualEndDates?: string[] | null;
-  
+
   // Cashflow schedule
   cashflows?: Cashflow[] | null;
-  
+
   // Market data snapshot used for this calculation
   marketDataSnapshot?: MarketDataSnapshot | null;
-  
+
   // DEPRECATED - Fake metrics (kept for backwards compatibility)
   dv01?: number | null;
   gamma?: number | null;

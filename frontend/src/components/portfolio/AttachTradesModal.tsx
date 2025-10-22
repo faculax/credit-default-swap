@@ -8,7 +8,11 @@ interface AttachTradesModalProps {
   onSuccess: () => void;
 }
 
-const AttachTradesModal: React.FC<AttachTradesModalProps> = ({ portfolioId, onClose, onSuccess }) => {
+const AttachTradesModal: React.FC<AttachTradesModalProps> = ({
+  portfolioId,
+  onClose,
+  onSuccess,
+}) => {
   const [availableTrades, setAvailableTrades] = useState<CDSTradeResponse[]>([]);
   const [selectedTrades, setSelectedTrades] = useState<Map<number, ConstituentRequest>>(new Map());
   const [loading, setLoading] = useState(true);
@@ -35,32 +39,30 @@ const AttachTradesModal: React.FC<AttachTradesModalProps> = ({ portfolioId, onCl
 
   const handleTradeToggle = (trade: CDSTradeResponse) => {
     const newSelected = new Map(selectedTrades);
-    
+
     if (newSelected.has(trade.id)) {
       newSelected.delete(trade.id);
     } else {
-      const weightValue = weightType === 'NOTIONAL' 
-        ? trade.notionalAmount 
-        : 0.0;
-      
+      const weightValue = weightType === 'NOTIONAL' ? trade.notionalAmount : 0.0;
+
       newSelected.set(trade.id, {
         tradeId: trade.id,
         weightType: weightType,
-        weightValue: weightValue
+        weightValue: weightValue,
       });
     }
-    
+
     setSelectedTrades(newSelected);
   };
 
   const handleWeightChange = (tradeId: number, value: number) => {
     const newSelected = new Map(selectedTrades);
     const existing = newSelected.get(tradeId);
-    
+
     if (existing) {
       newSelected.set(tradeId, {
         ...existing,
-        weightValue: value
+        weightValue: value,
       });
       setSelectedTrades(newSelected);
     }
@@ -68,16 +70,16 @@ const AttachTradesModal: React.FC<AttachTradesModalProps> = ({ portfolioId, onCl
 
   const handleWeightTypeChange = (newType: 'NOTIONAL' | 'PERCENT') => {
     setWeightType(newType);
-    
+
     // Update all selected trades with new weight type
     const newSelected = new Map(selectedTrades);
     newSelected.forEach((req, tradeId) => {
-      const trade = availableTrades.find(t => t.id === tradeId);
+      const trade = availableTrades.find((t) => t.id === tradeId);
       if (trade) {
         newSelected.set(tradeId, {
           ...req,
           weightType: newType,
-          weightValue: newType === 'NOTIONAL' ? trade.notionalAmount : 0.0
+          weightValue: newType === 'NOTIONAL' ? trade.notionalAmount : 0.0,
         });
       }
     });
@@ -92,9 +94,11 @@ const AttachTradesModal: React.FC<AttachTradesModalProps> = ({ portfolioId, onCl
 
     // Validate percent weights
     if (weightType === 'PERCENT') {
-      const total = Array.from(selectedTrades.values())
-        .reduce((sum, req) => sum + req.weightValue, 0);
-      
+      const total = Array.from(selectedTrades.values()).reduce(
+        (sum, req) => sum + req.weightValue,
+        0
+      );
+
       if (Math.abs(total - 1.0) > 0.05) {
         setError(`Percent weights must sum to 1.0 (±0.05), current sum: ${total.toFixed(4)}`);
         return;
@@ -104,11 +108,11 @@ const AttachTradesModal: React.FC<AttachTradesModalProps> = ({ portfolioId, onCl
     try {
       setSubmitting(true);
       setError(null);
-      
+
       await portfolioService.attachTrades(portfolioId, {
-        trades: Array.from(selectedTrades.values())
+        trades: Array.from(selectedTrades.values()),
       });
-      
+
       onSuccess();
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || err.message || 'Failed to attach trades';
@@ -121,13 +125,19 @@ const AttachTradesModal: React.FC<AttachTradesModalProps> = ({ portfolioId, onCl
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'USD',
     }).format(amount);
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-fd-darker rounded-lg shadow-xl border border-fd-border max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-fd-darker rounded-lg shadow-xl border border-fd-border max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="px-6 py-4 border-b border-fd-border">
           <h3 className="text-lg font-semibold text-fd-text">Attach Trades to Portfolio</h3>
         </div>
@@ -178,19 +188,34 @@ const AttachTradesModal: React.FC<AttachTradesModalProps> = ({ portfolioId, onCl
             <table className="min-w-full divide-y divide-fd-border">
               <thead className="bg-fd-dark">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider"
+                  >
                     Select
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider"
+                  >
                     Trade ID
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider"
+                  >
                     Reference Entity
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider"
+                  >
                     Notional
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-fd-text-muted uppercase tracking-wider"
+                  >
                     Weight Value
                   </th>
                 </tr>
@@ -199,9 +224,12 @@ const AttachTradesModal: React.FC<AttachTradesModalProps> = ({ portfolioId, onCl
                 {availableTrades.map((trade) => {
                   const isSelected = selectedTrades.has(trade.id);
                   const weight = selectedTrades.get(trade.id);
-                  
+
                   return (
-                    <tr key={trade.id} className={`transition-colors ${isSelected ? 'bg-fd-dark ring-2 ring-fd-green' : 'hover:bg-fd-dark'}`}>
+                    <tr
+                      key={trade.id}
+                      className={`transition-colors ${isSelected ? 'bg-fd-dark ring-2 ring-fd-green' : 'hover:bg-fd-dark'}`}
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <input
                           type="checkbox"
@@ -224,7 +252,9 @@ const AttachTradesModal: React.FC<AttachTradesModalProps> = ({ portfolioId, onCl
                           <input
                             type="number"
                             value={weight.weightValue}
-                            onChange={(e) => handleWeightChange(trade.id, parseFloat(e.target.value) || 0)}
+                            onChange={(e) =>
+                              handleWeightChange(trade.id, parseFloat(e.target.value) || 0)
+                            }
                             step={weightType === 'PERCENT' ? '0.01' : '1000'}
                             min="0"
                             max={weightType === 'PERCENT' ? '1' : undefined}

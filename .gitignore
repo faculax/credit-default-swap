@@ -13,3 +13,29 @@ risk-engine/target/
 
 # OS files
 .DS_Store
+
+# Security and quality analysis reports
+**/dependency-check-report.html
+**/dependency-check-report.json
+**/spotbugsXml.xml
+**/spotbugs.html
+**/pmd.xml
+**/checkstyle-result.xml
+**/eslint-report.json
+**/npm-audit.json
+**/.scannerwork/
+**/sonar-project.properties
+
+# IDE and editor files
+*.swp
+*.swo
+*~
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+
+# OS files
+Thumbs.db
+.DS_Store

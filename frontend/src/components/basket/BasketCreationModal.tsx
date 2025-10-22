@@ -16,19 +16,19 @@ interface FormErrors {
 const BASKET_TYPE_OPTIONS = [
   { value: 'FIRST_TO_DEFAULT', label: 'First-to-Default (FTD)' },
   { value: 'NTH_TO_DEFAULT', label: 'N-th-to-Default' },
-  { value: 'TRANCHETTE', label: 'Tranchette (Loss Slice)' }
+  { value: 'TRANCHETTE', label: 'Tranchette (Loss Slice)' },
 ];
 
 const PREMIUM_FREQUENCY_OPTIONS = [
   { value: 'QUARTERLY', label: 'Quarterly' },
   { value: 'SEMI_ANNUAL', label: 'Semi-Annual' },
-  { value: 'ANNUAL', label: 'Annual' }
+  { value: 'ANNUAL', label: 'Annual' },
 ];
 
 const DAY_COUNT_OPTIONS = [
   { value: 'ACT_360', label: 'ACT/360' },
   { value: 'ACT_365', label: 'ACT/365' },
-  { value: 'THIRTY_360', label: '30/360' }
+  { value: 'THIRTY_360', label: '30/360' },
 ];
 
 const CURRENCY_OPTIONS = ['USD', 'EUR', 'GBP', 'JPY'];
@@ -36,16 +36,20 @@ const CURRENCY_OPTIONS = ['USD', 'EUR', 'GBP', 'JPY'];
 const SENIORITY_OPTIONS = [
   { value: 'SR_UNSEC', label: 'Senior Unsecured' },
   { value: 'SR_SEC', label: 'Senior Secured' },
-  { value: 'SUBORD', label: 'Subordinated' }
+  { value: 'SUBORD', label: 'Subordinated' },
 ];
 
-const BasketCreationModal: React.FC<BasketCreationModalProps> = ({ isOpen, onClose, onSuccess }) => {
+const BasketCreationModal: React.FC<BasketCreationModalProps> = ({
+  isOpen,
+  onClose,
+  onSuccess,
+}) => {
   const [formData, setFormData] = useState<Partial<Basket>>({
     type: 'FIRST_TO_DEFAULT',
     currency: 'USD',
     premiumFrequency: 'QUARTERLY',
     dayCount: 'ACT_360',
-    constituents: []
+    constituents: [],
   });
 
   const [constituents, setConstituents] = useState<Partial<BasketConstituent>[]>([]);
@@ -55,14 +59,14 @@ const BasketCreationModal: React.FC<BasketCreationModalProps> = ({ isOpen, onClo
   // Calculate normalized weights dynamically
   const calculateNormalizedWeights = () => {
     const totalWeight = constituents.reduce((sum, c) => sum + (c.weight || 0), 0);
-    
+
     if (totalWeight === 0) {
       // Equal weights if none provided
       return constituents.map(() => 1 / constituents.length);
     }
-    
+
     // Normalize to sum to 1
-    return constituents.map(c => (c.weight || 0) / totalWeight);
+    return constituents.map((c) => (c.weight || 0) / totalWeight);
   };
 
   const validateForm = (): boolean => {
@@ -85,14 +89,25 @@ const BasketCreationModal: React.FC<BasketCreationModalProps> = ({ isOpen, onClo
     }
 
     if (formData.type === 'TRANCHETTE') {
-      if (formData.attachmentPoint === undefined || formData.attachmentPoint < 0 || formData.attachmentPoint > 1) {
+      if (
+        formData.attachmentPoint === undefined ||
+        formData.attachmentPoint < 0 ||
+        formData.attachmentPoint > 1
+      ) {
         newErrors.attachmentPoint = 'Attachment point must be between 0 and 1';
       }
-      if (formData.detachmentPoint === undefined || formData.detachmentPoint < 0 || formData.detachmentPoint > 1) {
+      if (
+        formData.detachmentPoint === undefined ||
+        formData.detachmentPoint < 0 ||
+        formData.detachmentPoint > 1
+      ) {
         newErrors.detachmentPoint = 'Detachment point must be between 0 and 1';
       }
-      if (formData.attachmentPoint !== undefined && formData.detachmentPoint !== undefined &&
-          formData.attachmentPoint >= formData.detachmentPoint) {
+      if (
+        formData.attachmentPoint !== undefined &&
+        formData.detachmentPoint !== undefined &&
+        formData.attachmentPoint >= formData.detachmentPoint
+      ) {
         newErrors.detachmentPoint = 'Detachment point must be greater than attachment point';
       }
     }
@@ -127,15 +142,15 @@ const BasketCreationModal: React.FC<BasketCreationModalProps> = ({ isOpen, onClo
   };
 
   const handleInputChange = (field: keyof Basket, value: any) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
 
     if (errors[field]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [field]: ''
+        [field]: '',
       }));
     }
   };
@@ -147,9 +162,9 @@ const BasketCreationModal: React.FC<BasketCreationModalProps> = ({ isOpen, onClo
 
     const errorKey = `constituent_${index}_${field}`;
     if (errors[errorKey]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [errorKey]: ''
+        [errorKey]: '',
       }));
     }
   };
@@ -173,7 +188,7 @@ const BasketCreationModal: React.FC<BasketCreationModalProps> = ({ isOpen, onClo
 
     try {
       const normalizedWeights = calculateNormalizedWeights();
-      
+
       const basketRequest = {
         ...formData,
         constituents: constituents.map((c, idx) => ({
@@ -181,8 +196,8 @@ const BasketCreationModal: React.FC<BasketCreationModalProps> = ({ isOpen, onClo
           weight: normalizedWeights[idx],
           recoveryOverride: c.recoveryOverride,
           seniority: c.seniority || 'SR_UNSEC',
-          sector: c.sector
-        }))
+          sector: c.sector,
+        })),
       };
 
       const basket = await basketService.createBasket(basketRequest as any);
@@ -202,7 +217,7 @@ const BasketCreationModal: React.FC<BasketCreationModalProps> = ({ isOpen, onClo
       currency: 'USD',
       premiumFrequency: 'QUARTERLY',
       dayCount: 'ACT_360',
-      constituents: []
+      constituents: [],
     });
     setConstituents([]);
     setErrors({});
@@ -213,20 +228,29 @@ const BasketCreationModal: React.FC<BasketCreationModalProps> = ({ isOpen, onClo
   const normalizedWeights = calculateNormalizedWeights();
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-fd-darker rounded-lg shadow-xl border border-fd-border max-w-6xl w-full max-h-[90vh] overflow-y-auto m-4" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-fd-darker rounded-lg shadow-xl border border-fd-border max-w-6xl w-full max-h-[90vh] overflow-y-auto m-4"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="sticky top-0 bg-fd-darker border-b border-fd-border px-6 py-4 flex justify-between items-center z-10">
-          <h2 className="text-xl font-semibold text-fd-text">
-            Create New Basket Derivative
-          </h2>
+          <h2 className="text-xl font-semibold text-fd-text">Create New Basket Derivative</h2>
           <button
             onClick={onClose}
             className="text-fd-text-muted hover:text-fd-text transition-colors"
             aria-label="Close modal"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -234,7 +258,6 @@ const BasketCreationModal: React.FC<BasketCreationModalProps> = ({ isOpen, onClo
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
             {/* Basic Information Section */}
             <div className="md:col-span-2">
               <h3 className="text-sm font-semibold text-fd-text-muted uppercase tracking-wide mb-4">
@@ -265,8 +288,10 @@ const BasketCreationModal: React.FC<BasketCreationModalProps> = ({ isOpen, onClo
                 onChange={(e) => handleInputChange('type', e.target.value as BasketType)}
                 className="w-full px-3 py-2 bg-fd-dark border border-fd-border text-fd-text rounded-md focus:outline-none focus:ring-2 focus:ring-fd-green focus:border-transparent"
               >
-                {BASKET_TYPE_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                {BASKET_TYPE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
                 ))}
               </select>
               {errors.type && <p className="mt-1 text-sm text-red-400">{errors.type}</p>}
@@ -303,11 +328,15 @@ const BasketCreationModal: React.FC<BasketCreationModalProps> = ({ isOpen, onClo
                     min="0"
                     max="1"
                     value={formData.attachmentPoint || ''}
-                    onChange={(e) => handleInputChange('attachmentPoint', parseFloat(e.target.value))}
+                    onChange={(e) =>
+                      handleInputChange('attachmentPoint', parseFloat(e.target.value))
+                    }
                     className={`w-full px-3 py-2 bg-fd-dark border ${errors.attachmentPoint ? 'border-red-500' : 'border-fd-border'} text-fd-text rounded-md focus:outline-none focus:ring-2 focus:ring-fd-green focus:border-transparent`}
                     placeholder="e.g., 0.03 for 3%"
                   />
-                  {errors.attachmentPoint && <p className="mt-1 text-sm text-red-400">{errors.attachmentPoint}</p>}
+                  {errors.attachmentPoint && (
+                    <p className="mt-1 text-sm text-red-400">{errors.attachmentPoint}</p>
+                  )}
                 </div>
 
                 <div>
@@ -320,11 +349,15 @@ const BasketCreationModal: React.FC<BasketCreationModalProps> = ({ isOpen, onClo
                     min="0"
                     max="1"
                     value={formData.detachmentPoint || ''}
-                    onChange={(e) => handleInputChange('detachmentPoint', parseFloat(e.target.value))}
+                    onChange={(e) =>
+                      handleInputChange('detachmentPoint', parseFloat(e.target.value))
+                    }
                     className={`w-full px-3 py-2 bg-fd-dark border ${errors.detachmentPoint ? 'border-red-500' : 'border-fd-border'} text-fd-text rounded-md focus:outline-none focus:ring-2 focus:ring-fd-green focus:border-transparent`}
                     placeholder="e.g., 0.07 for 7%"
                   />
-                  {errors.detachmentPoint && <p className="mt-1 text-sm text-red-400">{errors.detachmentPoint}</p>}
+                  {errors.detachmentPoint && (
+                    <p className="mt-1 text-sm text-red-400">{errors.detachmentPoint}</p>
+                  )}
                 </div>
               </>
             )}
@@ -345,8 +378,10 @@ const BasketCreationModal: React.FC<BasketCreationModalProps> = ({ isOpen, onClo
                 onChange={(e) => handleInputChange('currency', e.target.value)}
                 className="w-full px-3 py-2 bg-fd-dark border border-fd-border text-fd-text rounded-md focus:outline-none focus:ring-2 focus:ring-fd-green focus:border-transparent"
               >
-                {CURRENCY_OPTIONS.map(curr => (
-                  <option key={curr} value={curr}>{curr}</option>
+                {CURRENCY_OPTIONS.map((curr) => (
+                  <option key={curr} value={curr}>
+                    {curr}
+                  </option>
                 ))}
               </select>
             </div>
@@ -375,8 +410,10 @@ const BasketCreationModal: React.FC<BasketCreationModalProps> = ({ isOpen, onClo
                 onChange={(e) => handleInputChange('premiumFrequency', e.target.value)}
                 className="w-full px-3 py-2 bg-fd-dark border border-fd-border text-fd-text rounded-md focus:outline-none focus:ring-2 focus:ring-fd-green focus:border-transparent"
               >
-                {PREMIUM_FREQUENCY_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                {PREMIUM_FREQUENCY_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -390,8 +427,10 @@ const BasketCreationModal: React.FC<BasketCreationModalProps> = ({ isOpen, onClo
                 onChange={(e) => handleInputChange('dayCount', e.target.value)}
                 className="w-full px-3 py-2 bg-fd-dark border border-fd-border text-fd-text rounded-md focus:outline-none focus:ring-2 focus:ring-fd-green focus:border-transparent"
               >
-                {DAY_COUNT_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                {DAY_COUNT_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -406,7 +445,9 @@ const BasketCreationModal: React.FC<BasketCreationModalProps> = ({ isOpen, onClo
                 onChange={(e) => handleInputChange('maturityDate', e.target.value)}
                 className={`w-full px-3 py-2 bg-fd-dark border ${errors.maturityDate ? 'border-red-500' : 'border-fd-border'} text-fd-text rounded-md focus:outline-none focus:ring-2 focus:ring-fd-green focus:border-transparent`}
               />
-              {errors.maturityDate && <p className="mt-1 text-sm text-red-400">{errors.maturityDate}</p>}
+              {errors.maturityDate && (
+                <p className="mt-1 text-sm text-red-400">{errors.maturityDate}</p>
+              )}
             </div>
 
             {/* Constituents Section */}
@@ -424,12 +465,17 @@ const BasketCreationModal: React.FC<BasketCreationModalProps> = ({ isOpen, onClo
                 </button>
               </div>
 
-              {errors.constituents && <p className="mb-2 text-sm text-red-400">{errors.constituents}</p>}
+              {errors.constituents && (
+                <p className="mb-2 text-sm text-red-400">{errors.constituents}</p>
+              )}
 
               {constituents.map((constituent, index) => {
                 const normalizedWeight = normalizedWeights[index];
                 return (
-                  <div key={index} className="mb-4 p-4 bg-fd-dark border border-fd-border rounded-md">
+                  <div
+                    key={index}
+                    className="mb-4 p-4 bg-fd-dark border border-fd-border rounded-md"
+                  >
                     <div className="flex justify-between items-center mb-3">
                       <h4 className="text-sm font-medium text-fd-text">Constituent #{index + 1}</h4>
                       <button
@@ -459,7 +505,9 @@ const BasketCreationModal: React.FC<BasketCreationModalProps> = ({ isOpen, onClo
                           ))}
                         </select>
                         {errors[`constituent_${index}_issuer`] && (
-                          <p className="mt-1 text-xs text-red-400">{errors[`constituent_${index}_issuer`]}</p>
+                          <p className="mt-1 text-xs text-red-400">
+                            {errors[`constituent_${index}_issuer`]}
+                          </p>
                         )}
                       </div>
 
@@ -471,7 +519,13 @@ const BasketCreationModal: React.FC<BasketCreationModalProps> = ({ isOpen, onClo
                           type="number"
                           step="0.01"
                           value={constituent.weight || ''}
-                          onChange={(e) => handleConstituentChange(index, 'weight', parseFloat(e.target.value) || 0)}
+                          onChange={(e) =>
+                            handleConstituentChange(
+                              index,
+                              'weight',
+                              parseFloat(e.target.value) || 0
+                            )
+                          }
                           className="w-full px-2 py-1 text-sm bg-fd-darker border border-fd-border text-fd-text rounded-md focus:outline-none focus:ring-1 focus:ring-fd-green"
                           placeholder={`Auto: ${normalizedWeight.toFixed(4)}`}
                         />
@@ -488,11 +542,15 @@ const BasketCreationModal: React.FC<BasketCreationModalProps> = ({ isOpen, onClo
                         </label>
                         <select
                           value={constituent.seniority || 'SR_UNSEC'}
-                          onChange={(e) => handleConstituentChange(index, 'seniority', e.target.value)}
+                          onChange={(e) =>
+                            handleConstituentChange(index, 'seniority', e.target.value)
+                          }
                           className="w-full px-2 py-1 text-sm bg-fd-darker border border-fd-border text-fd-text rounded-md focus:outline-none focus:ring-1 focus:ring-fd-green"
                         >
-                          {SENIORITY_OPTIONS.map(opt => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          {SENIORITY_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
                           ))}
                         </select>
                       </div>
@@ -507,7 +565,13 @@ const BasketCreationModal: React.FC<BasketCreationModalProps> = ({ isOpen, onClo
                           min="0"
                           max="1"
                           value={constituent.recoveryOverride || ''}
-                          onChange={(e) => handleConstituentChange(index, 'recoveryOverride', parseFloat(e.target.value))}
+                          onChange={(e) =>
+                            handleConstituentChange(
+                              index,
+                              'recoveryOverride',
+                              parseFloat(e.target.value)
+                            )
+                          }
                           className="w-full px-2 py-1 text-sm bg-fd-darker border border-fd-border text-fd-text rounded-md focus:outline-none focus:ring-1 focus:ring-fd-green"
                           placeholder="Optional"
                         />

@@ -13,7 +13,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, trade, on
   const formatCurrency = (amount: number, currency: string) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: currency || 'USD'
+      currency: currency || 'USD',
     }).format(amount);
   };
 
@@ -21,7 +21,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, trade, on
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -41,8 +41,18 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, trade, on
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-fd-green rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-fd-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+              <svg
+                className="w-5 h-5 text-fd-dark"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M5 13l4 4L19 7"
+                ></path>
               </svg>
             </div>
             <h2 className="text-2xl font-bold text-fd-text">Trade Booked Successfully</h2>
@@ -52,7 +62,12 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, trade, on
             className="text-fd-text-muted hover:text-fd-text transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
             </svg>
           </button>
         </div>
@@ -69,8 +84,10 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, trade, on
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-fd-text border-b border-fd-border pb-2">Trade Details</h3>
-          
+          <h3 className="text-lg font-semibold text-fd-text border-b border-fd-border pb-2">
+            Trade Details
+          </h3>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <div className="flex justify-between">
@@ -83,7 +100,9 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, trade, on
               </div>
               <div className="flex justify-between">
                 <span className="text-fd-text-muted">Direction:</span>
-                <span className={`${trade.buySellProtection === 'BUY' ? 'text-blue-400' : 'text-orange-400'}`}>
+                <span
+                  className={`${trade.buySellProtection === 'BUY' ? 'text-blue-400' : 'text-orange-400'}`}
+                >
                   {trade.buySellProtection === 'BUY' ? 'Buy Protection' : 'Sell Protection'}
                 </span>
               </div>

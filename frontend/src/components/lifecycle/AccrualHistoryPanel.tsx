@@ -46,14 +46,14 @@ export const AccrualHistoryPanel: React.FC<Props> = ({ tradeId }) => {
           <input
             type="date"
             value={range.start}
-            onChange={e => setRange(r => ({ ...r, start: e.target.value }))}
+            onChange={(e) => setRange((r) => ({ ...r, start: e.target.value }))}
             className="bg-fd-dark border border-fd-border rounded px-2 py-1 text-xs text-fd-text"
           />
           <span className="text-fd-text-muted text-xs">to</span>
           <input
             type="date"
             value={range.end}
-            onChange={e => setRange(r => ({ ...r, end: e.target.value }))}
+            onChange={(e) => setRange((r) => ({ ...r, end: e.target.value }))}
             className="bg-fd-dark border border-fd-border rounded px-2 py-1 text-xs text-fd-text"
           />
           <button
@@ -67,13 +67,18 @@ export const AccrualHistoryPanel: React.FC<Props> = ({ tradeId }) => {
       </div>
       {cumulative !== null && (
         <div className="bg-fd-dark border border-fd-border rounded p-3 flex items-center justify-between">
-          <span className="text-fd-text-muted text-xs uppercase tracking-wide">Cumulative Accrual</span>
-          <span className="text-fd-green font-semibold">{cumulative.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          <span className="text-fd-text-muted text-xs uppercase tracking-wide">
+            Cumulative Accrual
+          </span>
+          <span className="text-fd-green font-semibold">
+            {cumulative.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </span>
         </div>
       )}
-      {loading && (
-        <div className="text-fd-text-muted text-sm">Loading accruals...</div>
-      )}
+      {loading && <div className="text-fd-text-muted text-sm">Loading accruals...</div>}
       {error && <div className="text-red-400 text-sm">{error}</div>}
       {!loading && accruals.length === 0 && !error && range.start && range.end && (
         <div className="text-fd-text-muted text-sm">No accruals in range.</div>
@@ -91,12 +96,18 @@ export const AccrualHistoryPanel: React.FC<Props> = ({ tradeId }) => {
               </tr>
             </thead>
             <tbody>
-              {accruals.map(a => (
+              {accruals.map((a) => (
                 <tr key={a.id} className="border-t border-fd-border hover:bg-fd-darker/40">
                   <td className="px-3 py-1 text-fd-text font-mono">{a.accrualDate}</td>
-                  <td className="px-3 py-1 text-fd-green font-medium">{a.accrualAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                  <td className="px-3 py-1 text-fd-text-muted">{a.cumulativeAccrual.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                  <td className="px-3 py-1 text-fd-text-muted">{a.notionalAmount.toLocaleString()}</td>
+                  <td className="px-3 py-1 text-fd-green font-medium">
+                    {a.accrualAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </td>
+                  <td className="px-3 py-1 text-fd-text-muted">
+                    {a.cumulativeAccrual.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </td>
+                  <td className="px-3 py-1 text-fd-text-muted">
+                    {a.notionalAmount.toLocaleString()}
+                  </td>
                   <td className="px-3 py-1 text-fd-text-muted">{a.tradeVersion}</td>
                 </tr>
               ))}

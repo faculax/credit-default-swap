@@ -5,13 +5,13 @@ export interface SettlementView {
   tradeId: string;
   creditEventId: string;
   createdAt: string;
-  
+
   // Cash settlement fields
   notional?: number;
   recoveryRate?: number;
   payoutAmount?: number;
   calculatedAt?: string;
-  
+
   // Physical settlement fields
   referenceObligationIsin?: string;
   proposedDeliveryDate?: string;
@@ -28,7 +28,7 @@ interface SettlementViewProps {
 const SettlementViewComponent: React.FC<SettlementViewProps> = ({
   settlement,
   isLoading = false,
-  error
+  error,
 }) => {
   if (isLoading) {
     return (
@@ -47,7 +47,11 @@ const SettlementViewComponent: React.FC<SettlementViewProps> = ({
         <div className="flex">
           <div className="flex-shrink-0">
             <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                clipRule="evenodd"
+              />
             </svg>
           </div>
           <div className="ml-3">
@@ -73,7 +77,7 @@ const SettlementViewComponent: React.FC<SettlementViewProps> = ({
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-      minimumFractionDigits: 2
+      minimumFractionDigits: 2,
     }).format(amount);
   };
 
@@ -85,18 +89,18 @@ const SettlementViewComponent: React.FC<SettlementViewProps> = ({
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6">
       <div className="flex items-center mb-4">
-        <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          settlement.type === 'cash' 
-            ? 'bg-green-100 text-green-800' 
-            : 'bg-blue-100 text-blue-800'
-        }`}>
+        <div
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            settlement.type === 'cash' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+          }`}
+        >
           {settlement.type === 'cash' ? 'Cash Settlement' : 'Physical Settlement'}
         </div>
       </div>
@@ -113,18 +117,20 @@ const SettlementViewComponent: React.FC<SettlementViewProps> = ({
             <div>
               <label className="block text-sm font-medium text-gray-700">Recovery Rate</label>
               <p className="mt-1 text-lg font-semibold text-gray-900">
-                {settlement.recoveryRate !== undefined ? formatPercentage(settlement.recoveryRate) : 'N/A'}
+                {settlement.recoveryRate !== undefined
+                  ? formatPercentage(settlement.recoveryRate)
+                  : 'N/A'}
               </p>
             </div>
           </div>
-          
+
           <div className="border-t border-gray-200 pt-4">
             <label className="block text-sm font-medium text-gray-700">Payout Amount</label>
             <p className="mt-1 text-2xl font-bold text-green-600">
               {settlement.payoutAmount ? formatCurrency(settlement.payoutAmount) : 'N/A'}
             </p>
           </div>
-          
+
           {settlement.calculatedAt && (
             <div className="text-sm text-gray-500">
               Calculated on {formatDate(settlement.calculatedAt)}
@@ -137,22 +143,26 @@ const SettlementViewComponent: React.FC<SettlementViewProps> = ({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-700">Status</span>
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-              settlement.status === 'DRAFT' 
-                ? 'bg-yellow-100 text-yellow-800'
-                : settlement.status === 'PENDING'
-                ? 'bg-blue-100 text-blue-800'
-                : settlement.status === 'CONFIRMED'
-                ? 'bg-green-100 text-green-800'
-                : 'bg-gray-100 text-gray-800'
-            }`}>
+            <span
+              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                settlement.status === 'DRAFT'
+                  ? 'bg-yellow-100 text-yellow-800'
+                  : settlement.status === 'PENDING'
+                    ? 'bg-blue-100 text-blue-800'
+                    : settlement.status === 'CONFIRMED'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-gray-100 text-gray-800'
+              }`}
+            >
               {settlement.status || 'Unknown'}
             </span>
           </div>
 
           {settlement.referenceObligationIsin && (
             <div>
-              <label className="block text-sm font-medium text-gray-700">Reference Obligation ISIN</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Reference Obligation ISIN
+              </label>
               <p className="mt-1 text-sm text-gray-900 font-mono">
                 {settlement.referenceObligationIsin}
               </p>
@@ -161,7 +171,9 @@ const SettlementViewComponent: React.FC<SettlementViewProps> = ({
 
           {settlement.proposedDeliveryDate && (
             <div>
-              <label className="block text-sm font-medium text-gray-700">Proposed Delivery Date</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Proposed Delivery Date
+              </label>
               <p className="mt-1 text-sm text-gray-900">
                 {formatDate(settlement.proposedDeliveryDate)}
               </p>
@@ -171,9 +183,7 @@ const SettlementViewComponent: React.FC<SettlementViewProps> = ({
           {settlement.notes && (
             <div>
               <label className="block text-sm font-medium text-gray-700">Notes</label>
-              <p className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">
-                {settlement.notes}
-              </p>
+              <p className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{settlement.notes}</p>
             </div>
           )}
 

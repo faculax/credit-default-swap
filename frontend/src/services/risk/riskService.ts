@@ -1,37 +1,40 @@
 import { RiskMeasures, ScenarioResponse } from './riskTypes';
 import { API_BASE_URL as API_BASE } from '../../config/api';
 
-export async function fetchRiskMeasures(tradeId: number, valuationDate?: string): Promise<RiskMeasures> {
-  // Use the ORE calculation endpoint instead of legacy endpoint  
+export async function fetchRiskMeasures(
+  tradeId: number,
+  valuationDate?: string
+): Promise<RiskMeasures> {
+  // Use the ORE calculation endpoint instead of legacy endpoint
   const finalValuationDate = valuationDate || new Date().toISOString().split('T')[0];
-  
+
   console.log(`🔍 DEBUG fetchRiskMeasures called with:`, {
     tradeId,
     valuationDate_param: valuationDate,
-    finalValuationDate
+    finalValuationDate,
   });
-  
+
   const scenarioRequest = {
     scenarioId: `cds-${tradeId}-base`,
     tradeIds: [tradeId],
     valuationDate: finalValuationDate, // Custom date or today's date in YYYY-MM-DD format
-    scenarios: {} // Empty scenarios for base calculation
+    scenarios: {}, // Empty scenarios for base calculation
   };
-  
+
   console.log(`🔍 DEBUG scenarioRequest:`, scenarioRequest);
 
   const res = await fetch(`${API_BASE}/risk/scenario/calculate`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     },
-    body: JSON.stringify(scenarioRequest)
+    body: JSON.stringify(scenarioRequest),
   });
-  
-  if(!res.ok) throw new Error('Failed to fetch risk measures from ORE');
-  
+
+  if (!res.ok) throw new Error('Failed to fetch risk measures from ORE');
+
   const results = await res.json();
-  
+
   // The ORE endpoint returns a List<RiskMeasures>, so we take the first result
   // which corresponds to our single trade
   if (Array.isArray(results) && results.length > 0) {
@@ -41,34 +44,37 @@ export async function fetchRiskMeasures(tradeId: number, valuationDate?: string)
   }
 }
 
-export async function runRiskScenarios(tradeId: number, parallelBpsShifts: number[]): Promise<ScenarioResponse> {
+export async function runRiskScenarios(
+  tradeId: number,
+  parallelBpsShifts: number[]
+): Promise<ScenarioResponse> {
   // Create base scenario request for ORE
   const baseScenarioRequest = {
     scenarioId: `cds-${tradeId}-base`,
     tradeIds: [tradeId],
     valuationDate: new Date().toISOString().split('T')[0],
-    scenarios: {}
+    scenarios: {},
   };
 
   // Get base measures using ORE
   const baseRes = await fetch(`${API_BASE}/risk/scenario/calculate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(baseScenarioRequest)
+    body: JSON.stringify(baseScenarioRequest),
   });
-  
+
   if (!baseRes.ok) throw new Error('Failed to get base risk measures from ORE');
   const baseResults = await baseRes.json();
-  
+
   if (!Array.isArray(baseResults) || baseResults.length === 0) {
     throw new Error('No base risk measures returned from ORE');
   }
-  
+
   const baseMeasures = baseResults[0];
 
   // Calculate scenarios using ORE
   const scenarios = [];
-  
+
   for (const shift of parallelBpsShifts) {
     const scenarioRequest = {
       scenarioId: `cds-${tradeId}-parallel-${shift}bp`,
@@ -76,37 +82,37 @@ export async function runRiskScenarios(tradeId: number, parallelBpsShifts: numbe
       valuationDate: new Date().toISOString().split('T')[0],
       scenarios: {
         // Apply parallel shift to curve points (example - adjust as needed)
-        "USD_1Y": shift / 10000, // Convert bps to decimal
-        "USD_2Y": shift / 10000,
-        "USD_3Y": shift / 10000,
-        "USD_5Y": shift / 10000,
-        "USD_7Y": shift / 10000,
-        "USD_10Y": shift / 10000
-      }
+        USD_1Y: shift / 10000, // Convert bps to decimal
+        USD_2Y: shift / 10000,
+        USD_3Y: shift / 10000,
+        USD_5Y: shift / 10000,
+        USD_7Y: shift / 10000,
+        USD_10Y: shift / 10000,
+      },
     };
 
     const res = await fetch(`${API_BASE}/risk/scenario/calculate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(scenarioRequest)
+      body: JSON.stringify(scenarioRequest),
     });
-    
+
     if (!res.ok) {
       console.warn(`Failed to calculate scenario for ${shift}bp shift`);
       continue;
     }
-    
+
     const results = await res.json();
     if (Array.isArray(results) && results.length > 0) {
       scenarios.push({
         scenario: `PARALLEL_${shift}BP`,
-        measures: results[0]
+        measures: results[0],
       });
     }
   }
 
   return {
     base: baseMeasures,
-    scenarios
+    scenarios,
   };
 }

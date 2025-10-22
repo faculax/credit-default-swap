@@ -28,14 +28,14 @@ const TopBar: React.FC = () => {
               </button>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-4">
             <span className="text-fd-text-muted text-sm">
-              {currentTime.toLocaleDateString('en-US', { 
-                weekday: 'short', 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric' 
+              {currentTime.toLocaleDateString('en-US', {
+                weekday: 'short',
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
               })}
             </span>
             <span className="text-fd-green font-mono text-lg">
@@ -43,7 +43,7 @@ const TopBar: React.FC = () => {
                 hour12: false,
                 hour: '2-digit',
                 minute: '2-digit',
-                second: '2-digit'
+                second: '2-digit',
               })}
             </span>
           </div>

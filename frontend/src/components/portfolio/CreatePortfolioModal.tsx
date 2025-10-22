@@ -14,7 +14,7 @@ const CreatePortfolioModal: React.FC<CreatePortfolioModalProps> = ({ onClose, on
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!name.trim()) {
       setError('Portfolio name is required');
       return;
@@ -35,8 +35,14 @@ const CreatePortfolioModal: React.FC<CreatePortfolioModalProps> = ({ onClose, on
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-fd-darker rounded-lg shadow-xl border border-fd-border max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-fd-darker rounded-lg shadow-xl border border-fd-border max-w-md w-full mx-4"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="px-6 py-4 border-b border-fd-border">
           <h3 className="text-lg font-semibold text-fd-text">Create New Portfolio</h3>
         </div>
@@ -66,7 +72,10 @@ const CreatePortfolioModal: React.FC<CreatePortfolioModalProps> = ({ onClose, on
           </div>
 
           <div>
-            <label htmlFor="portfolio-description" className="block text-sm font-medium text-fd-text mb-1">
+            <label
+              htmlFor="portfolio-description"
+              className="block text-sm font-medium text-fd-text mb-1"
+            >
               Description
             </label>
             <textarea

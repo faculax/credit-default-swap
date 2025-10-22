@@ -50,10 +50,9 @@ function App() {
       };
 
       const savedTrade = await cdsTradeService.createTrade(tradeRequest);
-      
+
       setBookedTrade(savedTrade);
       setIsConfirmationOpen(true);
-      
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       alert(`Error booking trade: ${errorMessage}`);
@@ -85,7 +84,7 @@ function App() {
   return (
     <div className="min-h-screen bg-fd-dark">
       <TopBar />
-      
+
       {/* Sub-navigation bar */}
       <div className="bg-fd-darker border-b border-fd-border">
         <div className="px-8 py-4">
@@ -183,9 +182,8 @@ function App() {
           </div>
         </div>
       </div>
-      
-      <div className="p-8">
 
+      <div className="p-8">
         {/* Content based on current view */}
         {currentView === 'form' ? (
           <CDSTradeForm onSubmit={handleTradeSubmit} />

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Focus on security-related bugs for CDS Gateway -->
+    <Match>
+        <Bug category="SECURITY"/>
+    </Match>
+    
+    <!-- Gateway-specific security patterns -->
+    <Match>
+        <Bug pattern="XSS_REQUEST_PARAMETER_TO_SERVLET_WRITER"/>
+    </Match>
+    <Match>
+        <Bug pattern="XSS_REQUEST_PARAMETER_TO_SEND_ERROR"/>
+    </Match>
+    
+    <!-- Password and credential issues -->
+    <Match>
+        <Bug pattern="HARD_CODE_PASSWORD"/>
+    </Match>
+    <Match>
+        <Bug pattern="HARD_CODE_KEY"/>
+    </Match>
+    
+    <!-- Path traversal vulnerabilities -->
+    <Match>
+        <Bug pattern="PATH_TRAVERSAL_IN"/>
+    </Match>
+    <Match>
+        <Bug pattern="PATH_TRAVERSAL_OUT"/>
+    </Match>
+    
+    <!-- Encryption and hashing vulnerabilities -->
+    <Match>
+        <Bug pattern="WEAK_MESSAGE_DIGEST_MD5"/>
+    </Match>
+    <Match>
+        <Bug pattern="WEAK_MESSAGE_DIGEST_SHA1"/>
+    </Match>
+    <Match>
+        <Bug pattern="CIPHER_INTEGRITY"/>
+    </Match>
+    <Match>
+        <Bug pattern="ECB_MODE"/>
+    </Match>
+    
+    <!-- Command injection -->
+    <Match>
+        <Bug pattern="COMMAND_INJECTION"/>
+    </Match>
+    
+    <!-- Focus on gateway routing and filter classes -->
+    <Match>
+        <Class name="~.*Gateway.*"/>
+        <Bug category="SECURITY"/>
+    </Match>
+    <Match>
+        <Class name="~.*Filter.*"/>
+        <Bug category="SECURITY"/>
+    </Match>
+    <Match>
+        <Class name="~.*Route.*"/>
+        <Bug category="SECURITY"/>
+    </Match>
+    
+    <!-- Cookie security for gateway -->
+    <Match>
+        <Bug pattern="HTTPONLY_COOKIE"/>
+    </Match>
+    <Match>
+        <Bug pattern="INSECURE_COOKIE"/>
+    </Match>
+    
+    <!-- Trust boundary violations -->
+    <Match>
+        <Bug pattern="TRUST_BOUNDARY_VIOLATION"/>
+    </Match>
+    
+    <!-- Unsafe reflection -->
+    <Match>
+        <Bug pattern="UNSAFE_JACKSON_DESERIALIZATION"/>
+    </Match>
+    <Match>
+        <Bug pattern="OBJECT_DESERIALIZATION"/>
+    </Match>
+    
+    <!-- Header injection for gateway routing -->
+    <Match>
+        <Bug pattern="HTTP_RESPONSE_SPLITTING"/>
+    </Match>
+</FindBugsFilter>

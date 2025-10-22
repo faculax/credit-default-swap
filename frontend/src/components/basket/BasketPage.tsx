@@ -18,32 +18,29 @@ const BasketPage: React.FC = () => {
   };
 
   const handleCreateSuccess = (basket: Basket) => {
-    setRefreshTrigger(prev => prev + 1);
+    setRefreshTrigger((prev) => prev + 1);
     // Optionally open the newly created basket
     // setSelectedBasket(basket);
   };
 
   return (
     <div className="max-w-7xl mx-auto">
-      <BasketList 
+      <BasketList
         onSelectBasket={handleSelectBasket}
         onCreateClick={handleCreateClick}
         refreshTrigger={refreshTrigger}
       />
-      
+
       {/* Basket Creation Modal */}
       <BasketCreationModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSuccess={handleCreateSuccess}
       />
-      
+
       {/* Basket Detail View */}
       {selectedBasket && (
-        <BasketDetailView
-          basket={selectedBasket}
-          onClose={() => setSelectedBasket(null)}
-        />
+        <BasketDetailView basket={selectedBasket} onClose={() => setSelectedBasket(null)} />
       )}
     </div>
   );

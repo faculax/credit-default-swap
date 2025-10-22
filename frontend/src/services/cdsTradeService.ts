@@ -40,14 +40,13 @@ export interface CDSTradeResponse extends Omit<CDSTradeRequest, 'obligation'> {
 }
 
 class CDSTradeService {
-  
   async createTrade(trade: CDSTradeRequest): Promise<CDSTradeResponse> {
     const response = await fetch(`${API_BASE_URL}/cds-trades`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(trade)
+      body: JSON.stringify(trade),
     });
 
     if (!response.ok) {
@@ -60,7 +59,7 @@ class CDSTradeService {
 
   async getAllTrades(): Promise<CDSTradeResponse[]> {
     const response = await fetch(`${API_BASE_URL}/cds-trades`);
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch trades: ${response.status}`);
     }
@@ -70,7 +69,7 @@ class CDSTradeService {
 
   async getTradeById(id: number): Promise<CDSTradeResponse> {
     const response = await fetch(`${API_BASE_URL}/cds-trades/${id}`);
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch trade: ${response.status}`);
     }
@@ -84,7 +83,7 @@ class CDSTradeService {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(trade)
+      body: JSON.stringify(trade),
     });
 
     if (!response.ok) {
@@ -96,7 +95,7 @@ class CDSTradeService {
 
   async deleteTrade(id: number): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/cds-trades/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
     });
 
     if (!response.ok) {
@@ -106,7 +105,7 @@ class CDSTradeService {
 
   async getTradeCount(): Promise<number> {
     const response = await fetch(`${API_BASE_URL}/cds-trades/count`);
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch trade count: ${response.status}`);
     }
@@ -115,8 +114,10 @@ class CDSTradeService {
   }
 
   async getTradesByReferenceEntity(referenceEntity: string): Promise<CDSTradeResponse[]> {
-    const response = await fetch(`${API_BASE_URL}/cds-trades/by-reference-entity/${referenceEntity}`);
-    
+    const response = await fetch(
+      `${API_BASE_URL}/cds-trades/by-reference-entity/${referenceEntity}`
+    );
+
     if (!response.ok) {
       throw new Error(`Failed to fetch trades by reference entity: ${response.status}`);
     }
@@ -126,7 +127,7 @@ class CDSTradeService {
 
   async getTradesByCounterparty(counterparty: string): Promise<CDSTradeResponse[]> {
     const response = await fetch(`${API_BASE_URL}/cds-trades/by-counterparty/${counterparty}`);
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch trades by counterparty: ${response.status}`);
     }
@@ -136,7 +137,7 @@ class CDSTradeService {
 
   async getTradesByStatus(status: string): Promise<CDSTradeResponse[]> {
     const response = await fetch(`${API_BASE_URL}/cds-trades/by-status/${status}`);
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch trades by status: ${response.status}`);
     }
