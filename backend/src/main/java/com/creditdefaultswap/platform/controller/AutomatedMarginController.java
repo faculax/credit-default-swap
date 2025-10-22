@@ -21,6 +21,11 @@ public class AutomatedMarginController {
     
     private static final Logger logger = LoggerFactory.getLogger(AutomatedMarginController.class);
     
+    // Security: Sanitize log parameters to prevent CRLF injection attacks (CWE-117)
+    private String sanitizeForLog(Object obj) {
+        return obj == null ? "null" : obj.toString().replaceAll("[\r\n]", "_");
+    }
+    
     /**
      * Generate automated VM/IM statements using existing CCP data and netting sets
      */
@@ -35,7 +40,7 @@ public class AutomatedMarginController {
                 statementDate = LocalDate.now();
             }
             
-            logger.info("Generating automated margin statements for date: {}", statementDate);
+            logger.info("Generating automated margin statements for date: {}", sanitizeForLog(statementDate));
             
             // Simple mock response for now demonstrating automated generation capability
             Map<String, Object> response = new java.util.HashMap<>();
@@ -69,7 +74,7 @@ public class AutomatedMarginController {
                 statementDate = LocalDate.now();
             }
             
-            logger.info("Getting automated margin generation summary for date: {}", statementDate);
+            logger.info("Getting automated margin generation summary for date: {}", sanitizeForLog(statementDate));
             
             // Mock response showing available netting sets for generation
             Map<String, Object> response = new java.util.HashMap<>();
