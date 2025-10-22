@@ -67,7 +67,8 @@ if [ ! -f /app/pgdata/PG_VERSION ]; then
     chown -R postgres:postgres /app/pgdata /run/postgresql
     chmod 0700 /app/pgdata
     
-    su - postgres -c "/usr/lib/postgresql/15/bin/initdb -D /app/pgdata -E UTF8 --locale=en_US.UTF-8" || {
+    # Use C locale for maximum compatibility
+    su - postgres -c "/usr/lib/postgresql/15/bin/initdb -D /app/pgdata -E UTF8 --locale=C" || {
         echo "ERROR: PostgreSQL initialization failed"
         exit 1
     }
