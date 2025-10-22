@@ -16,6 +16,11 @@ public class SimulationController {
     
     private static final Logger log = LoggerFactory.getLogger(SimulationController.class);
     
+    // Security: Sanitize log parameters to prevent CRLF injection attacks (CWE-117)
+    private String sanitizeForLog(Object obj) {
+        return obj == null ? "null" : obj.toString().replaceAll("[\r\n]", "_");
+    }
+    
     @Autowired
     private SimulationService simulationService;
     
@@ -29,18 +34,18 @@ public class SimulationController {
             @RequestBody SimulationRequest request) {
         
         log.info("Submitting simulation for portfolio {}: {} paths, {} horizons", 
-                portfolioId, request.getPaths(), request.getHorizons().size());
+                sanitizeForLog(portfolioId), request.getPaths(), request.getHorizons().size());
         
         try {
             SimulationResponse response = simulationService.submitSimulation(portfolioId, request);
             return ResponseEntity.accepted().body(response);
             
         } catch (IllegalArgumentException e) {
-            log.error("Validation error: {}", e.getMessage());
+            log.error("Validation error: {}", sanitizeForLog(e.getMessage()));
             throw e;
             
         } catch (Exception e) {
-            log.error("Error submitting simulation", e);
+            log.error("Error submitting simulation: {}", sanitizeForLog(e.getMessage()), e);
             throw new RuntimeException("Failed to submit simulation: " + e.getMessage(), e);
         }
     }
@@ -52,18 +57,18 @@ public class SimulationController {
     @GetMapping("/runs/{runId}")
     public ResponseEntity<SimulationResponse> getSimulationResults(@PathVariable String runId) {
         
-        log.info("Getting simulation results for runId: {}", runId);
+        log.info("Getting simulation results for runId: {}", sanitizeForLog(runId));
         
         try {
             SimulationResponse response = simulationService.getSimulationResults(runId);
             return ResponseEntity.ok(response);
             
         } catch (IllegalArgumentException e) {
-            log.error("Simulation not found: {}", runId);
+            log.error("Simulation not found: {}", sanitizeForLog(runId));
             return ResponseEntity.notFound().build();
             
         } catch (Exception e) {
-            log.error("Error retrieving simulation results", e);
+            log.error("Error retrieving simulation results: {}", sanitizeForLog(e.getMessage()), e);
             throw new RuntimeException("Failed to retrieve simulation: " + e.getMessage(), e);
         }
     }
@@ -75,18 +80,18 @@ public class SimulationController {
     @DeleteMapping("/runs/{runId}")
     public ResponseEntity<Void> cancelSimulation(@PathVariable String runId) {
         
-        log.info("Canceling simulation: {}", runId);
+        log.info("Canceling simulation: {}", sanitizeForLog(runId));
         
         try {
             simulationService.cancelSimulation(runId);
             return ResponseEntity.noContent().build();
             
         } catch (IllegalArgumentException e) {
-            log.error("Simulation not found: {}", runId);
+            log.error("Simulation not found: {}", sanitizeForLog(runId));
             return ResponseEntity.notFound().build();
             
         } catch (Exception e) {
-            log.error("Error canceling simulation", e);
+            log.error("Error canceling simulation: {}", sanitizeForLog(e.getMessage()), e);
             throw new RuntimeException("Failed to cancel simulation: " + e.getMessage(), e);
         }
     }

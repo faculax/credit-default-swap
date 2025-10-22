@@ -44,6 +44,11 @@ public class SimmController {
     
     private static final Logger logger = LoggerFactory.getLogger(SimmController.class);
     
+    // Security: Sanitize log parameters to prevent CRLF injection attacks (CWE-117)
+    private String sanitizeForLog(Object obj) {
+        return obj == null ? "null" : obj.toString().replaceAll("[\r\n]", "_");
+    }
+    
     @Autowired
     private CrifParserService crifParserService;
     
@@ -73,7 +78,7 @@ public class SimmController {
             @RequestParam(value = "currency", defaultValue = "USD") String currency) {
         
         try {
-            logger.info("Received CRIF file upload: {}", file.getOriginalFilename());
+            logger.info("Received CRIF file upload: {}", sanitizeForLog(file.getOriginalFilename()));
             
             if (file.isEmpty()) {
                 return ResponseEntity.badRequest()
@@ -124,7 +129,7 @@ public class SimmController {
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            logger.error("CRIF file upload failed", e);
+            logger.error("CRIF file upload failed: {}", sanitizeForLog(e.getMessage()), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Upload failed: " + e.getMessage()));
         }
@@ -160,7 +165,7 @@ public class SimmController {
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            logger.error("Failed to retrieve CRIF uploads", e);
+            logger.error("Failed to retrieve CRIF uploads: {}", sanitizeForLog(e.getMessage()), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Failed to retrieve uploads: " + e.getMessage()));
         }
@@ -174,7 +179,7 @@ public class SimmController {
         
         try {
             if (file.isEmpty()) {
-                logger.error("File is empty!");
+                logger.error("File is empty");
                 return ResponseEntity.badRequest()
                     .body(Map.of("error", "File is empty"));
             }
@@ -198,7 +203,7 @@ public class SimmController {
             CrifParserService.CrifParsingResult result = crifParserService.parseCrifFile(
                 file, portfolioId, valuationDate, currency);
             logger.info("DEBUG: CrifParserService returned result: uploadId={}, hasErrors={}", 
-                       result.getUploadId(), result.hasErrors());
+                       sanitizeForLog(result.getUploadId()), result.hasErrors());
             
             Map<String, Object> response = new HashMap<>();
             response.put("uploadId", result.getUploadId());
@@ -226,7 +231,7 @@ public class SimmController {
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            logger.error("CRIF file upload failed", e);
+            logger.error("CRIF file upload failed: {}", sanitizeForLog(e.getMessage()), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Upload failed: " + e.getMessage()));
         }
@@ -238,7 +243,7 @@ public class SimmController {
     @PostMapping("/calculate")
     public ResponseEntity<?> executeCalculation(@RequestBody SimmCalculationRequest request) {
         try {
-            logger.info("Executing SIMM calculation for portfolio: {}", request.getPortfolioId());
+            logger.info("Executing SIMM calculation for portfolio: {}", sanitizeForLog(request.getPortfolioId()));
             
             // Find CRIF upload for the portfolio
             List<CrifUpload> uploads = crifUploadRepository.findByPortfolioIdOrderByUploadTimestampDesc(request.getPortfolioId());
@@ -274,9 +279,9 @@ public class SimmController {
             try {
                 calculation = simmCalculationService.executeCalculation(calculation);
                 logger.info("SIMM calculation completed successfully: {} with total IM: {} USD", 
-                           calculationId, calculation.getTotalIm());
+                           sanitizeForLog(calculationId), calculation.getTotalIm());
             } catch (Exception calcException) {
-                logger.error("SIMM calculation engine failed: {}", calcException.getMessage(), calcException);
+                logger.error("SIMM calculation engine failed: {}", sanitizeForLog(calcException.getMessage()), calcException);
                 
                 // Fallback to simplified calculation for demo purposes
                 logger.warn("Falling back to simplified calculation for demo purposes");
@@ -319,7 +324,7 @@ public class SimmController {
                     response.put("marginByProductClass", breakdown);
                 }
             } catch (Exception e) {
-                logger.warn("Could not retrieve detailed results: {}", e.getMessage());
+                logger.warn("Could not retrieve detailed results: {}", sanitizeForLog(e.getMessage()));
                 // Include basic fallback breakdown
                 Map<String, Object> breakdown = new HashMap<>();
                 breakdown.put("Credit", 8500000.00);
@@ -329,11 +334,11 @@ public class SimmController {
                 response.put("marginByProductClass", breakdown);
             }
             
-            logger.info("SIMM calculation response prepared successfully: {}", calculationId);
+            logger.info("SIMM calculation response prepared successfully: {}", sanitizeForLog(calculationId));
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            logger.error("SIMM calculation failed", e);
+            logger.error("SIMM calculation failed: {}", sanitizeForLog(e.getMessage()), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Calculation failed: " + e.getMessage()));
         }
@@ -345,7 +350,7 @@ public class SimmController {
     @GetMapping("/portfolio/{portfolioId}/calculations")
     public ResponseEntity<?> getCalculationsForPortfolio(@PathVariable String portfolioId) {
         try {
-            logger.info("Getting SIMM calculations for portfolio: {}", portfolioId);
+            logger.info("Getting SIMM calculations for portfolio: {}", sanitizeForLog(portfolioId));
             
             List<SimmCalculation> calculations;
             
@@ -375,11 +380,11 @@ public class SimmController {
                 response.add(calcMap);
             }
             
-            logger.info("Found {} calculations for portfolio: {}", response.size(), portfolioId);
+            logger.info("Found {} calculations for portfolio: {}", response.size(), sanitizeForLog(portfolioId));
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            logger.error("Failed to get calculations for portfolio: " + portfolioId, e);
+            logger.error("Failed to get calculations for portfolio {}: {}", sanitizeForLog(portfolioId), sanitizeForLog(e.getMessage()), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Failed to retrieve calculations: " + e.getMessage()));
         }
@@ -391,7 +396,7 @@ public class SimmController {
     @GetMapping("/calculation/{calculationId}/results")
     public ResponseEntity<?> getCalculationResults(@PathVariable String calculationId) {
         try {
-            logger.info("Getting results for calculation: {}", calculationId);
+            logger.info("Getting results for calculation: {}", sanitizeForLog(calculationId));
             
             // Try to find the calculation first
             Optional<SimmCalculation> calculationOpt = simmCalculationService.getCalculationById(calculationId);
@@ -422,13 +427,13 @@ public class SimmController {
                         results.add(resultMap);
                     }
                     
-                    logger.info("Retrieved {} detailed results for calculation: {}", results.size(), calculationId);
+                    logger.info("Retrieved {} detailed results for calculation: {}", results.size(), sanitizeForLog(calculationId));
                     return ResponseEntity.ok(results);
                 }
             }
             
             // Fallback to mock results if no detailed results available
-            logger.warn("No detailed results found for calculation: {}, using mock results", calculationId);
+            logger.warn("No detailed results found for calculation: {}, using mock results", sanitizeForLog(calculationId));
             List<Map<String, Object>> results = new ArrayList<>();
             
             // Credit results
@@ -474,7 +479,7 @@ public class SimmController {
             return ResponseEntity.ok(results);
             
         } catch (Exception e) {
-            logger.error("Failed to get results for calculation: " + calculationId, e);
+            logger.error("Failed to get results for calculation {}: {}", sanitizeForLog(calculationId), sanitizeForLog(e.getMessage()), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Failed to retrieve results: " + e.getMessage()));
         }
@@ -505,7 +510,7 @@ public class SimmController {
     @GetMapping("/calculation/{calculationId}/audit")
     public ResponseEntity<?> getCalculationAudit(@PathVariable String calculationId) {
         try {
-            logger.info("Getting audit trail for calculation: {}", calculationId);
+            logger.info("Getting audit trail for calculation: {}", sanitizeForLog(calculationId));
             
             // Get real audit trail from database
             List<AuditLog> auditLogs = auditService.getRecentAuditTrail(AuditLog.EntityType.SIMM_CALCULATION, calculationId);
@@ -527,12 +532,12 @@ public class SimmController {
                     auditTrail.add(step);
                 }
                 
-                logger.info("Retrieved {} real audit entries for calculation: {}", auditTrail.size(), calculationId);
+                logger.info("Retrieved {} real audit entries for calculation: {}", auditTrail.size(), sanitizeForLog(calculationId));
                 return ResponseEntity.ok(auditTrail);
             }
             
             // Fallback to mock audit trail if no real data available
-            logger.warn("No audit trail found for calculation: {}, using mock data", calculationId);
+            logger.warn("No audit trail found for calculation: {}, using mock data", sanitizeForLog(calculationId));
             List<Map<String, Object>> auditTrail = new ArrayList<>();
             
             Map<String, Object> step1 = new HashMap<>();
@@ -586,7 +591,7 @@ public class SimmController {
             return ResponseEntity.ok(auditTrail);
             
         } catch (Exception e) {
-            logger.error("Failed to get audit trail for calculation: " + calculationId, e);
+            logger.error("Failed to get audit trail for calculation {}: {}", sanitizeForLog(calculationId), sanitizeForLog(e.getMessage()), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Failed to retrieve audit trail: " + e.getMessage()));
         }
@@ -634,7 +639,7 @@ public class SimmController {
             return ResponseEntity.ok(parameters);
             
         } catch (Exception e) {
-            logger.error("Failed to retrieve parameter sets", e);
+            logger.error("Failed to retrieve parameter sets: {}", sanitizeForLog(e.getMessage()), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Failed to retrieve parameter sets: " + e.getMessage()));
         }
