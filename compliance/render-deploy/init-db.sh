@@ -169,25 +169,36 @@ python3 manage.py collectstatic --noinput --clear || {
 if [ -d /app/components/node_modules ]; then
     echo "==> Linking node_modules packages to static directory..."
     
-    # Count packages
-    package_count=0
+    # Change to node_modules directory
+    cd /app/components/node_modules
     
-    # Use find to avoid glob issues and iterate through each package
-    find /app/components/node_modules -maxdepth 1 -mindepth 1 -type d | while read -r package; do
-        package_name=$(basename "$package")
+    # List all directories (packages)
+    package_count=0
+    for package_name in */; do
+        # Remove trailing slash
+        package_name="${package_name%/}"
         
-        # Skip hidden files and directories, and .bin
-        if [[ "$package_name" != .* ]] && [[ "$package_name" != ".bin" ]]; then
-            if [ ! -e "/app/static/$package_name" ]; then
-                ln -sf "$package" "/app/static/$package_name"
-                echo "  Linked: $package_name"
-                package_count=$((package_count + 1))
+        # Skip .bin directory
+        if [ "$package_name" != ".bin" ]; then
+            target="/app/static/$package_name"
+            
+            # Remove existing symlink or directory if it exists
+            if [ -e "$target" ] || [ -L "$target" ]; then
+                rm -rf "$target"
             fi
+            
+            # Create symlink
+            ln -sf "/app/components/node_modules/$package_name" "$target"
+            echo "  Linked: $package_name"
+            package_count=$((package_count + 1))
         fi
     done
     
-    echo "Node modules linked successfully"
+    echo "Node modules linked: $package_count packages"
     echo "Total symlinks in static: $(find /app/static -maxdepth 1 -type l 2>/dev/null | wc -l)"
+    
+    # Return to /app
+    cd /app
 else
     echo "WARNING: /app/components/node_modules directory not found"
 fi
