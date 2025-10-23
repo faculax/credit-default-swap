@@ -49,9 +49,11 @@ jobs:
           cache: 'maven'
       
       - name: Configure Maven Settings with NVD API Key
+        env:
+          NVD_KEY: ${{ secrets.NVD_API_KEY }}
         run: |
           mkdir -p ~/.m2
-          cat > ~/.m2/settings.xml << 'EOF'
+          cat > ~/.m2/settings.xml << EOF
           <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                     xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
@@ -59,12 +61,16 @@ jobs:
             <servers>
               <server>
                 <id>nvd-api</id>
-                <password>${{ env.NVD_API_KEY }}</password>
+                <password>${NVD_KEY}</password>
               </server>
             </servers>
           </settings>
           EOF
-          echo "✅ Maven settings.xml configured with NVD API key"
+          if [ -n "${NVD_KEY}" ]; then
+            echo "✅ Maven settings.xml configured with NVD API key"
+          else
+            echo "⚠️  WARNING: NVD_API_KEY not set - scans will be slower"
+          fi
       
       - name: Create security reports directory
         run: |
@@ -142,9 +148,11 @@ jobs:
           cache: 'maven'
       
       - name: Configure Maven Settings with NVD API Key
+        env:
+          NVD_KEY: ${{ secrets.NVD_API_KEY }}
         run: |
           mkdir -p ~/.m2
-          cat > ~/.m2/settings.xml << 'EOF'
+          cat > ~/.m2/settings.xml << EOF
           <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                     xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
@@ -152,12 +160,16 @@ jobs:
             <servers>
               <server>
                 <id>nvd-api</id>
-                <password>${{ env.NVD_API_KEY }}</password>
+                <password>${NVD_KEY}</password>
               </server>
             </servers>
           </settings>
           EOF
-          echo "✅ Maven settings.xml configured with NVD API key"
+          if [ -n "${NVD_KEY}" ]; then
+            echo "✅ Maven settings.xml configured with NVD API key"
+          else
+            echo "⚠️  WARNING: NVD_API_KEY not set - scans will be slower"
+          fi
       
       - name: Create security reports directory
         run: mkdir -p gateway/target/security-reports
@@ -222,9 +234,11 @@ jobs:
           cache: 'maven'
       
       - name: Configure Maven Settings with NVD API Key
+        env:
+          NVD_KEY: ${{ secrets.NVD_API_KEY }}
         run: |
           mkdir -p ~/.m2
-          cat > ~/.m2/settings.xml << 'EOF'
+          cat > ~/.m2/settings.xml << EOF
           <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                     xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
@@ -232,12 +246,16 @@ jobs:
             <servers>
               <server>
                 <id>nvd-api</id>
-                <password>${{ env.NVD_API_KEY }}</password>
+                <password>${NVD_KEY}</password>
               </server>
             </servers>
           </settings>
           EOF
-          echo "✅ Maven settings.xml configured with NVD API key"
+          if [ -n "${NVD_KEY}" ]; then
+            echo "✅ Maven settings.xml configured with NVD API key"
+          else
+            echo "⚠️  WARNING: NVD_API_KEY not set - scans will be slower"
+          fi
       
       - name: Create security reports directory
         run: mkdir -p risk-engine/target/security-reports
