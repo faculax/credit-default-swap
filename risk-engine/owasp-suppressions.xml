@@ -16,6 +16,7 @@
         Lombok is a compile-time dependency only and not part of runtime
         ]]></notes>
         <packageUrl regex="true">^pkg:maven/org\.projectlombok/lombok@.*$</packageUrl>
+        <cvssBelow>10.0</cvssBelow>
     </suppress>
     
     <!-- Spring Boot Actuator for health checks -->

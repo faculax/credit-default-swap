@@ -45,14 +45,32 @@ Add these secrets:
 | `DEFECTDOJO_URL` | DefectDojo URL (default: your Render instance) | No |
 | `DEFECTDOJO_USERNAME` | Admin username (default: `admin`) | No |
 | `DEFECTDOJO_PASSWORD` | Admin password | **YES** |
+| `NVD_API_KEY` | NVD API key for OWASP Dependency Check | **HIGHLY RECOMMENDED** |
 
-**Add the password secret:**
+**Critical Secrets to Add:**
 
 ```bash
 # In GitHub UI:
+
+# 1. DefectDojo Authentication (Required)
 Name: DEFECTDOJO_PASSWORD
 Value: <your-defectdojo-admin-password>
+
+# 2. NVD API Key (Highly Recommended - Makes OWASP scans 10-20x faster)
+Name: NVD_API_KEY
+Value: <your-nvd-api-key>
+# Get one free at: https://nvd.nist.gov/developers/request-an-api-key
 ```
+
+**⚠️ Without NVD_API_KEY:**
+- OWASP scans will take 30-60+ minutes (may timeout)
+- Rate limited to 5 requests per 30 seconds
+- May fail to download complete CVE database
+
+**✅ With NVD_API_KEY:**
+- Scans complete in 2-5 minutes
+- No rate limiting
+- Always get latest CVE data
 
 ### 2. Make Python Script Executable
 
