@@ -43,8 +43,7 @@ Add these secrets:
 | Secret Name | Description | Required |
 |-------------|-------------|----------|
 | `DEFECTDOJO_URL` | DefectDojo URL (default: your Render instance) | No |
-| `DEFECTDOJO_USERNAME` | Admin username (default: `admin`) | No |
-| `DEFECTDOJO_PASSWORD` | Admin password | **YES** |
+| `DEFECTDOJO_TOKEN` | DefectDojo API token | **YES** |
 | `NVD_API_KEY` | NVD API key for OWASP Dependency Check | **HIGHLY RECOMMENDED** |
 
 **Critical Secrets to Add:**
@@ -53,8 +52,10 @@ Add these secrets:
 # In GitHub UI:
 
 # 1. DefectDojo Authentication (Required)
-Name: DEFECTDOJO_PASSWORD
-Value: <your-defectdojo-admin-password>
+Name: DEFECTDOJO_TOKEN
+Value: <your-defectdojo-api-token>
+# Get from: Login to DefectDojo → Click username → API v2 Key
+# Example: a277b6a2a979fd8f71838337f40c5887da72d94d
 
 # 2. NVD API Key (Highly Recommended - Makes OWASP scans 10-20x faster)
 Name: NVD_API_KEY

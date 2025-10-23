@@ -36,12 +36,19 @@ class DefectDojoUploader:
         'gitleaks-report.json': 'Gitleaks Scan',
     }
     
-    def __init__(self, url: str, username: str, password: str):
+    def __init__(self, url: str, username: str = None, password: str = None, token: str = None):
         self.base_url = url.rstrip('/')
         self.username = username
         self.password = password
-        self.token = None
+        self.token = token
         self.session = self._create_session()
+        
+        # If token provided directly, set it up
+        if self.token:
+            self.session.headers.update({
+                'Authorization': f'Token {self.token}',
+                'Content-Type': 'application/json'
+            })
     
     def _create_session(self) -> requests.Session:
         """Create a requests session with retry logic"""
@@ -61,6 +68,11 @@ class DefectDojoUploader:
     
     def authenticate(self) -> bool:
         """Authenticate and get API token"""
+        # If token already provided, skip authentication
+        if self.token:
+            print(f"✅ Using provided API token (token: {self.token[:10]}...)")
+            return True
+            
         print("🔐 Authenticating with DefectDojo...")
         
         try:
@@ -342,8 +354,9 @@ def main():
     )
     
     parser.add_argument('--url', required=True, help='DefectDojo URL')
-    parser.add_argument('--username', required=True, help='DefectDojo username')
-    parser.add_argument('--password', required=True, help='DefectDojo password')
+    parser.add_argument('--token', help='DefectDojo API token')
+    parser.add_argument('--username', help='DefectDojo username (if not using token)')
+    parser.add_argument('--password', help='DefectDojo password (if not using token)')
     parser.add_argument('--product', required=True, help='Product name')
     parser.add_argument('--engagement', required=True, help='Engagement name')
     parser.add_argument('--scan-dir', required=True, help='Directory with scan results')
@@ -354,12 +367,22 @@ def main():
     
     args = parser.parse_args()
     
+    # Validate authentication method
+    if not args.token and not (args.username and args.password):
+        print("❌ ERROR: Must provide either --token or both --username and --password")
+        sys.exit(1)
+    
     scan_dir = Path(args.scan_dir)
     if not scan_dir.exists():
         print(f"❌ Scan directory not found: {scan_dir}")
         sys.exit(1)
     
-    uploader = DefectDojoUploader(args.url, args.username, args.password)
+    uploader = DefectDojoUploader(
+        url=args.url,
+        username=args.username,
+        password=args.password,
+        token=args.token
+    )
     
     success = uploader.upload_all(
         product_name=args.product,
