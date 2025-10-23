@@ -21,10 +21,12 @@ Your repository now has **automated security scanning** that runs on every push,
 
 4. **Add the following secrets:**
 
-   **Secret 1: DEFECTDOJO_PASSWORD** (Required)
-   - Name: `DEFECTDOJO_PASSWORD`
-   - Value: `<your-defectdojo-admin-password>`
+   **Secret 1: DEFECTDOJO_TOKEN** (Required)
+   - Name: `DEFECTDOJO_TOKEN`
+   - Value: `<your-defectdojo-api-token>`
    - Purpose: Authenticates with DefectDojo to upload scan results
+   - How to get: Login to DefectDojo → Click your username (top right) → API v2 Key
+   - Format: Just the token value (e.g., `a277b6a2a979fd8f71838337f40c5887da72d94d`)
    
    **Secret 2: NVD_API_KEY** (Highly Recommended)
    - Name: `NVD_API_KEY`
@@ -153,12 +155,15 @@ fi
 
 ### "Authentication Failed" Error
 
-**Cause:** `DEFECTDOJO_PASSWORD` secret not set
+**Cause:** `DEFECTDOJO_TOKEN` secret not set or invalid
 
 **Fix:**
-1. Add the secret in GitHub (see instructions above)
-2. Make sure DefectDojo is accessible: https://defectdojo-s74m.onrender.com
-3. Rerun the workflow
+1. Login to DefectDojo: https://defectdojo-s74m.onrender.com
+2. Click your username (top right) → **API v2 Key**
+3. Copy the API token (e.g., `a277b6a2a979fd8f71838337f40c5887da72d94d`)
+4. Add it as GitHub secret: `DEFECTDOJO_TOKEN`
+5. Make sure DefectDojo is accessible (not sleeping on Render.com)
+6. Rerun the workflow
 
 ### "NVD API Key Warning" or Very Slow OWASP Scans
 

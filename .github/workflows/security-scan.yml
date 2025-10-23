@@ -23,8 +23,7 @@ on:
 
 env:
   DEFECTDOJO_URL: ${{ secrets.DEFECTDOJO_URL || 'https://defectdojo-s74m.onrender.com' }}
-  DEFECTDOJO_USERNAME: ${{ secrets.DEFECTDOJO_USERNAME || 'admin' }}
-  DEFECTDOJO_PASSWORD: ${{ secrets.DEFECTDOJO_PASSWORD }}
+  DEFECTDOJO_TOKEN: ${{ secrets.DEFECTDOJO_TOKEN }}
   PRODUCT_NAME: 'Credit Default Swap Platform'
   NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
 
@@ -418,14 +417,12 @@ jobs:
       - name: Upload scans to DefectDojo
         env:
           DEFECTDOJO_URL: ${{ secrets.DEFECTDOJO_URL || 'https://defectdojo-s74m.onrender.com' }}
-          DEFECTDOJO_USERNAME: ${{ secrets.DEFECTDOJO_USERNAME || 'admin' }}
-          DEFECTDOJO_PASSWORD: ${{ secrets.DEFECTDOJO_PASSWORD }}
+          DEFECTDOJO_TOKEN: ${{ secrets.DEFECTDOJO_TOKEN }}
           PRODUCT_NAME: 'Credit Default Swap Platform'
         run: |
           python compliance/scripts/upload-to-defectdojo.py \
             --url "$DEFECTDOJO_URL" \
-            --username "$DEFECTDOJO_USERNAME" \
-            --password "$DEFECTDOJO_PASSWORD" \
+            --token "$DEFECTDOJO_TOKEN" \
             --product "$PRODUCT_NAME" \
             --engagement "Security Scan - $(date +'%Y-%m-%d %H:%M')" \
             --scan-dir scan-results \
