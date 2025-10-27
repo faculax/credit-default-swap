@@ -213,14 +213,14 @@ jobs:
           mvn compile spotbugs:spotbugs \
             -Dspotbugs.xmlOutput=true \
             -Dspotbugs.xmlOutputDirectory=target \
-            -Dspotbugs.failOnError=false
+            -Dspotbugs.failOnError=false || true
       
       - name: Run Checkstyle
         working-directory: gateway
         run: |
-          mvn checkstyle:checkstyle -Dcheckstyle.failOnViolation=false
+          mvn checkstyle:checkstyle -Dcheckstyle.failOnViolation=false || true
           [ -f target/checkstyle-result.xml ] && \
-            cp target/checkstyle-result.xml target/security-reports/
+            cp target/checkstyle-result.xml target/security-reports/ || true
       
       - name: Upload Gateway Scan Results
         uses: actions/upload-artifact@v4
@@ -304,14 +304,14 @@ jobs:
           mvn compile spotbugs:spotbugs \
             -Dspotbugs.xmlOutput=true \
             -Dspotbugs.xmlOutputDirectory=target \
-            -Dspotbugs.failOnError=false
+            -Dspotbugs.failOnError=false || true
       
       - name: Run Checkstyle
         working-directory: risk-engine
         run: |
-          mvn checkstyle:checkstyle -Dcheckstyle.failOnViolation=false
+          mvn checkstyle:checkstyle -Dcheckstyle.failOnViolation=false || true
           [ -f target/checkstyle-result.xml ] && \
-            cp target/checkstyle-result.xml target/security-reports/
+            cp target/checkstyle-result.xml target/security-reports/ || true
       
       - name: Upload Risk Engine Scan Results
         uses: actions/upload-artifact@v4

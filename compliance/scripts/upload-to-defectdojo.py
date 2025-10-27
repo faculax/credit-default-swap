@@ -118,13 +118,19 @@ class DefectDojoUploader:
                     print(f"✅ Found existing product (ID: {product_id})")
                     return product_id
             
+            # Get or create product type
+            prod_type_id = self._get_or_create_product_type("Web Application")
+            if not prod_type_id:
+                print("❌ Failed to get/create product type")
+                return None
+            
             # Create new product
             response = self.session.post(
                 f"{self.base_url}/api/v2/products/",
                 json={
                     "name": product_name,
                     "description": "Credit Default Swap Trading Platform",
-                    "prod_type": 1  # Assuming product type 1 exists
+                    "prod_type": prod_type_id
                 },
                 timeout=30
             )
@@ -139,6 +145,48 @@ class DefectDojoUploader:
                 
         except Exception as e:
             print(f"❌ Product error: {e}")
+            return None
+    
+    def _get_or_create_product_type(self, type_name: str) -> Optional[int]:
+        """Get or create a product type"""
+        try:
+            # Search for existing product type
+            response = self.session.get(
+                f"{self.base_url}/api/v2/product_types/",
+                params={"name": type_name},
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                results = response.json()['results']
+                if results:
+                    return results[0]['id']
+            
+            # Create new product type
+            response = self.session.post(
+                f"{self.base_url}/api/v2/product_types/",
+                json={"name": type_name},
+                timeout=30
+            )
+            
+            if response.status_code == 201:
+                return response.json()['id']
+            
+            # If creation failed, try to get any existing product type
+            response = self.session.get(
+                f"{self.base_url}/api/v2/product_types/",
+                timeout=30
+            )
+            if response.status_code == 200:
+                results = response.json()['results']
+                if results:
+                    print(f"⚠️  Using existing product type: {results[0]['name']}")
+                    return results[0]['id']
+            
+            return None
+            
+        except Exception as e:
+            print(f"❌ Product type error: {e}")
             return None
     
     def get_or_create_engagement(
