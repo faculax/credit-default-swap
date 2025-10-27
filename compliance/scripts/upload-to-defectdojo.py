@@ -251,7 +251,7 @@ class DefectDojoUploader:
         scan_type: str,
         file_path: Path,
         tags: List[str] = None
-    ) -> bool:
+    ) -> Optional[bool]:
         """Upload a scan result"""
         print(f"📤 Uploading {scan_type}: {file_path.name}")
         
@@ -291,7 +291,14 @@ class DefectDojoUploader:
                 print(f"✅ Upload successful - Test ID: {result.get('test')}")
                 return True
             else:
-                    print(f"❌ Upload failed ({response.status_code}): {response.text}")
+                error_msg = response.text
+                # Handle known npm audit limitation
+                if 'npm7 with auditReportVersion' in error_msg:
+                    print(f"⚠️  Upload skipped: npm audit v7+ format not supported by DefectDojo")
+                    print(f"    (Frontend security is still covered by ESLint and Retire.js)")
+                    return None  # Return None to indicate "skip" rather than "fail"
+                else:
+                    print(f"❌ Upload failed ({response.status_code}): {error_msg}")
                     return False
                     
         except Exception as e:
@@ -363,6 +370,7 @@ class DefectDojoUploader:
         # Upload each scan
         success_count = 0
         fail_count = 0
+        skip_count = 0
         
         for component, files in scan_files.items():
             print(f"\n{'='*70}")
@@ -383,15 +391,20 @@ class DefectDojoUploader:
                     print(f"⚠️  Unknown scan type for: {file_path.name}")
                     continue
                 
-                if self.upload_scan(engagement_id, scan_type, file_path, tags):
+                result = self.upload_scan(engagement_id, scan_type, file_path, tags)
+                if result is True:
                     success_count += 1
-                else:
+                elif result is False:
                     fail_count += 1
+                elif result is None:
+                    skip_count += 1
         
         print(f"\n{'='*70}")
         print(f"  UPLOAD SUMMARY")
         print(f"{'='*70}")
         print(f"✅ Successful uploads: {success_count}")
+        if skip_count > 0:
+            print(f"⚠️  Skipped uploads: {skip_count} (unsupported format)")
         print(f"❌ Failed uploads: {fail_count}")
         print(f"\n🔗 View results: {self.base_url}/dashboard")
         print(f"{'='*70}\n")
