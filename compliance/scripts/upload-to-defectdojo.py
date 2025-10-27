@@ -269,6 +269,9 @@ class DefectDojoUploader:
                 'active': 'true',
                 'verified': 'true',
                 'close_old_findings': 'true',
+                'push_to_jira': 'false',
+                'minimum_severity': 'Info',
+                'scan_date': datetime.now().date().isoformat(),
             }
             
             if tags:
