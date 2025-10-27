@@ -256,37 +256,41 @@ class DefectDojoUploader:
         print(f"📤 Uploading {scan_type}: {file_path.name}")
         
         try:
+            # Read file content first
             with open(file_path, 'rb') as f:
-                files = {'file': (file_path.name, f, 'application/octet-stream')}
-                
-                data = {
-                    'engagement': engagement_id,
-                    'scan_type': scan_type,
-                    'active': 'true',
-                    'verified': 'true',
-                    'close_old_findings': 'true',
-                }
-                
-                if tags:
-                    data['tags'] = ','.join(tags)
-                
-                # Create headers without Content-Type for multipart/form-data
-                # The requests library will set the correct Content-Type automatically
-                headers = {'Authorization': self.session.headers.get('Authorization')}
-                
-                response = self.session.post(
-                    f"{self.base_url}/api/v2/import-scan/",
-                    files=files,
-                    data=data,
-                    headers=headers,
-                    timeout=120
-                )
-                
-                if response.status_code == 201:
-                    result = response.json()
-                    print(f"✅ Upload successful - Test ID: {result.get('test')}")
-                    return True
-                else:
+                file_content = f.read()
+            
+            # Prepare files for upload
+            files = {'file': (file_path.name, file_content)}
+            
+            data = {
+                'engagement': str(engagement_id),
+                'scan_type': scan_type,
+                'active': 'true',
+                'verified': 'true',
+                'close_old_findings': 'true',
+            }
+            
+            if tags:
+                data['tags'] = ','.join(tags)
+            
+            # Use requests.post directly with only Authorization header
+            # This prevents any session-level headers from interfering
+            headers = {'Authorization': f'Token {self.token}'}
+            
+            response = requests.post(
+                f"{self.base_url}/api/v2/import-scan/",
+                files=files,
+                data=data,
+                headers=headers,
+                timeout=120
+            )
+            
+            if response.status_code == 201:
+                result = response.json()
+                print(f"✅ Upload successful - Test ID: {result.get('test')}")
+                return True
+            else:
                     print(f"❌ Upload failed ({response.status_code}): {response.text}")
                     return False
                     
