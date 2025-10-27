@@ -205,7 +205,7 @@ jobs:
             -DfailBuildOnCVSS=0
           
           [ -f target/dependency-check-report.json ] && \
-            cp target/dependency-check-report.json target/security-reports/
+            cp target/dependency-check-report.json target/security-reports/ || true
       
       - name: Run SpotBugs
         working-directory: gateway
@@ -296,7 +296,7 @@ jobs:
             -DfailBuildOnCVSS=0
           
           [ -f target/dependency-check-report.json ] && \
-            cp target/dependency-check-report.json target/security-reports/
+            cp target/dependency-check-report.json target/security-reports/ || true
       
       - name: Run SpotBugs
         working-directory: risk-engine
@@ -458,15 +458,15 @@ jobs:
         env:
           DEFECTDOJO_URL: ${{ secrets.DEFECTDOJO_URL || 'https://defectdojo-s74m.onrender.com' }}
           DEFECTDOJO_TOKEN: ${{ secrets.DEFECTDOJO_TOKEN }}
-          PRODUCT_NAME: 'Credit Default Swap Platform'
+          PRODUCT_PREFIX: 'CDS Platform'
         run: |
           python compliance/scripts/upload-to-defectdojo.py \
             --url "$DEFECTDOJO_URL" \
             --token "$DEFECTDOJO_TOKEN" \
-            --product "$PRODUCT_NAME" \
+            --product "$PRODUCT_PREFIX" \
             --engagement "Security Scan - $(date +'%Y-%m-%d %H:%M')" \
             --scan-dir scan-results \
-            --component-tags
+            --separate-products
       
       - name: Generate scan summary
         if: always()

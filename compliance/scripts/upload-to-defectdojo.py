@@ -338,7 +338,7 @@ class DefectDojoUploader:
         use_component_tags: bool = True,
         reuse_engagement: bool = True
     ) -> bool:
-        """Upload all scan results"""
+        """Upload all scan results (legacy mode - single product with tags)"""
         print("\n" + "="*70)
         print("  DEFECTDOJO SECURITY SCAN UPLOAD")
         print("="*70 + "\n")
@@ -410,6 +410,95 @@ class DefectDojoUploader:
         print(f"{'='*70}\n")
         
         return fail_count == 0
+    
+    def upload_by_component(
+        self,
+        product_prefix: str,
+        engagement_name: str,
+        scan_dir: Path,
+        reuse_engagement: bool = True
+    ) -> bool:
+        """Upload scan results - creates separate product per component"""
+        print("\n" + "="*70)
+        print("  DEFECTDOJO SECURITY SCAN UPLOAD (Per-Component Products)")
+        print("="*70 + "\n")
+        
+        if not self.authenticate():
+            return False
+        
+        # Find all scan files
+        scan_files = self.find_scan_files(scan_dir)
+        
+        if not scan_files:
+            print("⚠️  No scan files found")
+            return False
+        
+        print(f"\n📊 Found scan results for {len(scan_files)} component(s)\n")
+        
+        # Upload each component to its own product
+        total_success = 0
+        total_fail = 0
+        total_skip = 0
+        
+        for component, files in scan_files.items():
+            # Create product name from component
+            component_product = f"{product_prefix} - {component.replace('-', ' ').title()}"
+            
+            print(f"\n{'='*70}")
+            print(f"  Product: {component_product}")
+            print(f"{'='*70}\n")
+            
+            # Create/get product for this component
+            product_id = self.get_or_create_product(component_product)
+            if not product_id:
+                print(f"❌ Failed to create product for {component}")
+                total_fail += len(files)
+                continue
+            
+            # Create/get engagement for this component
+            engagement_id = self.get_or_create_engagement(
+                product_id,
+                engagement_name,
+                reuse_engagement
+            )
+            if not engagement_id:
+                print(f"❌ Failed to create engagement for {component}")
+                total_fail += len(files)
+                continue
+            
+            # Upload scans for this component
+            for file_path in files:
+                # Determine scan type
+                scan_type = None
+                for pattern, stype in self.SCAN_TYPE_MAP.items():
+                    if file_path.name == pattern:
+                        scan_type = stype
+                        break
+                
+                if not scan_type:
+                    print(f"⚠️  Unknown scan type for: {file_path.name}")
+                    continue
+                
+                result = self.upload_scan(engagement_id, scan_type, file_path, tags=None)
+                if result is True:
+                    total_success += 1
+                elif result is False:
+                    total_fail += 1
+                elif result is None:
+                    total_skip += 1
+        
+        print(f"\n{'='*70}")
+        print(f"  OVERALL UPLOAD SUMMARY")
+        print(f"{'='*70}")
+        print(f"📦 Products created/updated: {len(scan_files)}")
+        print(f"✅ Successful uploads: {total_success}")
+        if total_skip > 0:
+            print(f"⚠️  Skipped uploads: {total_skip} (unsupported format)")
+        print(f"❌ Failed uploads: {total_fail}")
+        print(f"\n🔗 View results: {self.base_url}/dashboard")
+        print(f"{'='*70}\n")
+        
+        return total_fail == 0
 
 
 def main():
@@ -421,11 +510,13 @@ def main():
     parser.add_argument('--token', help='DefectDojo API token')
     parser.add_argument('--username', help='DefectDojo username (if not using token)')
     parser.add_argument('--password', help='DefectDojo password (if not using token)')
-    parser.add_argument('--product', required=True, help='Product name')
+    parser.add_argument('--product', required=True, help='Product name or prefix')
     parser.add_argument('--engagement', required=True, help='Engagement name')
     parser.add_argument('--scan-dir', required=True, help='Directory with scan results')
     parser.add_argument('--component-tags', action='store_true', 
-                       help='Tag findings by component')
+                       help='Tag findings by component (legacy mode)')
+    parser.add_argument('--separate-products', action='store_true',
+                       help='Create separate product per component (recommended)')
     parser.add_argument('--no-reuse-engagement', action='store_true',
                        help="Don't reuse today's engagement")
     
@@ -448,13 +539,22 @@ def main():
         token=args.token
     )
     
-    success = uploader.upload_all(
-        product_name=args.product,
-        engagement_name=args.engagement,
-        scan_dir=scan_dir,
-        use_component_tags=args.component_tags,
-        reuse_engagement=not args.no_reuse_engagement
-    )
+    # Use separate products mode if requested
+    if args.separate_products:
+        success = uploader.upload_by_component(
+            product_prefix=args.product,
+            engagement_name=args.engagement,
+            scan_dir=scan_dir,
+            reuse_engagement=not args.no_reuse_engagement
+        )
+    else:
+        success = uploader.upload_all(
+            product_name=args.product,
+            engagement_name=args.engagement,
+            scan_dir=scan_dir,
+            use_component_tags=args.component_tags,
+            reuse_engagement=not args.no_reuse_engagement
+        )
     
     sys.exit(0 if success else 1)
 
