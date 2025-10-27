@@ -270,10 +270,9 @@ class DefectDojoUploader:
                 if tags:
                     data['tags'] = ','.join(tags)
                 
-                # Remove Content-Type header for multipart
-                headers = dict(self.session.headers)
-                if 'Content-Type' in headers:
-                    del headers['Content-Type']
+                # Create headers without Content-Type for multipart/form-data
+                # The requests library will set the correct Content-Type automatically
+                headers = {'Authorization': self.session.headers.get('Authorization')}
                 
                 response = self.session.post(
                     f"{self.base_url}/api/v2/import-scan/",
