@@ -256,6 +256,9 @@ class DefectDojoUploader:
         print(f"📤 Uploading {scan_type}: {file_path.name}")
         
         try:
+            # Check if a test already exists for this scan type in this engagement
+            existing_test_id = self._find_existing_test(engagement_id, scan_type)
+            
             # Read file content first
             with open(file_path, 'rb') as f:
                 file_content = f.read()
@@ -263,16 +266,34 @@ class DefectDojoUploader:
             # Prepare files for upload
             files = {'file': (file_path.name, file_content)}
             
-            data = {
-                'engagement': str(engagement_id),
-                'scan_type': scan_type,
-                'active': 'true',
-                'verified': 'true',
-                'close_old_findings': 'true',
-                'push_to_jira': 'false',
-                'minimum_severity': 'Info',
-                'scan_date': datetime.now().date().isoformat(),
-            }
+            # Use reimport if test exists, otherwise import
+            if existing_test_id:
+                endpoint = f"{self.base_url}/api/v2/reimport-scan/"
+                data = {
+                    'test': str(existing_test_id),
+                    'scan_type': scan_type,
+                    'active': 'true',
+                    'verified': 'true',
+                    'close_old_findings': 'true',
+                    'push_to_jira': 'false',
+                    'minimum_severity': 'Info',
+                    'scan_date': datetime.now().date().isoformat(),
+                    'do_not_reactivate': 'true',  # Don't reactivate closed findings
+                }
+                print(f"  🔄 Reimporting to existing test (ID: {existing_test_id})")
+            else:
+                endpoint = f"{self.base_url}/api/v2/import-scan/"
+                data = {
+                    'engagement': str(engagement_id),
+                    'scan_type': scan_type,
+                    'active': 'true',
+                    'verified': 'true',
+                    'close_old_findings': 'true',
+                    'push_to_jira': 'false',
+                    'minimum_severity': 'Info',
+                    'scan_date': datetime.now().date().isoformat(),
+                }
+                print(f"  ➕ Creating new test")
             
             if tags:
                 data['tags'] = ','.join(tags)
@@ -282,7 +303,7 @@ class DefectDojoUploader:
             headers = {'Authorization': f'Token {self.token}'}
             
             response = requests.post(
-                f"{self.base_url}/api/v2/import-scan/",
+                endpoint,
                 files=files,
                 data=data,
                 headers=headers,
@@ -291,7 +312,8 @@ class DefectDojoUploader:
             
             if response.status_code == 201:
                 result = response.json()
-                print(f"✅ Upload successful - Test ID: {result.get('test')}")
+                test_id = result.get('test')
+                print(f"✅ Upload successful - Test ID: {test_id}")
                 return True
             else:
                 error_msg = response.text
@@ -307,6 +329,29 @@ class DefectDojoUploader:
         except Exception as e:
             print(f"❌ Upload error: {e}")
             return False
+    
+    def _find_existing_test(self, engagement_id: int, scan_type: str) -> Optional[int]:
+        """Find existing test for this scan type in the engagement"""
+        try:
+            response = self.session.get(
+                f"{self.base_url}/api/v2/tests/",
+                params={
+                    'engagement': engagement_id,
+                    'test_type__name': scan_type
+                },
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                results = response.json()['results']
+                if results:
+                    return results[0]['id']  # Return first matching test
+            
+            return None
+            
+        except Exception as e:
+            print(f"⚠️  Could not check for existing test: {e}")
+            return None
     
     def find_scan_files(self, scan_dir: Path) -> Dict[str, List[Path]]:
         """Find all scan files organized by component"""
