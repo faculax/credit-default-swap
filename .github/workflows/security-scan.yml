@@ -405,12 +405,24 @@ jobs:
         with:
           config-path: .gitleaks.toml
       
-      - name: Upload Gitleaks Report
+      - name: Create security reports directory
+        if: always()
+        run: mkdir -p secret-scanning-security-reports
+      
+      - name: Copy Gitleaks Report
+        if: always()
+        run: |
+          if [ -f gitleaks-report.json ]; then
+            cp gitleaks-report.json secret-scanning-security-reports/
+            echo "✅ Gitleaks report copied"
+          fi
+      
+      - name: Upload Secret Scanning Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gitleaks-report
-          path: gitleaks-report.json
+          name: secret-scanning-security-reports
+          path: secret-scanning-security-reports/
           retention-days: 30
   
   # ============================================================================
