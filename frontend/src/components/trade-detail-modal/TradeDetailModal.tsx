@@ -11,6 +11,7 @@ import { bondService, Bond } from '../../services/bondService';
 import CreditEventModal, { CreateCreditEventRequest } from '../credit-event-modal/CreditEventModal';
 import LifecycleTimeline from '../lifecycle/LifecycleTimeline';
 import CashflowPanel from '../lifecycle/CashflowPanel';
+import StressPanel from '../stress/StressPanel';
 
 interface TradeDetailModalProps {
   isOpen: boolean;
@@ -24,7 +25,7 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
   const [currentTrade, setCurrentTrade] = useState<CDSTradeResponse | null>(trade);
   const [creditEvents, setCreditEvents] = useState<CreditEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
-  const [activeTab, setActiveTab] = useState<'details' | 'lifecycle' | 'cashflow' | 'events' | 'risk' | 'marketdata'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'lifecycle' | 'cashflow' | 'events' | 'risk' | 'marketdata' | 'stress'>('details');
   const [showScenarioModal, setShowScenarioModal] = useState(false);
   const [riskMeasures, setRiskMeasures] = useState<RiskMeasures | null>(null);
   const [loadingRisk, setLoadingRisk] = useState(false);
@@ -209,7 +210,8 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
             { key: 'cashflow', label: 'Cashflow' },
             { key: 'events', label: 'Credit Events' },
             { key: 'risk', label: 'Risk' },
-            { key: 'marketdata', label: 'Market Data' }
+            { key: 'marketdata', label: 'Market Data' },
+            { key: 'stress', label: 'Stress Scenarios' }
           ].map(t => (
             <button
               key={t.key}
@@ -310,6 +312,15 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
                   <div className="flex justify-between">
                     <span className="text-fd-text-muted">Spread:</span>
                     <span className="text-fd-text font-medium">{currentTrade.spread} bps</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-fd-text-muted">Recovery Rate:</span>
+                    <span className="text-fd-text font-medium">
+                      {currentTrade.recoveryRate > 1 
+                        ? `${currentTrade.recoveryRate.toFixed(1)}%`
+                        : `${(currentTrade.recoveryRate * 100).toFixed(1)}%`
+                      }
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-fd-text-muted">Currency:</span>
@@ -544,6 +555,11 @@ const TradeDetailModal: React.FC<TradeDetailModalProps> = ({ isOpen, trade, onCl
             </div>
           );
         })()}
+        {activeTab === 'stress' && currentTrade && (
+          <div className="mt-4">
+            <StressPanel trade={currentTrade} />
+          </div>
+        )}
         <div className="flex justify-end space-x-4 mt-8 pt-4 border-t border-fd-border">
           <button onClick={onClose} className="px-6 py-2 bg-fd-green text-fd-dark font-medium rounded hover:bg-fd-green-hover transition-colors">Close</button>
         </div>
