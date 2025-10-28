@@ -3,6 +3,8 @@ package com.creditdefaultswap.riskengine.ore;
 import com.creditdefaultswap.riskengine.model.RiskMeasures;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.math.BigDecimal;
 
@@ -12,9 +14,13 @@ class OreOutputParserTest {
     
     private OreOutputParser oreOutputParser;
     
+    @Mock
+    private MarketDataSnapshotBuilder marketDataSnapshotBuilder;
+    
     @BeforeEach
     void setUp() {
-        oreOutputParser = new OreOutputParser();
+        MockitoAnnotations.openMocks(this);
+        oreOutputParser = new OreOutputParser(marketDataSnapshotBuilder);
     }
     
     @Test
