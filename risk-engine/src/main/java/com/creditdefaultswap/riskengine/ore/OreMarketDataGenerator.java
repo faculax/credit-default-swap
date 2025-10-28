@@ -7,7 +7,9 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -23,7 +25,21 @@ public class OreMarketDataGenerator {
      * Generates market data file content for the given trades
      */
     public String generateMarketData(Set<OrePortfolioGenerator.CDSTradeData> trades, LocalDate valuationDate) {
+        return generateMarketData(trades, valuationDate, null);
+    }
+    
+    /**
+     * Generates market data file content for the given trades with optional yield curve shift
+     * 
+     * @param trades Trade data
+     * @param valuationDate Valuation date
+     * @param yieldCurveShift Optional parallel shift to apply to all yield curves (in basis points)
+     */
+    public String generateMarketData(Set<OrePortfolioGenerator.CDSTradeData> trades, LocalDate valuationDate, BigDecimal yieldCurveShift) {
         logger.info("Generating dynamic market data for {} trades on valuation date {}", trades.size(), valuationDate);
+        if (yieldCurveShift != null && yieldCurveShift.compareTo(BigDecimal.ZERO) != 0) {
+            logger.info("Applying yield curve shift: {} bp", yieldCurveShift);
+        }
         
         StringBuilder marketData = new StringBuilder();
         marketData.append("# Dynamically generated market data for CDS trades\n");
@@ -44,7 +60,7 @@ public class OreMarketDataGenerator {
         // Generate yield curves for all currencies
         marketData.append("# Yield Curves\n");
         for (String currency : currencies) {
-            generateYieldCurve(marketData, dateStr, currency);
+            generateYieldCurve(marketData, dateStr, currency, yieldCurveShift);
         }
         marketData.append("\n");
         
@@ -81,17 +97,24 @@ public class OreMarketDataGenerator {
     /**
      * Generates yield curve quotes for a currency
      */
-    private void generateYieldCurve(StringBuilder sb, String date, String currency) {
+    private void generateYieldCurve(StringBuilder sb, String date, String currency, BigDecimal yieldCurveShift) {
         // Use flat yield curves with realistic rates by currency
         double baseRate = getBaseRateForCurrency(currency);
         
+        // Apply yield curve shift if provided (convert basis points to decimal)
+        double shift = yieldCurveShift != null ? yieldCurveShift.doubleValue() / 10000.0 : 0.0;
+        
         // Use A365 day counter to match conventions.xml
         // Format: ZERO/RATE/CURRENCY/INDEX/DAYCOUNTER/TERM (6 tokens required)
-        sb.append("# ").append(currency).append(" Yield Curve\n");
-        sb.append(date).append(" ZERO/RATE/").append(currency).append("/").append(currency).append("6M/A365/1Y ").append(baseRate + 0.002).append("\n");
-        sb.append(date).append(" ZERO/RATE/").append(currency).append("/").append(currency).append("6M/A365/3Y ").append(baseRate + 0.005).append("\n");
-        sb.append(date).append(" ZERO/RATE/").append(currency).append("/").append(currency).append("6M/A365/5Y ").append(baseRate + 0.008).append("\n");
-        sb.append(date).append(" ZERO/RATE/").append(currency).append("/").append(currency).append("6M/A365/10Y ").append(baseRate + 0.010).append("\n");
+        sb.append("# ").append(currency).append(" Yield Curve");
+        if (shift != 0.0) {
+            sb.append(" (shifted by ").append(yieldCurveShift).append(" bp)");
+        }
+        sb.append("\n");
+        sb.append(date).append(" ZERO/RATE/").append(currency).append("/").append(currency).append("6M/A365/1Y ").append(baseRate + 0.002 + shift).append("\n");
+        sb.append(date).append(" ZERO/RATE/").append(currency).append("/").append(currency).append("6M/A365/3Y ").append(baseRate + 0.005 + shift).append("\n");
+        sb.append(date).append(" ZERO/RATE/").append(currency).append("/").append(currency).append("6M/A365/5Y ").append(baseRate + 0.008 + shift).append("\n");
+        sb.append(date).append(" ZERO/RATE/").append(currency).append("/").append(currency).append("6M/A365/10Y ").append(baseRate + 0.010 + shift).append("\n");
     }
     
     /**
@@ -178,5 +201,26 @@ public class OreMarketDataGenerator {
             case "CAD" -> 1.35;    // CAD/USD
             default -> 1.0;
         };
+    }
+    
+    /**
+     * Gets the yield curve for a currency as a map of tenor -> rate
+     * 
+     * @param currency The currency code
+     * @param yieldCurveShift Optional shift in basis points (null for base curve)
+     * @return Map of tenor (e.g., "1Y", "3Y") to rate (decimal, e.g., 0.042)
+     */
+    public Map<String, Double> getYieldCurveMap(String currency, BigDecimal yieldCurveShift) {
+        Map<String, Double> curve = new HashMap<>();
+        
+        double baseRate = getBaseRateForCurrency(currency);
+        double shift = yieldCurveShift != null ? yieldCurveShift.doubleValue() / 10000.0 : 0.0;
+        
+        curve.put("1Y", baseRate + 0.002 + shift);
+        curve.put("3Y", baseRate + 0.005 + shift);
+        curve.put("5Y", baseRate + 0.008 + shift);
+        curve.put("10Y", baseRate + 0.010 + shift);
+        
+        return curve;
     }
 }

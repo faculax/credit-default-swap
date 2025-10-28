@@ -86,12 +86,30 @@ public class StressTestService {
                 result.setBaseJtd(baseCaseResult.getJtd());
                 result.setCurrency(baseCaseResult.getCurrency());
                 
+                // 3a. Populate base yield curve
+                Map<String, Double> baseYieldCurve = marketDataGenerator.getYieldCurveMap(
+                    tradeData.getCurrency(), null);
+                result.setBaseYieldCurve(baseYieldCurve);
+                
+                // 3b. Populate shifted yield curves if requested
+                if (request.getYieldCurveShifts() != null && !request.getYieldCurveShifts().isEmpty()) {
+                    Map<String, Map<String, Double>> shiftedCurves = new HashMap<>();
+                    for (BigDecimal shift : request.getYieldCurveShifts()) {
+                        String label = "+" + shift + "bp";
+                        Map<String, Double> shiftedCurve = marketDataGenerator.getYieldCurveMap(
+                            tradeData.getCurrency(), shift);
+                        shiftedCurves.put(label, shiftedCurve);
+                    }
+                    result.setShiftedYieldCurves(shiftedCurves);
+                }
+                
                 // 4. Run stress scenarios
                 logger.info("Running stress scenarios");
                 List<StressImpactResult.ScenarioResult> scenarios = runStressScenarios(
                     request, tradeData, valuationDate, baseCaseResult);
                 
                 result.setScenarios(scenarios);
+                result.setScenarioCount(scenarios.size());
                 
                 logger.info("Stress test analysis completed for trade {} with {} scenarios", 
                     request.getTradeId(), scenarios.size());
@@ -155,7 +173,7 @@ public class StressTestService {
             for (BigDecimal spreadShift : request.getSpreadShifts()) {
                 String scenarioName = "Spread +" + spreadShift + "bp";
                 StressImpactResult.ScenarioResult scenario = runSingleStressScenario(
-                    tradeData, valuationDate, scenarioName, null, spreadShift, baseCase);
+                    tradeData, valuationDate, scenarioName, null, spreadShift, null, baseCase);
                 results.add(scenario);
             }
         }
@@ -165,30 +183,93 @@ public class StressTestService {
             for (BigDecimal recoveryRate : request.getRecoveryRates()) {
                 String scenarioName = "Recovery " + recoveryRate + "%";
                 StressImpactResult.ScenarioResult scenario = runSingleStressScenario(
-                    tradeData, valuationDate, scenarioName, recoveryRate, null, baseCase);
+                    tradeData, valuationDate, scenarioName, recoveryRate, null, null, baseCase);
                 results.add(scenario);
             }
         }
         
-        // Run combined scenarios if requested (full matrix of recovery × spread)
-        if (request.isCombined() && request.getRecoveryRates() != null && request.getSpreadShifts() != null) {
-            for (BigDecimal recoveryRate : request.getRecoveryRates()) {
-                for (BigDecimal spreadShift : request.getSpreadShifts()) {
-                    String scenarioName = "Recovery " + recoveryRate + "% + Spread +" + spreadShift + "bp";
-                    StressImpactResult.ScenarioResult scenario = runSingleStressScenario(
-                        tradeData, valuationDate, scenarioName, recoveryRate, spreadShift, baseCase);
-                    
-                    // Flag as severe if it's the worst combination
-                    BigDecimal worstRecovery = request.getRecoveryRates().stream()
-                        .min(BigDecimal::compareTo).orElse(null);
-                    BigDecimal worstSpread = request.getSpreadShifts().stream()
-                        .max(BigDecimal::compareTo).orElse(null);
-                    
-                    if (recoveryRate.equals(worstRecovery) && spreadShift.equals(worstSpread)) {
-                        scenario.setSevere(true);
+        // Run yield curve stress scenarios
+        if (request.getYieldCurveShifts() != null) {
+            for (BigDecimal yieldShift : request.getYieldCurveShifts()) {
+                String scenarioName = "Yield Curve +" + yieldShift + "bp";
+                StressImpactResult.ScenarioResult scenario = runSingleStressScenario(
+                    tradeData, valuationDate, scenarioName, null, null, yieldShift, baseCase);
+                results.add(scenario);
+            }
+        }
+        
+        // Run combined scenarios if requested
+        if (request.isCombined()) {
+            // Build lists with defaults if null
+            List<BigDecimal> recoveryRates = request.getRecoveryRates() != null ? 
+                request.getRecoveryRates() : List.of();
+            List<BigDecimal> spreadShifts = request.getSpreadShifts() != null ? 
+                request.getSpreadShifts() : List.of();
+            List<BigDecimal> yieldShifts = request.getYieldCurveShifts() != null ? 
+                request.getYieldCurveShifts() : List.of();
+            
+            // Need at least 2 stress dimensions to run combined scenarios
+            int dimensionCount = 0;
+            if (!recoveryRates.isEmpty()) dimensionCount++;
+            if (!spreadShifts.isEmpty()) dimensionCount++;
+            if (!yieldShifts.isEmpty()) dimensionCount++;
+            
+            if (dimensionCount >= 2) {
+                // Run full matrix: recovery × spread × yield
+                // If a dimension is empty, treat it as a single null value
+                List<BigDecimal> recoveryList = recoveryRates.isEmpty() ? List.of((BigDecimal) null) : recoveryRates;
+                List<BigDecimal> spreadList = spreadShifts.isEmpty() ? List.of((BigDecimal) null) : spreadShifts;
+                List<BigDecimal> yieldList = yieldShifts.isEmpty() ? List.of((BigDecimal) null) : yieldShifts;
+                
+                for (BigDecimal recoveryRate : recoveryList) {
+                    for (BigDecimal spreadShift : spreadList) {
+                        for (BigDecimal yieldShift : yieldList) {
+                            // Skip if all are null (already covered in base case)
+                            if (recoveryRate == null && spreadShift == null && yieldShift == null) {
+                                continue;
+                            }
+                            
+                            // Skip if only one stress is applied (already covered in individual scenarios)
+                            int stressCount = 0;
+                            if (recoveryRate != null) stressCount++;
+                            if (spreadShift != null) stressCount++;
+                            if (yieldShift != null) stressCount++;
+                            if (stressCount < 2) continue;
+                            
+                            // Build scenario name
+                            StringBuilder scenarioName = new StringBuilder("Combined: ");
+                            List<String> parts = new ArrayList<>();
+                            if (recoveryRate != null) parts.add("Recovery " + recoveryRate + "%");
+                            if (spreadShift != null) parts.add("Spread +" + spreadShift + "bp");
+                            if (yieldShift != null) parts.add("Yield +" + yieldShift + "bp");
+                            scenarioName.append(String.join(" + ", parts));
+                            
+                            StressImpactResult.ScenarioResult scenario = runSingleStressScenario(
+                                tradeData, valuationDate, scenarioName.toString(), 
+                                recoveryRate, spreadShift, yieldShift, baseCase);
+                            
+                            // Flag as severe if it's the worst combination
+                            boolean isWorst = true;
+                            if (!recoveryRates.isEmpty() && recoveryRate != null) {
+                                BigDecimal worstRecovery = recoveryRates.stream().min(BigDecimal::compareTo).orElse(null);
+                                isWorst = isWorst && recoveryRate.equals(worstRecovery);
+                            }
+                            if (!spreadShifts.isEmpty() && spreadShift != null) {
+                                BigDecimal worstSpread = spreadShifts.stream().max(BigDecimal::compareTo).orElse(null);
+                                isWorst = isWorst && spreadShift.equals(worstSpread);
+                            }
+                            if (!yieldShifts.isEmpty() && yieldShift != null) {
+                                BigDecimal worstYield = yieldShifts.stream().max(BigDecimal::compareTo).orElse(null);
+                                isWorst = isWorst && yieldShift.equals(worstYield);
+                            }
+                            
+                            if (isWorst) {
+                                scenario.setSevere(true);
+                            }
+                            
+                            results.add(scenario);
+                        }
                     }
-                    
-                    results.add(scenario);
                 }
             }
         }
@@ -205,6 +286,7 @@ public class StressTestService {
             String scenarioName,
             BigDecimal recoveryRate,
             BigDecimal spreadShift,
+            BigDecimal yieldCurveShift,
             RiskMeasures baseCase) {
         
         logger.info("🎯 Running stress scenario: {}", scenarioName);
@@ -230,6 +312,10 @@ public class StressTestService {
             if (spreadShift != null) {
                 stressParams.put("spreadShift", spreadShift);
                 logger.debug("Applying spread shift stress: +{} bp", spreadShift);
+            }
+            if (yieldCurveShift != null) {
+                stressParams.put("yieldCurveShift", yieldCurveShift);
+                logger.debug("Applying yield curve shift stress: +{} bp", yieldCurveShift);
             }
             
             generateOreInputs(tradeData, valuationDate, inputDir, workDir, stressParams);
@@ -296,9 +382,13 @@ public class StressTestService {
         // Apply stress to trade data if needed
         OrePortfolioGenerator.CDSTradeData stressedTradeData = applyStress(tradeData, stressParams);
         
+        // Extract yield curve shift if present
+        BigDecimal yieldCurveShift = stressParams != null && stressParams.containsKey("yieldCurveShift") ?
+            (BigDecimal) stressParams.get("yieldCurveShift") : null;
+        
         // Generate market data
         Set<OrePortfolioGenerator.CDSTradeData> trades = Set.of(stressedTradeData);
-        String marketData = marketDataGenerator.generateMarketData(trades, valuationDate);
+        String marketData = marketDataGenerator.generateMarketData(trades, valuationDate, yieldCurveShift);
         Path marketDataPath = inputDir.resolve("market.txt");
         Files.writeString(marketDataPath, marketData);
         

@@ -74,6 +74,7 @@ public class RiskController {
         int expectedScenarios = 0;
         if (request.getRecoveryRates() != null) expectedScenarios += request.getRecoveryRates().size();
         if (request.getSpreadShifts() != null) expectedScenarios += request.getSpreadShifts().size();
+        if (request.getYieldCurveShifts() != null) expectedScenarios += request.getYieldCurveShifts().size();
         if (request.isCombined() && request.getRecoveryRates() != null && request.getSpreadShifts() != null) {
             expectedScenarios += request.getRecoveryRates().size() * request.getSpreadShifts().size();
         }

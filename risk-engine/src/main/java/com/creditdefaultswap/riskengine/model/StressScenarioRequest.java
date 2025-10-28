@@ -25,6 +25,11 @@ public class StressScenarioRequest {
     private List<BigDecimal> spreadShifts;
     
     /**
+     * List of yield curve shifts to stress test (in basis points, e.g., 25 for +25bp)
+     */
+    private List<BigDecimal> yieldCurveShifts;
+    
+    /**
      * Whether to run combined scenarios (e.g., recovery 30% + spread +100bp together)
      * If false, runs independent scenarios only
      */
@@ -58,6 +63,14 @@ public class StressScenarioRequest {
     
     public void setSpreadShifts(List<BigDecimal> spreadShifts) {
         this.spreadShifts = spreadShifts;
+    }
+    
+    public List<BigDecimal> getYieldCurveShifts() {
+        return yieldCurveShifts;
+    }
+    
+    public void setYieldCurveShifts(List<BigDecimal> yieldCurveShifts) {
+        this.yieldCurveShifts = yieldCurveShifts;
     }
     
     public boolean isCombined() {

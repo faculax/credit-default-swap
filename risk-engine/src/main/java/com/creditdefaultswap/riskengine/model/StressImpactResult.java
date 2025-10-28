@@ -2,7 +2,9 @@ package com.creditdefaultswap.riskengine.model;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Result model for stress scenario impact analysis
@@ -30,12 +32,30 @@ public class StressImpactResult {
     private String currency;
     
     /**
+     * Total number of scenarios executed
+     */
+    private int scenarioCount;
+    
+    /**
+     * Base yield curve (tenor -> rate) for the trade currency
+     */
+    private Map<String, Double> baseYieldCurve;
+    
+    /**
+     * Shifted yield curves (shift label -> {tenor -> rate})
+     * e.g., "+50bp" -> {"1Y": 0.047, "3Y": 0.050, ...}
+     */
+    private Map<String, Map<String, Double>> shiftedYieldCurves;
+    
+    /**
      * List of stress scenario results
      */
     private List<ScenarioResult> scenarios;
     
     public StressImpactResult() {
         this.scenarios = new ArrayList<>();
+        this.baseYieldCurve = new HashMap<>();
+        this.shiftedYieldCurves = new HashMap<>();
     }
     
     /**
@@ -130,6 +150,30 @@ public class StressImpactResult {
     
     public void setCurrency(String currency) {
         this.currency = currency;
+    }
+    
+    public int getScenarioCount() {
+        return scenarioCount;
+    }
+    
+    public void setScenarioCount(int scenarioCount) {
+        this.scenarioCount = scenarioCount;
+    }
+    
+    public Map<String, Double> getBaseYieldCurve() {
+        return baseYieldCurve;
+    }
+    
+    public void setBaseYieldCurve(Map<String, Double> baseYieldCurve) {
+        this.baseYieldCurve = baseYieldCurve;
+    }
+    
+    public Map<String, Map<String, Double>> getShiftedYieldCurves() {
+        return shiftedYieldCurves;
+    }
+    
+    public void setShiftedYieldCurves(Map<String, Map<String, Double>> shiftedYieldCurves) {
+        this.shiftedYieldCurves = shiftedYieldCurves;
     }
     
     public List<ScenarioResult> getScenarios() {
