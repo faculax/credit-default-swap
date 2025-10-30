@@ -1,0 +1,17 @@
+{
+  "name": "credit-default-swap-functional-tests",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:smoke": "playwright test -g @smoke",
+    "test:accessibility": "playwright test -g @a11y",
+    "codegen": "playwright codegen"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.46.0",
+    "@axe-core/playwright": "^4.9.2",
+    "typescript": "^5.4.0"
+  }
+}
