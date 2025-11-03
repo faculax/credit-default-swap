@@ -85,6 +85,16 @@ jobs:
           # Test it works
           ./schemacrawler-${SC_VERSION}-bin/bin/schemacrawler.sh --version
 
+      - name: Install SchemaSpy
+        run: |
+          echo "Installing SchemaSpy for enhanced interactive diagrams..."
+          SCHEMASPY_VERSION=6.2.4
+          curl -L "https://github.com/schemaspy/schemaspy/releases/download/v${SCHEMASPY_VERSION}/schemaspy-${SCHEMASPY_VERSION}.jar" -o schemaspy.jar
+          # Download PostgreSQL JDBC driver
+          curl -L "https://jdbc.postgresql.org/download/postgresql-42.7.1.jar" -o postgresql.jar
+          echo "SCHEMASPY_JAR=$PWD/schemaspy.jar" >> $GITHUB_ENV
+          echo "POSTGRES_DRIVER=$PWD/postgresql.jar" >> $GITHUB_ENV
+
       - name: Generate Schema Artifacts
         run: |
           echo "Generating schema diagram and documentation..."

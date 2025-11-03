@@ -31,7 +31,18 @@ echo "Found ${TABLE_COUNT} tables in public schema"
 echo ""
 
 # Generate PlantUML source (logical representation)
-echo "Generating SVG diagram..."
+echo "Generating enhanced SVG diagram with custom styling..."
+
+# Create GraphViz styling configuration
+cat > /tmp/schemacrawler.config.properties <<'EOF'
+schemacrawler.format.hide_primarykey_names=true
+schemacrawler.format.hide_foreignkey_names=true
+schemacrawler.format.show_ordinal_numbers=false
+schemacrawler.graph.graphviz_opts=-Gfontname="Arial" -Gfontsize=12 -Gnodesep=0.5 -Granksep=1.0 -Grankdir=TB -Gbgcolor="#ffffff" -Gsplines=ortho
+schemacrawler.graph.node.table=-Nshape=plaintext -Nfontname="Arial" -Nfontsize=11 -Nmargin=0.1
+schemacrawler.graph.edge.foreignkey=-Earrowhead=vee -Earrowsize=0.8 -Ecolor="#3C4B61" -Epenwidth=1.5
+EOF
+
 schemacrawler.sh \
   --server=postgresql \
   --host=${DB_HOST} \
@@ -39,6 +50,7 @@ schemacrawler.sh \
   --database=${DB_NAME} \
   --user=${DB_USER} \
   --password=${DB_PASS} \
+  --config-file=/tmp/schemacrawler.config.properties \
   --info-level=standard \
   --schemas=public \
   --command=schema \
@@ -91,6 +103,35 @@ schemacrawler.sh \
   --output-file="${OUTPUT_DIR}/database-schema.txt"
 echo "✓ Text schema generated"
 
+# Generate interactive SchemaSpy documentation (if available)
+if [[ -n "${SCHEMASPY_JAR:-}" ]] && [[ -f "${SCHEMASPY_JAR}" ]]; then
+  echo "Generating interactive SchemaSpy documentation..."
+  SCHEMASPY_OUTPUT="${OUTPUT_DIR}/interactive"
+  mkdir -p "${SCHEMASPY_OUTPUT}"
+  
+  java -jar "${SCHEMASPY_JAR}" \
+    -t pgsql \
+    -host ${DB_HOST}:${DB_PORT} \
+    -db ${DB_NAME} \
+    -u ${DB_USER} \
+    -p ${DB_PASS} \
+    -s public \
+    -o "${SCHEMASPY_OUTPUT}" \
+    -dp "${POSTGRES_DRIVER}" \
+    -vizjs \
+    -degree 2 \
+    -norows \
+    -noimplied 2>/dev/null || echo "⚠ SchemaSpy generation had warnings (non-fatal)"
+  
+  if [[ -f "${SCHEMASPY_OUTPUT}/index.html" ]]; then
+    echo "✓ Interactive SchemaSpy documentation generated"
+  else
+    echo "⚠ SchemaSpy documentation incomplete"
+  fi
+else
+  echo "⚠ SchemaSpy not available, skipping interactive docs"
+fi
+
 # Capture applied migrations from Flyway history
 echo "Capturing Flyway migration history..."
 PGPASSWORD=${DB_PASS} psql -h ${DB_HOST} -p ${DB_PORT} -U ${DB_USER} -d ${DB_NAME} -Atc \
@@ -126,13 +167,23 @@ cat > "${OUTPUT_DIR}/README.md" <<EOF
 
 ## Entity-Relationship Diagram
 
-### Interactive SVG
-[View Interactive SVG Diagram](./database-schema.svg) (recommended - zoomable and searchable)
+### 🌟 Interactive Web Documentation (Recommended)
+**[Open Interactive Schema Browser →](./interactive/index.html)**
+
+Modern, beautiful schema browser with:
+- 🎨 Styled, clickable entity diagrams
+- 🔍 Full-text search across tables and columns
+- 📊 Relationship graphs and dependency trees
+- 📝 Constraint and index visualization
+- 🎯 Anomaly detection
+
+### SVG Diagram
+[View Interactive SVG Diagram](./database-schema.svg) (zoomable and searchable)
 
 ### PNG Export
 ![Database Schema](./database-schema.png)
 
-_The SVG version is interactive and provides better quality when zoomed._
+_For best experience, use the [Interactive Schema Browser](./interactive/index.html)_
 
 ---
 
@@ -202,6 +253,7 @@ $(cat "${OUTPUT_DIR}/migrations-applied.txt")
 
 ## Additional Resources
 
+- **[Interactive SchemaSpy Documentation](./interactive/index.html)** - 🌟 Modern, interactive schema browser with beautiful diagrams
 - **[Full HTML Documentation](./database-schema.html)** - Detailed schema browser with table/column descriptions
 - **[SVG Diagram](./database-schema.svg)** - Scalable vector graphic (interactive, zoomable)
 - **[Text Schema](./database-schema.txt)** - Plain text representation for quick reference
@@ -241,7 +293,8 @@ echo "  Schema Generation Complete!"
 echo "============================================"
 echo ""
 echo "Generated artifacts in ${OUTPUT_DIR}:"
-echo "  - database-schema.svg (${TABLE_COUNT} tables, interactive)"
+echo "  - interactive/index.html (modern interactive docs)"
+echo "  - database-schema.svg (${TABLE_COUNT} tables, styled)"
 echo "  - database-schema.png (${TABLE_COUNT} tables, static)"
 echo "  - database-schema.html (detailed docs)"
 echo "  - database-schema.txt (text representation)"
