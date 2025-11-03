@@ -32,7 +32,7 @@ echo ""
 
 # Generate PlantUML source (logical representation)
 echo "Generating PlantUML source..."
-schemacrawler \
+schemacrawler.sh \
   --server=postgresql \
   --host=${DB_HOST} \
   --port=${DB_PORT} \
@@ -50,7 +50,7 @@ echo "✓ PlantUML source generated"
 
 # Generate PNG diagram
 echo "Generating PNG diagram..."
-schemacrawler \
+schemacrawler.sh \
   --server=postgresql \
   --host=${DB_HOST} \
   --port=${DB_PORT} \
@@ -68,7 +68,7 @@ echo "✓ PNG diagram generated"
 
 # Generate detailed HTML documentation
 echo "Generating HTML documentation..."
-schemacrawler \
+schemacrawler.sh \
   --server=postgresql \
   --host=${DB_HOST} \
   --port=${DB_PORT} \

@@ -79,14 +79,11 @@ jobs:
           echo "Downloading SchemaCrawler ${SC_VERSION}..."
           curl -L "https://github.com/schemacrawler/SchemaCrawler/releases/download/v${SC_VERSION}/schemacrawler-${SC_VERSION}-bin.zip" -o sc.zip
           unzip -q sc.zip
-          echo "Extracted contents:"
-          ls -la
-          # Find the actual schemacrawler.sh location
-          find . -name "schemacrawler.sh" -type f
-          SC_SCRIPT=$(find . -name "schemacrawler.sh" -type f | head -n 1)
-          chmod +x "$SC_SCRIPT"
-          sudo ln -s "$PWD/$SC_SCRIPT" /usr/local/bin/schemacrawler
-          schemacrawler --version
+          # Make the script executable and add to PATH
+          chmod +x schemacrawler-${SC_VERSION}-bin/bin/schemacrawler.sh
+          echo "$PWD/schemacrawler-${SC_VERSION}-bin/bin" >> $GITHUB_PATH
+          # Test it works
+          ./schemacrawler-${SC_VERSION}-bin/bin/schemacrawler.sh --version
 
       - name: Generate Schema Artifacts
         run: |
