@@ -31,7 +31,7 @@ echo "Found ${TABLE_COUNT} tables in public schema"
 echo ""
 
 # Generate PlantUML source (logical representation)
-echo "Generating PlantUML source..."
+echo "Generating SVG diagram..."
 schemacrawler.sh \
   --server=postgresql \
   --host=${DB_HOST} \
@@ -44,27 +44,18 @@ schemacrawler.sh \
   --command=schema \
   --no-info \
   --portable-names \
-  --output-format=plantuml \
-  --output-file="${OUTPUT_DIR}/database-schema.puml"
-echo "✓ PlantUML source generated"
+  --output-format=svg \
+  --output-file="${OUTPUT_DIR}/database-schema.svg"
+echo "✓ SVG diagram generated"
 
-# Generate PNG diagram
-echo "Generating PNG diagram..."
-schemacrawler.sh \
-  --server=postgresql \
-  --host=${DB_HOST} \
-  --port=${DB_PORT} \
-  --database=${DB_NAME} \
-  --user=${DB_USER} \
-  --password=${DB_PASS} \
-  --info-level=standard \
-  --schemas=public \
-  --command=schema \
-  --no-info \
-  --portable-names \
-  --output-format=png \
-  --output-file="${OUTPUT_DIR}/database-schema.png"
-echo "✓ PNG diagram generated"
+# Generate PNG diagram from SVG (better quality)
+echo "Converting SVG to PNG..."
+if command -v convert &> /dev/null; then
+  convert -density 150 -background white "${OUTPUT_DIR}/database-schema.svg" "${OUTPUT_DIR}/database-schema.png"
+  echo "✓ PNG diagram generated"
+else
+  echo "⚠ ImageMagick not available, skipping PNG conversion"
+fi
 
 # Generate detailed HTML documentation
 echo "Generating HTML documentation..."
@@ -82,6 +73,23 @@ schemacrawler.sh \
   --output-format=html \
   --output-file="${OUTPUT_DIR}/database-schema.html"
 echo "✓ HTML documentation generated"
+
+# Generate text-based schema for quick reference
+echo "Generating text schema..."
+schemacrawler.sh \
+  --server=postgresql \
+  --host=${DB_HOST} \
+  --port=${DB_PORT} \
+  --database=${DB_NAME} \
+  --user=${DB_USER} \
+  --password=${DB_PASS} \
+  --info-level=standard \
+  --schemas=public \
+  --command=schema \
+  --portable-names \
+  --output-format=text \
+  --output-file="${OUTPUT_DIR}/database-schema.txt"
+echo "✓ Text schema generated"
 
 # Capture applied migrations from Flyway history
 echo "Capturing Flyway migration history..."
@@ -118,9 +126,13 @@ cat > "${OUTPUT_DIR}/README.md" <<EOF
 
 ## Entity-Relationship Diagram
 
+### Interactive SVG
+[View Interactive SVG Diagram](./database-schema.svg) (recommended - zoomable and searchable)
+
+### PNG Export
 ![Database Schema](./database-schema.png)
 
-_Click the image above to view in full resolution._
+_The SVG version is interactive and provides better quality when zoomed._
 
 ---
 
@@ -191,7 +203,8 @@ $(cat "${OUTPUT_DIR}/migrations-applied.txt")
 ## Additional Resources
 
 - **[Full HTML Documentation](./database-schema.html)** - Detailed schema browser with table/column descriptions
-- **[PlantUML Source](./database-schema.puml)** - Editable diagram source for customization
+- **[SVG Diagram](./database-schema.svg)** - Scalable vector graphic (interactive, zoomable)
+- **[Text Schema](./database-schema.txt)** - Plain text representation for quick reference
 
 ---
 
@@ -228,9 +241,10 @@ echo "  Schema Generation Complete!"
 echo "============================================"
 echo ""
 echo "Generated artifacts in ${OUTPUT_DIR}:"
-echo "  - database-schema.png (${TABLE_COUNT} tables)"
-echo "  - database-schema.puml (PlantUML source)"
+echo "  - database-schema.svg (${TABLE_COUNT} tables, interactive)"
+echo "  - database-schema.png (${TABLE_COUNT} tables, static)"
 echo "  - database-schema.html (detailed docs)"
+echo "  - database-schema.txt (text representation)"
 echo "  - migrations-applied.txt (${MIGRATION_COUNT} migrations)"
 echo "  - README.md (documentation index)"
 echo ""
