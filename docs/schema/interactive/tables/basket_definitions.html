@@ -445,16 +445,12 @@
                                     <td>(((day_count)::text &#61; ANY ((ARRAY[&#39;ACT_360&#39;::character varying, &#39;ACT_365F&#39;::character varying])::text[])))</td>
                                 </tr>
                                 <tr>
-                                    <td>basket_definitions_type_check</td>
-                                    <td>(((type)::text &#61; ANY ((ARRAY[&#39;FIRST_TO_DEFAULT&#39;::character varying, &#39;NTH_TO_DEFAULT&#39;::character varying, &#39;TRANCHETTE&#39;::character varying])::text[])))</td>
+                                    <td>basket_definitions_notional_check</td>
+                                    <td>((notional &gt; (0)::numeric))</td>
                                 </tr>
                                 <tr>
                                     <td>basket_definitions_check</td>
                                     <td>(((((type)::text &#61; &#39;NTH_TO_DEFAULT&#39;::text) AND (nth IS NOT NULL) AND (nth &gt;&#61; 1)) OR ((type)::text &lt;&gt; &#39;NTH_TO_DEFAULT&#39;::text)))</td>
-                                </tr>
-                                <tr>
-                                    <td>basket_definitions_notional_check</td>
-                                    <td>((notional &gt; (0)::numeric))</td>
                                 </tr>
                                 <tr>
                                     <td>basket_definitions_premium_frequency_check</td>
@@ -463,6 +459,10 @@
                                 <tr>
                                     <td>basket_definitions_check1</td>
                                     <td>(((((type)::text &#61; &#39;TRANCHETTE&#39;::text) AND (attachment_point IS NOT NULL) AND (detachment_point IS NOT NULL) AND (attachment_point &gt;&#61; (0)::numeric) AND (attachment_point &lt; detachment_point) AND (detachment_point &lt;&#61; (1)::numeric)) OR ((type)::text &lt;&gt; &#39;TRANCHETTE&#39;::text)))</td>
+                                </tr>
+                                <tr>
+                                    <td>basket_definitions_type_check</td>
+                                    <td>(((type)::text &#61; ANY ((ARRAY[&#39;FIRST_TO_DEFAULT&#39;::character varying, &#39;NTH_TO_DEFAULT&#39;::character varying, &#39;TRANCHETTE&#39;::character varying])::text[])))</td>
                                 </tr>
                                 </tbody>
                             </table>

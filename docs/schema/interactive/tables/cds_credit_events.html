@@ -359,16 +359,16 @@
                                 </thead>
                                 <tbody>
                                 <tr>
+                                    <td>ck_notice_date_after_event</td>
+                                    <td>((notice_date &gt;&#61; event_date))</td>
+                                </tr>
+                                <tr>
                                     <td>ck_event_type</td>
                                     <td>(((event_type)::text &#61; ANY ((ARRAY[&#39;BANKRUPTCY&#39;::character varying, &#39;FAILURE_TO_PAY&#39;::character varying, &#39;RESTRUCTURING&#39;::character varying, &#39;OBLIGATION_DEFAULT&#39;::character varying, &#39;REPUDIATION_MORATORIUM&#39;::character varying, &#39;PAYOUT&#39;::character varying])::text[])))</td>
                                 </tr>
                                 <tr>
                                     <td>ck_settlement_method</td>
                                     <td>(((settlement_method)::text &#61; ANY ((ARRAY[&#39;CASH&#39;::character varying, &#39;PHYSICAL&#39;::character varying])::text[])))</td>
-                                </tr>
-                                <tr>
-                                    <td>ck_notice_date_after_event</td>
-                                    <td>((notice_date &gt;&#61; event_date))</td>
                                 </tr>
                                 </tbody>
                             </table>
