@@ -1,0 +1,108 @@
+name: Generate Database Schema Diagram
+
+on:
+  push:
+    branches: [ main, develop, data-model ]
+    paths:
+      - "backend/src/main/resources/db/migration/**"
+      - ".github/workflows/generate-schema-diagram.yml"
+      - "scripts/generate-db-diagram.sh"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-schema:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: cdsplatform
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d cdsplatform"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Wait for Postgres
+        run: |
+          echo "Waiting for PostgreSQL to be ready..."
+          for i in {1..60}; do
+            if pg_isready -h 127.0.0.1 -p 5432 -U postgres -d cdsplatform; then
+              echo "PostgreSQL is ready!"
+              break
+            fi
+            echo "Attempt $i: PostgreSQL not ready yet..."
+            sleep 2
+          done
+
+      - name: Install Flyway CLI
+        run: |
+          FLYWAY_VERSION=10.17.0
+          echo "Installing Flyway ${FLYWAY_VERSION}..."
+          curl -sL "https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/${FLYWAY_VERSION}/flyway-commandline-${FLYWAY_VERSION}-linux-x64.tar.gz" \
+            | tar xz
+          sudo ln -s "$PWD/flyway-${FLYWAY_VERSION}/flyway" /usr/local/bin/flyway
+          flyway -v
+
+      - name: Run Flyway Migrations
+        run: |
+          echo "Running Flyway migrations from backend/src/main/resources/db/migration..."
+          flyway \
+            -url=jdbc:postgresql://127.0.0.1:5432/cdsplatform \
+            -user=postgres \
+            -password=postgres \
+            -locations=filesystem:backend/src/main/resources/db/migration \
+            -baselineOnMigrate=true \
+            -connectRetries=30 \
+            migrate
+          echo "Migrations completed successfully!"
+
+      - name: Install SchemaCrawler + Graphviz
+        run: |
+          echo "Installing Graphviz and SchemaCrawler..."
+          sudo apt-get update && sudo apt-get install -y graphviz unzip postgresql-client
+          SC_VERSION=16.21.6
+          curl -sL "https://github.com/schemacrawler/SchemaCrawler/releases/download/v${SC_VERSION}/schemacrawler-${SC_VERSION}-distribution.zip" -o sc.zip
+          unzip -q sc.zip
+          sudo ln -s "$PWD/schemacrawler-${SC_VERSION}/schemacrawler.sh" /usr/local/bin/schemacrawler
+          schemacrawler --version
+
+      - name: Generate Schema Artifacts
+        run: |
+          echo "Generating schema diagram and documentation..."
+          chmod +x scripts/generate-db-diagram.sh
+          bash scripts/generate-db-diagram.sh
+
+      - name: List Generated Files
+        run: |
+          echo "Generated schema artifacts:"
+          ls -lah docs/schema/
+
+      - name: Commit Changes (if any)
+        run: |
+          git config user.name "schema-bot"
+          git config user.email "schema-bot@users.noreply.github.com"
+          
+          if [[ -n "$(git status --porcelain docs/schema)" ]]; then
+            echo "Schema changes detected, committing..."
+            git add docs/schema
+            git commit -m "chore(schema): update DB schema diagram [skip ci]"
+            git push
+            echo "Schema diagram updated and pushed successfully!"
+          else
+            echo "No schema changes detected - diagram is up to date."
+          fi
