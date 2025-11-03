@@ -33,14 +33,15 @@ echo ""
 # Generate PlantUML source (logical representation)
 echo "Generating enhanced SVG diagram with custom styling..."
 
-# Create GraphViz styling configuration
+# Create GraphViz styling configuration for better readability
 cat > /tmp/schemacrawler.config.properties <<'EOF'
-schemacrawler.format.hide_primarykey_names=true
-schemacrawler.format.hide_foreignkey_names=true
-schemacrawler.format.show_ordinal_numbers=false
-schemacrawler.graph.graphviz_opts=-Gfontname="Arial" -Gfontsize=12 -Gnodesep=0.5 -Granksep=1.0 -Grankdir=TB -Gbgcolor="#ffffff" -Gsplines=ortho
-schemacrawler.graph.node.table=-Nshape=plaintext -Nfontname="Arial" -Nfontsize=11 -Nmargin=0.1
-schemacrawler.graph.edge.foreignkey=-Earrowhead=vee -Earrowsize=0.8 -Ecolor="#3C4B61" -Epenwidth=1.5
+schemacrawler.format.hide_primarykey_names=false
+schemacrawler.format.hide_foreignkey_names=false
+schemacrawler.format.show_ordinal_numbers=true
+schemacrawler.format.show_standard_column_type_names=true
+schemacrawler.graph.graphviz_opts=-Gfontname="Arial" -Gfontsize=14 -Gfontcolor="#1a1a1a" -Gnodesep=0.75 -Granksep=1.5 -Grankdir=TB -Gbgcolor="#ffffff" -Gsplines=spline -Gdpi=150
+schemacrawler.graph.node.table=-Nshape=box -Nstyle="filled,rounded" -Nfillcolor="#e8f4f8" -Ncolor="#0074D9" -Npenwidth=2 -Nfontname="Arial" -Nfontsize=12 -Nfontcolor="#1a1a1a" -Nmargin=0.2
+schemacrawler.graph.edge.foreignkey=-Earrowhead=crow -Earrowsize=1.0 -Ecolor="#0074D9" -Epenwidth=2.0 -Efontsize=10 -Efontcolor="#3C4B61"
 EOF
 
 schemacrawler.sh \
@@ -60,11 +61,24 @@ schemacrawler.sh \
   --output-file="${OUTPUT_DIR}/database-schema.svg"
 echo "✓ SVG diagram generated"
 
-# Generate PNG diagram from SVG (better quality)
-echo "Converting SVG to PNG..."
+# Generate high-quality PNG diagram from SVG
+echo "Converting SVG to PNG with high quality settings..."
 if command -v convert &> /dev/null; then
-  convert -density 150 -background white "${OUTPUT_DIR}/database-schema.svg" "${OUTPUT_DIR}/database-schema.png"
-  echo "✓ PNG diagram generated"
+  # High DPI, white background, better quality
+  convert -density 200 -background white -flatten \
+    -resize 3000x3000\> \
+    -quality 95 \
+    "${OUTPUT_DIR}/database-schema.svg" \
+    "${OUTPUT_DIR}/database-schema.png"
+  
+  # Also create a thumbnail version
+  convert -density 150 -background white -flatten \
+    -resize 1200x1200\> \
+    -quality 90 \
+    "${OUTPUT_DIR}/database-schema.svg" \
+    "${OUTPUT_DIR}/database-schema-thumbnail.png"
+  
+  echo "✓ PNG diagrams generated (full size + thumbnail)"
 else
   echo "⚠ ImageMagick not available, skipping PNG conversion"
 fi
@@ -181,9 +195,9 @@ Modern, beautiful schema browser with:
 [View Interactive SVG Diagram](./database-schema.svg) (zoomable and searchable)
 
 ### PNG Export
-![Database Schema](./database-schema.png)
+[![Database Schema Thumbnail](./database-schema-thumbnail.png)](./database-schema.png)
 
-_For best experience, use the [Interactive Schema Browser](./interactive/index.html)_
+_Click the thumbnail above to view full resolution PNG, or use the [Interactive Schema Browser](./interactive/index.html) for best experience_
 
 ---
 
@@ -295,7 +309,8 @@ echo ""
 echo "Generated artifacts in ${OUTPUT_DIR}:"
 echo "  - interactive/index.html (modern interactive docs)"
 echo "  - database-schema.svg (${TABLE_COUNT} tables, styled)"
-echo "  - database-schema.png (${TABLE_COUNT} tables, static)"
+echo "  - database-schema.png (${TABLE_COUNT} tables, high-res)"
+echo "  - database-schema-thumbnail.png (preview image)"
 echo "  - database-schema.html (detailed docs)"
 echo "  - database-schema.txt (text representation)"
 echo "  - migrations-applied.txt (${MIGRATION_COUNT} migrations)"
