@@ -61,54 +61,10 @@ schemacrawler.sh \
   --output-file="${OUTPUT_DIR}/database-schema.svg"
 echo "✓ SVG diagram generated"
 
-# Generate PNG diagram from SVG using rsvg-convert (better for large diagrams)
-echo "Converting SVG to PNG..."
-if command -v rsvg-convert &> /dev/null; then
-  # Use rsvg-convert which handles large SVGs much better than ImageMagick
-  echo "Using rsvg-convert for high-quality conversion..."
-  
-  # Full-size PNG
-  rsvg-convert -w 2400 -b white \
-    "${OUTPUT_DIR}/database-schema.svg" \
-    -o "${OUTPUT_DIR}/database-schema.png"
-  
-  # Thumbnail
-  rsvg-convert -w 1200 -b white \
-    "${OUTPUT_DIR}/database-schema.svg" \
-    -o "${OUTPUT_DIR}/database-schema-thumbnail.png"
-  
-  echo "✓ PNG diagrams generated with rsvg-convert"
-  
-elif command -v convert &> /dev/null; then
-  # Fallback to ImageMagick with conservative settings
-  echo "Using ImageMagick with conservative settings..."
-  
-  # Try very low resolution only
-  convert -limit memory 1GiB -limit map 2GiB \
-    -density 48 -background white -flatten \
-    -resize 1200x1200\> \
-    -quality 80 \
-    "${OUTPUT_DIR}/database-schema.svg" \
-    "${OUTPUT_DIR}/database-schema.png" 2>/dev/null || \
-    echo "⚠ PNG conversion failed - SVG too large for available resources"
-  
-  # Thumbnail at even lower resolution
-  convert -limit memory 512MiB -limit map 1GiB \
-    -density 36 -background white -flatten \
-    -resize 800x800\> \
-    -quality 75 \
-    "${OUTPUT_DIR}/database-schema.svg" \
-    "${OUTPUT_DIR}/database-schema-thumbnail.png" 2>/dev/null || \
-    echo "⚠ Thumbnail generation failed"
-  
-  if [[ -f "${OUTPUT_DIR}/database-schema.png" ]]; then
-    echo "✓ PNG diagrams generated (lower quality due to size constraints)"
-  else
-    echo "⚠ PNG conversion skipped - use SVG or interactive docs instead"
-  fi
-else
-  echo "⚠ No PNG converter available, use SVG or interactive docs"
-fi
+# Note: PNG conversion skipped for large schemas
+# GitHub can display SVG files directly, and SchemaSpy provides better interactive diagrams
+echo "⚠ PNG conversion skipped - large schemas render better as SVG or interactive HTML"
+echo "  GitHub will display the SVG file directly in the README"
 
 # Generate detailed HTML documentation
 echo "Generating HTML documentation..."
@@ -218,19 +174,12 @@ Modern, beautiful schema browser with:
 - 📝 Constraint and index visualization
 - 🎯 Anomaly detection
 
-### SVG Diagram (Recommended for Large Schemas)
-**[View Interactive SVG Diagram →](./database-schema.svg)** (zoomable, searchable, works in all modern browsers)
+### SVG Diagram
+**[View Full Schema Diagram (SVG) →](./database-schema.svg)**
 
-### PNG Export
-$(if [[ -f "${OUTPUT_DIR}/database-schema-thumbnail.png" ]]; then
-  echo "[![Database Schema Thumbnail](./database-schema-thumbnail.png)](./database-schema.png)"
-  echo ""
-  echo "_Click the thumbnail above to view full resolution PNG_"
-else
-  echo "_PNG export not available for very large schemas - use SVG or interactive docs_"
-fi)
+The SVG diagram shows all ${TABLE_COUNT} tables with their relationships. Open it in your browser for zooming and panning.
 
-_For best experience, use the [Interactive Schema Browser](./interactive/index.html)_
+_Note: For large schemas like ours, SVG provides better quality than PNG. GitHub renders SVG files natively._
 
 ---
 
@@ -340,12 +289,12 @@ echo "  Schema Generation Complete!"
 echo "============================================"
 echo ""
 echo "Generated artifacts in ${OUTPUT_DIR}:"
-echo "  - interactive/index.html (modern interactive docs)"
-echo "  - database-schema.svg (${TABLE_COUNT} tables, styled)"
-echo "  - database-schema.png (${TABLE_COUNT} tables, high-res)"
-echo "  - database-schema-thumbnail.png (preview image)"
-echo "  - database-schema.html (detailed docs)"
+echo "  ⭐ interactive/index.html (RECOMMENDED - beautiful interactive docs)"
+echo "  - database-schema.svg (${TABLE_COUNT} tables, vector graphic)"
+echo "  - database-schema.html (detailed SchemaCrawler docs)"
 echo "  - database-schema.txt (text representation)"
 echo "  - migrations-applied.txt (${MIGRATION_COUNT} migrations)"
 echo "  - README.md (documentation index)"
+echo ""
+echo "🌟 Open docs/schema/interactive/index.html for the best experience!"
 echo ""
