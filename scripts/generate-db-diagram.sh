@@ -61,46 +61,53 @@ schemacrawler.sh \
   --output-file="${OUTPUT_DIR}/database-schema.svg"
 echo "✓ SVG diagram generated"
 
-# Generate high-quality PNG diagram from SVG
-echo "Converting SVG to PNG with optimized settings..."
-if command -v convert &> /dev/null; then
-  # Increase ImageMagick resource limits
-  export MAGICK_MEMORY_LIMIT=2GiB
-  export MAGICK_MAP_LIMIT=4GiB
-  export MAGICK_DISK_LIMIT=8GiB
-  export MAGICK_WIDTH_LIMIT=16KP
-  export MAGICK_HEIGHT_LIMIT=16KP
+# Generate PNG diagram from SVG using rsvg-convert (better for large diagrams)
+echo "Converting SVG to PNG..."
+if command -v rsvg-convert &> /dev/null; then
+  # Use rsvg-convert which handles large SVGs much better than ImageMagick
+  echo "Using rsvg-convert for high-quality conversion..."
   
-  # Generate full-size PNG (reasonable resolution)
-  convert -limit memory 2GiB -limit map 4GiB \
-    -density 120 -background white -flatten \
-    -resize 2400x2400\> \
-    -quality 90 \
+  # Full-size PNG
+  rsvg-convert -w 2400 -b white \
+    "${OUTPUT_DIR}/database-schema.svg" \
+    -o "${OUTPUT_DIR}/database-schema.png"
+  
+  # Thumbnail
+  rsvg-convert -w 1200 -b white \
+    "${OUTPUT_DIR}/database-schema.svg" \
+    -o "${OUTPUT_DIR}/database-schema-thumbnail.png"
+  
+  echo "✓ PNG diagrams generated with rsvg-convert"
+  
+elif command -v convert &> /dev/null; then
+  # Fallback to ImageMagick with conservative settings
+  echo "Using ImageMagick with conservative settings..."
+  
+  # Try very low resolution only
+  convert -limit memory 1GiB -limit map 2GiB \
+    -density 48 -background white -flatten \
+    -resize 1200x1200\> \
+    -quality 80 \
     "${OUTPUT_DIR}/database-schema.svg" \
     "${OUTPUT_DIR}/database-schema.png" 2>/dev/null || \
-    echo "⚠ Full-size PNG generation had issues, trying lower resolution..."
+    echo "⚠ PNG conversion failed - SVG too large for available resources"
   
-  # If full size failed, try medium resolution
-  if [[ ! -f "${OUTPUT_DIR}/database-schema.png" ]]; then
-    convert -limit memory 2GiB -limit map 4GiB \
-      -density 96 -background white -flatten \
-      -resize 1800x1800\> \
-      -quality 85 \
-      "${OUTPUT_DIR}/database-schema.svg" \
-      "${OUTPUT_DIR}/database-schema.png"
-  fi
-  
-  # Create a thumbnail version
-  convert -limit memory 1GiB -limit map 2GiB \
-    -density 72 -background white -flatten \
-    -resize 1200x1200\> \
-    -quality 85 \
+  # Thumbnail at even lower resolution
+  convert -limit memory 512MiB -limit map 1GiB \
+    -density 36 -background white -flatten \
+    -resize 800x800\> \
+    -quality 75 \
     "${OUTPUT_DIR}/database-schema.svg" \
-    "${OUTPUT_DIR}/database-schema-thumbnail.png"
+    "${OUTPUT_DIR}/database-schema-thumbnail.png" 2>/dev/null || \
+    echo "⚠ Thumbnail generation failed"
   
-  echo "✓ PNG diagrams generated"
+  if [[ -f "${OUTPUT_DIR}/database-schema.png" ]]; then
+    echo "✓ PNG diagrams generated (lower quality due to size constraints)"
+  else
+    echo "⚠ PNG conversion skipped - use SVG or interactive docs instead"
+  fi
 else
-  echo "⚠ ImageMagick not available, skipping PNG conversion"
+  echo "⚠ No PNG converter available, use SVG or interactive docs"
 fi
 
 # Generate detailed HTML documentation
@@ -211,13 +218,19 @@ Modern, beautiful schema browser with:
 - 📝 Constraint and index visualization
 - 🎯 Anomaly detection
 
-### SVG Diagram
-[View Interactive SVG Diagram](./database-schema.svg) (zoomable and searchable)
+### SVG Diagram (Recommended for Large Schemas)
+**[View Interactive SVG Diagram →](./database-schema.svg)** (zoomable, searchable, works in all modern browsers)
 
 ### PNG Export
-[![Database Schema Thumbnail](./database-schema-thumbnail.png)](./database-schema.png)
+$(if [[ -f "${OUTPUT_DIR}/database-schema-thumbnail.png" ]]; then
+  echo "[![Database Schema Thumbnail](./database-schema-thumbnail.png)](./database-schema.png)"
+  echo ""
+  echo "_Click the thumbnail above to view full resolution PNG_"
+else
+  echo "_PNG export not available for very large schemas - use SVG or interactive docs_"
+fi)
 
-_Click the thumbnail above to view full resolution PNG, or use the [Interactive Schema Browser](./interactive/index.html) for best experience_
+_For best experience, use the [Interactive Schema Browser](./interactive/index.html)_
 
 ---
 
