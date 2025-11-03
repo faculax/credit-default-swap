@@ -75,10 +75,12 @@ jobs:
         run: |
           echo "Installing Graphviz and SchemaCrawler..."
           sudo apt-get update && sudo apt-get install -y graphviz unzip postgresql-client
-          SC_VERSION=16.21.6
-          curl -sL "https://github.com/schemacrawler/SchemaCrawler/releases/download/v${SC_VERSION}/schemacrawler-${SC_VERSION}-distribution.zip" -o sc.zip
-          unzip -q sc.zip
-          sudo ln -s "$PWD/schemacrawler-${SC_VERSION}/schemacrawler.sh" /usr/local/bin/schemacrawler
+          SC_VERSION=16.21.2
+          echo "Downloading SchemaCrawler ${SC_VERSION}..."
+          curl -L "https://github.com/schemacrawler/SchemaCrawler/releases/download/v${SC_VERSION}/schemacrawler-${SC_VERSION}-bin.zip" -o sc.zip
+          unzip -q sc.zip -d schemacrawler
+          chmod +x schemacrawler/_schemacrawler/schemacrawler.sh
+          sudo ln -s "$PWD/schemacrawler/_schemacrawler/schemacrawler.sh" /usr/local/bin/schemacrawler
           schemacrawler --version
 
       - name: Generate Schema Artifacts
