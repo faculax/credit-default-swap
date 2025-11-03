@@ -37,11 +37,11 @@ echo "Generating enhanced SVG diagram with custom styling..."
 cat > /tmp/schemacrawler.config.properties <<'EOF'
 schemacrawler.format.hide_primarykey_names=false
 schemacrawler.format.hide_foreignkey_names=false
-schemacrawler.format.show_ordinal_numbers=true
+schemacrawler.format.show_ordinal_numbers=false
 schemacrawler.format.show_standard_column_type_names=true
-schemacrawler.graph.graphviz_opts=-Gfontname="Arial" -Gfontsize=14 -Gfontcolor="#1a1a1a" -Gnodesep=0.75 -Granksep=1.5 -Grankdir=TB -Gbgcolor="#ffffff" -Gsplines=spline -Gdpi=150
-schemacrawler.graph.node.table=-Nshape=box -Nstyle="filled,rounded" -Nfillcolor="#e8f4f8" -Ncolor="#0074D9" -Npenwidth=2 -Nfontname="Arial" -Nfontsize=12 -Nfontcolor="#1a1a1a" -Nmargin=0.2
-schemacrawler.graph.edge.foreignkey=-Earrowhead=crow -Earrowsize=1.0 -Ecolor="#0074D9" -Epenwidth=2.0 -Efontsize=10 -Efontcolor="#3C4B61"
+schemacrawler.graph.graphviz_opts=-Gfontname="Helvetica" -Gfontsize=10 -Gnodesep=0.5 -Granksep=1.0 -Grankdir=LR -Gbgcolor="white" -Gsplines=ortho
+schemacrawler.graph.node.table=-Nshape=record -Nstyle="filled" -Nfillcolor="#E8F4F8" -Ncolor="#0074D9" -Nfontname="Helvetica" -Nfontsize=10
+schemacrawler.graph.edge.foreignkey=-Earrowhead=crow -Earrowsize=0.9 -Ecolor="#555555" -Epenwidth=1.5
 EOF
 
 schemacrawler.sh \
