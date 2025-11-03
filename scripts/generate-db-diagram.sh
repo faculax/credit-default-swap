@@ -62,23 +62,43 @@ schemacrawler.sh \
 echo "✓ SVG diagram generated"
 
 # Generate high-quality PNG diagram from SVG
-echo "Converting SVG to PNG with high quality settings..."
+echo "Converting SVG to PNG with optimized settings..."
 if command -v convert &> /dev/null; then
-  # High DPI, white background, better quality
-  convert -density 200 -background white -flatten \
-    -resize 3000x3000\> \
-    -quality 95 \
-    "${OUTPUT_DIR}/database-schema.svg" \
-    "${OUTPUT_DIR}/database-schema.png"
+  # Increase ImageMagick resource limits
+  export MAGICK_MEMORY_LIMIT=2GiB
+  export MAGICK_MAP_LIMIT=4GiB
+  export MAGICK_DISK_LIMIT=8GiB
+  export MAGICK_WIDTH_LIMIT=16KP
+  export MAGICK_HEIGHT_LIMIT=16KP
   
-  # Also create a thumbnail version
-  convert -density 150 -background white -flatten \
-    -resize 1200x1200\> \
+  # Generate full-size PNG (reasonable resolution)
+  convert -limit memory 2GiB -limit map 4GiB \
+    -density 120 -background white -flatten \
+    -resize 2400x2400\> \
     -quality 90 \
+    "${OUTPUT_DIR}/database-schema.svg" \
+    "${OUTPUT_DIR}/database-schema.png" 2>/dev/null || \
+    echo "⚠ Full-size PNG generation had issues, trying lower resolution..."
+  
+  # If full size failed, try medium resolution
+  if [[ ! -f "${OUTPUT_DIR}/database-schema.png" ]]; then
+    convert -limit memory 2GiB -limit map 4GiB \
+      -density 96 -background white -flatten \
+      -resize 1800x1800\> \
+      -quality 85 \
+      "${OUTPUT_DIR}/database-schema.svg" \
+      "${OUTPUT_DIR}/database-schema.png"
+  fi
+  
+  # Create a thumbnail version
+  convert -limit memory 1GiB -limit map 2GiB \
+    -density 72 -background white -flatten \
+    -resize 1200x1200\> \
+    -quality 85 \
     "${OUTPUT_DIR}/database-schema.svg" \
     "${OUTPUT_DIR}/database-schema-thumbnail.png"
   
-  echo "✓ PNG diagrams generated (full size + thumbnail)"
+  echo "✓ PNG diagrams generated"
 else
   echo "⚠ ImageMagick not available, skipping PNG conversion"
 fi
