@@ -314,16 +314,16 @@
                                 </thead>
                                 <tbody>
                                 <tr>
-                                    <td>ck_positive_notional</td>
-                                    <td>((notional &gt; (0)::numeric))</td>
+                                    <td>ck_recovery_rate_range</td>
+                                    <td>(((recovery_rate &gt;&#61; (0)::numeric) AND (recovery_rate &lt;&#61; (1)::numeric)))</td>
                                 </tr>
                                 <tr>
                                     <td>ck_non_negative_payout</td>
                                     <td>((payout_amount &gt;&#61; (0)::numeric))</td>
                                 </tr>
                                 <tr>
-                                    <td>ck_recovery_rate_range</td>
-                                    <td>(((recovery_rate &gt;&#61; (0)::numeric) AND (recovery_rate &lt;&#61; (1)::numeric)))</td>
+                                    <td>ck_positive_notional</td>
+                                    <td>((notional &gt; (0)::numeric))</td>
                                 </tr>
                                 </tbody>
                             </table>
