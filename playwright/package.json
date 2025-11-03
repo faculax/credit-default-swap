@@ -7,11 +7,15 @@
     "test:ui": "playwright test --ui",
     "test:smoke": "playwright test -g @smoke",
     "test:accessibility": "playwright test -g @a11y",
+    "test:headed": "playwright test --headed",
+    "test:visual": "playwright test --ui --headed",
+    "trace:show": "playwright show-trace $(Get-ChildItem -Recurse -Filter trace.zip | Select-Object -First 1).FullName",
     "codegen": "playwright codegen"
   },
   "devDependencies": {
-    "@playwright/test": "^1.46.0",
     "@axe-core/playwright": "^4.9.2",
+    "@playwright/test": "^1.46.0",
+    "@types/node": "^24.9.2",
     "typescript": "^5.4.0"
   }
 }

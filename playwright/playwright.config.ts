@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { defineConfig, devices } from '@playwright/test';
 
 // Environment variables (override in CI):
@@ -9,15 +10,17 @@ const baseURL = process.env.BASE_URL || 'http://localhost:3000';
 
 export default defineConfig({
   testDir: './tests',
+  globalSetup: require.resolve('./global-setup'),
   timeout: 60_000,
   expect: { timeout: 5_000 },
   retries: process.env.CI ? 2 : 0,
-  reporter: process.env.CI ? [['html', { open: 'never' }], ['list']] : 'list',
+  reporter: process.env.CI ? [['html', { open: 'never' }], ['list']] : [ ['list'], ['html', { open: 'never' }] ],
   use: {
     baseURL,
-    trace: 'on-first-retry',
+    trace: 'on', // always capture for richer debugging (can toggle to 'retain-on-failure' later)
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure'
+    video: 'retain-on-failure',
+    actionTimeout: 10_000
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
