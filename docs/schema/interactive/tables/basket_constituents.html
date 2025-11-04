@@ -368,16 +368,16 @@
                                 </thead>
                                 <tbody>
                                 <tr>
-                                    <td>basket_constituents_seniority_check</td>
-                                    <td>(((seniority IS NULL) OR ((seniority)::text &#61; ANY ((ARRAY[&#39;SR_UNSEC&#39;::character varying, &#39;SR_SEC&#39;::character varying, &#39;SUBORD&#39;::character varying])::text[]))))</td>
-                                </tr>
-                                <tr>
                                     <td>basket_constituents_recovery_override_check</td>
                                     <td>(((recovery_override IS NULL) OR ((recovery_override &gt;&#61; (0)::numeric) AND (recovery_override &lt;&#61; (1)::numeric))))</td>
                                 </tr>
                                 <tr>
                                     <td>basket_constituents_weight_check</td>
                                     <td>(((weight IS NULL) OR ((weight &gt;&#61; (0)::numeric) AND (weight &lt;&#61; (1)::numeric))))</td>
+                                </tr>
+                                <tr>
+                                    <td>basket_constituents_seniority_check</td>
+                                    <td>(((seniority IS NULL) OR ((seniority)::text &#61; ANY ((ARRAY[&#39;SR_UNSEC&#39;::character varying, &#39;SR_SEC&#39;::character varying, &#39;SUBORD&#39;::character varying])::text[]))))</td>
                                 </tr>
                                 </tbody>
                             </table>
