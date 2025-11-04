@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Generate database schema diagrams in multiple formats
 OUTPUT_DIR="docs/schema"
 mkdir -p "${OUTPUT_DIR}"
 
