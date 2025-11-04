@@ -31,19 +31,7 @@ echo "Found ${TABLE_COUNT} tables in public schema"
 echo ""
 
 # Generate PlantUML source (logical representation)
-echo "Generating enhanced SVG diagram with custom styling..."
-
-# Create GraphViz styling configuration for better readability
-cat > /tmp/schemacrawler.config.properties <<'EOF'
-schemacrawler.format.hide_primarykey_names=false
-schemacrawler.format.hide_foreignkey_names=false
-schemacrawler.format.show_ordinal_numbers=false
-schemacrawler.format.show_standard_column_type_names=true
-schemacrawler.graph.graphviz_opts=-Gfontname="Helvetica" -Gfontsize=10 -Gnodesep=0.5 -Granksep=1.0 -Grankdir=LR -Gbgcolor="white" -Gsplines=ortho
-schemacrawler.graph.node.table=-Nshape=record -Nstyle="filled" -Nfillcolor="#E8F4F8" -Ncolor="#0074D9" -Nfontname="Helvetica" -Nfontsize=10
-schemacrawler.graph.edge.foreignkey=-Earrowhead=crow -Earrowsize=0.9 -Ecolor="#555555" -Epenwidth=1.5
-EOF
-
+echo "Generating SVG diagram..."
 schemacrawler.sh \
   --server=postgresql \
   --host=${DB_HOST} \
@@ -51,7 +39,6 @@ schemacrawler.sh \
   --database=${DB_NAME} \
   --user=${DB_USER} \
   --password=${DB_PASS} \
-  --config-file=/tmp/schemacrawler.config.properties \
   --info-level=standard \
   --schemas=public \
   --command=schema \
