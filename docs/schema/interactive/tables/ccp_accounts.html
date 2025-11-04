@@ -378,12 +378,12 @@
                                 </thead>
                                 <tbody>
                                 <tr>
-                                    <td>ccp_accounts_status_check</td>
-                                    <td>(((status)::text &#61; ANY ((ARRAY[&#39;ACTIVE&#39;::character varying, &#39;INACTIVE&#39;::character varying, &#39;SUSPENDED&#39;::character varying, &#39;PENDING_APPROVAL&#39;::character varying])::text[])))</td>
-                                </tr>
-                                <tr>
                                     <td>ccp_accounts_account_type_check</td>
                                     <td>(((account_type)::text &#61; ANY ((ARRAY[&#39;HOUSE&#39;::character varying, &#39;CLIENT&#39;::character varying, &#39;SEGREGATED&#39;::character varying])::text[])))</td>
+                                </tr>
+                                <tr>
+                                    <td>ccp_accounts_status_check</td>
+                                    <td>(((status)::text &#61; ANY ((ARRAY[&#39;ACTIVE&#39;::character varying, &#39;INACTIVE&#39;::character varying, &#39;SUSPENDED&#39;::character varying, &#39;PENDING_APPROVAL&#39;::character varying])::text[])))</td>
                                 </tr>
                                 </tbody>
                             </table>
