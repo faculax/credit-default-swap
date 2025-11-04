@@ -95,6 +95,12 @@ jobs:
           echo "SCHEMASPY_JAR=$PWD/schemaspy.jar" >> $GITHUB_ENV
           echo "POSTGRES_DRIVER=$PWD/postgresql.jar" >> $GITHUB_ENV
 
+      - name: Install Mermaid CLI
+        run: |
+          echo "Installing Mermaid CLI for diagram exports..."
+          npm install -g @mermaid-js/mermaid-cli
+          mmdc --version
+
       - name: Generate Schema Artifacts
         run: |
           echo "Generating schema diagram and documentation..."

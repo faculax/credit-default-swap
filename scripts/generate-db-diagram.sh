@@ -176,6 +176,35 @@ PGPASSWORD=${DB_PASS} psql -h ${DB_HOST} -p ${DB_PORT} -U ${DB_USER} -d ${DB_NAM
 
 echo "✓ Mermaid ER diagram generated"
 
+# Export Mermaid diagram to PNG and PDF (if mmdc is available)
+if command -v mmdc &> /dev/null; then
+  echo "Exporting Mermaid diagram to PNG and PDF..."
+  
+  # Export to PNG with high quality
+  mmdc -i "${OUTPUT_DIR}/database-schema.mmd" \
+       -o "${OUTPUT_DIR}/database-schema-mermaid.png" \
+       -t default \
+       -b white \
+       -w 3000 \
+       -H 3000 2>/dev/null || echo "⚠ PNG export had issues"
+  
+  # Export to PDF
+  mmdc -i "${OUTPUT_DIR}/database-schema.mmd" \
+       -o "${OUTPUT_DIR}/database-schema-mermaid.pdf" \
+       -t default \
+       -b white 2>/dev/null || echo "⚠ PDF export had issues"
+  
+  if [[ -f "${OUTPUT_DIR}/database-schema-mermaid.png" ]]; then
+    echo "✓ Mermaid PNG exported"
+  fi
+  
+  if [[ -f "${OUTPUT_DIR}/database-schema-mermaid.pdf" ]]; then
+    echo "✓ Mermaid PDF exported"
+  fi
+else
+  echo "⚠ Mermaid CLI (mmdc) not available, skipping PNG/PDF export"
+fi
+
 # Generate interactive SchemaSpy documentation (if available)
 if [[ -n "${SCHEMASPY_JAR:-}" ]] && [[ -f "${SCHEMASPY_JAR}" ]]; then
   echo "Generating interactive SchemaSpy documentation..."
@@ -251,9 +280,9 @@ Modern, beautiful schema browser with:
 - 🎯 Anomaly detection
 
 ### Mermaid ER Diagram
-**[View Mermaid Diagram →](./database-schema.mmd)** 
+**[View Mermaid Source →](./database-schema.mmd)** | **[PNG Export →](./database-schema-mermaid.png)** | **[PDF Export →](./database-schema-mermaid.pdf)**
 
-Text-based ER diagram that GitHub renders natively. Shows all ${TABLE_COUNT} tables with their columns and relationships in a clean, readable format.
+Text-based ER diagram that GitHub renders natively. Shows all ${TABLE_COUNT} tables with their columns and relationships in a clean, readable format. Available in multiple formats for different use cases.
 
 ### SVG Diagram (Overview)
 **[View Full Schema Diagram (SVG) →](./database-schema.svg)**
@@ -333,6 +362,8 @@ $(cat "${OUTPUT_DIR}/migrations-applied.txt")
 
 - **[Interactive SchemaSpy Documentation](./interactive/index.html)** - 🌟 Modern, interactive schema browser with beautiful diagrams
 - **[Mermaid ER Diagram](./database-schema.mmd)** - Text-based diagram with GitHub native rendering
+- **[Mermaid PNG Export](./database-schema-mermaid.png)** - High-resolution PNG for presentations
+- **[Mermaid PDF Export](./database-schema-mermaid.pdf)** - PDF format for documentation
 - **[Full HTML Documentation](./database-schema.html)** - Detailed schema browser with table/column descriptions
 - **[SVG Diagram](./database-schema.svg)** - Scalable vector graphic (interactive, zoomable)
 - **[Text Schema](./database-schema.txt)** - Plain text representation for quick reference
@@ -373,7 +404,9 @@ echo "============================================"
 echo ""
 echo "Generated artifacts in ${OUTPUT_DIR}:"
 echo "  ⭐ interactive/index.html (RECOMMENDED - beautiful interactive docs)"
-echo "  - database-schema.mmd (${TABLE_COUNT} tables, Mermaid ER diagram)"
+echo "  - database-schema.mmd (${TABLE_COUNT} tables, Mermaid source)"
+echo "  - database-schema-mermaid.png (Mermaid PNG export)"
+echo "  - database-schema-mermaid.pdf (Mermaid PDF export)"
 echo "  - database-schema.svg (${TABLE_COUNT} tables, vector graphic)"
 echo "  - database-schema.html (detailed SchemaCrawler docs)"
 echo "  - database-schema.txt (text representation)"
@@ -382,4 +415,5 @@ echo "  - README.md (documentation index)"
 echo ""
 echo "🌟 Open docs/schema/interactive/index.html for the best experience!"
 echo "📊 View database-schema.mmd in GitHub for native Mermaid rendering!"
+echo "🖼️ Use database-schema-mermaid.png/pdf for presentations and reports!"
 echo ""
