@@ -339,9 +339,9 @@
 </g>
 </g>
 <!-- simm_parameter_sets -->
-<g id="node43" class="node">
+<g id="node44" class="node">
 <title>simm_parameter_sets</title>
-<g id="a_node43"><a xlink:href="../../tables/simm_parameter_sets.html" xlink:title="simm_parameter_sets" target="_top">
+<g id="a_node44"><a xlink:href="../../tables/simm_parameter_sets.html" xlink:title="simm_parameter_sets" target="_top">
 <polygon fill="#ffffff" stroke="transparent" points="253.5,-3256.2 253.5,-3427.2 439.5,-3427.2 439.5,-3256.2 253.5,-3256.2"/>
 <polygon fill="#f5f5f5" stroke="transparent" points="253.5,-3403.7 253.5,-3426.7 439.5,-3426.7 439.5,-3403.7 253.5,-3403.7"/>
 <polygon fill="none" stroke="#000000" points="253.5,-3403.7 253.5,-3426.7 439.5,-3426.7 439.5,-3403.7 253.5,-3403.7"/>
@@ -1079,46 +1079,10 @@
 <polygon fill="#000000" stroke="#000000" points="252.5905,-1132.8998 261.0399,-1135.2593 256.5452,-1132.2999 260.5,-1131.7 260.5,-1131.7 260.5,-1131.7 256.5452,-1132.2999 259.9601,-1128.1407 252.5905,-1132.8998 252.5905,-1132.8998"/>
 <ellipse fill="none" stroke="#000000" cx="249.4267" cy="-1133.3797" rx="3.2" ry="3.2"/>
 </g>
-<!-- sa_ccr_calculation_details -->
-<g id="node17" class="node">
-<title>sa_ccr_calculation_details</title>
-<g id="a_node17"><a xlink:href="../../tables/sa_ccr_calculation_details.html" xlink:title="sa_ccr_calculation_details" target="_top">
-<polygon fill="#ffffff" stroke="transparent" points="525.5,-378.2 525.5,-483.2 737.5,-483.2 737.5,-378.2 525.5,-378.2"/>
-<polygon fill="#f5f5f5" stroke="transparent" points="525.5,-459.7 525.5,-482.7 737.5,-482.7 737.5,-459.7 525.5,-459.7"/>
-<polygon fill="none" stroke="#000000" points="525.5,-459.7 525.5,-482.7 737.5,-482.7 737.5,-459.7 525.5,-459.7"/>
-<text text-anchor="start" x="530.5" y="-468.3" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="11.00" fill="#000000">sa_ccr_calculation_details</text>
-<text text-anchor="start" x="703.0219" y="-467.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">[table]</text>
-<polygon fill="none" stroke="#000000" points="525.5,-437.7 525.5,-459.7 737.5,-459.7 737.5,-437.7 525.5,-437.7"/>
-<image xlink:href="../../images/primaryKeys.png" width="11px" height="12px" preserveAspectRatio="xMinYMin meet" x="530.5" y="-454.7"/>
-<text text-anchor="start" x="554.5" y="-444.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">id</text>
-<polygon fill="none" stroke="#000000" points="525.5,-415.7 525.5,-437.7 737.5,-437.7 737.5,-415.7 525.5,-415.7"/>
-<image xlink:href="../../images/foreignKeys.png" width="11px" height="12px" preserveAspectRatio="xMinYMin meet" x="530.5" y="-432.7"/>
-<text text-anchor="start" x="554.5" y="-422.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">calculation_id</text>
-<polygon fill="none" stroke="#000000" points="525.5,-396.7 525.5,-415.7 737.5,-415.7 737.5,-396.7 525.5,-396.7"/>
-<text text-anchor="start" x="528.5" y="-402.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">...</text>
-<polygon fill="#ffffff" stroke="transparent" points="525.5,-377.7 525.5,-396.7 629.5,-396.7 629.5,-377.7 525.5,-377.7"/>
-<polygon fill="none" stroke="#000000" points="525.5,-377.7 525.5,-396.7 629.5,-396.7 629.5,-377.7 525.5,-377.7"/>
-<text text-anchor="start" x="528.5" y="-383.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">&lt; 1</text>
-<polygon fill="#ffffff" stroke="transparent" points="629.5,-377.7 629.5,-396.7 683.5,-396.7 683.5,-377.7 629.5,-377.7"/>
-<polygon fill="none" stroke="#000000" points="629.5,-377.7 629.5,-396.7 683.5,-396.7 683.5,-377.7 629.5,-377.7"/>
-<text text-anchor="start" x="674.3862" y="-383.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000"> &#160;</text>
-<polygon fill="#ffffff" stroke="transparent" points="683.5,-377.7 683.5,-396.7 737.5,-396.7 737.5,-377.7 683.5,-377.7"/>
-<polygon fill="none" stroke="#000000" points="683.5,-377.7 683.5,-396.7 737.5,-396.7 737.5,-377.7 683.5,-377.7"/>
-<text text-anchor="start" x="728.3862" y="-383.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000"> &#160;</text>
-</a>
-</g>
-</g>
-<!-- sa_ccr_calculation_details&#45;&gt;sa_ccr_calculations -->
-<g id="edge28" class="edge">
-<title>sa_ccr_calculation_details:w&#45;&gt;sa_ccr_calculations:e</title>
-<path fill="none" stroke="#000000" d="M510.811,-427.4507C486.4341,-430.0777 475.9761,-438.7 445.5,-438.7"/>
-<polygon fill="#000000" stroke="#000000" points="517.5104,-427.1083 525.6838,-430.2953 521.5052,-426.9042 525.5,-426.7 525.5,-426.7 525.5,-426.7 521.5052,-426.9042 525.3162,-423.1047 517.5104,-427.1083 517.5104,-427.1083"/>
-<ellipse fill="none" stroke="#000000" cx="514.3146" cy="-427.2717" rx="3.2" ry="3.2"/>
-</g>
 <!-- position_discrepancies -->
-<g id="node18" class="node">
+<g id="node17" class="node">
 <title>position_discrepancies</title>
-<g id="a_node18"><a xlink:href="../../tables/position_discrepancies.html" xlink:title="position_discrepancies" target="_top">
+<g id="a_node17"><a xlink:href="../../tables/position_discrepancies.html" xlink:title="position_discrepancies" target="_top">
 <polygon fill="#ffffff" stroke="transparent" points="846,-2373.2 846,-2522.2 1038,-2522.2 1038,-2373.2 846,-2373.2"/>
 <polygon fill="#f5f5f5" stroke="transparent" points="846,-2498.7 846,-2521.7 1038,-2521.7 1038,-2498.7 846,-2498.7"/>
 <polygon fill="none" stroke="#000000" points="846,-2498.7 846,-2521.7 1038,-2521.7 1038,-2498.7 846,-2498.7"/>
@@ -1157,6 +1121,42 @@
 <path fill="none" stroke="#000000" d="M831.5404,-2467.1044C777.9549,-2478.156 780.1021,-2550.7 716.5,-2550.7"/>
 <polygon fill="#000000" stroke="#000000" points="838.0375,-2466.4734 846.348,-2469.2831 842.0187,-2466.0867 846,-2465.7 846,-2465.7 846,-2465.7 842.0187,-2466.0867 845.652,-2462.1169 838.0375,-2466.4734 838.0375,-2466.4734"/>
 <ellipse fill="none" stroke="#000000" cx="834.8525" cy="-2466.7828" rx="3.2" ry="3.2"/>
+</g>
+<!-- sa_ccr_calculation_details -->
+<g id="node18" class="node">
+<title>sa_ccr_calculation_details</title>
+<g id="a_node18"><a xlink:href="../../tables/sa_ccr_calculation_details.html" xlink:title="sa_ccr_calculation_details" target="_top">
+<polygon fill="#ffffff" stroke="transparent" points="525.5,-378.2 525.5,-483.2 737.5,-483.2 737.5,-378.2 525.5,-378.2"/>
+<polygon fill="#f5f5f5" stroke="transparent" points="525.5,-459.7 525.5,-482.7 737.5,-482.7 737.5,-459.7 525.5,-459.7"/>
+<polygon fill="none" stroke="#000000" points="525.5,-459.7 525.5,-482.7 737.5,-482.7 737.5,-459.7 525.5,-459.7"/>
+<text text-anchor="start" x="530.5" y="-468.3" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="11.00" fill="#000000">sa_ccr_calculation_details</text>
+<text text-anchor="start" x="703.0219" y="-467.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">[table]</text>
+<polygon fill="none" stroke="#000000" points="525.5,-437.7 525.5,-459.7 737.5,-459.7 737.5,-437.7 525.5,-437.7"/>
+<image xlink:href="../../images/primaryKeys.png" width="11px" height="12px" preserveAspectRatio="xMinYMin meet" x="530.5" y="-454.7"/>
+<text text-anchor="start" x="554.5" y="-444.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">id</text>
+<polygon fill="none" stroke="#000000" points="525.5,-415.7 525.5,-437.7 737.5,-437.7 737.5,-415.7 525.5,-415.7"/>
+<image xlink:href="../../images/foreignKeys.png" width="11px" height="12px" preserveAspectRatio="xMinYMin meet" x="530.5" y="-432.7"/>
+<text text-anchor="start" x="554.5" y="-422.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">calculation_id</text>
+<polygon fill="none" stroke="#000000" points="525.5,-396.7 525.5,-415.7 737.5,-415.7 737.5,-396.7 525.5,-396.7"/>
+<text text-anchor="start" x="528.5" y="-402.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">...</text>
+<polygon fill="#ffffff" stroke="transparent" points="525.5,-377.7 525.5,-396.7 629.5,-396.7 629.5,-377.7 525.5,-377.7"/>
+<polygon fill="none" stroke="#000000" points="525.5,-377.7 525.5,-396.7 629.5,-396.7 629.5,-377.7 525.5,-377.7"/>
+<text text-anchor="start" x="528.5" y="-383.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">&lt; 1</text>
+<polygon fill="#ffffff" stroke="transparent" points="629.5,-377.7 629.5,-396.7 683.5,-396.7 683.5,-377.7 629.5,-377.7"/>
+<polygon fill="none" stroke="#000000" points="629.5,-377.7 629.5,-396.7 683.5,-396.7 683.5,-377.7 629.5,-377.7"/>
+<text text-anchor="start" x="674.3862" y="-383.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000"> &#160;</text>
+<polygon fill="#ffffff" stroke="transparent" points="683.5,-377.7 683.5,-396.7 737.5,-396.7 737.5,-377.7 683.5,-377.7"/>
+<polygon fill="none" stroke="#000000" points="683.5,-377.7 683.5,-396.7 737.5,-396.7 737.5,-377.7 683.5,-377.7"/>
+<text text-anchor="start" x="728.3862" y="-383.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000"> &#160;</text>
+</a>
+</g>
+</g>
+<!-- sa_ccr_calculation_details&#45;&gt;sa_ccr_calculations -->
+<g id="edge28" class="edge">
+<title>sa_ccr_calculation_details:w&#45;&gt;sa_ccr_calculations:e</title>
+<path fill="none" stroke="#000000" d="M510.811,-427.4507C486.4341,-430.0777 475.9761,-438.7 445.5,-438.7"/>
+<polygon fill="#000000" stroke="#000000" points="517.5104,-427.1083 525.6838,-430.2953 521.5052,-426.9042 525.5,-426.7 525.5,-426.7 525.5,-426.7 521.5052,-426.9042 525.3162,-423.1047 517.5104,-427.1083 517.5104,-427.1083"/>
+<ellipse fill="none" stroke="#000000" cx="514.3146" cy="-427.2717" rx="3.2" ry="3.2"/>
 </g>
 <!-- compression_proposal_items -->
 <g id="node19" class="node">
@@ -1620,50 +1620,10 @@
 <polygon fill="#000000" stroke="#000000" points="540.5514,-1063.6057 548.9076,-1066.2769 544.5257,-1063.1529 548.5,-1062.7 548.5,-1062.7 548.5,-1062.7 544.5257,-1063.1529 548.0924,-1059.1231 540.5514,-1063.6057 540.5514,-1063.6057"/>
 <ellipse fill="none" stroke="#000000" cx="537.372" cy="-1063.968" rx="3.2" ry="3.2"/>
 </g>
-<!-- portfolio_risk_cache -->
-<g id="node32" class="node">
-<title>portfolio_risk_cache</title>
-<g id="a_node32"><a xlink:href="../../tables/portfolio_risk_cache.html" xlink:title="portfolio_risk_cache" target="_top">
-<polygon fill="#ffffff" stroke="transparent" points="244,-1853.2 244,-1980.2 449,-1980.2 449,-1853.2 244,-1853.2"/>
-<polygon fill="#f5f5f5" stroke="transparent" points="244.5,-1956.7 244.5,-1979.7 449.5,-1979.7 449.5,-1956.7 244.5,-1956.7"/>
-<polygon fill="none" stroke="#000000" points="244.5,-1956.7 244.5,-1979.7 449.5,-1979.7 449.5,-1956.7 244.5,-1956.7"/>
-<text text-anchor="start" x="249.5" y="-1965.3" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="11.00" fill="#000000">portfolio_risk_cache</text>
-<text text-anchor="start" x="414.5437" y="-1964.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">[table]</text>
-<polygon fill="none" stroke="#000000" points="244.5,-1934.7 244.5,-1956.7 449.5,-1956.7 449.5,-1934.7 244.5,-1934.7"/>
-<image xlink:href="../../images/primaryKeys.png" width="11px" height="12px" preserveAspectRatio="xMinYMin meet" x="249.5" y="-1951.7"/>
-<text text-anchor="start" x="264.5" y="-1941.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">id</text>
-<polygon fill="#ffffff" stroke="transparent" points="244.5,-1912.7 244.5,-1934.7 449.5,-1934.7 449.5,-1912.7 244.5,-1912.7"/>
-<polygon fill="none" stroke="#000000" points="244.5,-1912.7 244.5,-1934.7 449.5,-1934.7 449.5,-1912.7 244.5,-1912.7"/>
-<image xlink:href="../../images/foreignKeys.png" width="11px" height="12px" preserveAspectRatio="xMinYMin meet" x="249.5" y="-1929.7"/>
-<text text-anchor="start" x="264.5" y="-1919.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">portfolio_id</text>
-<polygon fill="#ffffff" stroke="transparent" points="244.5,-1890.7 244.5,-1912.7 449.5,-1912.7 449.5,-1890.7 244.5,-1890.7"/>
-<polygon fill="none" stroke="#000000" points="244.5,-1890.7 244.5,-1912.7 449.5,-1912.7 449.5,-1890.7 244.5,-1890.7"/>
-<text text-anchor="start" x="264.5" y="-1897.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">valuation_date</text>
-<polygon fill="none" stroke="#000000" points="244.5,-1871.7 244.5,-1890.7 449.5,-1890.7 449.5,-1871.7 244.5,-1871.7"/>
-<text text-anchor="start" x="247.5" y="-1877.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">...</text>
-<polygon fill="#ffffff" stroke="transparent" points="244.5,-1852.7 244.5,-1871.7 345.5,-1871.7 345.5,-1852.7 244.5,-1852.7"/>
-<polygon fill="none" stroke="#000000" points="244.5,-1852.7 244.5,-1871.7 345.5,-1871.7 345.5,-1852.7 244.5,-1852.7"/>
-<text text-anchor="start" x="247.5" y="-1858.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">&lt; 1</text>
-<polygon fill="#ffffff" stroke="transparent" points="345.5,-1852.7 345.5,-1871.7 397.5,-1871.7 397.5,-1852.7 345.5,-1852.7"/>
-<polygon fill="none" stroke="#000000" points="345.5,-1852.7 345.5,-1871.7 397.5,-1871.7 397.5,-1852.7 345.5,-1852.7"/>
-<text text-anchor="start" x="388.3862" y="-1858.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000"> &#160;</text>
-<polygon fill="#ffffff" stroke="transparent" points="397.5,-1852.7 397.5,-1871.7 449.5,-1871.7 449.5,-1852.7 397.5,-1852.7"/>
-<polygon fill="none" stroke="#000000" points="397.5,-1852.7 397.5,-1871.7 449.5,-1871.7 449.5,-1852.7 397.5,-1852.7"/>
-<text text-anchor="start" x="440.3862" y="-1858.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000"> &#160;</text>
-</a>
-</g>
-</g>
-<!-- portfolio_risk_cache&#45;&gt;cds_portfolios -->
-<g id="edge25" class="edge">
-<title>portfolio_risk_cache:w&#45;&gt;cds_portfolios:e</title>
-<path fill="none" stroke="#000000" d="M230.2191,-1921.159C192.7508,-1906.0513 210.9895,-1828.7 160,-1828.7"/>
-<polygon fill="#000000" stroke="#000000" points="236.6237,-1922.2985 243.8693,-1927.2443 240.5619,-1922.9993 244.5,-1923.7 244.5,-1923.7 244.5,-1923.7 240.5619,-1922.9993 245.1307,-1920.1557 236.6237,-1922.2985 236.6237,-1922.2985"/>
-<ellipse fill="none" stroke="#000000" cx="233.4732" cy="-1921.7379" rx="3.2" ry="3.2"/>
-</g>
 <!-- notional_adjustments -->
-<g id="node33" class="node">
+<g id="node32" class="node">
 <title>notional_adjustments</title>
-<g id="a_node33"><a xlink:href="../../tables/notional_adjustments.html" xlink:title="notional_adjustments" target="_top">
+<g id="a_node32"><a xlink:href="../../tables/notional_adjustments.html" xlink:title="notional_adjustments" target="_top">
 <polygon fill="#ffffff" stroke="transparent" points="539.5,-822.2 539.5,-949.2 723.5,-949.2 723.5,-822.2 539.5,-822.2"/>
 <polygon fill="#f5f5f5" stroke="transparent" points="539.5,-925.7 539.5,-948.7 723.5,-948.7 723.5,-925.7 539.5,-925.7"/>
 <polygon fill="none" stroke="#000000" points="539.5,-925.7 539.5,-948.7 723.5,-948.7 723.5,-925.7 539.5,-925.7"/>
@@ -1699,6 +1659,46 @@
 <path fill="none" stroke="#000000" d="M524.9726,-893.764C390.8851,-914.8317 589.5091,-1241.7 432.5,-1241.7"/>
 <polygon fill="#000000" stroke="#000000" points="531.5214,-893.2844 539.763,-896.2904 535.5107,-892.9922 539.5,-892.7 539.5,-892.7 539.5,-892.7 535.5107,-892.9922 539.237,-889.1096 531.5214,-893.2844 531.5214,-893.2844"/>
 <ellipse fill="none" stroke="#000000" cx="528.3299" cy="-893.5182" rx="3.2" ry="3.2"/>
+</g>
+<!-- portfolio_risk_cache -->
+<g id="node33" class="node">
+<title>portfolio_risk_cache</title>
+<g id="a_node33"><a xlink:href="../../tables/portfolio_risk_cache.html" xlink:title="portfolio_risk_cache" target="_top">
+<polygon fill="#ffffff" stroke="transparent" points="244,-1853.2 244,-1980.2 449,-1980.2 449,-1853.2 244,-1853.2"/>
+<polygon fill="#f5f5f5" stroke="transparent" points="244.5,-1956.7 244.5,-1979.7 449.5,-1979.7 449.5,-1956.7 244.5,-1956.7"/>
+<polygon fill="none" stroke="#000000" points="244.5,-1956.7 244.5,-1979.7 449.5,-1979.7 449.5,-1956.7 244.5,-1956.7"/>
+<text text-anchor="start" x="249.5" y="-1965.3" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="11.00" fill="#000000">portfolio_risk_cache</text>
+<text text-anchor="start" x="414.5437" y="-1964.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">[table]</text>
+<polygon fill="none" stroke="#000000" points="244.5,-1934.7 244.5,-1956.7 449.5,-1956.7 449.5,-1934.7 244.5,-1934.7"/>
+<image xlink:href="../../images/primaryKeys.png" width="11px" height="12px" preserveAspectRatio="xMinYMin meet" x="249.5" y="-1951.7"/>
+<text text-anchor="start" x="264.5" y="-1941.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">id</text>
+<polygon fill="#ffffff" stroke="transparent" points="244.5,-1912.7 244.5,-1934.7 449.5,-1934.7 449.5,-1912.7 244.5,-1912.7"/>
+<polygon fill="none" stroke="#000000" points="244.5,-1912.7 244.5,-1934.7 449.5,-1934.7 449.5,-1912.7 244.5,-1912.7"/>
+<image xlink:href="../../images/foreignKeys.png" width="11px" height="12px" preserveAspectRatio="xMinYMin meet" x="249.5" y="-1929.7"/>
+<text text-anchor="start" x="264.5" y="-1919.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">portfolio_id</text>
+<polygon fill="#ffffff" stroke="transparent" points="244.5,-1890.7 244.5,-1912.7 449.5,-1912.7 449.5,-1890.7 244.5,-1890.7"/>
+<polygon fill="none" stroke="#000000" points="244.5,-1890.7 244.5,-1912.7 449.5,-1912.7 449.5,-1890.7 244.5,-1890.7"/>
+<text text-anchor="start" x="264.5" y="-1897.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">valuation_date</text>
+<polygon fill="none" stroke="#000000" points="244.5,-1871.7 244.5,-1890.7 449.5,-1890.7 449.5,-1871.7 244.5,-1871.7"/>
+<text text-anchor="start" x="247.5" y="-1877.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">...</text>
+<polygon fill="#ffffff" stroke="transparent" points="244.5,-1852.7 244.5,-1871.7 345.5,-1871.7 345.5,-1852.7 244.5,-1852.7"/>
+<polygon fill="none" stroke="#000000" points="244.5,-1852.7 244.5,-1871.7 345.5,-1871.7 345.5,-1852.7 244.5,-1852.7"/>
+<text text-anchor="start" x="247.5" y="-1858.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">&lt; 1</text>
+<polygon fill="#ffffff" stroke="transparent" points="345.5,-1852.7 345.5,-1871.7 397.5,-1871.7 397.5,-1852.7 345.5,-1852.7"/>
+<polygon fill="none" stroke="#000000" points="345.5,-1852.7 345.5,-1871.7 397.5,-1871.7 397.5,-1852.7 345.5,-1852.7"/>
+<text text-anchor="start" x="388.3862" y="-1858.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000"> &#160;</text>
+<polygon fill="#ffffff" stroke="transparent" points="397.5,-1852.7 397.5,-1871.7 449.5,-1871.7 449.5,-1852.7 397.5,-1852.7"/>
+<polygon fill="none" stroke="#000000" points="397.5,-1852.7 397.5,-1871.7 449.5,-1871.7 449.5,-1852.7 397.5,-1852.7"/>
+<text text-anchor="start" x="440.3862" y="-1858.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000"> &#160;</text>
+</a>
+</g>
+</g>
+<!-- portfolio_risk_cache&#45;&gt;cds_portfolios -->
+<g id="edge25" class="edge">
+<title>portfolio_risk_cache:w&#45;&gt;cds_portfolios:e</title>
+<path fill="none" stroke="#000000" d="M230.2191,-1921.159C192.7508,-1906.0513 210.9895,-1828.7 160,-1828.7"/>
+<polygon fill="#000000" stroke="#000000" points="236.6237,-1922.2985 243.8693,-1927.2443 240.5619,-1922.9993 244.5,-1923.7 244.5,-1923.7 244.5,-1923.7 240.5619,-1922.9993 245.1307,-1920.1557 236.6237,-1922.2985 236.6237,-1922.2985"/>
+<ellipse fill="none" stroke="#000000" cx="233.4732" cy="-1921.7379" rx="3.2" ry="3.2"/>
 </g>
 <!-- sa_ccr_calculations&#45;&gt;netting_sets -->
 <g id="edge29" class="edge">
@@ -1937,9 +1937,9 @@
 <ellipse fill="none" stroke="#000000" cx="789.8492" cy="-1328.5406" rx="3.2" ry="3.2"/>
 </g>
 <!-- simm_risk_weights -->
-<g id="node44" class="node">
+<g id="node43" class="node">
 <title>simm_risk_weights</title>
-<g id="a_node44"><a xlink:href="../../tables/simm_risk_weights.html" xlink:title="simm_risk_weights" target="_top">
+<g id="a_node43"><a xlink:href="../../tables/simm_risk_weights.html" xlink:title="simm_risk_weights" target="_top">
 <polygon fill="#ffffff" stroke="transparent" points="549,-3193.2 549,-3342.2 714,-3342.2 714,-3193.2 549,-3193.2"/>
 <polygon fill="#f5f5f5" stroke="transparent" points="549.5,-3318.7 549.5,-3341.7 714.5,-3341.7 714.5,-3318.7 549.5,-3318.7"/>
 <polygon fill="none" stroke="#000000" points="549.5,-3318.7 549.5,-3341.7 714.5,-3341.7 714.5,-3318.7 549.5,-3318.7"/>
