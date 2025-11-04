@@ -9,94 +9,94 @@ erDiagram
     numeric day_count_fraction
     numeric notional_amount
     integer trade_version
-    timestamp without time zone posted_at
+    timestamp posted_at
   }
   basket_constituents {
     bigint id PK
     bigint basket_id FK
-    character varying issuer
+    varchar issuer
     numeric weight
     numeric recovery_override
-    character varying seniority
-    character varying sector
+    varchar seniority
+    varchar sector
     integer sequence_order
-    timestamp without time zone created_at
+    timestamp created_at
   }
   basket_definitions {
     bigint id PK
-    character varying name
-    character varying type
+    varchar name
+    varchar type
     integer nth
     numeric attachment_point
     numeric detachment_point
-    character varying premium_frequency
-    character varying day_count
-    character varying currency
+    varchar premium_frequency
+    varchar day_count
+    varchar currency
     numeric notional
     date maturity_date
-    timestamp without time zone created_at
-    timestamp without time zone updated_at
+    timestamp created_at
+    timestamp updated_at
   }
   basket_portfolio_constituents {
     bigint id PK
     bigint portfolio_id FK
     bigint basket_id FK
-    character varying weight_type
+    varchar weight_type
     numeric weight_value
     boolean active
-    timestamp without time zone added_at
+    timestamp added_at
   }
   bond_portfolio_constituents {
     bigint id PK
     bigint portfolio_id FK
     bigint bond_id FK
-    character varying weight_type
+    varchar weight_type
     numeric weight_value
     boolean active
-    timestamp without time zone added_at
+    timestamp added_at
   }
   bonds {
     bigint id PK
-    character varying isin
-    character varying issuer
-    character varying seniority
-    character varying sector
-    character varying currency
+    varchar isin
+    varchar issuer
+    varchar seniority
+    varchar sector
+    varchar currency
     numeric notional
     numeric coupon_rate
-    character varying coupon_frequency
-    character varying day_count
+    varchar coupon_frequency
+    varchar day_count
     date issue_date
     date maturity_date
     integer settlement_days
     numeric face_value
-    character varying price_convention
-    timestamp without time zone created_at
-    timestamp without time zone updated_at
+    varchar price_convention
+    timestamp created_at
+    timestamp updated_at
   }
   ccp_account_product_eligibility {
     bigint ccp_account_id PK
-    character varying product_type PK
+    varchar product_type PK
   }
   ccp_accounts {
     bigint id PK
-    character varying ccp_name
-    character varying member_firm
-    character varying member_id
-    character varying account_number
-    character varying account_name
-    character varying account_type
-    character varying status
-    timestamp without time zone created_at
-    timestamp without time zone updated_at
+    varchar ccp_name
+    varchar member_firm
+    varchar member_id
+    varchar account_number
+    varchar account_name
+    varchar account_type
+    varchar status
+    timestamp created_at
+    timestamp updated_at
   }
   cds_audit_log {
     uuid id PK
-    character varying entity_type
-    character varying entity_id
-    character varying action
-    timestamp without time zone timestamp
-    character varying actor
+    varchar entity_type
+    varchar entity_id
+    varchar action
+    timestamp timestamp
+    varchar actor
     text summary
     uuid correlation_id
   }
@@ -107,98 +107,98 @@ erDiagram
     numeric notional
     numeric recovery_rate
     numeric payout_amount
-    timestamp without time zone calculated_at
+    timestamp calculated_at
   }
   cds_credit_events {
     uuid id PK
     bigint trade_id FK
-    character varying event_type
+    varchar event_type
     date event_date
     date notice_date
-    character varying settlement_method
+    varchar settlement_method
     text comments
-    timestamp without time zone created_at
-    timestamp without time zone updated_at
+    timestamp created_at
+    timestamp updated_at
   }
   cds_physical_settlement_instructions {
     uuid id PK
     uuid credit_event_id FK
     bigint trade_id FK
-    character varying reference_obligation_isin
+    varchar reference_obligation_isin
     date proposed_delivery_date
     text notes
-    character varying status
-    timestamp without time zone created_at
-    timestamp without time zone updated_at
+    varchar status
+    timestamp created_at
+    timestamp updated_at
   }
   cds_portfolio_constituents {
     bigint id PK
     bigint portfolio_id FK
     bigint trade_id FK
-    character varying weight_type
+    varchar weight_type
     numeric weight_value
     boolean active
-    timestamp without time zone added_at
+    timestamp added_at
   }
   cds_portfolios {
     bigint id PK
-    character varying name
+    varchar name
     text description
-    timestamp without time zone created_at
-    timestamp without time zone updated_at
+    timestamp created_at
+    timestamp updated_at
   }
   cds_trades {
     bigint id PK
-    character varying reference_entity
+    varchar reference_entity
     numeric notional_amount
     numeric spread
     date maturity_date
     date effective_date
-    character varying counterparty
+    varchar counterparty
     date trade_date
-    character varying currency
-    character varying premium_frequency
-    character varying day_count_convention
-    character varying buy_sell_protection
-    character varying restructuring_clause
-    character varying payment_calendar
+    varchar currency
+    varchar premium_frequency
+    varchar day_count_convention
+    varchar buy_sell_protection
+    varchar restructuring_clause
+    varchar payment_calendar
     date accrual_start_date
-    timestamp without time zone created_at
-    timestamp without time zone updated_at
-    character varying trade_status
+    timestamp created_at
+    timestamp updated_at
+    varchar trade_status
     integer version
     numeric recovery_rate
     bigint obligation_id FK
-    character varying settlement_type
-    character varying ccp_name
-    character varying ccp_member_id
-    character varying clearing_account
-    character varying netting_set_id
+    varchar settlement_type
+    varchar ccp_name
+    varchar ccp_member_id
+    varchar clearing_account
+    varchar netting_set_id
     bigint original_trade_id FK
-    timestamp without time zone novation_timestamp
-    character varying novation_reference
-    character varying uti
-    character varying usi
+    timestamp novation_timestamp
+    varchar novation_reference
+    varchar uti
+    varchar usi
     boolean is_cleared
     numeric mark_to_market_value
     numeric upfront_amount
   }
   collateral_ledger {
     bigint id PK
-    character varying ccp_name
-    character varying member_firm
-    character varying account_number
+    varchar ccp_name
+    varchar member_firm
+    varchar account_number
     date position_date
     USER-DEFINED position_type
-    character varying currency
+    varchar currency
     numeric opening_balance
     numeric variation_margin
     numeric initial_margin
     numeric excess_collateral
     numeric closing_balance
     bigint source_statement_id FK
-    timestamp with time zone created_at
-    timestamp with time zone updated_at
+    timestamptz created_at
+    timestamptz updated_at
   }
   compression_proposal_items {
     bigint id PK
@@ -211,16 +211,16 @@ erDiagram
   }
   compression_proposals {
     bigint id PK
-    character varying proposal_id
+    varchar proposal_id
     date proposal_date
     date execution_date
-    character varying status
+    varchar status
     boolean cs01_tolerance_check
     numeric total_gross_notional_before
     numeric total_gross_notional_after
     numeric net_notional_reduction
     integer number_of_trades_affected
-    timestamp without time zone created_at
+    timestamp created_at
   }
   coupon_periods {
     bigint id PK
@@ -230,87 +230,87 @@ erDiagram
     date payment_date
     integer accrual_days
     numeric notional_amount
-    character varying day_count_convention
-    character varying business_day_convention
-    timestamp without time zone created_at
+    varchar day_count_convention
+    varchar business_day_convention
+    timestamp created_at
     boolean paid
-    timestamp without time zone paid_at
+    timestamp paid_at
   }
   crif_sensitivities {
     bigint id PK
     bigint upload_id FK
-    character varying trade_id
-    character varying portfolio_id
-    character varying product_class
-    character varying risk_type
-    character varying risk_class
-    character varying bucket
-    character varying label1
-    character varying label2
+    varchar trade_id
+    varchar portfolio_id
+    varchar product_class
+    varchar risk_type
+    varchar risk_class
+    varchar bucket
+    varchar label1
+    varchar label2
     numeric amount_base_currency
     numeric amount_usd
-    character varying collect_regulations
-    character varying post_regulations
+    varchar collect_regulations
+    varchar post_regulations
     date end_date
-    timestamp without time zone created_at
+    timestamp created_at
   }
   crif_uploads {
     bigint id PK
-    character varying upload_id
-    character varying filename
-    character varying portfolio_id
+    varchar upload_id
+    varchar filename
+    varchar portfolio_id
     date valuation_date
-    character varying currency
-    timestamp without time zone upload_timestamp
+    varchar currency
+    timestamp upload_timestamp
     integer total_records
     integer valid_records
     integer error_records
-    character varying processing_status
+    varchar processing_status
     text error_message
-    timestamp without time zone created_at
-    timestamp without time zone updated_at
+    timestamp created_at
+    timestamp updated_at
   }
   flyway_schema_history {
     integer installed_rank PK
-    character varying version
-    character varying description
-    character varying type
-    character varying script
+    varchar version
+    varchar description
+    varchar type
+    varchar script
     integer checksum
-    character varying installed_by
-    timestamp without time zone installed_on
+    varchar installed_by
+    timestamp installed_on
     integer execution_time
     boolean success
   }
   margin_positions {
     bigint id PK
     bigint statement_id FK
-    character varying position_type
+    varchar position_type
     numeric amount
-    character varying currency
+    varchar currency
     date effective_date
-    character varying account_number
-    character varying portfolio_code
-    character varying product_class
-    character varying netting_set_id
-    timestamp with time zone created_at
+    varchar account_number
+    varchar portfolio_code
+    varchar product_class
+    varchar netting_set_id
+    timestamptz created_at
   }
   margin_statements {
     bigint id PK
-    character varying statement_id
-    character varying ccp_name
-    character varying member_firm
-    character varying account_number
+    varchar statement_id
+    varchar ccp_name
+    varchar member_firm
+    varchar account_number
     date statement_date
-    character varying currency
-    character varying statement_format
-    character varying file_name
+    varchar currency
+    varchar statement_format
+    varchar file_name
     bigint file_size
     text raw_content
-    character varying status
-    timestamp with time zone created_at
-    timestamp with time zone updated_at
-    timestamp with time zone processed_at
+    varchar status
+    timestamptz created_at
+    timestamptz updated_at
+    timestamptz processed_at
     text error_message
     integer retry_count
     numeric variation_margin
@@ -318,38 +318,38 @@ erDiagram
   }
   margin_tolerance_config {
     bigint id PK
-    character varying ccp_name
+    varchar ccp_name
     USER-DEFINED position_type
-    character varying currency
+    varchar currency
     numeric absolute_threshold
     numeric percentage_threshold
     boolean is_active
-    timestamp with time zone created_at
-    timestamp with time zone updated_at
+    timestamptz created_at
+    timestamptz updated_at
   }
   netting_sets {
     bigint id PK
-    character varying netting_set_id
-    character varying counterparty_id
-    character varying legal_agreement_type
+    varchar netting_set_id
+    varchar counterparty_id
+    varchar legal_agreement_type
     date agreement_date
-    character varying governing_law
+    varchar governing_law
     boolean netting_eligible
     boolean collateral_agreement
-    timestamp without time zone created_at
-    timestamp without time zone updated_at
+    timestamp created_at
+    timestamp updated_at
   }
   notional_adjustments {
     bigint id PK
     bigint trade_id FK
     date adjustment_date
-    character varying adjustment_type
+    varchar adjustment_type
     numeric original_notional
     numeric adjustment_amount
     numeric remaining_notional
     numeric unwind_cash_amount
     text adjustment_reason
-    timestamp without time zone created_at
+    timestamp created_at
   }
   portfolio_risk_cache {
     bigint id PK
@@ -368,58 +368,58 @@ erDiagram
     jsonb by_trade_breakdown
     integer completeness_constituents
     integer completeness_priced
-    timestamp without time zone calculated_at
+    timestamp calculated_at
     numeric total_notional
     numeric upfront_premium
     numeric total_paid_coupons
     integer trade_count
     numeric net_protection_bought
-    character varying average_maturity_years
+    varchar average_maturity_years
   }
   position_discrepancies {
     bigint id PK
     bigint statement_id FK
-    character varying account_number
+    varchar account_number
     USER-DEFINED position_type
-    character varying currency
+    varchar currency
     numeric expected_amount
     numeric actual_amount
     numeric variance_amount
     numeric variance_percentage
     numeric tolerance_threshold
     boolean is_material
-    character varying resolution_status
+    varchar resolution_status
     text resolution_notes
-    timestamp with time zone created_at
-    timestamp with time zone resolved_at
+    timestamptz created_at
+    timestamptz resolved_at
   }
   sa_ccr_audit_trail {
     bigint id PK
-    character varying calculation_id FK
+    varchar calculation_id FK
     integer step_number
-    character varying step_name
+    varchar step_name
     text description
     jsonb input_values
     jsonb output_values
     jsonb parameters_used
-    timestamp without time zone calculation_timestamp
+    timestamp calculation_timestamp
   }
   sa_ccr_calculation_details {
     bigint id PK
-    character varying calculation_id FK
-    character varying asset_class
+    varchar calculation_id FK
+    varchar asset_class
     numeric effective_notional
     numeric supervisory_factor
     numeric supervisory_addon
     numeric hedge_ratio
-    timestamp without time zone created_at
+    timestamp created_at
   }
   sa_ccr_calculations {
     bigint id PK
-    character varying calculation_id
-    character varying netting_set_id FK
+    varchar calculation_id
+    varchar netting_set_id FK
     date calculation_date
-    character varying jurisdiction
+    varchar jurisdiction
     numeric alpha_factor
     numeric gross_mtm
     numeric vm_received
@@ -432,128 +432,128 @@ erDiagram
     numeric multiplier
     numeric potential_future_exposure
     numeric exposure_at_default
-    character varying calculation_status
-    character varying created_by
-    timestamp without time zone created_at
-    timestamp without time zone completed_at
-    character varying base_currency
+    varchar calculation_status
+    varchar created_by
+    timestamp created_at
+    timestamp completed_at
+    varchar base_currency
   }
   sa_ccr_supervisory_parameters {
     bigint id PK
-    character varying jurisdiction
-    character varying asset_class
-    character varying parameter_type
-    character varying tenor_bucket
-    character varying credit_quality
+    varchar jurisdiction
+    varchar asset_class
+    varchar parameter_type
+    varchar tenor_bucket
+    varchar credit_quality
     numeric parameter_value
     date effective_date
     date expiry_date
-    timestamp without time zone created_at
+    timestamp created_at
   }
   sa_ccr_trade_mappings {
     bigint id PK
-    character varying calculation_id FK
+    varchar calculation_id FK
     bigint trade_id FK
-    character varying netting_set_id FK
-    character varying asset_class
+    varchar netting_set_id FK
+    varchar asset_class
     numeric notional_amount
     date maturity_date
     numeric effective_maturity
     numeric current_mtm
     numeric supervisory_delta
-    timestamp without time zone created_at
+    timestamp created_at
   }
   simm_bucket_mappings {
     bigint id PK
     bigint parameter_set_id FK
-    character varying risk_class
-    character varying risk_factor
-    character varying bucket
+    varchar risk_class
+    varchar risk_factor
+    varchar bucket
     text description
-    timestamp without time zone created_at
+    timestamp created_at
   }
   simm_calculation_audit {
     bigint id PK
     bigint calculation_id FK
-    character varying step_name
+    varchar step_name
     integer step_order
     text input_data
     text output_data
     text calculation_details
     bigint processing_time_ms
-    timestamp without time zone created_at
+    timestamp created_at
   }
   simm_calculation_results {
     bigint id PK
     bigint calculation_id FK
-    character varying risk_class
-    character varying bucket
+    varchar risk_class
+    varchar bucket
     numeric weighted_sensitivity
     numeric correlation_adjustment
     numeric margin_component
     numeric margin_component_usd
-    timestamp without time zone created_at
+    timestamp created_at
   }
   simm_calculations {
     bigint id PK
-    character varying calculation_id
+    varchar calculation_id
     bigint upload_id FK
     bigint parameter_set_id FK
-    character varying portfolio_id
+    varchar portfolio_id
     date calculation_date
-    character varying reporting_currency
-    character varying calculation_status
+    varchar reporting_currency
+    varchar calculation_status
     numeric total_im
     numeric total_im_usd
     numeric diversification_benefit
     bigint calculation_time_ms
     text error_message
-    timestamp without time zone created_at
-    timestamp without time zone updated_at
+    timestamp created_at
+    timestamp updated_at
   }
   simm_correlations {
     bigint id PK
     bigint parameter_set_id FK
-    character varying risk_class
-    character varying correlation_type
-    character varying bucket_from
-    character varying bucket_to
-    character varying risk_factor_from
-    character varying risk_factor_to
+    varchar risk_class
+    varchar correlation_type
+    varchar bucket_from
+    varchar bucket_to
+    varchar risk_factor_from
+    varchar risk_factor_to
     numeric correlation
-    timestamp without time zone created_at
+    timestamp created_at
   }
   simm_parameter_sets {
     bigint id PK
-    character varying version_name
-    character varying isda_version
+    varchar version_name
+    varchar isda_version
     date effective_date
     date end_date
     text description
     boolean is_active
-    timestamp without time zone created_at
-    timestamp without time zone updated_at
+    timestamp created_at
+    timestamp updated_at
   }
   simm_risk_weights {
     bigint id PK
     bigint parameter_set_id FK
-    character varying risk_class
-    character varying bucket
+    varchar risk_class
+    varchar bucket
     numeric risk_weight
-    timestamp without time zone created_at
+    timestamp created_at
   }
   simulation_audit {
     bigint id PK
-    character varying run_id FK
-    character varying event_type
-    timestamp without time zone event_timestamp
-    character varying user_id
+    varchar run_id FK
+    varchar event_type
+    timestamp event_timestamp
+    varchar user_id
     jsonb event_data
   }
   simulation_contributors {
     bigint id PK
-    character varying run_id FK
-    character varying entity_name
+    varchar run_id FK
+    varchar entity_name
     numeric marginal_el_pct
     numeric beta
     numeric standalone_el
@@ -562,8 +562,8 @@ erDiagram
   }
   simulation_horizon_metrics {
     bigint id PK
-    character varying run_id FK
-    character varying tenor
+    varchar run_id FK
+    varchar tenor
     numeric p_any_default
     numeric expected_defaults
     numeric loss_mean
@@ -576,27 +576,27 @@ erDiagram
   }
   simulation_runs {
     bigint id PK
-    character varying run_id
+    varchar run_id
     bigint portfolio_id FK
-    character varying status
+    varchar status
     date valuation_date
     integer paths
     jsonb request_payload
     bigint seed_used
     text error_message
-    timestamp without time zone created_at
-    timestamp without time zone started_at
-    timestamp without time zone completed_at
+    timestamp created_at
+    timestamp started_at
+    timestamp completed_at
     bigint runtime_ms
   }
   statement_processing_log {
     bigint id PK
     bigint statement_id FK
-    character varying processing_step
-    character varying status
+    varchar processing_step
+    varchar status
     text message
     integer processing_time_ms
-    timestamp with time zone created_at
+    timestamptz created_at
   }
   trade_amendments {
     bigint id PK
@@ -604,70 +604,71 @@ erDiagram
     date amendment_date
     integer previous_version
     integer new_version
-    character varying field_name
+    varchar field_name
     text previous_value
     text new_value
     text amendment_reason
     numeric pnl_impact_estimate
-    character varying amended_by
-    timestamp without time zone created_at
+    varchar amended_by
+    timestamp created_at
   }
   trade_novations {
     bigint id PK
     bigint original_trade_id FK
     bigint new_trade_id FK
     date novation_date
-    character varying original_counterparty
-    character varying new_counterparty
+    varchar original_counterparty
+    varchar new_counterparty
     text novation_reason
     numeric fee_amount
-    character varying fee_currency
-    character varying status
-    timestamp without time zone created_at
+    varchar fee_currency
+    varchar status
+    timestamp created_at
   }
-  accrual_events ||--o{ cds_trades : "references"
-  accrual_events ||--o{ coupon_periods : "references"
-  basket_constituents ||--o{ basket_definitions : "references"
-  basket_portfolio_constituents ||--o{ basket_definitions : "references"
-  basket_portfolio_constituents ||--o{ cds_portfolios : "references"
-  bond_portfolio_constituents ||--o{ bonds : "references"
-  bond_portfolio_constituents ||--o{ cds_portfolios : "references"
-  ccp_account_product_eligibility ||--o{ ccp_accounts : "references"
-  cds_cash_settlements ||--o{ cds_credit_events : "references"
-  cds_cash_settlements ||--o{ cds_trades : "references"
-  cds_credit_events ||--o{ cds_trades : "references"
-  cds_physical_settlement_instructions ||--o{ cds_credit_events : "references"
-  cds_physical_settlement_instructions ||--o{ cds_trades : "references"
-  cds_portfolio_constituents ||--o{ cds_portfolios : "references"
-  cds_portfolio_constituents ||--o{ cds_trades : "references"
-  cds_trades ||--o{ bonds : "references"
-  cds_trades ||--o{ cds_trades : "references"
-  collateral_ledger ||--o{ margin_statements : "references"
-  compression_proposal_items ||--o{ cds_trades : "references"
-  compression_proposal_items ||--o{ compression_proposals : "references"
-  coupon_periods ||--o{ cds_trades : "references"
-  crif_sensitivities ||--o{ crif_uploads : "references"
-  margin_positions ||--o{ margin_statements : "references"
-  notional_adjustments ||--o{ cds_trades : "references"
-  portfolio_risk_cache ||--o{ cds_portfolios : "references"
-  position_discrepancies ||--o{ margin_statements : "references"
-  sa_ccr_audit_trail ||--o{ sa_ccr_calculations : "references"
-  sa_ccr_calculation_details ||--o{ sa_ccr_calculations : "references"
-  sa_ccr_calculations ||--o{ netting_sets : "references"
-  sa_ccr_trade_mappings ||--o{ cds_trades : "references"
-  sa_ccr_trade_mappings ||--o{ netting_sets : "references"
-  sa_ccr_trade_mappings ||--o{ sa_ccr_calculations : "references"
-  simm_bucket_mappings ||--o{ simm_parameter_sets : "references"
-  simm_calculation_audit ||--o{ simm_calculations : "references"
-  simm_calculation_results ||--o{ simm_calculations : "references"
-  simm_calculations ||--o{ crif_uploads : "references"
-  simm_calculations ||--o{ simm_parameter_sets : "references"
-  simm_correlations ||--o{ simm_parameter_sets : "references"
-  simm_risk_weights ||--o{ simm_parameter_sets : "references"
-  simulation_audit ||--o{ simulation_runs : "references"
-  simulation_contributors ||--o{ simulation_runs : "references"
-  simulation_horizon_metrics ||--o{ simulation_runs : "references"
-  simulation_runs ||--o{ cds_portfolios : "references"
-  statement_processing_log ||--o{ margin_statements : "references"
-  trade_amendments ||--o{ cds_trades : "references"
-  trade_novations ||--o{ cds_trades : "references"
+
+  accrual_events ||--o{ cds_trades : references
+  accrual_events ||--o{ coupon_periods : references
+  basket_constituents ||--o{ basket_definitions : references
+  basket_portfolio_constituents ||--o{ basket_definitions : references
+  basket_portfolio_constituents ||--o{ cds_portfolios : references
+  bond_portfolio_constituents ||--o{ bonds : references
+  bond_portfolio_constituents ||--o{ cds_portfolios : references
+  ccp_account_product_eligibility ||--o{ ccp_accounts : references
+  cds_cash_settlements ||--o{ cds_credit_events : references
+  cds_cash_settlements ||--o{ cds_trades : references
+  cds_credit_events ||--o{ cds_trades : references
+  cds_physical_settlement_instructions ||--o{ cds_credit_events : references
+  cds_physical_settlement_instructions ||--o{ cds_trades : references
+  cds_portfolio_constituents ||--o{ cds_portfolios : references
+  cds_portfolio_constituents ||--o{ cds_trades : references
+  cds_trades ||--o{ bonds : references
+  cds_trades ||--o{ cds_trades : references
+  collateral_ledger ||--o{ margin_statements : references
+  compression_proposal_items ||--o{ cds_trades : references
+  compression_proposal_items ||--o{ compression_proposals : references
+  coupon_periods ||--o{ cds_trades : references
+  crif_sensitivities ||--o{ crif_uploads : references
+  margin_positions ||--o{ margin_statements : references
+  notional_adjustments ||--o{ cds_trades : references
+  portfolio_risk_cache ||--o{ cds_portfolios : references
+  position_discrepancies ||--o{ margin_statements : references
+  sa_ccr_audit_trail ||--o{ sa_ccr_calculations : references
+  sa_ccr_calculation_details ||--o{ sa_ccr_calculations : references
+  sa_ccr_calculations ||--o{ netting_sets : references
+  sa_ccr_trade_mappings ||--o{ cds_trades : references
+  sa_ccr_trade_mappings ||--o{ netting_sets : references
+  sa_ccr_trade_mappings ||--o{ sa_ccr_calculations : references
+  simm_bucket_mappings ||--o{ simm_parameter_sets : references
+  simm_calculation_audit ||--o{ simm_calculations : references
+  simm_calculation_results ||--o{ simm_calculations : references
+  simm_calculations ||--o{ crif_uploads : references
+  simm_calculations ||--o{ simm_parameter_sets : references
+  simm_correlations ||--o{ simm_parameter_sets : references
+  simm_risk_weights ||--o{ simm_parameter_sets : references
+  simulation_audit ||--o{ simulation_runs : references
+  simulation_contributors ||--o{ simulation_runs : references
+  simulation_horizon_metrics ||--o{ simulation_runs : references
+  simulation_runs ||--o{ cds_portfolios : references
+  statement_processing_log ||--o{ margin_statements : references
+  trade_amendments ||--o{ cds_trades : references
+  trade_novations ||--o{ cds_trades : references

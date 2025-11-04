@@ -4,8 +4,8 @@
 
 ## Metadata
 
-- **Generated**: 2025-11-04 10:32:23 UTC
-- **Git Commit**: `2292134`
+- **Generated**: 2025-11-04 10:37:46 UTC
+- **Git Commit**: `8f2d7ca`
 - **Git Branch**: `data-model`
 - **Database**: `cdsplatform`
 - **Schema**: `public`
@@ -101,50 +101,50 @@ The schema includes the following table groups:
 Format: `version | installed_on | script`
 
 ```text
-1 | 2025-11-04 10:30:31.390388 | V1__create_cds_trades_table.sql
-2 | 2025-11-04 10:30:31.456218 | V2__create_credit_events_table.sql
-3 | 2025-11-04 10:30:31.486545 | V3__add_trade_status_enum.sql
-4 | 2025-11-04 10:30:31.505435 | V4__create_cash_settlements_table.sql
-5 | 2025-11-04 10:30:31.52518 | V5__create_physical_settlement_instructions.sql
-6 | 2025-11-04 10:30:31.54515 | V6__create_audit_log_table.sql
-7 | 2025-11-04 10:30:31.566227 | V7__convert_trade_status_enum_to_varchar.sql
-8 | 2025-11-04 10:30:31.587125 | V8__create_lifecycle_tables.sql
-9 | 2025-11-04 10:30:31.673483 | V9__add_coupon_payment_tracking.sql
-10 | 2025-11-04 10:30:31.688119 | V10__create_portfolio_tables.sql
-11 | 2025-11-04 10:30:31.726581 | V11__fix_portfolio_weight_value_precision.sql
-12 | 2025-11-04 10:30:31.74176 | V12__add_enhanced_portfolio_metrics.sql
-13 | 2025-11-04 10:30:31.749777 | V13__create_simulation_tables.sql
-14 | 2025-11-04 10:30:31.793596 | V14__add_sample_spreads.sql
-15 | 2025-11-04 10:30:31.80346 | V15__create_bonds_table.sql
-16 | 2025-11-04 10:30:31.825752 | V16__add_bond_portfolio_constituents.sql
-17 | 2025-11-04 10:30:31.847378 | V17__create_basket_tables.sql
-18 | 2025-11-04 10:30:31.883686 | V18__add_basket_portfolio_constituents.sql
-19 | 2025-11-04 10:30:31.906279 | V19__add_recovery_rate_to_cds_trades.sql
-20 | 2025-11-04 10:30:31.915045 | V20__add_obligation_to_cds_trades.sql
-21 | 2025-11-04 10:30:31.929101 | V21__remove_bond_credit_fields.sql
-22 | 2025-11-04 10:30:31.938908 | V22__add_payout_event_type.sql
-23 | 2025-11-04 10:30:31.946004 | V23__add_settlement_type_to_cds_trades.sql
-33 | 2025-11-04 10:30:31.956028 | V33__add_ccp_novation_fields.sql
-34 | 2025-11-04 10:30:31.988455 | V34__create_ccp_accounts_table.sql
-35 | 2025-11-04 10:30:32.013812 | V35__extend_audit_log_for_novation.sql
-36 | 2025-11-04 10:30:32.022645 | V36__create_margin_statements_schema.sql
-37 | 2025-11-04 10:30:32.084404 | V37__create_sa_ccr_schema.sql
-38 | 2025-11-04 10:30:32.144348 | V38__add_sa_ccr_fields_to_cds_trades.sql
-39 | 2025-11-04 10:30:32.157297 | V39__add_margin_amounts_to_statements.sql
-40 | 2025-11-04 10:30:32.170154 | V40__extend_audit_log_for_epic8.sql
-41 | 2025-11-04 10:30:32.180872 | V41__add_jurisdiction_currency_support.sql
-42 | 2025-11-04 10:30:32.190641 | V42__insert_comprehensive_jurisdiction_parameters.sql
-43 | 2025-11-04 10:30:32.203664 | V43__fix_enum_varchar_compatibility.sql
-44 | 2025-11-04 10:30:32.243936 | V44__create_crif_uploads_table.sql
-45 | 2025-11-04 10:30:32.267691 | V45__create_crif_sensitivities_table.sql
-46 | 2025-11-04 10:30:32.294078 | V46__create_simm_parameter_sets_table.sql
-47 | 2025-11-04 10:30:32.314073 | V47__create_simm_risk_weights_table.sql
-48 | 2025-11-04 10:30:32.331722 | V48__create_simm_correlations_table.sql
-49 | 2025-11-04 10:30:32.347588 | V49__create_simm_bucket_mappings_table.sql
-50 | 2025-11-04 10:30:32.364579 | V50__create_simm_calculations_table.sql
-51 | 2025-11-04 10:30:32.389181 | V51__create_simm_calculation_results_table.sql
-52 | 2025-11-04 10:30:32.405721 | V52__create_simm_calculation_audit_table.sql
-53 | 2025-11-04 10:30:32.424087 | V53__insert_default_simm_parameter_set.sql
+1 | 2025-11-04 10:35:12.537831 | V1__create_cds_trades_table.sql
+2 | 2025-11-04 10:35:12.62072 | V2__create_credit_events_table.sql
+3 | 2025-11-04 10:35:12.660833 | V3__add_trade_status_enum.sql
+4 | 2025-11-04 10:35:12.684883 | V4__create_cash_settlements_table.sql
+5 | 2025-11-04 10:35:12.70905 | V5__create_physical_settlement_instructions.sql
+6 | 2025-11-04 10:35:12.733823 | V6__create_audit_log_table.sql
+7 | 2025-11-04 10:35:12.758646 | V7__convert_trade_status_enum_to_varchar.sql
+8 | 2025-11-04 10:35:12.778601 | V8__create_lifecycle_tables.sql
+9 | 2025-11-04 10:35:12.887501 | V9__add_coupon_payment_tracking.sql
+10 | 2025-11-04 10:35:12.90484 | V10__create_portfolio_tables.sql
+11 | 2025-11-04 10:35:12.951972 | V11__fix_portfolio_weight_value_precision.sql
+12 | 2025-11-04 10:35:12.970245 | V12__add_enhanced_portfolio_metrics.sql
+13 | 2025-11-04 10:35:12.982027 | V13__create_simulation_tables.sql
+14 | 2025-11-04 10:35:13.038958 | V14__add_sample_spreads.sql
+15 | 2025-11-04 10:35:13.053219 | V15__create_bonds_table.sql
+16 | 2025-11-04 10:35:13.081489 | V16__add_bond_portfolio_constituents.sql
+17 | 2025-11-04 10:35:13.107209 | V17__create_basket_tables.sql
+18 | 2025-11-04 10:35:13.147942 | V18__add_basket_portfolio_constituents.sql
+19 | 2025-11-04 10:35:13.172962 | V19__add_recovery_rate_to_cds_trades.sql
+20 | 2025-11-04 10:35:13.182983 | V20__add_obligation_to_cds_trades.sql
+21 | 2025-11-04 10:35:13.197741 | V21__remove_bond_credit_fields.sql
+22 | 2025-11-04 10:35:13.207207 | V22__add_payout_event_type.sql
+23 | 2025-11-04 10:35:13.216285 | V23__add_settlement_type_to_cds_trades.sql
+33 | 2025-11-04 10:35:13.2286 | V33__add_ccp_novation_fields.sql
+34 | 2025-11-04 10:35:13.266337 | V34__create_ccp_accounts_table.sql
+35 | 2025-11-04 10:35:13.303251 | V35__extend_audit_log_for_novation.sql
+36 | 2025-11-04 10:35:13.314038 | V36__create_margin_statements_schema.sql
+37 | 2025-11-04 10:35:13.406478 | V37__create_sa_ccr_schema.sql
+38 | 2025-11-04 10:35:13.47268 | V38__add_sa_ccr_fields_to_cds_trades.sql
+39 | 2025-11-04 10:35:13.486659 | V39__add_margin_amounts_to_statements.sql
+40 | 2025-11-04 10:35:13.501609 | V40__extend_audit_log_for_epic8.sql
+41 | 2025-11-04 10:35:13.514113 | V41__add_jurisdiction_currency_support.sql
+42 | 2025-11-04 10:35:13.525275 | V42__insert_comprehensive_jurisdiction_parameters.sql
+43 | 2025-11-04 10:35:13.538792 | V43__fix_enum_varchar_compatibility.sql
+44 | 2025-11-04 10:35:13.587389 | V44__create_crif_uploads_table.sql
+45 | 2025-11-04 10:35:13.615672 | V45__create_crif_sensitivities_table.sql
+46 | 2025-11-04 10:35:13.646654 | V46__create_simm_parameter_sets_table.sql
+47 | 2025-11-04 10:35:13.668398 | V47__create_simm_risk_weights_table.sql
+48 | 2025-11-04 10:35:13.689858 | V48__create_simm_correlations_table.sql
+49 | 2025-11-04 10:35:13.7087 | V49__create_simm_bucket_mappings_table.sql
+50 | 2025-11-04 10:35:13.725853 | V50__create_simm_calculations_table.sql
+51 | 2025-11-04 10:35:13.750381 | V51__create_simm_calculation_results_table.sql
+52 | 2025-11-04 10:35:13.771967 | V52__create_simm_calculation_audit_table.sql
+53 | 2025-11-04 10:35:13.791189 | V53__insert_default_simm_parameter_set.sql
 ```
 
 ---
