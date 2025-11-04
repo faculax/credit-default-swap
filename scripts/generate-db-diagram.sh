@@ -87,6 +87,84 @@ schemacrawler.sh \
   --output-file="${OUTPUT_DIR}/database-schema.txt"
 echo "✓ Text schema generated"
 
+# Generate Mermaid ER diagram
+echo "Generating Mermaid ER diagram..."
+cat > "${OUTPUT_DIR}/database-schema.mmd" <<'MERMAID_START'
+erDiagram
+MERMAID_START
+
+# Query tables and their columns
+PGPASSWORD=${DB_PASS} psql -h ${DB_HOST} -p ${DB_PORT} -U ${DB_USER} -d ${DB_NAME} -Atc "
+  SELECT 
+    t.table_name,
+    c.column_name,
+    c.data_type,
+    CASE 
+      WHEN pk.constraint_type = 'PRIMARY KEY' THEN 'PK'
+      WHEN fk.constraint_type = 'FOREIGN KEY' THEN 'FK'
+      ELSE ''
+    END as key_type
+  FROM information_schema.tables t
+  LEFT JOIN information_schema.columns c ON t.table_name = c.table_name AND t.table_schema = c.table_schema
+  LEFT JOIN (
+    SELECT ku.table_name, ku.column_name, tc.constraint_type
+    FROM information_schema.table_constraints tc
+    JOIN information_schema.key_column_usage ku ON tc.constraint_name = ku.constraint_name
+    WHERE tc.constraint_type = 'PRIMARY KEY'
+  ) pk ON c.table_name = pk.table_name AND c.column_name = pk.column_name
+  LEFT JOIN (
+    SELECT ku.table_name, ku.column_name, tc.constraint_type
+    FROM information_schema.table_constraints tc
+    JOIN information_schema.key_column_usage ku ON tc.constraint_name = ku.constraint_name
+    WHERE tc.constraint_type = 'FOREIGN KEY'
+  ) fk ON c.table_name = fk.table_name AND c.column_name = fk.column_name
+  WHERE t.table_schema = 'public' AND t.table_type = 'BASE TABLE'
+  ORDER BY t.table_name, c.ordinal_position
+" | awk -F'|' '
+BEGIN {
+  current_table = ""
+}
+{
+  table = $1
+  column = $2
+  type = $3
+  key = $4
+  
+  if (table != current_table) {
+    if (current_table != "") print "  }"
+    print "  " table " {"
+    current_table = table
+  }
+  
+  key_marker = ""
+  if (key == "PK") key_marker = " PK"
+  else if (key == "FK") key_marker = " FK"
+  
+  print "    " type " " column key_marker
+}
+END {
+  if (current_table != "") print "  }"
+}
+' >> "${OUTPUT_DIR}/database-schema.mmd"
+
+# Query foreign key relationships
+PGPASSWORD=${DB_PASS} psql -h ${DB_HOST} -p ${DB_PORT} -U ${DB_USER} -d ${DB_NAME} -Atc "
+  SELECT 
+    tc.table_name as from_table,
+    ccu.table_name as to_table,
+    'one to many' as relationship
+  FROM information_schema.table_constraints tc
+  JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name
+  JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_name = tc.constraint_name
+  WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema = 'public'
+  GROUP BY tc.table_name, ccu.table_name
+  ORDER BY tc.table_name, ccu.table_name
+" | awk -F'|' '{
+  print "  " $1 " ||--o{ " $2 " : \"references\""
+}' >> "${OUTPUT_DIR}/database-schema.mmd"
+
+echo "✓ Mermaid ER diagram generated"
+
 # Generate interactive SchemaSpy documentation (if available)
 if [[ -n "${SCHEMASPY_JAR:-}" ]] && [[ -f "${SCHEMASPY_JAR}" ]]; then
   echo "Generating interactive SchemaSpy documentation..."
@@ -161,13 +239,18 @@ Modern, beautiful schema browser with:
 - 📝 Constraint and index visualization
 - 🎯 Anomaly detection
 
+### Mermaid ER Diagram
+**[View Mermaid Diagram →](./database-schema.mmd)** 
+
+Text-based ER diagram that GitHub renders natively. Shows all ${TABLE_COUNT} tables with their columns and relationships in a clean, readable format.
+
 ### SVG Diagram (Overview)
 **[View Full Schema Diagram (SVG) →](./database-schema.svg)**
 
 A high-level overview showing all ${TABLE_COUNT} tables and their relationships. 
 For detailed column information, use the interactive documentation above.
 
-_Note: This is a simplified view for large schemas. The interactive docs provide full details._
+_Note: Both Mermaid and SVG diagrams are available. The interactive docs provide the most detail._
 
 ---
 
@@ -238,6 +321,7 @@ $(cat "${OUTPUT_DIR}/migrations-applied.txt")
 ## Additional Resources
 
 - **[Interactive SchemaSpy Documentation](./interactive/index.html)** - 🌟 Modern, interactive schema browser with beautiful diagrams
+- **[Mermaid ER Diagram](./database-schema.mmd)** - Text-based diagram with GitHub native rendering
 - **[Full HTML Documentation](./database-schema.html)** - Detailed schema browser with table/column descriptions
 - **[SVG Diagram](./database-schema.svg)** - Scalable vector graphic (interactive, zoomable)
 - **[Text Schema](./database-schema.txt)** - Plain text representation for quick reference
@@ -278,6 +362,7 @@ echo "============================================"
 echo ""
 echo "Generated artifacts in ${OUTPUT_DIR}:"
 echo "  ⭐ interactive/index.html (RECOMMENDED - beautiful interactive docs)"
+echo "  - database-schema.mmd (${TABLE_COUNT} tables, Mermaid ER diagram)"
 echo "  - database-schema.svg (${TABLE_COUNT} tables, vector graphic)"
 echo "  - database-schema.html (detailed SchemaCrawler docs)"
 echo "  - database-schema.txt (text representation)"
@@ -285,4 +370,5 @@ echo "  - migrations-applied.txt (${MIGRATION_COUNT} migrations)"
 echo "  - README.md (documentation index)"
 echo ""
 echo "🌟 Open docs/schema/interactive/index.html for the best experience!"
+echo "📊 View database-schema.mmd in GitHub for native Mermaid rendering!"
 echo ""
