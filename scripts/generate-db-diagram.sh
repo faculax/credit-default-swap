@@ -181,19 +181,37 @@ echo "✓ Mermaid ER diagram generated"
 if command -v mmdc &> /dev/null; then
   echo "Exporting Mermaid diagram to PNG and PDF..."
   
-  # Export to PNG with high quality
-  mmdc -i "${OUTPUT_DIR}/database-schema.mmd" \
+  # Get the directory where this script is located (for puppeteer config)
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  PUPPETEER_CONFIG="${SCRIPT_DIR}/puppeteer-config.json"
+  
+  # Export to PNG with high quality and increased timeout for large diagrams
+  echo "  → Generating PNG (this may take a minute for large schemas)..."
+  if mmdc -i "${OUTPUT_DIR}/database-schema.mmd" \
        -o "${OUTPUT_DIR}/database-schema-mermaid.png" \
        -t default \
        -b white \
-       -w 3000 \
-       -H 3000 2>/dev/null || echo "⚠ PNG export had issues"
+       -w 4000 \
+       -H 4000 \
+       --puppeteerConfigFile "${PUPPETEER_CONFIG}" 2>&1 | tee /tmp/mmdc-png.log; then
+    echo "    ✓ PNG export successful"
+  else
+    echo "    ⚠ PNG export failed - checking errors..."
+    grep -i "error\|timeout\|failed" /tmp/mmdc-png.log || echo "    No specific error found in logs"
+  fi
   
-  # Export to PDF
-  mmdc -i "${OUTPUT_DIR}/database-schema.mmd" \
+  # Export to PDF with increased timeout for large diagrams
+  echo "  → Generating PDF (this may take a minute for large schemas)..."
+  if mmdc -i "${OUTPUT_DIR}/database-schema.mmd" \
        -o "${OUTPUT_DIR}/database-schema-mermaid.pdf" \
        -t default \
-       -b white 2>/dev/null || echo "⚠ PDF export had issues"
+       -b white \
+       --puppeteerConfigFile "${PUPPETEER_CONFIG}" 2>&1 | tee /tmp/mmdc-pdf.log; then
+    echo "    ✓ PDF export successful"
+  else
+    echo "    ⚠ PDF export failed - checking errors..."
+    grep -i "error\|timeout\|failed" /tmp/mmdc-pdf.log || echo "    No specific error found in logs"
+  fi
   
   if [[ -f "${OUTPUT_DIR}/database-schema-mermaid.png" ]]; then
     echo "✓ Mermaid PNG exported"
