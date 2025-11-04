@@ -502,20 +502,20 @@
                                 </thead>
                                 <tbody>
                                 <tr>
-                                    <td>bonds_check</td>
-                                    <td>((issue_date &lt; maturity_date))</td>
+                                    <td>bonds_settlement_days_check</td>
+                                    <td>((settlement_days &gt;&#61; 0))</td>
                                 </tr>
                                 <tr>
-                                    <td>bonds_coupon_rate_check</td>
-                                    <td>((coupon_rate &gt;&#61; (0)::numeric))</td>
+                                    <td>bonds_check</td>
+                                    <td>((issue_date &lt; maturity_date))</td>
                                 </tr>
                                 <tr>
                                     <td>bonds_notional_check</td>
                                     <td>((notional &gt; (0)::numeric))</td>
                                 </tr>
                                 <tr>
-                                    <td>bonds_settlement_days_check</td>
-                                    <td>((settlement_days &gt;&#61; 0))</td>
+                                    <td>bonds_coupon_rate_check</td>
+                                    <td>((coupon_rate &gt;&#61; (0)::numeric))</td>
                                 </tr>
                                 </tbody>
                             </table>
