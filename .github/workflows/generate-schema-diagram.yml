@@ -95,39 +95,11 @@ jobs:
           echo "SCHEMASPY_JAR=$PWD/schemaspy.jar" >> $GITHUB_ENV
           echo "POSTGRES_DRIVER=$PWD/postgresql.jar" >> $GITHUB_ENV
 
-      - name: Install Mermaid CLI
+      - name: Pull Mermaid CLI Docker Image
         run: |
-          echo "Installing Mermaid CLI for diagram exports..."
-          # Install system dependencies for Chromium/Puppeteer
-          sudo apt-get update
-          sudo apt-get install -y \
-            chromium-browser \
-            fonts-liberation \
-            libnss3 \
-            libnspr4 \
-            libatk-bridge2.0-0 \
-            libatk1.0-0 \
-            libcups2 \
-            libdrm2 \
-            libxkbcommon0 \
-            libxcomposite1 \
-            libxdamage1 \
-            libxfixes3 \
-            libxrandr2 \
-            libgbm1 \
-            libpango-1.0-0 \
-            libcairo2 \
-            libasound2t64 \
-            libatspi2.0-0 \
-            libxshmfence1
-          
-          # Install Mermaid CLI with specific version that works well
-          npm install -g @mermaid-js/mermaid-cli@10.6.1
-          
-          # Install Puppeteer browsers
-          npx puppeteer browsers install chrome
-          
-          mmdc --version
+          echo "Pulling Mermaid CLI Docker image for diagram exports..."
+          docker pull minlag/mermaid-cli:latest
+          echo "✓ Mermaid CLI ready"
 
       - name: Generate Schema Artifacts
         run: |

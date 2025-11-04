@@ -177,39 +177,31 @@ PGPASSWORD=${DB_PASS} psql -h ${DB_HOST} -p ${DB_PORT} -U ${DB_USER} -d ${DB_NAM
 
 echo "✓ Mermaid ER diagram generated"
 
-# Export Mermaid diagram to PNG and PDF (if mmdc is available)
-if command -v mmdc &> /dev/null; then
+# Export Mermaid diagram to PNG and PDF using Docker (simple and reliable)
+if command -v docker &> /dev/null && [[ -f "${OUTPUT_DIR}/database-schema.mmd" ]]; then
   echo "Exporting Mermaid diagram to PNG and PDF..."
   
-  # Get the directory where this script is located (for puppeteer config)
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  PUPPETEER_CONFIG="${SCRIPT_DIR}/puppeteer-config.json"
+  # Get absolute path for Docker volume mount
+  WORK_DIR="$(cd "$(dirname "${OUTPUT_DIR}")" && pwd)/$(basename "${OUTPUT_DIR}")"
   
-  # Export to PNG with simplified options that work reliably
-  echo "  → Generating PNG (this may take a minute for large schemas)..."
-  if mmdc -i "${OUTPUT_DIR}/database-schema.mmd" \
-       -o "${OUTPUT_DIR}/database-schema-mermaid.png" \
-       -b white \
-       --scale 3 \
-       -p "${PUPPETEER_CONFIG}" 2>&1 | tee /tmp/mmdc-png.log; then
-    echo "    ✓ PNG export successful"
-  else
-    echo "    ⚠ PNG export failed - checking errors..."
-    grep -i "error\|timeout\|failed" /tmp/mmdc-png.log | head -3 || echo "    No specific error found in logs"
-  fi
+  # Export to PNG using official Mermaid CLI Docker image
+  echo "  → Generating PNG..."
+  docker run --rm -v "${WORK_DIR}:/data" minlag/mermaid-cli:latest \
+    -i /data/database-schema.mmd \
+    -o /data/database-schema-mermaid.png \
+    -b white \
+    -s 3 \
+    2>&1 | grep -v "Generating single mermaid chart" || true
   
-  # Export to PDF with simplified options
-  echo "  → Generating PDF (this may take a minute for large schemas)..."
-  if mmdc -i "${OUTPUT_DIR}/database-schema.mmd" \
-       -o "${OUTPUT_DIR}/database-schema-mermaid.pdf" \
-       -b white \
-       -p "${PUPPETEER_CONFIG}" 2>&1 | tee /tmp/mmdc-pdf.log; then
-    echo "    ✓ PDF export successful"
-  else
-    echo "    ⚠ PDF export failed - checking errors..."
-    grep -i "error\|timeout\|failed" /tmp/mmdc-pdf.log | head -3 || echo "    No specific error found in logs"
-  fi
+  # Export to PDF
+  echo "  → Generating PDF..."
+  docker run --rm -v "${WORK_DIR}:/data" minlag/mermaid-cli:latest \
+    -i /data/database-schema.mmd \
+    -o /data/database-schema-mermaid.pdf \
+    -b white \
+    2>&1 | grep -v "Generating single mermaid chart" || true
   
+  # Check results
   if [[ -f "${OUTPUT_DIR}/database-schema-mermaid.png" ]]; then
     echo "✓ Mermaid PNG exported"
   fi
@@ -218,7 +210,7 @@ if command -v mmdc &> /dev/null; then
     echo "✓ Mermaid PDF exported"
   fi
 else
-  echo "⚠ Mermaid CLI (mmdc) not available, skipping PNG/PDF export"
+  echo "⚠ Docker not available or Mermaid file missing, skipping PNG/PDF export"
 fi
 
 # Generate interactive SchemaSpy documentation (if available)
