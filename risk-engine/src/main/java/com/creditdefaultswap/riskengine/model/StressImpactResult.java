@@ -32,6 +32,11 @@ public class StressImpactResult {
     private String currency;
     
     /**
+     * Position: BUY (protection buyer) or SELL (protection seller)
+     */
+    private String buySellProtection;
+    
+    /**
      * Total number of scenarios executed
      */
     private int scenarioCount;
@@ -150,6 +155,14 @@ public class StressImpactResult {
     
     public void setCurrency(String currency) {
         this.currency = currency;
+    }
+    
+    public String getBuySellProtection() {
+        return buySellProtection;
+    }
+    
+    public void setBuySellProtection(String buySellProtection) {
+        this.buySellProtection = buySellProtection;
     }
     
     public int getScenarioCount() {

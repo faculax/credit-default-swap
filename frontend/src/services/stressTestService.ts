@@ -24,6 +24,7 @@ export interface StressImpactResult {
   baseNpv: number;
   baseJtd: number;
   currency: string;
+  buySellProtection: string;
   scenarioCount: number;
   baseYieldCurve: Record<string, number>;
   shiftedYieldCurves: Record<string, Record<string, number>>;
