@@ -1,21 +1,24 @@
--- V54: Make margin statement enum types idempotent
--- This migration modifies the enum type creation to be safe for re-runs
--- Original enum types in V36 would fail if run twice; this makes them idempotent
+-- V54: Make margin statement enum creation idempotent
+-- This migration wraps the enum type creation from V36 in idempotent blocks
+-- Since the enums already exist (created by V36), these blocks will safely do nothing
 
--- Note: The enum types themselves cannot be modified after creation
--- This migration documents the desired idempotent pattern for future reference
--- The actual enum types (statement_status, statement_format, position_type) 
--- were already created by V36 and cannot be recreated
+-- Statement processing status enum type (idempotent)
+DO $$ BEGIN
+    CREATE TYPE statement_status AS ENUM ('PENDING', 'PROCESSING', 'PROCESSED', 'FAILED', 'DISPUTED', 'RETRYING');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- For future migrations, use this pattern for enum creation:
--- DO $$ BEGIN
---     CREATE TYPE your_enum_type AS ENUM ('VALUE1', 'VALUE2');
--- EXCEPTION
---     WHEN duplicate_object THEN null;
--- END $$;
+-- Statement format enum type (idempotent)
+DO $$ BEGIN
+    CREATE TYPE statement_format AS ENUM ('CSV', 'XML', 'JSON', 'PROPRIETARY');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- This migration serves as a placeholder to maintain version numbering
--- and documents the improvement that was moved from V36
-
--- No actual schema changes needed as the enums are already created
-SELECT 1; -- Dummy statement to make this a valid migration
+-- Collateral position type enum (idempotent)
+DO $$ BEGIN
+    CREATE TYPE position_type AS ENUM ('VARIATION_MARGIN', 'INITIAL_MARGIN', 'EXCESS_COLLATERAL');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
