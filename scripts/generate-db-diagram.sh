@@ -30,7 +30,7 @@ TABLE_COUNT=$(PGPASSWORD=${DB_PASS} psql -h ${DB_HOST} -p ${DB_PORT} -U ${DB_USE
 echo "Found ${TABLE_COUNT} tables in public schema"
 echo ""
 
-# Generate PlantUML source (logical representation)
+# Generate SVG diagram with minimal info (renders better)
 echo "Generating SVG diagram..."
 schemacrawler.sh \
   --server=postgresql \
@@ -39,14 +39,14 @@ schemacrawler.sh \
   --database=${DB_NAME} \
   --user=${DB_USER} \
   --password=${DB_PASS} \
-  --info-level=standard \
+  --info-level=minimum \
   --schemas=public \
   --command=schema \
   --no-info \
   --portable-names \
   --output-format=svg \
   --output-file="${OUTPUT_DIR}/database-schema.svg"
-echo "✓ SVG diagram generated"
+echo "✓ SVG diagram generated (minimal - table names and relationships only)"
 
 # Note: PNG conversion skipped for large schemas
 # GitHub can display SVG files directly, and SchemaSpy provides better interactive diagrams
@@ -161,12 +161,13 @@ Modern, beautiful schema browser with:
 - 📝 Constraint and index visualization
 - 🎯 Anomaly detection
 
-### SVG Diagram
+### SVG Diagram (Overview)
 **[View Full Schema Diagram (SVG) →](./database-schema.svg)**
 
-The SVG diagram shows all ${TABLE_COUNT} tables with their relationships. Open it in your browser for zooming and panning.
+A high-level overview showing all ${TABLE_COUNT} tables and their relationships. 
+For detailed column information, use the interactive documentation above.
 
-_Note: For large schemas like ours, SVG provides better quality than PNG. GitHub renders SVG files natively._
+_Note: This is a simplified view for large schemas. The interactive docs provide full details._
 
 ---
 
