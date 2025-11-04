@@ -909,18 +909,18 @@
         "comments": ""
     },
     {
-        "tableName": "simm_parameter_sets",
-        "tableFileName": "simm_parameter_sets",
+        "tableName": "simm_risk_weights",
+        "tableFileName": "simm_risk_weights",
         "tableType": "Table",
         "keyClass": "",
         "keyTitle": "",
-        "name": "created_at",
-        "type": "timestamp",
-        "length": 29,
+        "name": "risk_weight",
+        "type": "numeric",
+        "length": 10,
         "nullable": "",
         "autoUpdated": "",
-        "defaultValue": "CURRENT_TIMESTAMP",
-        "comments": ""
+        "defaultValue": "null",
+        "comments": "<p>Risk weight factor for the bucket<\/p>"
     },
     {
         "tableName": "collateral_ledger",
@@ -1203,17 +1203,17 @@
         "comments": ""
     },
     {
-        "tableName": "simm_risk_weights",
-        "tableFileName": "simm_risk_weights",
+        "tableName": "simm_parameter_sets",
+        "tableFileName": "simm_parameter_sets",
         "tableType": "Table",
         "keyClass": "",
         "keyTitle": "",
-        "name": "created_at",
-        "type": "timestamp",
-        "length": 29,
-        "nullable": "",
+        "name": "description",
+        "type": "text",
+        "length": 2147483647,
+        "nullable": "√",
         "autoUpdated": "",
-        "defaultValue": "CURRENT_TIMESTAMP",
+        "defaultValue": "null",
         "comments": ""
     },
     {
@@ -1553,18 +1553,18 @@
         "comments": ""
     },
     {
-        "tableName": "simm_parameter_sets",
-        "tableFileName": "simm_parameter_sets",
+        "tableName": "simm_risk_weights",
+        "tableFileName": "simm_risk_weights",
         "tableType": "Table",
-        "keyClass": "",
-        "keyTitle": "",
-        "name": "description",
-        "type": "text",
-        "length": 2147483647,
-        "nullable": "√",
+        "keyClass": "indexedColumn",
+        "keyTitle": "Indexed",
+        "name": "<i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'><\/i>risk_class",
+        "type": "varchar",
+        "length": 20,
+        "nullable": "",
         "autoUpdated": "",
         "defaultValue": "null",
-        "comments": ""
+        "comments": "<p>Risk class: IR, FX, EQ, CO, CR_Q, CR_NQ<\/p>"
     },
     {
         "tableName": "statement_processing_log",
@@ -1721,17 +1721,17 @@
         "comments": ""
     },
     {
-        "tableName": "simm_parameter_sets",
-        "tableFileName": "simm_parameter_sets",
+        "tableName": "simm_risk_weights",
+        "tableFileName": "simm_risk_weights",
         "tableType": "Table",
         "keyClass": "",
         "keyTitle": "",
-        "name": "updated_at",
+        "name": "created_at",
         "type": "timestamp",
         "length": 29,
-        "nullable": "√",
+        "nullable": "",
         "autoUpdated": "",
-        "defaultValue": "null",
+        "defaultValue": "CURRENT_TIMESTAMP",
         "comments": ""
     },
     {
@@ -2995,18 +2995,18 @@
         "comments": ""
     },
     {
-        "tableName": "simm_risk_weights",
-        "tableFileName": "simm_risk_weights",
+        "tableName": "simm_parameter_sets",
+        "tableFileName": "simm_parameter_sets",
         "tableType": "Table",
         "keyClass": "indexedColumn",
         "keyTitle": "Indexed",
-        "name": "<i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'><\/i>risk_class",
+        "name": "<i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'><\/i>isda_version",
         "type": "varchar",
         "length": 20,
         "nullable": "",
         "autoUpdated": "",
         "defaultValue": "null",
-        "comments": "<p>Risk class: IR, FX, EQ, CO, CR_Q, CR_NQ<\/p>"
+        "comments": "<p>ISDA SIMM version (e.g., 2.6, 2.7)<\/p>"
     },
     {
         "tableName": "simm_calculations",
@@ -3443,18 +3443,18 @@
         "comments": ""
     },
     {
-        "tableName": "simm_parameter_sets",
-        "tableFileName": "simm_parameter_sets",
+        "tableName": "simm_risk_weights",
+        "tableFileName": "simm_risk_weights",
         "tableType": "Table",
-        "keyClass": "indexedColumn",
-        "keyTitle": "Indexed",
-        "name": "<i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'><\/i>effective_date",
-        "type": "date",
-        "length": 13,
+        "keyClass": "primaryKey",
+        "keyTitle": "Primary Key",
+        "name": "<i class='icon ion-key iconkey' style='padding-left: 5px;'><\/i>id",
+        "type": "bigserial",
+        "length": 19,
         "nullable": "",
-        "autoUpdated": "",
-        "defaultValue": "null",
-        "comments": "<p>Date from which this parameter set is effective<\/p>"
+        "autoUpdated": "√",
+        "defaultValue": "nextval('simm_risk_weights_id_seq'::regclass)",
+        "comments": ""
     },
     {
         "tableName": "trade_amendments",
@@ -3541,18 +3541,18 @@
         "comments": ""
     },
     {
-        "tableName": "simm_risk_weights",
-        "tableFileName": "simm_risk_weights",
+        "tableName": "simm_parameter_sets",
+        "tableFileName": "simm_parameter_sets",
         "tableType": "Table",
         "keyClass": "indexedColumn",
         "keyTitle": "Indexed",
-        "name": "<i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'><\/i>bucket",
-        "type": "varchar",
-        "length": 10,
+        "name": "<i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'><\/i>effective_date",
+        "type": "date",
+        "length": 13,
         "nullable": "",
         "autoUpdated": "",
         "defaultValue": "null",
-        "comments": "<p>SIMM bucket identifier<\/p>"
+        "comments": "<p>Date from which this parameter set is effective<\/p>"
     },
     {
         "tableName": "collateral_ledger",
@@ -4829,18 +4829,18 @@
         "comments": ""
     },
     {
-        "tableName": "simm_risk_weights",
-        "tableFileName": "simm_risk_weights",
+        "tableName": "simm_parameter_sets",
+        "tableFileName": "simm_parameter_sets",
         "tableType": "Table",
-        "keyClass": "foreignKey",
-        "keyTitle": "Foreign Key",
-        "name": "<i class='icon ion-key iconkey' style='padding-left: 5px;'><\/i>parameter_set_id",
-        "type": "int8",
-        "length": 19,
+        "keyClass": "indexedColumn",
+        "keyTitle": "Indexed",
+        "name": "<i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'><\/i>version_name",
+        "type": "varchar",
+        "length": 50,
         "nullable": "",
         "autoUpdated": "",
         "defaultValue": "null",
-        "comments": ""
+        "comments": "<p>Friendly version name<\/p>"
     },
     {
         "tableName": "simm_correlations",
@@ -5025,18 +5025,18 @@
         "comments": ""
     },
     {
-        "tableName": "simm_parameter_sets",
-        "tableFileName": "simm_parameter_sets",
+        "tableName": "simm_risk_weights",
+        "tableFileName": "simm_risk_weights",
         "tableType": "Table",
-        "keyClass": "",
-        "keyTitle": "",
-        "name": "end_date",
-        "type": "date",
-        "length": 13,
-        "nullable": "√",
+        "keyClass": "foreignKey",
+        "keyTitle": "Foreign Key",
+        "name": "<i class='icon ion-key iconkey' style='padding-left: 5px;'><\/i>parameter_set_id",
+        "type": "int8",
+        "length": 19,
+        "nullable": "",
         "autoUpdated": "",
         "defaultValue": "null",
-        "comments": "<p>Date until which this parameter set is effective<\/p>"
+        "comments": ""
     },
     {
         "tableName": "margin_positions",
@@ -5154,15 +5154,15 @@
         "tableName": "simm_parameter_sets",
         "tableFileName": "simm_parameter_sets",
         "tableType": "Table",
-        "keyClass": "primaryKey",
-        "keyTitle": "Primary Key",
-        "name": "<i class='icon ion-key iconkey' style='padding-left: 5px;'><\/i>id",
-        "type": "bigserial",
-        "length": 19,
+        "keyClass": "indexedColumn",
+        "keyTitle": "Indexed",
+        "name": "<i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'><\/i>is_active",
+        "type": "bool",
+        "length": 1,
         "nullable": "",
-        "autoUpdated": "√",
-        "defaultValue": "nextval('simm_parameter_sets_id_seq'::regclass)",
-        "comments": ""
+        "autoUpdated": "",
+        "defaultValue": "false",
+        "comments": "<p>Whether this is the currently active parameter set<\/p>"
     },
     {
         "tableName": "margin_tolerance_config",
@@ -6439,8 +6439,8 @@
         "comments": ""
     },
     {
-        "tableName": "simm_risk_weights",
-        "tableFileName": "simm_risk_weights",
+        "tableName": "simm_parameter_sets",
+        "tableFileName": "simm_parameter_sets",
         "tableType": "Table",
         "keyClass": "primaryKey",
         "keyTitle": "Primary Key",
@@ -6449,7 +6449,7 @@
         "length": 19,
         "nullable": "",
         "autoUpdated": "√",
-        "defaultValue": "nextval('simm_risk_weights_id_seq'::regclass)",
+        "defaultValue": "nextval('simm_parameter_sets_id_seq'::regclass)",
         "comments": ""
     },
     {
@@ -6484,15 +6484,15 @@
         "tableName": "simm_parameter_sets",
         "tableFileName": "simm_parameter_sets",
         "tableType": "Table",
-        "keyClass": "indexedColumn",
-        "keyTitle": "Indexed",
-        "name": "<i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'><\/i>isda_version",
-        "type": "varchar",
-        "length": 20,
-        "nullable": "",
+        "keyClass": "",
+        "keyTitle": "",
+        "name": "updated_at",
+        "type": "timestamp",
+        "length": 29,
+        "nullable": "√",
         "autoUpdated": "",
         "defaultValue": "null",
-        "comments": "<p>ISDA SIMM version (e.g., 2.6, 2.7)<\/p>"
+        "comments": ""
     },
     {
         "tableName": "cds_trades",
@@ -6873,18 +6873,18 @@
         "comments": ""
     },
     {
-        "tableName": "simm_risk_weights",
-        "tableFileName": "simm_risk_weights",
+        "tableName": "simm_parameter_sets",
+        "tableFileName": "simm_parameter_sets",
         "tableType": "Table",
         "keyClass": "",
         "keyTitle": "",
-        "name": "risk_weight",
-        "type": "numeric",
-        "length": 10,
-        "nullable": "",
+        "name": "end_date",
+        "type": "date",
+        "length": 13,
+        "nullable": "√",
         "autoUpdated": "",
         "defaultValue": "null",
-        "comments": "<p>Risk weight factor for the bucket<\/p>"
+        "comments": "<p>Date until which this parameter set is effective<\/p>"
     },
     {
         "tableName": "sa_ccr_calculation_details",
@@ -6974,15 +6974,15 @@
         "tableName": "simm_parameter_sets",
         "tableFileName": "simm_parameter_sets",
         "tableType": "Table",
-        "keyClass": "indexedColumn",
-        "keyTitle": "Indexed",
-        "name": "<i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'><\/i>version_name",
-        "type": "varchar",
-        "length": 50,
+        "keyClass": "",
+        "keyTitle": "",
+        "name": "created_at",
+        "type": "timestamp",
+        "length": 29,
         "nullable": "",
         "autoUpdated": "",
-        "defaultValue": "null",
-        "comments": "<p>Friendly version name<\/p>"
+        "defaultValue": "CURRENT_TIMESTAMP",
+        "comments": ""
     },
     {
         "tableName": "sa_ccr_calculations",
@@ -7405,18 +7405,18 @@
         "comments": ""
     },
     {
-        "tableName": "simm_parameter_sets",
-        "tableFileName": "simm_parameter_sets",
+        "tableName": "simm_risk_weights",
+        "tableFileName": "simm_risk_weights",
         "tableType": "Table",
         "keyClass": "indexedColumn",
         "keyTitle": "Indexed",
-        "name": "<i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'><\/i>is_active",
-        "type": "bool",
-        "length": 1,
+        "name": "<i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'><\/i>bucket",
+        "type": "varchar",
+        "length": 10,
         "nullable": "",
         "autoUpdated": "",
-        "defaultValue": "false",
-        "comments": "<p>Whether this is the currently active parameter set<\/p>"
+        "defaultValue": "null",
+        "comments": "<p>SIMM bucket identifier<\/p>"
     },
     {
         "tableName": "simulation_runs",
