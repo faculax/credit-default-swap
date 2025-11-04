@@ -93,12 +93,19 @@ cat > "${OUTPUT_DIR}/database-schema.mmd" <<'MERMAID_START'
 erDiagram
 MERMAID_START
 
-# Query tables and their columns
+# Query tables and their columns with proper escaping
 PGPASSWORD=${DB_PASS} psql -h ${DB_HOST} -p ${DB_PORT} -U ${DB_USER} -d ${DB_NAME} -Atc "
   SELECT 
     t.table_name,
     c.column_name,
-    c.data_type,
+    CASE 
+      WHEN c.data_type IN ('character varying', 'varchar') THEN 'varchar'
+      WHEN c.data_type = 'character' THEN 'char'
+      WHEN c.data_type = 'timestamp without time zone' THEN 'timestamp'
+      WHEN c.data_type = 'timestamp with time zone' THEN 'timestamptz'
+      WHEN c.data_type = 'double precision' THEN 'float'
+      ELSE c.data_type
+    END as data_type,
     CASE 
       WHEN pk.constraint_type = 'PRIMARY KEY' THEN 'PK'
       WHEN fk.constraint_type = 'FOREIGN KEY' THEN 'FK'
@@ -130,6 +137,10 @@ BEGIN {
   type = $3
   key = $4
   
+  # Replace special characters and spaces in column names
+  gsub(/ /, "_", column)
+  gsub(/-/, "_", column)
+  
   if (table != current_table) {
     if (current_table != "") print "  }"
     print "  " table " {"
@@ -140,6 +151,7 @@ BEGIN {
   if (key == "PK") key_marker = " PK"
   else if (key == "FK") key_marker = " FK"
   
+  # Format: type column_name key
   print "    " type " " column key_marker
 }
 END {
@@ -148,19 +160,18 @@ END {
 ' >> "${OUTPUT_DIR}/database-schema.mmd"
 
 # Query foreign key relationships
+echo "" >> "${OUTPUT_DIR}/database-schema.mmd"
 PGPASSWORD=${DB_PASS} psql -h ${DB_HOST} -p ${DB_PORT} -U ${DB_USER} -d ${DB_NAME} -Atc "
-  SELECT 
+  SELECT DISTINCT
     tc.table_name as from_table,
-    ccu.table_name as to_table,
-    'one to many' as relationship
+    ccu.table_name as to_table
   FROM information_schema.table_constraints tc
   JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name
   JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_name = tc.constraint_name
   WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema = 'public'
-  GROUP BY tc.table_name, ccu.table_name
   ORDER BY tc.table_name, ccu.table_name
 " | awk -F'|' '{
-  print "  " $1 " ||--o{ " $2 " : \"references\""
+  print "  " $1 " ||--o{ " $2 " : references"
 }' >> "${OUTPUT_DIR}/database-schema.mmd"
 
 echo "✓ Mermaid ER diagram generated"
