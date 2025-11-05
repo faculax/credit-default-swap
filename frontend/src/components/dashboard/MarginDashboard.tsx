@@ -25,12 +25,14 @@ interface MarginStatement {
 
 interface MarginPosition {
   id: number;
-  positionId: string;
-  ccpAccount: string;
-  product: string;
-  variationMargin: number;
-  initialMargin: number;
+  positionType: string;
+  amount: number;
   currency: string;
+  accountNumber: string;
+  portfolioCode: string;
+  nettingSetId: string;
+  productClass: string;
+  effectiveDate: string;
 }
 
 interface MarginDashboardProps {
@@ -381,25 +383,27 @@ const MarginDashboard: React.FC<MarginDashboardProps> = ({
                     <table className="w-full">
                       <thead className="bg-fd-dark text-xs">
                         <tr>
-                          <th className="px-4 py-2 text-left text-fd-text-muted">Position</th>
+                          <th className="px-4 py-2 text-left text-fd-text-muted">Netting Set</th>
                           <th className="px-4 py-2 text-left text-fd-text-muted">Account</th>
-                          <th className="px-4 py-2 text-left text-fd-text-muted">Product</th>
-                          <th className="px-4 py-2 text-right text-fd-text-muted">VM</th>
-                          <th className="px-4 py-2 text-right text-fd-text-muted">IM</th>
+                          <th className="px-4 py-2 text-left text-fd-text-muted">Product Class</th>
+                          <th className="px-4 py-2 text-left text-fd-text-muted">Type</th>
+                          <th className="px-4 py-2 text-right text-fd-text-muted">Amount</th>
                           <th className="px-4 py-2 text-right text-fd-text-muted">Currency</th>
                         </tr>
                       </thead>
                       <tbody className="text-sm">
                         {positions.map((position) => (
                           <tr key={position.id} className="border-t border-fd-border hover:bg-fd-dark/50">
-                            <td className="px-4 py-2 text-fd-text font-mono text-xs">{position.positionId}</td>
-                            <td className="px-4 py-2 text-fd-text">{position.ccpAccount}</td>
-                            <td className="px-4 py-2 text-fd-text">{position.product}</td>
-                            <td className={`px-4 py-2 text-right font-medium ${position.variationMargin >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                              {formatCurrency(position.variationMargin)}
+                            <td className="px-4 py-2 text-fd-text font-mono text-xs">{position.nettingSetId}</td>
+                            <td className="px-4 py-2 text-fd-text">{position.accountNumber}</td>
+                            <td className="px-4 py-2 text-fd-text">{position.productClass}</td>
+                            <td className="px-4 py-2 text-fd-text">
+                              <span className={`px-2 py-1 rounded text-xs ${position.positionType === 'VARIATION_MARGIN' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                                {position.positionType === 'VARIATION_MARGIN' ? 'VM' : 'IM'}
+                              </span>
                             </td>
-                            <td className="px-4 py-2 text-right text-fd-text font-medium">
-                              {formatCurrency(position.initialMargin)}
+                            <td className={`px-4 py-2 text-right font-medium ${position.amount >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                              {formatCurrency(position.amount)}
                             </td>
                             <td className="px-4 py-2 text-right text-fd-text-muted">{position.currency}</td>
                           </tr>

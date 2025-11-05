@@ -1,6 +1,7 @@
 package com.creditdefaultswap.platform.controller;
 
 import com.creditdefaultswap.platform.service.simm.CrifParserService;
+import com.creditdefaultswap.platform.service.simm.CrifGenerationService;
 import com.creditdefaultswap.platform.service.simm.SimmCalculationService;
 import com.creditdefaultswap.platform.service.AuditService;
 import com.creditdefaultswap.platform.model.AuditLog;
@@ -14,6 +15,7 @@ import com.creditdefaultswap.platform.repository.simm.SimmParameterSetRepository
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -46,6 +48,9 @@ public class SimmController {
     
     @Autowired
     private CrifParserService crifParserService;
+    
+    @Autowired
+    private CrifGenerationService crifGenerationService;
     
     @Autowired
     private SimmCalculationService simmCalculationService;
@@ -163,6 +168,100 @@ public class SimmController {
             logger.error("Failed to retrieve CRIF uploads", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Failed to retrieve uploads: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * Auto-generate CRIF sensitivities from CDS trades in a portfolio
+     */
+    @PostMapping("/crif/generate-from-portfolio")
+    public ResponseEntity<?> generateCrifFromPortfolio(
+            @RequestParam("portfolioId") String portfolioId,
+            @RequestParam("valuationDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate valuationDate) {
+        
+        try {
+            logger.info("Generating CRIF sensitivities for portfolio: {} as of {}", portfolioId, valuationDate);
+            
+            if (portfolioId == null || portfolioId.trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Portfolio ID is required"));
+            }
+            
+            // Generate CRIF sensitivities from trades
+            CrifUpload upload = crifGenerationService.generateFromPortfolio(portfolioId, valuationDate);
+            
+            // Prepare response
+            Map<String, Object> response = new HashMap<>();
+            response.put("uploadId", upload.getUploadId());
+            response.put("portfolioId", upload.getPortfolioId());
+            response.put("fileName", upload.getFilename());
+            response.put("valuationDate", upload.getValuationDate().toString());
+            response.put("sensitivityCount", upload.getValidRecords());
+            response.put("status", upload.getProcessingStatus().toString());
+            response.put("message", "Successfully generated " + upload.getValidRecords() + " CRIF sensitivities from portfolio trades");
+            
+            logger.info("Generated {} sensitivities for portfolio {}", upload.getValidRecords(), portfolioId);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (RuntimeException e) {
+            logger.error("Failed to generate CRIF from portfolio: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Failed to generate CRIF from portfolio", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "CRIF generation failed: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * Delete a CRIF upload and all associated sensitivities and calculations
+     */
+    @DeleteMapping("/crif/upload/{uploadId}")
+    public ResponseEntity<?> deleteCrifUpload(@PathVariable String uploadId) {
+        try {
+            logger.info("Deleting CRIF upload: {}", uploadId);
+            
+            Optional<CrifUpload> uploadOpt = crifUploadRepository.findByUploadId(uploadId);
+            
+            if (uploadOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Upload not found: " + uploadId));
+            }
+            
+            CrifUpload upload = uploadOpt.get();
+            
+            // Find and delete related SIMM calculations first
+            List<SimmCalculation> relatedCalculations = simmCalculationRepository
+                .findByUpload(upload);
+            
+            int calculationCount = relatedCalculations.size();
+            int sensitivityCount = upload.getSensitivities().size();
+            
+            if (!relatedCalculations.isEmpty()) {
+                logger.info("Deleting {} related SIMM calculations for upload {}", 
+                           calculationCount, uploadId);
+                simmCalculationRepository.deleteAll(relatedCalculations);
+            }
+            
+            // Delete the upload (cascade will delete associated sensitivities)
+            crifUploadRepository.delete(upload);
+            
+            logger.info("Successfully deleted CRIF upload: {} with {} sensitivities and {} calculations", 
+                       uploadId, sensitivityCount, calculationCount);
+            
+            return ResponseEntity.ok(Map.of(
+                "message", "Upload deleted successfully",
+                "uploadId", uploadId,
+                "deletedSensitivities", sensitivityCount,
+                "deletedCalculations", calculationCount
+            ));
+            
+        } catch (Exception e) {
+            logger.error("Failed to delete CRIF upload: {}", uploadId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to delete upload: " + e.getMessage()));
         }
     }
     
@@ -486,13 +585,23 @@ public class SimmController {
     private String determineProductClass(String riskClass) {
         if (riskClass == null) return "Unknown";
         
-        if (riskClass.toLowerCase().contains("credit")) {
+        String riskClassUpper = riskClass.toUpperCase();
+        
+        // Credit risk classes: CR_Q, CR_NQ, or contains "CREDIT"
+        if (riskClassUpper.startsWith("CR_") || riskClassUpper.contains("CREDIT")) {
             return "Credit";
-        } else if (riskClass.toLowerCase().contains("interest") || riskClass.toLowerCase().contains("fx")) {
+        } 
+        // Interest Rate and FX risk classes: IR, FX, or contains "INTEREST" or "FX"
+        else if (riskClassUpper.equals("IR") || riskClassUpper.equals("FX") || 
+                 riskClassUpper.contains("INTEREST") || riskClassUpper.contains("RATE")) {
             return "RatesFX";
-        } else if (riskClass.toLowerCase().contains("equity")) {
+        } 
+        // Equity risk classes: EQ or contains "EQUITY"
+        else if (riskClassUpper.equals("EQ") || riskClassUpper.contains("EQUITY")) {
             return "Equity";
-        } else if (riskClass.toLowerCase().contains("commodity")) {
+        } 
+        // Commodity risk classes: CO or contains "COMMODITY"
+        else if (riskClassUpper.equals("CO") || riskClassUpper.contains("COMMODITY")) {
             return "Commodity";
         }
         

@@ -7,6 +7,7 @@ import com.creditdefaultswap.platform.model.CDSTrade;
 import com.creditdefaultswap.platform.model.TradeStatus;
 import com.creditdefaultswap.platform.repository.saccr.SaCcrCalculationRepository;
 import com.creditdefaultswap.platform.repository.saccr.NettingSetRepository;
+import com.creditdefaultswap.platform.repository.saccr.SaCcrSupervisoryParameterRepository;
 import com.creditdefaultswap.platform.repository.CDSTradeRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -33,6 +35,9 @@ public class SaCcrCalculationService {
     
     @Autowired
     private SaCcrJurisdictionService jurisdictionService;
+    
+    @Autowired
+    private SaCcrSupervisoryParameterRepository supervisoryParameterRepository;
 
     /**
      * Calculate SA-CCR exposures for all netting sets
@@ -48,8 +53,8 @@ public class SaCcrCalculationService {
                 // Always recalculate to ensure fresh data
                 SaCcrCalculation calculation = calculateExposure(nettingSet, asOfDate, jurisdiction);
                 
-                // Check if calculation already exists for this netting set and date
-                String calculationId = "SACCR-" + nettingSet.getNettingSetId() + "-" + asOfDate.toString();
+                // Check if calculation already exists for this netting set, date AND jurisdiction
+                String calculationId = "SACCR-" + nettingSet.getNettingSetId() + "-" + asOfDate.toString() + "-" + jurisdiction;
                 SaCcrCalculation existingCalculation = calculationRepository.findByCalculationId(calculationId);
                 
                 if (existingCalculation != null) {
@@ -116,8 +121,8 @@ public class SaCcrCalculationService {
                 replacementCost.add(potentialFutureExposure)
             ).setScale(2, RoundingMode.HALF_UP);
             
-            // Create calculation record
-            String calculationId = "SACCR-" + nettingSet.getNettingSetId() + "-" + asOfDate.toString();
+            // Create calculation record with jurisdiction in ID
+            String calculationId = "SACCR-" + nettingSet.getNettingSetId() + "-" + asOfDate.toString() + "-" + jurisdiction;
             SaCcrCalculation calculation = new SaCcrCalculation(calculationId, nettingSet.getNettingSetId(), asOfDate, jurisdiction);
             calculation.setNettingSet(nettingSet);
             calculation.setReplacementCost(replacementCost);
@@ -232,8 +237,27 @@ public class SaCcrCalculationService {
             
             String creditQuality = isInvestmentGrade ? "IG" : "HY";
             
-            // Use jurisdiction service to get jurisdiction-specific alpha factor (as a supervisory parameter)
-            return jurisdictionService.getAlphaFactor(jurisdiction, LocalDate.now());
+            // Query database for jurisdiction-specific supervisory factor for Credit asset class
+            LocalDate asOfDate = LocalDate.now();
+            Optional<SaCcrSupervisoryParameter> paramOpt = supervisoryParameterRepository
+                .findByJurisdictionAndAssetClassAndParameterTypeAndEffectiveDateLessThanEqualOrderByEffectiveDateDesc(
+                    jurisdiction, "CREDIT", "SUPERVISORY_FACTOR", asOfDate)
+                .stream()
+                .filter(p -> creditQuality.equals(p.getCreditQuality()))
+                .filter(p -> p.isEffective(asOfDate))
+                .findFirst();
+            
+            if (paramOpt.isPresent()) {
+                BigDecimal factor = paramOpt.get().getParameterValue();
+                log.debug("Using jurisdiction-specific supervisory factor for {}-{}: {} = {}", 
+                         jurisdiction, creditQuality, trade.getId(), factor);
+                return factor;
+            }
+            
+            // Fallback to standard Basel III factors if not found in database
+            log.warn("No jurisdiction-specific supervisory factor found for {}-{}, using standard Basel III factor", 
+                    jurisdiction, creditQuality);
+            return isInvestmentGrade ? new BigDecimal("0.0050") : new BigDecimal("0.0130");
                 
         } catch (Exception e) {
             log.warn("Error determining supervisory factor for trade {}, using default: {}", 
@@ -265,8 +289,27 @@ public class SaCcrCalculationService {
      * Determine alpha factor based on jurisdiction and netting set characteristics
      */
     private BigDecimal determineAlphaFactor(NettingSet nettingSet, String jurisdiction) {
-        // Use jurisdiction service to get jurisdiction-specific alpha factor
-        return jurisdictionService.getAlphaFactor(jurisdiction, LocalDate.now());
+        try {
+            // Query database for jurisdiction-specific alpha factor
+            LocalDate asOfDate = LocalDate.now();
+            Optional<SaCcrSupervisoryParameter> paramOpt = supervisoryParameterRepository
+                .findTopByJurisdictionAndParameterTypeAndEffectiveDateLessThanEqualOrderByEffectiveDateDesc(
+                    jurisdiction, "ALPHA_FACTOR", asOfDate);
+            
+            if (paramOpt.isPresent() && paramOpt.get().isEffective(asOfDate)) {
+                BigDecimal alpha = paramOpt.get().getParameterValue();
+                log.debug("Using jurisdiction-specific alpha factor for {}: {}", jurisdiction, alpha);
+                return alpha;
+            }
+            
+            // Fallback to standard Basel III alpha = 1.4
+            log.warn("No jurisdiction-specific alpha factor found for {}, using standard Basel III alpha = 1.4", jurisdiction);
+            return new BigDecimal("1.4");
+            
+        } catch (Exception e) {
+            log.warn("Error determining alpha factor for jurisdiction {}, using default: {}", jurisdiction, e.getMessage());
+            return new BigDecimal("1.4");
+        }
     }
 
     public List<SaCcrCalculation> getAllCalculations() {

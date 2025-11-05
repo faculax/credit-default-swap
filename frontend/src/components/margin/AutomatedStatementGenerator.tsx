@@ -25,6 +25,7 @@ const AutomatedStatementGenerator: React.FC<{
   const [generatedStatements, setGeneratedStatements] = useState<GeneratedMarginStatement[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
 
   const generateStatements = async () => {
     setIsGenerating(true);
@@ -51,10 +52,27 @@ const AutomatedStatementGenerator: React.FC<{
         throw new Error(result.message || result.error || `HTTP error! status: ${response.status}`);
       }
 
-      if (result.success && result.generatedStatements) {
-        setGeneratedStatements(result.generatedStatements);
-        setShowResults(true);
+      if (result.success) {
+        // Show success notification
+        setShowSuccessNotification(true);
+        
+        // Auto-hide notification after 3 seconds
+        setTimeout(() => {
+          setShowSuccessNotification(false);
+        }, 3000);
+        
+        // Trigger refresh for statement list (but don't switch tabs)
         onGenerationSuccess();
+        
+        // Set results if available for display
+        if (result.generatedStatements) {
+          setGeneratedStatements(result.generatedStatements);
+          setShowResults(true);
+        } else if (result.generatedStatement) {
+          // Handle single statement response (new consolidated format)
+          setGeneratedStatements([result.generatedStatement]);
+          setShowResults(true);
+        }
       } else {
         throw new Error(result.error || 'Generation failed');
       }
@@ -79,6 +97,33 @@ const AutomatedStatementGenerator: React.FC<{
 
   return (
     <div className="space-y-6">
+      {/* Success Notification */}
+      {showSuccessNotification && (
+        <div className="fixed top-4 right-4 z-[60] animate-fade-in">
+          <div className="bg-fd-dark border-2 border-fd-green rounded-lg shadow-lg p-4 flex items-start gap-3 min-w-[320px] max-w-[480px]">
+            <div className="flex-shrink-0 mt-0.5">
+              <svg className="w-6 h-6 text-fd-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+                          <div className="flex-1">
+                <h4 className="text-fd-text font-semibold mb-1">Success!</h4>
+                <p className="text-fd-text-muted text-sm leading-relaxed">
+                  Margin statement created
+                </p>
+              </div>
+            <button
+              onClick={() => setShowSuccessNotification(false)}
+              className="flex-shrink-0 text-fd-text-muted hover:text-fd-text transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+      
       {/* Generation Controls */}
       <div className="bg-fd-darker rounded-lg border border-fd-border p-6">
         <div className="flex items-center space-x-3 mb-6">
