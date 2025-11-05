@@ -1620,50 +1620,10 @@
 <polygon fill="#000000" stroke="#000000" points="540.5514,-1063.6057 548.9076,-1066.2769 544.5257,-1063.1529 548.5,-1062.7 548.5,-1062.7 548.5,-1062.7 544.5257,-1063.1529 548.0924,-1059.1231 540.5514,-1063.6057 540.5514,-1063.6057"/>
 <ellipse fill="none" stroke="#000000" cx="537.372" cy="-1063.968" rx="3.2" ry="3.2"/>
 </g>
-<!-- notional_adjustments -->
-<g id="node32" class="node">
-<title>notional_adjustments</title>
-<g id="a_node32"><a xlink:href="../../tables/notional_adjustments.html" xlink:title="notional_adjustments" target="_top">
-<polygon fill="#ffffff" stroke="transparent" points="539.5,-822.2 539.5,-949.2 723.5,-949.2 723.5,-822.2 539.5,-822.2"/>
-<polygon fill="#f5f5f5" stroke="transparent" points="539.5,-925.7 539.5,-948.7 723.5,-948.7 723.5,-925.7 539.5,-925.7"/>
-<polygon fill="none" stroke="#000000" points="539.5,-925.7 539.5,-948.7 723.5,-948.7 723.5,-925.7 539.5,-925.7"/>
-<text text-anchor="start" x="544.5" y="-934.3" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="11.00" fill="#000000">notional_adjustments</text>
-<text text-anchor="start" x="689.0219" y="-933.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">[table]</text>
-<polygon fill="none" stroke="#000000" points="539.5,-903.7 539.5,-925.7 723.5,-925.7 723.5,-903.7 539.5,-903.7"/>
-<image xlink:href="../../images/primaryKeys.png" width="11px" height="12px" preserveAspectRatio="xMinYMin meet" x="544.5" y="-920.7"/>
-<text text-anchor="start" x="568.5" y="-910.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">id</text>
-<polygon fill="#ffffff" stroke="transparent" points="539.5,-881.7 539.5,-903.7 723.5,-903.7 723.5,-881.7 539.5,-881.7"/>
-<polygon fill="none" stroke="#000000" points="539.5,-881.7 539.5,-903.7 723.5,-903.7 723.5,-881.7 539.5,-881.7"/>
-<image xlink:href="../../images/foreignKeys.png" width="11px" height="12px" preserveAspectRatio="xMinYMin meet" x="544.5" y="-898.7"/>
-<text text-anchor="start" x="568.5" y="-888.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">trade_id</text>
-<polygon fill="#ffffff" stroke="transparent" points="539.5,-859.7 539.5,-881.7 723.5,-881.7 723.5,-859.7 539.5,-859.7"/>
-<polygon fill="none" stroke="#000000" points="539.5,-859.7 539.5,-881.7 723.5,-881.7 723.5,-859.7 539.5,-859.7"/>
-<text text-anchor="start" x="568.5" y="-866.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">adjustment_date</text>
-<polygon fill="none" stroke="#000000" points="539.5,-840.7 539.5,-859.7 723.5,-859.7 723.5,-840.7 539.5,-840.7"/>
-<text text-anchor="start" x="542.5" y="-846.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">...</text>
-<polygon fill="#ffffff" stroke="transparent" points="539.5,-821.7 539.5,-840.7 629.5,-840.7 629.5,-821.7 539.5,-821.7"/>
-<polygon fill="none" stroke="#000000" points="539.5,-821.7 539.5,-840.7 629.5,-840.7 629.5,-821.7 539.5,-821.7"/>
-<text text-anchor="start" x="542.5" y="-827.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">&lt; 1</text>
-<polygon fill="#ffffff" stroke="transparent" points="629.5,-821.7 629.5,-840.7 676.5,-840.7 676.5,-821.7 629.5,-821.7"/>
-<polygon fill="none" stroke="#000000" points="629.5,-821.7 629.5,-840.7 676.5,-840.7 676.5,-821.7 629.5,-821.7"/>
-<text text-anchor="start" x="667.3862" y="-827.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000"> &#160;</text>
-<polygon fill="#ffffff" stroke="transparent" points="676.5,-821.7 676.5,-840.7 723.5,-840.7 723.5,-821.7 676.5,-821.7"/>
-<polygon fill="none" stroke="#000000" points="676.5,-821.7 676.5,-840.7 723.5,-840.7 723.5,-821.7 676.5,-821.7"/>
-<text text-anchor="start" x="714.3862" y="-827.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000"> &#160;</text>
-</a>
-</g>
-</g>
-<!-- notional_adjustments&#45;&gt;cds_trades -->
-<g id="edge24" class="edge">
-<title>notional_adjustments:w&#45;&gt;cds_trades:e</title>
-<path fill="none" stroke="#000000" d="M524.9726,-893.764C390.8851,-914.8317 589.5091,-1241.7 432.5,-1241.7"/>
-<polygon fill="#000000" stroke="#000000" points="531.5214,-893.2844 539.763,-896.2904 535.5107,-892.9922 539.5,-892.7 539.5,-892.7 539.5,-892.7 535.5107,-892.9922 539.237,-889.1096 531.5214,-893.2844 531.5214,-893.2844"/>
-<ellipse fill="none" stroke="#000000" cx="528.3299" cy="-893.5182" rx="3.2" ry="3.2"/>
-</g>
 <!-- portfolio_risk_cache -->
-<g id="node33" class="node">
+<g id="node32" class="node">
 <title>portfolio_risk_cache</title>
-<g id="a_node33"><a xlink:href="../../tables/portfolio_risk_cache.html" xlink:title="portfolio_risk_cache" target="_top">
+<g id="a_node32"><a xlink:href="../../tables/portfolio_risk_cache.html" xlink:title="portfolio_risk_cache" target="_top">
 <polygon fill="#ffffff" stroke="transparent" points="244,-1853.2 244,-1980.2 449,-1980.2 449,-1853.2 244,-1853.2"/>
 <polygon fill="#f5f5f5" stroke="transparent" points="244.5,-1956.7 244.5,-1979.7 449.5,-1979.7 449.5,-1956.7 244.5,-1956.7"/>
 <polygon fill="none" stroke="#000000" points="244.5,-1956.7 244.5,-1979.7 449.5,-1979.7 449.5,-1956.7 244.5,-1956.7"/>
@@ -1699,6 +1659,46 @@
 <path fill="none" stroke="#000000" d="M230.2191,-1921.159C192.7508,-1906.0513 210.9895,-1828.7 160,-1828.7"/>
 <polygon fill="#000000" stroke="#000000" points="236.6237,-1922.2985 243.8693,-1927.2443 240.5619,-1922.9993 244.5,-1923.7 244.5,-1923.7 244.5,-1923.7 240.5619,-1922.9993 245.1307,-1920.1557 236.6237,-1922.2985 236.6237,-1922.2985"/>
 <ellipse fill="none" stroke="#000000" cx="233.4732" cy="-1921.7379" rx="3.2" ry="3.2"/>
+</g>
+<!-- notional_adjustments -->
+<g id="node33" class="node">
+<title>notional_adjustments</title>
+<g id="a_node33"><a xlink:href="../../tables/notional_adjustments.html" xlink:title="notional_adjustments" target="_top">
+<polygon fill="#ffffff" stroke="transparent" points="539.5,-822.2 539.5,-949.2 723.5,-949.2 723.5,-822.2 539.5,-822.2"/>
+<polygon fill="#f5f5f5" stroke="transparent" points="539.5,-925.7 539.5,-948.7 723.5,-948.7 723.5,-925.7 539.5,-925.7"/>
+<polygon fill="none" stroke="#000000" points="539.5,-925.7 539.5,-948.7 723.5,-948.7 723.5,-925.7 539.5,-925.7"/>
+<text text-anchor="start" x="544.5" y="-934.3" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="11.00" fill="#000000">notional_adjustments</text>
+<text text-anchor="start" x="689.0219" y="-933.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">[table]</text>
+<polygon fill="none" stroke="#000000" points="539.5,-903.7 539.5,-925.7 723.5,-925.7 723.5,-903.7 539.5,-903.7"/>
+<image xlink:href="../../images/primaryKeys.png" width="11px" height="12px" preserveAspectRatio="xMinYMin meet" x="544.5" y="-920.7"/>
+<text text-anchor="start" x="568.5" y="-910.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">id</text>
+<polygon fill="#ffffff" stroke="transparent" points="539.5,-881.7 539.5,-903.7 723.5,-903.7 723.5,-881.7 539.5,-881.7"/>
+<polygon fill="none" stroke="#000000" points="539.5,-881.7 539.5,-903.7 723.5,-903.7 723.5,-881.7 539.5,-881.7"/>
+<image xlink:href="../../images/foreignKeys.png" width="11px" height="12px" preserveAspectRatio="xMinYMin meet" x="544.5" y="-898.7"/>
+<text text-anchor="start" x="568.5" y="-888.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">trade_id</text>
+<polygon fill="#ffffff" stroke="transparent" points="539.5,-859.7 539.5,-881.7 723.5,-881.7 723.5,-859.7 539.5,-859.7"/>
+<polygon fill="none" stroke="#000000" points="539.5,-859.7 539.5,-881.7 723.5,-881.7 723.5,-859.7 539.5,-859.7"/>
+<text text-anchor="start" x="568.5" y="-866.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">adjustment_date</text>
+<polygon fill="none" stroke="#000000" points="539.5,-840.7 539.5,-859.7 723.5,-859.7 723.5,-840.7 539.5,-840.7"/>
+<text text-anchor="start" x="542.5" y="-846.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">...</text>
+<polygon fill="#ffffff" stroke="transparent" points="539.5,-821.7 539.5,-840.7 629.5,-840.7 629.5,-821.7 539.5,-821.7"/>
+<polygon fill="none" stroke="#000000" points="539.5,-821.7 539.5,-840.7 629.5,-840.7 629.5,-821.7 539.5,-821.7"/>
+<text text-anchor="start" x="542.5" y="-827.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000">&lt; 1</text>
+<polygon fill="#ffffff" stroke="transparent" points="629.5,-821.7 629.5,-840.7 676.5,-840.7 676.5,-821.7 629.5,-821.7"/>
+<polygon fill="none" stroke="#000000" points="629.5,-821.7 629.5,-840.7 676.5,-840.7 676.5,-821.7 629.5,-821.7"/>
+<text text-anchor="start" x="667.3862" y="-827.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000"> &#160;</text>
+<polygon fill="#ffffff" stroke="transparent" points="676.5,-821.7 676.5,-840.7 723.5,-840.7 723.5,-821.7 676.5,-821.7"/>
+<polygon fill="none" stroke="#000000" points="676.5,-821.7 676.5,-840.7 723.5,-840.7 723.5,-821.7 676.5,-821.7"/>
+<text text-anchor="start" x="714.3862" y="-827.8" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#000000"> &#160;</text>
+</a>
+</g>
+</g>
+<!-- notional_adjustments&#45;&gt;cds_trades -->
+<g id="edge24" class="edge">
+<title>notional_adjustments:w&#45;&gt;cds_trades:e</title>
+<path fill="none" stroke="#000000" d="M524.9726,-893.764C390.8851,-914.8317 589.5091,-1241.7 432.5,-1241.7"/>
+<polygon fill="#000000" stroke="#000000" points="531.5214,-893.2844 539.763,-896.2904 535.5107,-892.9922 539.5,-892.7 539.5,-892.7 539.5,-892.7 535.5107,-892.9922 539.237,-889.1096 531.5214,-893.2844 531.5214,-893.2844"/>
+<ellipse fill="none" stroke="#000000" cx="528.3299" cy="-893.5182" rx="3.2" ry="3.2"/>
 </g>
 <!-- sa_ccr_calculations&#45;&gt;netting_sets -->
 <g id="edge29" class="edge">
