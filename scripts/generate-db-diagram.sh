@@ -31,7 +31,7 @@ TABLE_COUNT=$(PGPASSWORD=${DB_PASS} psql -h ${DB_HOST} -p ${DB_PORT} -U ${DB_USE
 echo "Found ${TABLE_COUNT} tables in public schema"
 echo ""
 
-# Generate SVG diagram with minimal info (renders better)
+# Generate PlantUML source (logical representation)
 echo "Generating SVG diagram..."
 schemacrawler.sh \
   --server=postgresql \
@@ -40,14 +40,14 @@ schemacrawler.sh \
   --database=${DB_NAME} \
   --user=${DB_USER} \
   --password=${DB_PASS} \
-  --info-level=minimum \
+  --info-level=standard \
   --schemas=public \
   --command=schema \
   --no-info \
   --portable-names \
   --output-format=svg \
   --output-file="${OUTPUT_DIR}/database-schema.svg"
-echo "✓ SVG diagram generated (minimal - table names and relationships only)"
+echo "✓ SVG diagram generated"
 
 # Note: PNG conversion skipped for large schemas
 # GitHub can display SVG files directly, and SchemaSpy provides better interactive diagrams
