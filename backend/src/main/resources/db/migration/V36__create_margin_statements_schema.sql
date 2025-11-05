@@ -1,4 +1,4 @@
-﻿-- Epic 8 Story 2: Daily VM/IM Statement Ingestion Schema
+-- Epic 8 Story 2: Daily VM/IM Statement Ingestion Schema
 -- Creates tables for managing margin statements, collateral ledger, and processing status
 
 -- Statement processing status enum type
