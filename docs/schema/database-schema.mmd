@@ -1,0 +1,674 @@
+erDiagram
+  accrual_events {
+    bigint id PK
+    bigint trade_id FK
+    bigint coupon_period_id FK
+    date accrual_date
+    numeric accrual_amount
+    numeric cumulative_accrual
+    numeric day_count_fraction
+    numeric notional_amount
+    integer trade_version
+    timestamp posted_at
+  }
+  basket_constituents {
+    bigint id PK
+    bigint basket_id FK
+    varchar issuer
+    numeric weight
+    numeric recovery_override
+    varchar seniority
+    varchar sector
+    integer sequence_order
+    timestamp created_at
+  }
+  basket_definitions {
+    bigint id PK
+    varchar name
+    varchar type
+    integer nth
+    numeric attachment_point
+    numeric detachment_point
+    varchar premium_frequency
+    varchar day_count
+    varchar currency
+    numeric notional
+    date maturity_date
+    timestamp created_at
+    timestamp updated_at
+  }
+  basket_portfolio_constituents {
+    bigint id PK
+    bigint portfolio_id FK
+    bigint basket_id FK
+    varchar weight_type
+    numeric weight_value
+    boolean active
+    timestamp added_at
+  }
+  bond_portfolio_constituents {
+    bigint id PK
+    bigint portfolio_id FK
+    bigint bond_id FK
+    varchar weight_type
+    numeric weight_value
+    boolean active
+    timestamp added_at
+  }
+  bonds {
+    bigint id PK
+    varchar isin
+    varchar issuer
+    varchar seniority
+    varchar sector
+    varchar currency
+    numeric notional
+    numeric coupon_rate
+    varchar coupon_frequency
+    varchar day_count
+    date issue_date
+    date maturity_date
+    integer settlement_days
+    numeric face_value
+    varchar price_convention
+    timestamp created_at
+    timestamp updated_at
+  }
+  ccp_account_product_eligibility {
+    bigint ccp_account_id PK
+    varchar product_type PK
+  }
+  ccp_accounts {
+    bigint id PK
+    varchar ccp_name
+    varchar member_firm
+    varchar member_id
+    varchar account_number
+    varchar account_name
+    varchar account_type
+    varchar status
+    timestamp created_at
+    timestamp updated_at
+  }
+  cds_audit_log {
+    uuid id PK
+    varchar entity_type
+    varchar entity_id
+    varchar action
+    timestamp timestamp
+    varchar actor
+    text summary
+    uuid correlation_id
+  }
+  cds_cash_settlements {
+    uuid id PK
+    uuid credit_event_id FK
+    bigint trade_id FK
+    numeric notional
+    numeric recovery_rate
+    numeric payout_amount
+    timestamp calculated_at
+  }
+  cds_credit_events {
+    uuid id PK
+    bigint trade_id FK
+    varchar event_type
+    date event_date
+    date notice_date
+    varchar settlement_method
+    text comments
+    timestamp created_at
+    timestamp updated_at
+  }
+  cds_physical_settlement_instructions {
+    uuid id PK
+    uuid credit_event_id FK
+    bigint trade_id FK
+    varchar reference_obligation_isin
+    date proposed_delivery_date
+    text notes
+    varchar status
+    timestamp created_at
+    timestamp updated_at
+  }
+  cds_portfolio_constituents {
+    bigint id PK
+    bigint portfolio_id FK
+    bigint trade_id FK
+    varchar weight_type
+    numeric weight_value
+    boolean active
+    timestamp added_at
+  }
+  cds_portfolios {
+    bigint id PK
+    varchar name
+    text description
+    timestamp created_at
+    timestamp updated_at
+  }
+  cds_trades {
+    bigint id PK
+    varchar reference_entity
+    numeric notional_amount
+    numeric spread
+    date maturity_date
+    date effective_date
+    varchar counterparty
+    date trade_date
+    varchar currency
+    varchar premium_frequency
+    varchar day_count_convention
+    varchar buy_sell_protection
+    varchar restructuring_clause
+    varchar payment_calendar
+    date accrual_start_date
+    timestamp created_at
+    timestamp updated_at
+    varchar trade_status
+    integer version
+    numeric recovery_rate
+    bigint obligation_id FK
+    varchar settlement_type
+    varchar ccp_name
+    varchar ccp_member_id
+    varchar clearing_account
+    varchar netting_set_id
+    bigint original_trade_id FK
+    timestamp novation_timestamp
+    varchar novation_reference
+    varchar uti
+    varchar usi
+    boolean is_cleared
+    numeric mark_to_market_value
+    numeric upfront_amount
+  }
+  collateral_ledger {
+    bigint id PK
+    varchar ccp_name
+    varchar member_firm
+    varchar account_number
+    date position_date
+    USER-DEFINED position_type
+    varchar currency
+    numeric opening_balance
+    numeric variation_margin
+    numeric initial_margin
+    numeric excess_collateral
+    numeric closing_balance
+    bigint source_statement_id FK
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  compression_proposal_items {
+    bigint id PK
+    bigint proposal_id FK
+    bigint trade_id FK
+    numeric original_notional
+    numeric adjusted_notional
+    numeric notional_change
+    boolean termination_flag
+  }
+  compression_proposals {
+    bigint id PK
+    varchar proposal_id
+    date proposal_date
+    date execution_date
+    varchar status
+    boolean cs01_tolerance_check
+    numeric total_gross_notional_before
+    numeric total_gross_notional_after
+    numeric net_notional_reduction
+    integer number_of_trades_affected
+    timestamp created_at
+  }
+  coupon_periods {
+    bigint id PK
+    bigint trade_id FK
+    date period_start_date
+    date period_end_date
+    date payment_date
+    integer accrual_days
+    numeric notional_amount
+    varchar day_count_convention
+    varchar business_day_convention
+    timestamp created_at
+    boolean paid
+    timestamp paid_at
+  }
+  crif_sensitivities {
+    bigint id PK
+    bigint upload_id FK
+    varchar trade_id
+    varchar portfolio_id
+    varchar product_class
+    varchar risk_type
+    varchar risk_class
+    varchar bucket
+    varchar label1
+    varchar label2
+    numeric amount_base_currency
+    numeric amount_usd
+    varchar collect_regulations
+    varchar post_regulations
+    date end_date
+    timestamp created_at
+  }
+  crif_uploads {
+    bigint id PK
+    varchar upload_id
+    varchar filename
+    varchar portfolio_id
+    date valuation_date
+    varchar currency
+    timestamp upload_timestamp
+    integer total_records
+    integer valid_records
+    integer error_records
+    varchar processing_status
+    text error_message
+    timestamp created_at
+    timestamp updated_at
+  }
+  flyway_schema_history {
+    integer installed_rank PK
+    varchar version
+    varchar description
+    varchar type
+    varchar script
+    integer checksum
+    varchar installed_by
+    timestamp installed_on
+    integer execution_time
+    boolean success
+  }
+  margin_positions {
+    bigint id PK
+    bigint statement_id FK
+    varchar position_type
+    numeric amount
+    varchar currency
+    date effective_date
+    varchar account_number
+    varchar portfolio_code
+    varchar product_class
+    varchar netting_set_id
+    timestamptz created_at
+  }
+  margin_statements {
+    bigint id PK
+    varchar statement_id
+    varchar ccp_name
+    varchar member_firm
+    varchar account_number
+    date statement_date
+    varchar currency
+    varchar statement_format
+    varchar file_name
+    bigint file_size
+    text raw_content
+    varchar status
+    timestamptz created_at
+    timestamptz updated_at
+    timestamptz processed_at
+    text error_message
+    integer retry_count
+    numeric variation_margin
+    numeric initial_margin
+  }
+  margin_tolerance_config {
+    bigint id PK
+    varchar ccp_name
+    USER-DEFINED position_type
+    varchar currency
+    numeric absolute_threshold
+    numeric percentage_threshold
+    boolean is_active
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  netting_sets {
+    bigint id PK
+    varchar netting_set_id
+    varchar counterparty_id
+    varchar legal_agreement_type
+    date agreement_date
+    varchar governing_law
+    boolean netting_eligible
+    boolean collateral_agreement
+    timestamp created_at
+    timestamp updated_at
+  }
+  notional_adjustments {
+    bigint id PK
+    bigint trade_id FK
+    date adjustment_date
+    varchar adjustment_type
+    numeric original_notional
+    numeric adjustment_amount
+    numeric remaining_notional
+    numeric unwind_cash_amount
+    text adjustment_reason
+    timestamp created_at
+  }
+  portfolio_risk_cache {
+    bigint id PK
+    bigint portfolio_id FK
+    date valuation_date
+    numeric aggregate_pv
+    numeric aggregate_accrued
+    numeric premium_leg_pv
+    numeric protection_leg_pv
+    numeric fair_spread_bps_weighted
+    numeric cs01
+    numeric rec01
+    numeric jtd
+    numeric top_5_pct_cs01
+    jsonb sector_breakdown
+    jsonb by_trade_breakdown
+    integer completeness_constituents
+    integer completeness_priced
+    timestamp calculated_at
+    numeric total_notional
+    numeric upfront_premium
+    numeric total_paid_coupons
+    integer trade_count
+    numeric net_protection_bought
+    varchar average_maturity_years
+  }
+  position_discrepancies {
+    bigint id PK
+    bigint statement_id FK
+    varchar account_number
+    USER-DEFINED position_type
+    varchar currency
+    numeric expected_amount
+    numeric actual_amount
+    numeric variance_amount
+    numeric variance_percentage
+    numeric tolerance_threshold
+    boolean is_material
+    varchar resolution_status
+    text resolution_notes
+    timestamptz created_at
+    timestamptz resolved_at
+  }
+  sa_ccr_audit_trail {
+    bigint id PK
+    varchar calculation_id FK
+    integer step_number
+    varchar step_name
+    text description
+    jsonb input_values
+    jsonb output_values
+    jsonb parameters_used
+    timestamp calculation_timestamp
+  }
+  sa_ccr_calculation_details {
+    bigint id PK
+    varchar calculation_id FK
+    varchar asset_class
+    numeric effective_notional
+    numeric supervisory_factor
+    numeric supervisory_addon
+    numeric hedge_ratio
+    timestamp created_at
+  }
+  sa_ccr_calculations {
+    bigint id PK
+    varchar calculation_id
+    varchar netting_set_id FK
+    date calculation_date
+    varchar jurisdiction
+    numeric alpha_factor
+    numeric gross_mtm
+    numeric vm_received
+    numeric vm_posted
+    numeric im_received
+    numeric im_posted
+    numeric replacement_cost
+    numeric effective_notional
+    numeric supervisory_addon
+    numeric multiplier
+    numeric potential_future_exposure
+    numeric exposure_at_default
+    varchar calculation_status
+    varchar created_by
+    timestamp created_at
+    timestamp completed_at
+    varchar base_currency
+  }
+  sa_ccr_supervisory_parameters {
+    bigint id PK
+    varchar jurisdiction
+    varchar asset_class
+    varchar parameter_type
+    varchar tenor_bucket
+    varchar credit_quality
+    numeric parameter_value
+    date effective_date
+    date expiry_date
+    timestamp created_at
+  }
+  sa_ccr_trade_mappings {
+    bigint id PK
+    varchar calculation_id FK
+    bigint trade_id FK
+    varchar netting_set_id FK
+    varchar asset_class
+    numeric notional_amount
+    date maturity_date
+    numeric effective_maturity
+    numeric current_mtm
+    numeric supervisory_delta
+    timestamp created_at
+  }
+  simm_bucket_mappings {
+    bigint id PK
+    bigint parameter_set_id FK
+    varchar risk_class
+    varchar risk_factor
+    varchar bucket
+    text description
+    timestamp created_at
+  }
+  simm_calculation_audit {
+    bigint id PK
+    bigint calculation_id FK
+    varchar step_name
+    integer step_order
+    text input_data
+    text output_data
+    text calculation_details
+    bigint processing_time_ms
+    timestamp created_at
+  }
+  simm_calculation_results {
+    bigint id PK
+    bigint calculation_id FK
+    varchar risk_class
+    varchar bucket
+    numeric weighted_sensitivity
+    numeric correlation_adjustment
+    numeric margin_component
+    numeric margin_component_usd
+    timestamp created_at
+  }
+  simm_calculations {
+    bigint id PK
+    varchar calculation_id
+    bigint upload_id FK
+    bigint parameter_set_id FK
+    varchar portfolio_id
+    date calculation_date
+    varchar reporting_currency
+    varchar calculation_status
+    numeric total_im
+    numeric total_im_usd
+    numeric diversification_benefit
+    bigint calculation_time_ms
+    text error_message
+    timestamp created_at
+    timestamp updated_at
+  }
+  simm_correlations {
+    bigint id PK
+    bigint parameter_set_id FK
+    varchar risk_class
+    varchar correlation_type
+    varchar bucket_from
+    varchar bucket_to
+    varchar risk_factor_from
+    varchar risk_factor_to
+    numeric correlation
+    timestamp created_at
+  }
+  simm_parameter_sets {
+    bigint id PK
+    varchar version_name
+    varchar isda_version
+    date effective_date
+    date end_date
+    text description
+    boolean is_active
+    timestamp created_at
+    timestamp updated_at
+  }
+  simm_risk_weights {
+    bigint id PK
+    bigint parameter_set_id FK
+    varchar risk_class
+    varchar bucket
+    numeric risk_weight
+    timestamp created_at
+  }
+  simulation_audit {
+    bigint id PK
+    varchar run_id FK
+    varchar event_type
+    timestamp event_timestamp
+    varchar user_id
+    jsonb event_data
+  }
+  simulation_contributors {
+    bigint id PK
+    varchar run_id FK
+    varchar entity_name
+    numeric marginal_el_pct
+    numeric beta
+    numeric standalone_el
+    numeric recovery_mean
+    numeric recovery_stdev
+  }
+  simulation_horizon_metrics {
+    bigint id PK
+    varchar run_id FK
+    varchar tenor
+    numeric p_any_default
+    numeric expected_defaults
+    numeric loss_mean
+    numeric loss_var95
+    numeric loss_var99
+    numeric loss_es97_5
+    numeric sum_standalone_el
+    numeric portfolio_el
+    numeric diversification_benefit_pct
+  }
+  simulation_runs {
+    bigint id PK
+    varchar run_id
+    bigint portfolio_id FK
+    varchar status
+    date valuation_date
+    integer paths
+    jsonb request_payload
+    bigint seed_used
+    text error_message
+    timestamp created_at
+    timestamp started_at
+    timestamp completed_at
+    bigint runtime_ms
+  }
+  statement_processing_log {
+    bigint id PK
+    bigint statement_id FK
+    varchar processing_step
+    varchar status
+    text message
+    integer processing_time_ms
+    timestamptz created_at
+  }
+  trade_amendments {
+    bigint id PK
+    bigint trade_id FK
+    date amendment_date
+    integer previous_version
+    integer new_version
+    varchar field_name
+    text previous_value
+    text new_value
+    text amendment_reason
+    numeric pnl_impact_estimate
+    varchar amended_by
+    timestamp created_at
+  }
+  trade_novations {
+    bigint id PK
+    bigint original_trade_id FK
+    bigint new_trade_id FK
+    date novation_date
+    varchar original_counterparty
+    varchar new_counterparty
+    text novation_reason
+    numeric fee_amount
+    varchar fee_currency
+    varchar status
+    timestamp created_at
+  }
+
+  accrual_events ||--o{ cds_trades : references
+  accrual_events ||--o{ coupon_periods : references
+  basket_constituents ||--o{ basket_definitions : references
+  basket_portfolio_constituents ||--o{ basket_definitions : references
+  basket_portfolio_constituents ||--o{ cds_portfolios : references
+  bond_portfolio_constituents ||--o{ bonds : references
+  bond_portfolio_constituents ||--o{ cds_portfolios : references
+  ccp_account_product_eligibility ||--o{ ccp_accounts : references
+  cds_cash_settlements ||--o{ cds_credit_events : references
+  cds_cash_settlements ||--o{ cds_trades : references
+  cds_credit_events ||--o{ cds_trades : references
+  cds_physical_settlement_instructions ||--o{ cds_credit_events : references
+  cds_physical_settlement_instructions ||--o{ cds_trades : references
+  cds_portfolio_constituents ||--o{ cds_portfolios : references
+  cds_portfolio_constituents ||--o{ cds_trades : references
+  cds_trades ||--o{ bonds : references
+  cds_trades ||--o{ cds_trades : references
+  collateral_ledger ||--o{ margin_statements : references
+  compression_proposal_items ||--o{ cds_trades : references
+  compression_proposal_items ||--o{ compression_proposals : references
+  coupon_periods ||--o{ cds_trades : references
+  crif_sensitivities ||--o{ crif_uploads : references
+  margin_positions ||--o{ margin_statements : references
+  notional_adjustments ||--o{ cds_trades : references
+  portfolio_risk_cache ||--o{ cds_portfolios : references
+  position_discrepancies ||--o{ margin_statements : references
+  sa_ccr_audit_trail ||--o{ sa_ccr_calculations : references
+  sa_ccr_calculation_details ||--o{ sa_ccr_calculations : references
+  sa_ccr_calculations ||--o{ netting_sets : references
+  sa_ccr_trade_mappings ||--o{ cds_trades : references
+  sa_ccr_trade_mappings ||--o{ netting_sets : references
+  sa_ccr_trade_mappings ||--o{ sa_ccr_calculations : references
+  simm_bucket_mappings ||--o{ simm_parameter_sets : references
+  simm_calculation_audit ||--o{ simm_calculations : references
+  simm_calculation_results ||--o{ simm_calculations : references
+  simm_calculations ||--o{ crif_uploads : references
+  simm_calculations ||--o{ simm_parameter_sets : references
+  simm_correlations ||--o{ simm_parameter_sets : references
+  simm_risk_weights ||--o{ simm_parameter_sets : references
+  simulation_audit ||--o{ simulation_runs : references
+  simulation_contributors ||--o{ simulation_runs : references
+  simulation_horizon_metrics ||--o{ simulation_runs : references
+  simulation_runs ||--o{ cds_portfolios : references
+  statement_processing_log ||--o{ margin_statements : references
+  trade_amendments ||--o{ cds_trades : references
+  trade_novations ||--o{ cds_trades : references

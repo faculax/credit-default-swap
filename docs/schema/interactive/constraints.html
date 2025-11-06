@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>cdsplatform.public</title>
+        <!-- Tell the browser to be responsive to screen width -->
+        <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+        <link rel="icon" type="image/png" sizes="16x16" href="favicon.png">
+        <!-- Bootstrap 3.3.5 -->
+        <link rel="stylesheet" href="bower/admin-lte/bootstrap/css/bootstrap.min.css">
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="bower/font-awesome/css/font-awesome.min.css">
+        <!-- Ionicons -->
+        <link rel="stylesheet" href="bower/ionicons/css/ionicons.min.css">
+        <!-- DataTables -->
+        <link rel="stylesheet" href="bower/datatables.net-bs/css/dataTables.bootstrap.min.css">
+        <link rel="stylesheet" href="bower/datatables.net-buttons-bs/css/buttons.bootstrap.min.css">
+        <!-- Code Mirror -->
+        <link rel="stylesheet" href="bower/codemirror/codemirror.css">
+        <!-- Fonts -->
+        <link href='fonts/indieflower/indie-flower.css' rel='stylesheet' type='text/css'>
+        <link href='fonts/source-sans-pro/source-sans-pro.css' rel='stylesheet' type='text/css'>
+
+        <!-- Theme style -->
+        <link rel="stylesheet" href="bower/admin-lte/dist/css/AdminLTE.min.css">
+        <!-- Salvattore -->
+        <link rel="stylesheet" href="bower/salvattore/salvattore.css">
+        <!-- AdminLTE Skins. Choose a skin from the css/skins
+           folder instead of downloading all of them to reduce the load. -->
+        <link rel="stylesheet" href="bower/admin-lte/dist/css/skins/_all-skins.min.css">
+        <!-- SchemaSpy -->
+        <link rel="stylesheet" href="schemaSpy.css">
+
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+        <script src="bower/html5shiv/html5shiv.min.js"></script>
+        <script src="bower/respond/respond.min.js"></script>
+        <![endif]-->
+    </head>
+    <!-- ADD THE CLASS layout-top-nav TO REMOVE THE SIDEBAR. -->
+    <body class="hold-transition skin-blue layout-top-nav">
+        <div class="wrapper">
+            <header class="main-header">
+                <nav class="navbar navbar-static-top">
+                    <div class="container">
+                        <div class="navbar-header">
+                            <a href="index.html" class="navbar-brand"><b>cdsplatform</b></a><span class="navbar-brand" style="padding-left: 0">.public</span>
+                            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse"><i class="fa fa-bars"></i></button>
+                        </div>
+
+                        <!-- Collect the nav links, forms, and other content for toggling -->
+                        <div class="collapse navbar-collapse pull-left" id="navbar-collapse">
+                            <ul class="nav navbar-nav">
+                                <li><a href="index.html">Tables <span class="sr-only">(current)</span></a></li>
+                                <li><a href="columns.html" title="All of the columns in the schema">Columns</a></li>
+                                <li><a href="constraints.html" title="Useful for diagnosing error messages that just give constraint name or number">Constraints</a></li>
+                                <li><a href="relationships.html" title="Diagram of table relationships">Relationships</a></li>
+                                <li><a href="orphans.html" title="View of tables with neither parents nor children">Orphan&nbsp;Tables</a></li>
+                                <li><a href="anomalies.html" title="Things that might not be quite right">Anomalies</a></li>
+                                <li><a href="routines.html" title="Procedures and functions">Routines</a></li>
+                            </ul>
+                        </div>
+                        <!-- /.navbar-collapse -->
+                        <!-- Navbar Right Menu -->
+                    </div>
+                    <!-- /.container-fluid -->
+                </nav>
+            </header>
+            <!-- Main content -->
+            <!-- Full Width Column -->
+            <div class="content-wrapper">
+                <!-- Content Header (Page header) -->
+                <section class="content-header">
+                    <h1>Constraints</h1>
+                </section>
+                <!-- Main content -->
+                <section class="content">
+                    <div class="box box-primary">
+                        <div class="box-header with-border">
+                            <i class="ion ion-key"></i>
+                            <h3 class="box-title">47 Foreign Key Constraints</h3>
+                            <div class="box-tools pull-right">
+                                <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+                                <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                            </div>
+                        </div>
+                        <div class="box-body">
+                            <table
+                                    id="fk_table"
+                                    class="table table-bordered table-striped dataTable"
+                                    role="grid"
+                                    data-paging="true"
+                                    data-page-length="50"
+                                    data-length-change="false">
+                                <thead align='left'>
+                                    <tr>
+                                        <th>Constraint Name</th>
+                                        <th>Child Column</th>
+                                        <th>Parent Column</th>
+                                        <th>Delete Rule</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>fk_ccp_account_eligibility</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/ccp_account_product_eligibility.html'>ccp_account_product_eligibility</a><span>.ccp_account_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/ccp_accounts.html'>ccp_accounts</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>coupon_periods_trade_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/coupon_periods.html'>coupon_periods</a><span>.trade_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_trades.html'>cds_trades</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>collateral_ledger_source_statement_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/collateral_ledger.html'>collateral_ledger</a><span>.source_statement_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/margin_statements.html'>margin_statements</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>Restrict delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>simm_bucket_mappings_parameter_set_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/simm_bucket_mappings.html'>simm_bucket_mappings</a><span>.parameter_set_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/simm_parameter_sets.html'>simm_parameter_sets</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>simm_calculation_audit_calculation_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/simm_calculation_audit.html'>simm_calculation_audit</a><span>.calculation_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/simm_calculations.html'>simm_calculations</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>fk_simulation_portfolio</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/simulation_runs.html'>simulation_runs</a><span>.portfolio_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_portfolios.html'>cds_portfolios</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>fk_basket_portfolio</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/basket_portfolio_constituents.html'>basket_portfolio_constituents</a><span>.portfolio_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_portfolios.html'>cds_portfolios</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>fk_basket_constituent</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/basket_portfolio_constituents.html'>basket_portfolio_constituents</a><span>.basket_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/basket_definitions.html'>basket_definitions</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>fk_contributor_run</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/simulation_contributors.html'>simulation_contributors</a><span>.run_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/simulation_runs.html'>simulation_runs</a><span>.run_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>sa_ccr_trade_mappings_netting_set_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/sa_ccr_trade_mappings.html'>sa_ccr_trade_mappings</a><span>.netting_set_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/netting_sets.html'>netting_sets</a><span>.netting_set_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>Restrict delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>sa_ccr_trade_mappings_trade_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/sa_ccr_trade_mappings.html'>sa_ccr_trade_mappings</a><span>.trade_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_trades.html'>cds_trades</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>Restrict delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>sa_ccr_trade_mappings_calculation_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/sa_ccr_trade_mappings.html'>sa_ccr_trade_mappings</a><span>.calculation_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/sa_ccr_calculations.html'>sa_ccr_calculations</a><span>.calculation_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>statement_processing_log_statement_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/statement_processing_log.html'>statement_processing_log</a><span>.statement_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/margin_statements.html'>margin_statements</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>accrual_events_trade_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/accrual_events.html'>accrual_events</a><span>.trade_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_trades.html'>cds_trades</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>accrual_events_coupon_period_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/accrual_events.html'>accrual_events</a><span>.coupon_period_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/coupon_periods.html'>coupon_periods</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>basket_constituents_basket_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/basket_constituents.html'>basket_constituents</a><span>.basket_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/basket_definitions.html'>basket_definitions</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>fk_cash_settlement_credit_event</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_cash_settlements.html'>cds_cash_settlements</a><span>.credit_event_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_credit_events.html'>cds_credit_events</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>Restrict delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>fk_cash_settlement_trade</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_cash_settlements.html'>cds_cash_settlements</a><span>.trade_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_trades.html'>cds_trades</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>Restrict delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>fk_cds_trade_obligation</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_trades.html'>cds_trades</a><span>.obligation_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/bonds.html'>bonds</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Null on delete:&#10;Foreign key to parent set to NULL when parent deleted'>Null on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>fk_original_trade</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_trades.html'>cds_trades</a><span>.original_trade_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_trades.html'>cds_trades</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>Restrict delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>position_discrepancies_statement_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/position_discrepancies.html'>position_discrepancies</a><span>.statement_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/margin_statements.html'>margin_statements</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>sa_ccr_calculation_details_calculation_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/sa_ccr_calculation_details.html'>sa_ccr_calculation_details</a><span>.calculation_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/sa_ccr_calculations.html'>sa_ccr_calculations</a><span>.calculation_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>compression_proposal_items_proposal_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/compression_proposal_items.html'>compression_proposal_items</a><span>.proposal_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/compression_proposals.html'>compression_proposals</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>compression_proposal_items_trade_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/compression_proposal_items.html'>compression_proposal_items</a><span>.trade_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_trades.html'>cds_trades</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>fk_bond_constituent</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/bond_portfolio_constituents.html'>bond_portfolio_constituents</a><span>.bond_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/bonds.html'>bonds</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>fk_bond_portfolio</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/bond_portfolio_constituents.html'>bond_portfolio_constituents</a><span>.portfolio_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_portfolios.html'>cds_portfolios</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>sa_ccr_audit_trail_calculation_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/sa_ccr_audit_trail.html'>sa_ccr_audit_trail</a><span>.calculation_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/sa_ccr_calculations.html'>sa_ccr_calculations</a><span>.calculation_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>simm_calculation_results_calculation_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/simm_calculation_results.html'>simm_calculation_results</a><span>.calculation_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/simm_calculations.html'>simm_calculations</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>fk_credit_event_trade</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_credit_events.html'>cds_credit_events</a><span>.trade_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_trades.html'>cds_trades</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>Restrict delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>trade_amendments_trade_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/trade_amendments.html'>trade_amendments</a><span>.trade_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_trades.html'>cds_trades</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>margin_positions_statement_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/margin_positions.html'>margin_positions</a><span>.statement_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/margin_statements.html'>margin_statements</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>simm_correlations_parameter_set_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/simm_correlations.html'>simm_correlations</a><span>.parameter_set_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/simm_parameter_sets.html'>simm_parameter_sets</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>simm_calculations_upload_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/simm_calculations.html'>simm_calculations</a><span>.upload_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/crif_uploads.html'>crif_uploads</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>simm_calculations_parameter_set_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/simm_calculations.html'>simm_calculations</a><span>.parameter_set_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/simm_parameter_sets.html'>simm_parameter_sets</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>Restrict delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>trade_novations_original_trade_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/trade_novations.html'>trade_novations</a><span>.original_trade_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_trades.html'>cds_trades</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>Restrict delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>trade_novations_new_trade_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/trade_novations.html'>trade_novations</a><span>.new_trade_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_trades.html'>cds_trades</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>Restrict delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>fk_risk_cache_portfolio</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/portfolio_risk_cache.html'>portfolio_risk_cache</a><span>.portfolio_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_portfolios.html'>cds_portfolios</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>notional_adjustments_trade_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/notional_adjustments.html'>notional_adjustments</a><span>.trade_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_trades.html'>cds_trades</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>sa_ccr_calculations_netting_set_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/sa_ccr_calculations.html'>sa_ccr_calculations</a><span>.netting_set_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/netting_sets.html'>netting_sets</a><span>.netting_set_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>Restrict delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>fk_horizon_metrics_run</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/simulation_horizon_metrics.html'>simulation_horizon_metrics</a><span>.run_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/simulation_runs.html'>simulation_runs</a><span>.run_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>fk_constituent_trade</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_portfolio_constituents.html'>cds_portfolio_constituents</a><span>.trade_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_trades.html'>cds_trades</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>fk_constituent_portfolio</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_portfolio_constituents.html'>cds_portfolio_constituents</a><span>.portfolio_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_portfolios.html'>cds_portfolios</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>fk_audit_run</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/simulation_audit.html'>simulation_audit</a><span>.run_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/simulation_runs.html'>simulation_runs</a><span>.run_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>crif_sensitivities_upload_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/crif_sensitivities.html'>crif_sensitivities</a><span>.upload_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/crif_uploads.html'>crif_uploads</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>fk_physical_settlement_credit_event</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_physical_settlement_instructions.html'>cds_physical_settlement_instructions</a><span>.credit_event_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_credit_events.html'>cds_credit_events</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>Restrict delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>fk_physical_settlement_trade</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_physical_settlement_instructions.html'>cds_physical_settlement_instructions</a><span>.trade_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/cds_trades.html'>cds_trades</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>Restrict delete</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>simm_risk_weights_parameter_set_id_fkey</td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/simm_risk_weights.html'>simm_risk_weights</a><span>.parameter_set_id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td><a href='tables/simm_parameter_sets.html'>simm_parameter_sets</a><span>.id</span></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td><span title='Cascade on delete:&#10;Deletion of parent deletes child'>Cascade on delete</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="box box-primary">
+                        <div class="box-header with-border">
+                            <i class="fa fa-sitemap"></i>
+                            <h3 class="box-title">Check Constraints</h3>
+                            <div class="box-tools pull-right">
+                                <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+                                <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                            </div>
+                        </div>
+                        <div class="box-body">
+                            <table
+                                    id="check_table"
+                                    class="table table-bordered table-striped dataTable"
+                                    role="grid"
+                                    data-paging="true"
+                                    data-page-length="10"
+                                    data-length-change="false">
+                                <thead align='left'>
+                                    <tr>
+                                        <th>Table</th>
+                                        <th>Constraint Name</th>
+                                        <th>Constraint</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><a href='tables/simulation_runs.html'>simulation_runs</a></td>
+                                        <td>simulation_runs_status_check</td>
+                                        <td>(((status)::text &#61; ANY ((ARRAY[&#39;QUEUED&#39;::character varying, &#39;RUNNING&#39;::character varying, &#39;COMPLETE&#39;::character varying, &#39;FAILED&#39;::character varying, &#39;CANCELED&#39;::character varying])::text[])))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/basket_portfolio_constituents.html'>basket_portfolio_constituents</a></td>
+                                        <td>basket_portfolio_constituents_weight_type_check</td>
+                                        <td>(((weight_type)::text &#61; ANY ((ARRAY[&#39;EQUAL&#39;::character varying, &#39;NOTIONAL&#39;::character varying, &#39;MARKET_VALUE&#39;::character varying])::text[])))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/basket_constituents.html'>basket_constituents</a></td>
+                                        <td>basket_constituents_recovery_override_check</td>
+                                        <td>(((recovery_override IS NULL) OR ((recovery_override &gt;&#61; (0)::numeric) AND (recovery_override &lt;&#61; (1)::numeric))))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/basket_constituents.html'>basket_constituents</a></td>
+                                        <td>basket_constituents_seniority_check</td>
+                                        <td>(((seniority IS NULL) OR ((seniority)::text &#61; ANY ((ARRAY[&#39;SR_UNSEC&#39;::character varying, &#39;SR_SEC&#39;::character varying, &#39;SUBORD&#39;::character varying])::text[]))))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/basket_constituents.html'>basket_constituents</a></td>
+                                        <td>basket_constituents_weight_check</td>
+                                        <td>(((weight IS NULL) OR ((weight &gt;&#61; (0)::numeric) AND (weight &lt;&#61; (1)::numeric))))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/cds_cash_settlements.html'>cds_cash_settlements</a></td>
+                                        <td>ck_non_negative_payout</td>
+                                        <td>((payout_amount &gt;&#61; (0)::numeric))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/cds_cash_settlements.html'>cds_cash_settlements</a></td>
+                                        <td>ck_positive_notional</td>
+                                        <td>((notional &gt; (0)::numeric))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/cds_cash_settlements.html'>cds_cash_settlements</a></td>
+                                        <td>ck_recovery_rate_range</td>
+                                        <td>(((recovery_rate &gt;&#61; (0)::numeric) AND (recovery_rate &lt;&#61; (1)::numeric)))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/cds_trades.html'>cds_trades</a></td>
+                                        <td>cds_trades_buy_sell_protection_check</td>
+                                        <td>(((buy_sell_protection)::text &#61; ANY ((ARRAY[&#39;BUY&#39;::character varying, &#39;SELL&#39;::character varying])::text[])))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/cds_trades.html'>cds_trades</a></td>
+                                        <td>cds_trades_settlement_type_check</td>
+                                        <td>(((settlement_type)::text &#61; ANY ((ARRAY[&#39;CASH&#39;::character varying, &#39;PHYSICAL&#39;::character varying])::text[])))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/cds_trades.html'>cds_trades</a></td>
+                                        <td>chk_trade_status_values</td>
+                                        <td>(((trade_status)::text &#61; ANY ((ARRAY[&#39;PENDING&#39;::character varying, &#39;ACTIVE&#39;::character varying, &#39;CREDIT_EVENT_RECORDED&#39;::character varying, &#39;TRIGGERED&#39;::character varying, &#39;SETTLED_CASH&#39;::character varying, &#39;SETTLED_PHYSICAL&#39;::character varying, &#39;CANCELLED&#39;::character varying, &#39;PARTIALLY_TERMINATED&#39;::character varying, &#39;NOVATED&#39;::character varying, &#39;TERMINATED&#39;::character varying, &#39;COMPRESSED&#39;::character varying])::text[])))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/bond_portfolio_constituents.html'>bond_portfolio_constituents</a></td>
+                                        <td>bond_portfolio_constituents_weight_type_check</td>
+                                        <td>(((weight_type)::text &#61; ANY ((ARRAY[&#39;EQUAL&#39;::character varying, &#39;NOTIONAL&#39;::character varying, &#39;MARKET_VALUE&#39;::character varying])::text[])))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/basket_definitions.html'>basket_definitions</a></td>
+                                        <td>basket_definitions_check</td>
+                                        <td>(((((type)::text &#61; &#39;NTH_TO_DEFAULT&#39;::text) AND (nth IS NOT NULL) AND (nth &gt;&#61; 1)) OR ((type)::text &lt;&gt; &#39;NTH_TO_DEFAULT&#39;::text)))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/basket_definitions.html'>basket_definitions</a></td>
+                                        <td>basket_definitions_check1</td>
+                                        <td>(((((type)::text &#61; &#39;TRANCHETTE&#39;::text) AND (attachment_point IS NOT NULL) AND (detachment_point IS NOT NULL) AND (attachment_point &gt;&#61; (0)::numeric) AND (attachment_point &lt; detachment_point) AND (detachment_point &lt;&#61; (1)::numeric)) OR ((type)::text &lt;&gt; &#39;TRANCHETTE&#39;::text)))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/basket_definitions.html'>basket_definitions</a></td>
+                                        <td>basket_definitions_day_count_check</td>
+                                        <td>(((day_count)::text &#61; ANY ((ARRAY[&#39;ACT_360&#39;::character varying, &#39;ACT_365F&#39;::character varying])::text[])))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/basket_definitions.html'>basket_definitions</a></td>
+                                        <td>basket_definitions_notional_check</td>
+                                        <td>((notional &gt; (0)::numeric))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/basket_definitions.html'>basket_definitions</a></td>
+                                        <td>basket_definitions_premium_frequency_check</td>
+                                        <td>(((premium_frequency)::text &#61; ANY ((ARRAY[&#39;QUARTERLY&#39;::character varying, &#39;SEMI_ANNUAL&#39;::character varying])::text[])))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/basket_definitions.html'>basket_definitions</a></td>
+                                        <td>basket_definitions_type_check</td>
+                                        <td>(((type)::text &#61; ANY ((ARRAY[&#39;FIRST_TO_DEFAULT&#39;::character varying, &#39;NTH_TO_DEFAULT&#39;::character varying, &#39;TRANCHETTE&#39;::character varying])::text[])))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/cds_credit_events.html'>cds_credit_events</a></td>
+                                        <td>ck_event_type</td>
+                                        <td>(((event_type)::text &#61; ANY ((ARRAY[&#39;BANKRUPTCY&#39;::character varying, &#39;FAILURE_TO_PAY&#39;::character varying, &#39;RESTRUCTURING&#39;::character varying, &#39;OBLIGATION_DEFAULT&#39;::character varying, &#39;REPUDIATION_MORATORIUM&#39;::character varying, &#39;PAYOUT&#39;::character varying])::text[])))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/cds_credit_events.html'>cds_credit_events</a></td>
+                                        <td>ck_notice_date_after_event</td>
+                                        <td>((notice_date &gt;&#61; event_date))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/cds_credit_events.html'>cds_credit_events</a></td>
+                                        <td>ck_settlement_method</td>
+                                        <td>(((settlement_method)::text &#61; ANY ((ARRAY[&#39;CASH&#39;::character varying, &#39;PHYSICAL&#39;::character varying])::text[])))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/ccp_accounts.html'>ccp_accounts</a></td>
+                                        <td>ccp_accounts_account_type_check</td>
+                                        <td>(((account_type)::text &#61; ANY ((ARRAY[&#39;HOUSE&#39;::character varying, &#39;CLIENT&#39;::character varying, &#39;SEGREGATED&#39;::character varying])::text[])))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/ccp_accounts.html'>ccp_accounts</a></td>
+                                        <td>ccp_accounts_status_check</td>
+                                        <td>(((status)::text &#61; ANY ((ARRAY[&#39;ACTIVE&#39;::character varying, &#39;INACTIVE&#39;::character varying, &#39;SUSPENDED&#39;::character varying, &#39;PENDING_APPROVAL&#39;::character varying])::text[])))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/trade_novations.html'>trade_novations</a></td>
+                                        <td>trade_novations_status_check</td>
+                                        <td>(((status)::text &#61; ANY ((ARRAY[&#39;PENDING&#39;::character varying, &#39;COMPLETED&#39;::character varying, &#39;FAILED&#39;::character varying])::text[])))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/notional_adjustments.html'>notional_adjustments</a></td>
+                                        <td>notional_adjustments_adjustment_type_check</td>
+                                        <td>(((adjustment_type)::text &#61; ANY ((ARRAY[&#39;PARTIAL_TERMINATION&#39;::character varying, &#39;FULL_TERMINATION&#39;::character varying, &#39;REDUCTION&#39;::character varying])::text[])))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/compression_proposals.html'>compression_proposals</a></td>
+                                        <td>compression_proposals_status_check</td>
+                                        <td>(((status)::text &#61; ANY ((ARRAY[&#39;PENDING&#39;::character varying, &#39;EXECUTED&#39;::character varying, &#39;REJECTED&#39;::character varying, &#39;CANCELLED&#39;::character varying])::text[])))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/bonds.html'>bonds</a></td>
+                                        <td>bonds_check</td>
+                                        <td>((issue_date &lt; maturity_date))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/bonds.html'>bonds</a></td>
+                                        <td>bonds_coupon_rate_check</td>
+                                        <td>((coupon_rate &gt;&#61; (0)::numeric))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/bonds.html'>bonds</a></td>
+                                        <td>bonds_notional_check</td>
+                                        <td>((notional &gt; (0)::numeric))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/bonds.html'>bonds</a></td>
+                                        <td>bonds_settlement_days_check</td>
+                                        <td>((settlement_days &gt;&#61; 0))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/cds_audit_log.html'>cds_audit_log</a></td>
+                                        <td>ck_action</td>
+                                        <td>(((action)::text &#61; ANY ((ARRAY[&#39;CREATE&#39;::character varying, &#39;UPDATE&#39;::character varying, &#39;DELETE&#39;::character varying, &#39;TRANSITION&#39;::character varying, &#39;CALCULATE&#39;::character varying, &#39;NOVATION&#39;::character varying])::text[])))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/cds_audit_log.html'>cds_audit_log</a></td>
+                                        <td>ck_entity_type</td>
+                                        <td>(((entity_type)::text &#61; ANY ((ARRAY[&#39;CREDIT_EVENT&#39;::character varying, &#39;CASH_SETTLEMENT&#39;::character varying, &#39;PHYSICAL_SETTLEMENT&#39;::character varying, &#39;TRADE&#39;::character varying, &#39;SIMM_CALCULATION&#39;::character varying, &#39;SACCR_CALCULATION&#39;::character varying])::text[])))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/cds_portfolio_constituents.html'>cds_portfolio_constituents</a></td>
+                                        <td>cds_portfolio_constituents_weight_type_check</td>
+                                        <td>(((weight_type)::text &#61; ANY ((ARRAY[&#39;NOTIONAL&#39;::character varying, &#39;PERCENT&#39;::character varying])::text[])))</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href='tables/cds_physical_settlement_instructions.html'>cds_physical_settlement_instructions</a></td>
+                                        <td>ck_instruction_status</td>
+                                        <td>(((status)::text &#61; ANY ((ARRAY[&#39;DRAFT&#39;::character varying, &#39;PENDING&#39;::character varying, &#39;CONFIRMED&#39;::character varying, &#39;COMPLETED&#39;::character varying])::text[])))</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                <script>
+                    var config = {
+                        pagination: true
+                    }
+                </script>
+            </div>
+            <!-- /.content-wrapper -->
+            <footer class="main-footer">
+                <div>
+                    <div class="pull-right hidden-xs">
+                        <a href="https://github.com/schemaspy/schemaspy" title="GitHub for SchemaSpy"><i class="fa fa-github-square fa-2x"></i></a>
+                        <a href="http://stackoverflow.com/questions/tagged/schemaspy" title="StackOverflow for SchemaSpy"><i class="fa fa-stack-overflow fa-2x"></i></a>
+                    </div>
+                    <strong>Generated by <a href="http://schemaspy.org/" class="logo-text"><i class="fa fa-database"></i> SchemaSpy 6.2.4</a></strong>
+                </div>
+                <!-- /.container -->
+            </footer>
+        </div>
+        <!-- ./wrapper -->
+
+        <!-- jQuery 2.2.3 -->
+        <script src="bower/admin-lte/plugins/jQuery/jquery-2.2.3.min.js"></script>
+        <script src="bower/admin-lte/plugins/jQueryUI/jquery-ui.min.js"></script>
+        <!-- Bootstrap 3.3.5 -->
+        <script src="bower/admin-lte/bootstrap/js/bootstrap.min.js"></script>
+        <!-- DataTables -->
+        <script src="bower/datatables.net/jquery.dataTables.min.js"></script>
+        <script src="bower/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+        <script src="bower/datatables.net-buttons/dataTables.buttons.min.js"></script>
+        <script src="bower/datatables.net-buttons-bs/js/buttons.bootstrap.min.js"></script>
+        <script src="bower/datatables.net-buttons/buttons.html5.min.js"></script>
+        <script src="bower/datatables.net-buttons/buttons.print.min.js"></script>
+        <script src="bower/datatables.net-buttons/buttons.colVis.min.js"></script>
+        <!-- SheetJS -->
+        <script src="bower/js-xlsx/xlsx.full.min.js"></script>
+        <!-- pdfmake -->
+        <script src="bower/pdfmake/pdfmake.min.js"></script>
+        <script src="bower/pdfmake/vfs_fonts.js"></script>
+        <!-- SlimScroll -->
+        <script src="bower/admin-lte/plugins/slimScroll/jquery.slimscroll.min.js"></script>
+        <!-- FastClick -->
+        <script src="bower/admin-lte/plugins/fastclick/fastclick.js"></script>
+        <!-- Salvattore -->
+        <script src="bower/salvattore/salvattore.min.js"></script>
+        <!-- AnchorJS -->
+        <script src="bower/anchor-js/anchor.min.js"></script>
+        <!-- CodeMirror -->
+        <script src="bower/codemirror/codemirror.js"></script>
+        <script src="bower/codemirror/sql.js"></script>
+        <!-- AdminLTE App -->
+        <script src="bower/admin-lte/dist/js/app.min.js"></script>
+        <script src="constraint.js"></script>
+        <script src="schemaSpy.js"></script>
+    </body>
+</html>
