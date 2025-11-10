@@ -1,13 +1,16 @@
 name: Generate Database Schema Diagram
 
 on:
+  workflow_dispatch: # manual trigger
   push:
-    branches: [ main, develop, data-model ]
+    branches:
+      - 'release/**'
+    tags:
+      - 'v*'
     paths:
       - "backend/src/main/resources/db/migration/**"
       - ".github/workflows/generate-schema-diagram.yml"
       - "scripts/generate-db-diagram.sh"
-  workflow_dispatch:
 
 permissions:
   contents: write

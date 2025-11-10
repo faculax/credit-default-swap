@@ -2,6 +2,7 @@ package com.creditdefaultswap.platform.controller;
 
 import com.creditdefaultswap.platform.model.CDSTrade;
 import com.creditdefaultswap.platform.service.CDSTradeService;
+import com.creditdefaultswap.platform.service.LineageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,10 +16,12 @@ import java.util.Optional;
 public class CDSTradeController {
     
     private final CDSTradeService cdsTradeService;
+    private final LineageService lineageService;
     
     @Autowired
-    public CDSTradeController(CDSTradeService cdsTradeService) {
+    public CDSTradeController(CDSTradeService cdsTradeService, LineageService lineageService) {
         this.cdsTradeService = cdsTradeService;
+        this.lineageService = lineageService;
     }
     
     /**
@@ -28,6 +31,23 @@ public class CDSTradeController {
     public ResponseEntity<CDSTrade> createTrade(@RequestBody CDSTrade trade) {
         try {
             CDSTrade savedTrade = cdsTradeService.saveTrade(trade);
+            
+            // Build comprehensive trade details for lineage tracking
+            java.util.Map<String, Object> tradeDetails = new java.util.HashMap<>();
+            tradeDetails.put("entityName", savedTrade.getReferenceEntity());
+            tradeDetails.put("notional", savedTrade.getNotionalAmount());
+            tradeDetails.put("maturityDate", savedTrade.getMaturityDate() != null ? savedTrade.getMaturityDate().toString() : "");
+            tradeDetails.put("spread", savedTrade.getSpread());
+            tradeDetails.put("upfrontAmount", savedTrade.getUpfrontAmount() != null ? savedTrade.getUpfrontAmount() : 0);
+            tradeDetails.put("buySellProtection", savedTrade.getBuySellProtection() != null ? savedTrade.getBuySellProtection().toString() : "BUY");
+            tradeDetails.put("counterparty", savedTrade.getCounterparty());
+            tradeDetails.put("tradeDate", savedTrade.getTradeDate() != null ? savedTrade.getTradeDate().toString() : "");
+            tradeDetails.put("currency", savedTrade.getCurrency());
+            tradeDetails.put("recoveryRate", savedTrade.getRecoveryRate());
+            
+            // Track comprehensive lineage
+            lineageService.trackTradeCapture(savedTrade.getId(), "SINGLE_NAME", "system", tradeDetails);
+            
             return new ResponseEntity<>(savedTrade, HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);

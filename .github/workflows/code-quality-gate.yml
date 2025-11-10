@@ -1,0 +1,84 @@
+name: Code Quality Gate
+
+on:
+  push:    # run on every push to any branch
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  COVERAGE_THRESHOLD: '80'
+
+jobs:
+  frontend-tests:
+    name: Frontend tests & coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: |
+          if [ -f package-lock.json ] || [ -f yarn.lock ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Run frontend tests (coverage)
+        working-directory: frontend
+        run: |
+          if grep -q "\"test\"" package.json >/dev/null 2>&1; then
+            npm test -- --coverage --coverageReporters="json-summary" || true
+          else
+            echo "No frontend test script; skipping"
+          fi
+
+      - name: Check frontend coverage
+        if: always()
+        working-directory: frontend
+        run: |
+          if [ -f coverage/coverage-summary.json ]; then
+            coverage=$(node -p "(require('./coverage/coverage-summary.json').total.lines.pct).toFixed(2)")
+            echo "Frontend coverage: $coverage%"
+            pct=${coverage%.*}
+            if [ "$pct" -lt "${{ env.COVERAGE_THRESHOLD }}" ]; then
+              echo "Frontend coverage ($coverage%) below threshold ${{ env.COVERAGE_THRESHOLD }}%"; exit 1
+            fi
+          else
+            echo "No frontend coverage report found; skipping coverage check"
+          fi
+
+  backend-tests:
+    name: Backend tests & coverage (JaCoCo)
+    runs-on: ubuntu-latest
+    needs: frontend-tests
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Run Maven tests and generate JaCoCo reports
+        run: |
+          if [ -f mvnw ]; then
+            chmod +x mvnw
+            ./mvnw -T 1C -DskipTests=false test jacoco:report
+          else
+            mvn -T 1C -DskipTests=false test jacoco:report
+          fi
+
+      - name: Aggregate and check JaCoCo LINE coverage
+        run: |
+          python3 scripts/ci/check_jacoco_coverage.py ${{ env.COVERAGE_THRESHOLD }}

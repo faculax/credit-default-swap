@@ -5,6 +5,7 @@ import com.creditdefaultswap.platform.model.saccr.SaCcrCalculation;
 import com.creditdefaultswap.platform.model.saccr.SaCcrSupervisoryParameter;
 import com.creditdefaultswap.platform.service.saccr.SaCcrCalculationService;
 import com.creditdefaultswap.platform.service.saccr.SaCcrJurisdictionService;
+import com.creditdefaultswap.platform.service.LineageService;
 import com.creditdefaultswap.platform.repository.saccr.NettingSetRepository;
 import com.creditdefaultswap.platform.repository.saccr.SaCcrCalculationRepository;
 import com.creditdefaultswap.platform.repository.saccr.SaCcrSupervisoryParameterRepository;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -47,6 +49,9 @@ public class SaCcrController {
     @Autowired
     private SaCcrJurisdictionService jurisdictionService;
     
+    @Autowired
+    private LineageService lineageService;
+    
     // ========== Calculation Endpoints ==========
     
     /**
@@ -61,6 +66,19 @@ public class SaCcrController {
             logger.info("Received SA-CCR calculation request for jurisdiction: {} as of {}", jurisdiction, valuationDate);
             
             List<SaCcrCalculation> calculations = calculationService.calculateAllExposures(valuationDate, jurisdiction);
+            
+            // Track lineage for SA-CCR calculation
+            for (SaCcrCalculation calculation : calculations) {
+                Map<String, Object> marginDetails = new HashMap<>();
+                marginDetails.put("nettingSetId", calculation.getNettingSetId());
+                marginDetails.put("ead", calculation.getExposureAtDefault() != null ? calculation.getExposureAtDefault().doubleValue() : 0.0);
+                marginDetails.put("replacementCost", calculation.getReplacementCost() != null ? calculation.getReplacementCost().doubleValue() : 0.0);
+                marginDetails.put("pfe", calculation.getPotentialFutureExposure() != null ? calculation.getPotentialFutureExposure().doubleValue() : 0.0);
+                marginDetails.put("valuationDate", valuationDate.toString());
+                marginDetails.put("jurisdiction", jurisdiction);
+                marginDetails.put("status", calculation.getCalculationStatus().name());
+                lineageService.trackMarginOperation("SA-CCR", String.valueOf(calculation.getNettingSetId()), "system", marginDetails);
+            }
             
             return ResponseEntity.ok(Map.of(
                 "status", "SUCCESS",

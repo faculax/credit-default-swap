@@ -12,10 +12,11 @@ import SaCcrDashboard from './components/SaCcrDashboard';
 import ReconciliationDashboard from './components/dashboard/ReconciliationDashboard';
 import BondPage from './components/bond/BondPage';
 import BasketPage from './components/basket/BasketPage';
+import LineagePage from './pages/LineagePage';
 import { CDSTrade } from './data/referenceData';
 import { cdsTradeService, CDSTradeRequest, CDSTradeResponse } from './services/cdsTradeService';
 
-type ViewMode = 'form' | 'blotter' | 'portfolios' | 'margin-statements' | 'simm' | 'sa-ccr' | 'reconciliation' | 'bonds' | 'baskets';
+type ViewMode = 'form' | 'blotter' | 'portfolios' | 'margin-statements' | 'simm' | 'sa-ccr' | 'reconciliation' | 'bonds' | 'baskets' | 'lineage';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewMode>('form');
@@ -180,6 +181,16 @@ function App() {
             >
               Reconciliation Dashboard
             </button>
+            <button
+              onClick={() => setCurrentView('lineage')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                currentView === 'lineage'
+                  ? 'bg-fd-green text-fd-dark'
+                  : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
+              }`}
+            >
+              Data Lineage
+            </button>
           </div>
         </div>
       </div>
@@ -205,6 +216,8 @@ function App() {
           <BondPage />
         ) : currentView === 'baskets' ? (
           <BasketPage />
+        ) : currentView === 'lineage' ? (
+          <LineagePage />
         ) : null}
 
         <ConfirmationModal

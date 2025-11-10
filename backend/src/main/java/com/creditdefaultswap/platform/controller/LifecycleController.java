@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,6 +41,9 @@ public class LifecycleController {
 
     @Autowired
     private NotionalAdjustmentService notionalAdjustmentService;
+    
+    @Autowired
+    private LineageService lineageService;
 
     // Coupon Schedule Endpoints
 
@@ -86,6 +90,15 @@ public class LifecycleController {
         }
         
         CouponPeriod paidPeriod = couponScheduleService.payCoupon(periodId, paymentTimestamp);
+        
+        // Track lifecycle lineage
+        Map<String, Object> lifecycleDetails = new HashMap<>();
+        lifecycleDetails.put("periodId", periodId);
+        lifecycleDetails.put("paymentDate", paidPeriod.getPaymentDate().toString());
+        lifecycleDetails.put("couponAmount", paidPeriod.getCouponAmount());
+        
+        lineageService.trackLifecycleOperation("COUPON", tradeId, "system", lifecycleDetails);
+        
         return ResponseEntity.ok(paidPeriod);
     }
 

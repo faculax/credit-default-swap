@@ -1,0 +1,71 @@
+name: Schema Smoke Check
+
+on:
+  pull_request:
+  push:
+    branches: [ main, develop ]
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-validate:
+    name: Flyway smoke validate
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: cdsplatform
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d cdsplatform"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Wait for Postgres
+        run: |
+          echo "Waiting for PostgreSQL to be ready..."
+          for i in {1..60}; do
+            if pg_isready -h 127.0.0.1 -p 5432 -U postgres -d cdsplatform; then
+              echo "PostgreSQL is ready!"
+              break
+            fi
+            echo "Attempt $i: PostgreSQL not ready yet..."
+            sleep 1
+          done
+
+      - name: Install Flyway CLI
+        run: |
+          FLYWAY_VERSION=10.17.0
+          echo "Installing Flyway ${FLYWAY_VERSION}..."
+          curl -sL "https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/${FLYWAY_VERSION}/flyway-commandline-${FLYWAY_VERSION}-linux-x64.tar.gz" | tar xz
+          sudo ln -s "$PWD/flyway-${FLYWAY_VERSION}/flyway" /usr/local/bin/flyway
+          flyway -v
+
+      - name: Run Flyway migrate (smoke)
+        run: |
+          echo "Running Flyway migrate as a smoke-check..."
+          flyway \
+            -url=jdbc:postgresql://127.0.0.1:5432/cdsplatform \
+            -user=postgres \
+            -password=postgres \
+            -locations=filesystem:backend/src/main/resources/db/migration \
+            -baselineOnMigrate=true \
+            -connectRetries=30 \
+            migrate
+
+      - name: Flyway info
+        run: |
+          flyway -url=jdbc:postgresql://127.0.0.1:5432/cdsplatform -user=postgres -password=postgres info

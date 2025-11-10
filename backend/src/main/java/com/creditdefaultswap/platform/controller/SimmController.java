@@ -4,6 +4,7 @@ import com.creditdefaultswap.platform.service.simm.CrifParserService;
 import com.creditdefaultswap.platform.service.simm.CrifGenerationService;
 import com.creditdefaultswap.platform.service.simm.SimmCalculationService;
 import com.creditdefaultswap.platform.service.AuditService;
+import com.creditdefaultswap.platform.service.LineageService;
 import com.creditdefaultswap.platform.model.AuditLog;
 import com.creditdefaultswap.platform.model.simm.CrifUpload;
 import com.creditdefaultswap.platform.model.simm.SimmCalculation;
@@ -57,6 +58,9 @@ public class SimmController {
     
     @Autowired
     private AuditService auditService;
+    
+    @Autowired
+    private LineageService lineageService;
     
     @Autowired
     private CrifUploadRepository crifUploadRepository;
@@ -429,6 +433,24 @@ public class SimmController {
             }
             
             logger.info("SIMM calculation response prepared successfully: {}", calculationId);
+            
+            // Track lineage for SIMM margin calculation
+            Map<String, Object> marginDetails = new HashMap<>();
+            marginDetails.put("calculationId", calculation.getCalculationId());
+            marginDetails.put("portfolioId", calculation.getPortfolioId());
+            marginDetails.put("totalIM", calculation.getTotalIm() != null ? calculation.getTotalIm().doubleValue() : 0.0);
+            marginDetails.put("calculationDate", calculation.getCalculationDate().toString());
+            marginDetails.put("parameterSetVersion", parameterSet.getVersionName());
+            marginDetails.put("isdaVersion", parameterSet.getIsdaVersion());
+            marginDetails.put("calculationTimeMs", calculation.getCalculationTimeMs());
+            marginDetails.put("status", calculation.getCalculationStatus().name());
+            if (response.containsKey("marginByRiskClass")) {
+                marginDetails.put("breakdown", response.get("marginByRiskClass"));
+            } else if (response.containsKey("marginByProductClass")) {
+                marginDetails.put("breakdown", response.get("marginByProductClass"));
+            }
+            lineageService.trackMarginOperation("SIMM", calculation.getPortfolioId(), "system", marginDetails);
+            
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {

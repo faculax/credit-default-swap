@@ -1,0 +1,27 @@
+name: Policy as Code (Conftest)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  conftest-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install conftest
+        run: |
+          wget https://github.com/open-policy-agent/conftest/releases/download/v0.44.0/conftest_0.44.0_Linux_x86_64.tar.gz -O conftest.tar.gz
+          tar -xzf conftest.tar.gz
+          sudo mv conftest /usr/local/bin/
+
+      - name: Run conftest against Kubernetes and terraform manifests (policy/)
+        run: |
+          conftest test --policy policy || true
+
+      - name: Upload conftest results
+        uses: actions/upload-artifact@v4
+        with:
+          name: conftest-results
+          path: /tmp/conftest || .

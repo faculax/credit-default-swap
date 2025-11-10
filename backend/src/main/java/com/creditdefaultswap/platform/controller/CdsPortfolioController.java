@@ -8,6 +8,7 @@ import com.creditdefaultswap.platform.model.CdsPortfolio;
 import com.creditdefaultswap.platform.model.CdsPortfolioConstituent;
 import com.creditdefaultswap.platform.model.WeightType;
 import com.creditdefaultswap.platform.service.CdsPortfolioService;
+import com.creditdefaultswap.platform.service.LineageService;
 import com.creditdefaultswap.platform.service.PortfolioBondService;
 import com.creditdefaultswap.platform.service.PortfolioBasketService;
 import com.creditdefaultswap.platform.service.PortfolioPricingService;
@@ -20,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,17 +35,20 @@ public class CdsPortfolioController {
     private final PortfolioPricingService pricingService;
     private final PortfolioBondService bondService;
     private final PortfolioBasketService basketService;
+    private final LineageService lineageService;
     
     @Autowired
     public CdsPortfolioController(
             CdsPortfolioService portfolioService,
             PortfolioPricingService pricingService,
             PortfolioBondService bondService,
-            PortfolioBasketService basketService) {
+            PortfolioBasketService basketService,
+            LineageService lineageService) {
         this.portfolioService = portfolioService;
         this.pricingService = pricingService;
         this.bondService = bondService;
         this.basketService = basketService;
+        this.lineageService = lineageService;
     }
     
     /**
@@ -60,6 +65,17 @@ public class CdsPortfolioController {
             }
             
             CdsPortfolio portfolio = portfolioService.createPortfolio(name, description);
+            
+            // Track lineage
+            Map<String, Object> portfolioDetails = new HashMap<>();
+            portfolioDetails.put("name", name);
+            portfolioDetails.put("description", description != null ? description : "");
+            portfolioDetails.put("tradeCount", 0);
+            portfolioDetails.put("bondCount", 0);
+            portfolioDetails.put("totalPositions", 0);
+            
+            lineageService.trackPortfolioOperation("CREATE", portfolio.getId(), "system", portfolioDetails);
+            
             return new ResponseEntity<>(portfolio, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -149,6 +165,14 @@ public class CdsPortfolioController {
             @RequestBody AttachTradesRequest request) {
         try {
             List<CdsPortfolioConstituent> constituents = portfolioService.attachTrades(id, request);
+            
+            // Track lineage for attaching trades to portfolio
+            Map<String, Object> portfolioDetails = new HashMap<>();
+            portfolioDetails.put("portfolioId", id);
+            portfolioDetails.put("tradesAttached", request.getTrades() != null ? request.getTrades().size() : 0);
+            portfolioDetails.put("totalConstituents", constituents.size());
+            lineageService.trackPortfolioOperation("ATTACH_TRADES", id, "system", portfolioDetails);
+            
             return new ResponseEntity<>(constituents, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -201,6 +225,17 @@ public class CdsPortfolioController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate valuationDate) {
         try {
             PortfolioPricingResponse response = pricingService.pricePortfolio(id, valuationDate);
+            
+            // Track lineage for portfolio pricing
+            Map<String, Object> portfolioDetails = new HashMap<>();
+            portfolioDetails.put("portfolioId", id);
+            portfolioDetails.put("valuationDate", valuationDate.toString());
+            if (response.getAggregate() != null) {
+                portfolioDetails.put("totalPV", response.getAggregate().getPv() != null ? response.getAggregate().getPv().doubleValue() : 0.0);
+                portfolioDetails.put("tradeCount", response.getAggregate().getTradeCount());
+            }
+            lineageService.trackPortfolioOperation("PRICE", id, "system", portfolioDetails);
+            
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -245,6 +280,15 @@ public class CdsPortfolioController {
                     : java.math.BigDecimal.ONE;
             
             BondPortfolioConstituent constituent = bondService.attachBond(id, bondId, weightType, weightValue);
+            
+            // Track lineage for attaching bond to portfolio
+            Map<String, Object> portfolioDetails = new HashMap<>();
+            portfolioDetails.put("portfolioId", id);
+            portfolioDetails.put("bondId", bondId);
+            portfolioDetails.put("weightType", weightType.name());
+            portfolioDetails.put("weightValue", weightValue.doubleValue());
+            lineageService.trackPortfolioOperation("ATTACH_BOND", id, "system", portfolioDetails);
+            
             return new ResponseEntity<>(constituent, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -305,6 +349,15 @@ public class CdsPortfolioController {
                     : java.math.BigDecimal.ONE;
             
             BasketPortfolioConstituent constituent = basketService.attachBasket(id, basketId, weightType, weightValue);
+            
+            // Track lineage for attaching basket to portfolio
+            Map<String, Object> portfolioDetails = new HashMap<>();
+            portfolioDetails.put("portfolioId", id);
+            portfolioDetails.put("basketId", basketId);
+            portfolioDetails.put("weightType", weightType.name());
+            portfolioDetails.put("weightValue", weightValue.doubleValue());
+            lineageService.trackPortfolioOperation("ATTACH_BASKET", id, "system", portfolioDetails);
+            
             return new ResponseEntity<>(constituent, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
