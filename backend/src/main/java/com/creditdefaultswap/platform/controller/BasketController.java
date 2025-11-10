@@ -1,9 +1,10 @@
 package com.creditdefaultswap.platform.controller;
 
+import com.creditdefaultswap.platform.annotation.LineageOperationType;
+import com.creditdefaultswap.platform.annotation.TrackLineage;
 import com.creditdefaultswap.platform.dto.*;
 import com.creditdefaultswap.platform.service.BasketPricingService;
 import com.creditdefaultswap.platform.service.BasketService;
-import com.creditdefaultswap.platform.service.LineageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -11,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,6 +19,8 @@ import java.util.Optional;
 /**
  * REST Controller for Basket operations
  * Epic 15: Basket & Multi-Name Credit Derivatives
+ * 
+ * Now using AOP-based lineage tracking via @TrackLineage annotation
  */
 @RestController
 @RequestMapping("/api/baskets")
@@ -30,25 +32,21 @@ public class BasketController {
     @Autowired
     private BasketPricingService pricingService;
     
-    @Autowired
-    private LineageService lineageService;
-    
     /**
      * POST /api/baskets - Create a new basket
+     * 
+     * Lineage tracking is automatic via @TrackLineage annotation
      */
     @PostMapping
+    @TrackLineage(
+        operationType = LineageOperationType.BASKET,
+        operation = "CREATE",
+        entityIdFromResult = "id",
+        autoExtractDetails = true
+    )
     public ResponseEntity<?> createBasket(@RequestBody BasketRequest request) {
         try {
             BasketResponse response = basketService.createBasket(request);
-            
-            // Track lineage
-            Map<String, Object> basketDetails = new HashMap<>();
-            basketDetails.put("basketId", response.getId());
-            basketDetails.put("constituentCount", request.getConstituents() != null ? request.getConstituents().size() : 0);
-            basketDetails.put("notional", request.getNotional() != null ? request.getNotional() : 0);
-            
-            lineageService.trackBasketOperation("CREATE", response.getId(), "system", basketDetails);
-            
             return new ResponseEntity<>(response, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             ErrorResponse error = new ErrorResponse("VALIDATION_ERROR", e.getMessage());
@@ -93,19 +91,19 @@ public class BasketController {
     
     /**
      * PUT /api/baskets/{id} - Update basket (limited fields)
+     * 
+     * Lineage tracking is automatic via @TrackLineage annotation
      */
     @PutMapping("/{id}")
+    @TrackLineage(
+        operationType = LineageOperationType.BASKET,
+        operation = "UPDATE",
+        entityIdParam = "id",
+        autoExtractDetails = true
+    )
     public ResponseEntity<?> updateBasket(@PathVariable Long id, @RequestBody BasketRequest request) {
         try {
             BasketResponse response = basketService.updateBasket(id, request);
-            
-            // Track lineage
-            Map<String, Object> basketDetails = new HashMap<>();
-            basketDetails.put("basketId", response.getId());
-            basketDetails.put("constituentCount", response.getConstituents() != null ? response.getConstituents().size() : 0);
-            
-            lineageService.trackBasketOperation("UPDATE", response.getId(), "system", basketDetails);
-            
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             ErrorResponse error = new ErrorResponse("VALIDATION_ERROR", e.getMessage());
@@ -118,8 +116,16 @@ public class BasketController {
     
     /**
      * POST /api/baskets/{id}/price - Price a basket
+     * 
+     * Lineage tracking is automatic via @TrackLineage annotation
      */
     @PostMapping("/{id}/price")
+    @TrackLineage(
+        operationType = LineageOperationType.PRICING,
+        operation = "BASKET",
+        entityIdParam = "id",
+        autoExtractDetails = true
+    )
     public ResponseEntity<?> priceBasket(
             @PathVariable Long id,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate valuationDate,
@@ -137,10 +143,6 @@ public class BasketController {
             request.setIncludeEtlTimeline(includeEtlTimeline);
             
             BasketPricingResponse response = pricingService.priceBasket(id, request);
-            
-            // Track pricing lineage
-            lineageService.trackPricingCalculation("BASKET", id, "MONTE_CARLO", "system");
-            
             return ResponseEntity.ok(response);
             
         } catch (IllegalArgumentException e) {

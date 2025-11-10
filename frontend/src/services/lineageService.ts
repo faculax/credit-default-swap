@@ -124,7 +124,8 @@ class LineageService {
         Object.entries(event.outputs).forEach(([outputKey, outputValue]: [string, any]) => {
           if (outputValue && typeof outputValue === 'object' && outputValue.dataset) {
             const outputDatasetName = outputValue.dataset;
-            const outputNodeId = `dataset-${outputDatasetName}`;
+            // Make output dataset nodes unique per operation to avoid merging different operations
+            const outputNodeId = `dataset-${outputDatasetName}-${event.id}`;
             
             if (!nodeMap.has(outputNodeId)) {
               const outputNode: LineageNode = {
@@ -148,7 +149,8 @@ class LineageService {
 
       // Fallback: if no datasets found in inputs/outputs, link to main dataset
       if (edges.filter(e => e.source === operationNodeId || e.target === operationNodeId).length === 0) {
-        const datasetNodeId = `dataset-${event.dataset}`;
+        // Make fallback dataset nodes unique per operation as well
+        const datasetNodeId = `dataset-${event.dataset}-${event.id}`;
         if (!nodeMap.has(datasetNodeId)) {
           const datasetNode: LineageNode = {
             id: datasetNodeId,
