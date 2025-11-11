@@ -26,6 +26,8 @@ public interface SaCcrCalculationRepository extends JpaRepository<SaCcrCalculati
     
     List<SaCcrCalculation> findByJurisdictionOrderByCalculationDateDesc(String jurisdiction);
     
+    List<SaCcrCalculation> findByCalculationDateAndJurisdictionOrderByNettingSetId(LocalDate calculationDate, String jurisdiction);
+    
     List<SaCcrCalculation> findByCalculationDateOrderByNettingSet_Id(LocalDate calculationDate);
     
     List<SaCcrCalculation> findByNettingSet_IdAndCalculationDateBetween(

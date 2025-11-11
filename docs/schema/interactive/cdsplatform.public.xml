@@ -1,0 +1,1593 @@
+<?xml version="1.0" encoding="UTF-8"?><database name="cdsplatform" schema="public" type="PostgreSQL - 16.10">
+   <sequences>
+      <sequence increment="1" name="accrual_events_id_seq" startValue="1"/>
+      <sequence increment="1" name="basket_constituents_id_seq" startValue="1"/>
+      <sequence increment="1" name="basket_definitions_id_seq" startValue="1"/>
+      <sequence increment="1" name="basket_portfolio_constituents_id_seq" startValue="1"/>
+      <sequence increment="1" name="bond_portfolio_constituents_id_seq" startValue="1"/>
+      <sequence increment="1" name="bonds_id_seq" startValue="1"/>
+      <sequence increment="1" name="ccp_accounts_id_seq" startValue="1"/>
+      <sequence increment="1" name="cds_portfolio_constituents_id_seq" startValue="1"/>
+      <sequence increment="1" name="cds_portfolios_id_seq" startValue="1"/>
+      <sequence increment="1" name="cds_trades_id_seq" startValue="1"/>
+      <sequence increment="1" name="collateral_ledger_id_seq" startValue="1"/>
+      <sequence increment="1" name="compression_proposal_items_id_seq" startValue="1"/>
+      <sequence increment="1" name="compression_proposals_id_seq" startValue="1"/>
+      <sequence increment="1" name="coupon_periods_id_seq" startValue="1"/>
+      <sequence increment="1" name="crif_sensitivities_id_seq" startValue="1"/>
+      <sequence increment="1" name="crif_uploads_id_seq" startValue="1"/>
+      <sequence increment="1" name="margin_positions_id_seq" startValue="1"/>
+      <sequence increment="1" name="margin_statements_id_seq" startValue="1"/>
+      <sequence increment="1" name="margin_tolerance_config_id_seq" startValue="1"/>
+      <sequence increment="1" name="netting_sets_id_seq" startValue="1"/>
+      <sequence increment="1" name="notional_adjustments_id_seq" startValue="1"/>
+      <sequence increment="1" name="portfolio_risk_cache_id_seq" startValue="1"/>
+      <sequence increment="1" name="position_discrepancies_id_seq" startValue="1"/>
+      <sequence increment="1" name="sa_ccr_audit_trail_id_seq" startValue="1"/>
+      <sequence increment="1" name="sa_ccr_calculation_details_id_seq" startValue="1"/>
+      <sequence increment="1" name="sa_ccr_calculations_id_seq" startValue="1"/>
+      <sequence increment="1" name="sa_ccr_supervisory_parameters_id_seq" startValue="1"/>
+      <sequence increment="1" name="sa_ccr_trade_mappings_id_seq" startValue="1"/>
+      <sequence increment="1" name="simm_bucket_mappings_id_seq" startValue="1"/>
+      <sequence increment="1" name="simm_calculation_audit_id_seq" startValue="1"/>
+      <sequence increment="1" name="simm_calculation_results_id_seq" startValue="1"/>
+      <sequence increment="1" name="simm_calculations_id_seq" startValue="1"/>
+      <sequence increment="1" name="simm_correlations_id_seq" startValue="1"/>
+      <sequence increment="1" name="simm_parameter_sets_id_seq" startValue="1"/>
+      <sequence increment="1" name="simm_risk_weights_id_seq" startValue="1"/>
+      <sequence increment="1" name="simulation_audit_id_seq" startValue="1"/>
+      <sequence increment="1" name="simulation_contributors_id_seq" startValue="1"/>
+      <sequence increment="1" name="simulation_horizon_metrics_id_seq" startValue="1"/>
+      <sequence increment="1" name="simulation_runs_id_seq" startValue="1"/>
+      <sequence increment="1" name="statement_processing_log_id_seq" startValue="1"/>
+      <sequence increment="1" name="trade_amendments_id_seq" startValue="1"/>
+      <sequence increment="1" name="trade_novations_id_seq" startValue="1"/>
+   </sequences>
+   <tables>
+      <table name="accrual_events" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('accrual_events_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="trade_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="accrual_events_trade_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="cds_trades"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="coupon_period_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="accrual_events_coupon_period_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="coupon_periods"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="accrual_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="4" name="accrual_amount" nullable="false" remarks="" size="15" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="5" name="cumulative_accrual" nullable="false" remarks="" size="15" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="8" id="6" name="day_count_fraction" nullable="false" remarks="" size="10" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="7" name="notional_amount" nullable="false" remarks="" size="15" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="1" digits="0" id="8" name="trade_version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="9" name="posted_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="accrual_events_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="accrual_events_trade_id_accrual_date_trade_version_key" unique="true">
+            <column ascending="true" name="trade_id"/>
+            <column ascending="true" name="accrual_date"/>
+            <column ascending="true" name="trade_version"/>
+         </index>
+         <index name="idx_accrual_events_accrual_date" unique="false">
+            <column ascending="true" name="accrual_date"/>
+         </index>
+         <index name="idx_accrual_events_trade_id" unique="false">
+            <column ascending="true" name="trade_id"/>
+         </index>
+         <index name="idx_accrual_events_trade_version" unique="false">
+            <column ascending="true" name="trade_id"/>
+            <column ascending="true" name="trade_version"/>
+         </index>
+      </table>
+      <table name="basket_constituents" remarks="Constituent reference entities for basket instruments" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('basket_constituents_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="basket_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="basket_constituents_basket_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="basket_definitions"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="issuer" nullable="false" remarks="" size="40" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="10" id="3" name="weight" nullable="true" remarks="Notional weight; NULL means equal weighting" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="4" name="recovery_override" nullable="true" remarks="Override default recovery rate; NULL uses issuer default" size="5" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="seniority" nullable="true" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="sector" nullable="true" remarks="" size="30" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="0" digits="0" id="7" name="sequence_order" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="8" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="basket_constituents_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="basket_constituents_basket_id_issuer_key" unique="true">
+            <column ascending="true" name="basket_id"/>
+            <column ascending="true" name="issuer"/>
+         </index>
+         <index name="idx_basket_constituents_basket_id" unique="false">
+            <column ascending="true" name="basket_id"/>
+         </index>
+         <index name="idx_basket_constituents_issuer" unique="false">
+            <column ascending="true" name="issuer"/>
+         </index>
+         <index name="idx_basket_constituents_sector" unique="false">
+            <column ascending="true" name="sector"/>
+         </index>
+         <checkConstraint constraint="(((recovery_override IS NULL) OR ((recovery_override &gt;= (0)::numeric) AND (recovery_override &lt;= (1)::numeric))))" name="basket_constituents_recovery_override_check"/>
+         <checkConstraint constraint="(((seniority IS NULL) OR ((seniority)::text = ANY ((ARRAY['SR_UNSEC'::character varying, 'SR_SEC'::character varying, 'SUBORD'::character varying])::text[]))))" name="basket_constituents_seniority_check"/>
+         <checkConstraint constraint="(((weight IS NULL) OR ((weight &gt;= (0)::numeric) AND (weight &lt;= (1)::numeric))))" name="basket_constituents_weight_check"/>
+      </table>
+      <table name="basket_definitions" remarks="Basket credit derivative definitions (First-to-Default, N-th-to-Default, Tranche)" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('basket_definitions_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+            <child column="basket_id" foreignKey="basket_constituents_basket_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="basket_constituents"/>
+            <child column="basket_id" foreignKey="fk_basket_constituent" implied="false" onDeleteCascade="true" schema="public" table="basket_portfolio_constituents"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="name" nullable="false" remarks="" size="80" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="type" nullable="false" remarks="Basket type: FIRST_TO_DEFAULT, NTH_TO_DEFAULT, TRANCHETTE" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="nth" nullable="true" remarks="For N-th-to-Default: which default triggers (1=first, 2=second, etc.)" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="4" name="attachment_point" nullable="true" remarks="For tranches: lower bound of loss slice (0-1)" size="9" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="5" name="detachment_point" nullable="true" remarks="For tranches: upper bound of loss slice (0-1)" size="9" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="premium_frequency" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="day_count" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="'USD'::character varying" digits="0" id="8" name="currency" nullable="false" remarks="" size="3" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="9" name="notional" nullable="false" remarks="" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="maturity_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="11" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="12" name="updated_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="basket_definitions_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="basket_definitions_name_key" unique="true">
+            <column ascending="true" name="name"/>
+         </index>
+         <index name="idx_basket_definitions_currency" unique="false">
+            <column ascending="true" name="currency"/>
+         </index>
+         <index name="idx_basket_definitions_maturity_date" unique="false">
+            <column ascending="true" name="maturity_date"/>
+         </index>
+         <index name="idx_basket_definitions_type" unique="false">
+            <column ascending="true" name="type"/>
+         </index>
+         <checkConstraint constraint="(((((type)::text = 'NTH_TO_DEFAULT'::text) AND (nth IS NOT NULL) AND (nth &gt;= 1)) OR ((type)::text &lt;&gt; 'NTH_TO_DEFAULT'::text)))" name="basket_definitions_check"/>
+         <checkConstraint constraint="(((((type)::text = 'TRANCHETTE'::text) AND (attachment_point IS NOT NULL) AND (detachment_point IS NOT NULL) AND (attachment_point &gt;= (0)::numeric) AND (attachment_point &lt; detachment_point) AND (detachment_point &lt;= (1)::numeric)) OR ((type)::text &lt;&gt; 'TRANCHETTE'::text)))" name="basket_definitions_check1"/>
+         <checkConstraint constraint="(((day_count)::text = ANY ((ARRAY['ACT_360'::character varying, 'ACT_365F'::character varying])::text[])))" name="basket_definitions_day_count_check"/>
+         <checkConstraint constraint="((notional &gt; (0)::numeric))" name="basket_definitions_notional_check"/>
+         <checkConstraint constraint="(((premium_frequency)::text = ANY ((ARRAY['QUARTERLY'::character varying, 'SEMI_ANNUAL'::character varying])::text[])))" name="basket_definitions_premium_frequency_check"/>
+         <checkConstraint constraint="(((type)::text = ANY ((ARRAY['FIRST_TO_DEFAULT'::character varying, 'NTH_TO_DEFAULT'::character varying, 'TRANCHETTE'::character varying])::text[])))" name="basket_definitions_type_check"/>
+      </table>
+      <table name="basket_portfolio_constituents" remarks="Maps basket derivatives to portfolios for multi-asset credit portfolios" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('basket_portfolio_constituents_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="portfolio_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_basket_portfolio" implied="false" onDeleteCascade="true" schema="public" table="cds_portfolios"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="basket_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_basket_constituent" implied="false" onDeleteCascade="true" schema="public" table="basket_definitions"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="weight_type" nullable="false" remarks="How the basket is weighted in the portfolio: EQUAL, NOTIONAL, or MARKET_VALUE" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="4" name="weight_value" nullable="false" remarks="Weight value corresponding to the weight_type" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="true" digits="0" id="5" name="active" nullable="false" remarks="Whether this basket is currently active in the portfolio" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="6" name="added_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="basket_portfolio_constituents_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_basket_constituents_active" unique="false">
+            <column ascending="true" name="active"/>
+         </index>
+         <index name="idx_basket_constituents_basket" unique="false">
+            <column ascending="true" name="basket_id"/>
+         </index>
+         <index name="idx_basket_constituents_portfolio" unique="false">
+            <column ascending="true" name="portfolio_id"/>
+         </index>
+         <index name="unique_basket_in_portfolio" unique="true">
+            <column ascending="true" name="portfolio_id"/>
+            <column ascending="true" name="basket_id"/>
+         </index>
+         <checkConstraint constraint="(((weight_type)::text = ANY ((ARRAY['EQUAL'::character varying, 'NOTIONAL'::character varying, 'MARKET_VALUE'::character varying])::text[])))" name="basket_portfolio_constituents_weight_type_check"/>
+      </table>
+      <table name="bond_portfolio_constituents" remarks="Maps bonds to portfolios for multi-asset credit portfolios" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('bond_portfolio_constituents_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="portfolio_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_bond_portfolio" implied="false" onDeleteCascade="true" schema="public" table="cds_portfolios"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="bond_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_bond_constituent" implied="false" onDeleteCascade="true" schema="public" table="bonds"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="weight_type" nullable="false" remarks="How the bond is weighted in the portfolio: EQUAL, NOTIONAL, or MARKET_VALUE" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="4" name="weight_value" nullable="false" remarks="Weight value corresponding to the weight_type" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="true" digits="0" id="5" name="active" nullable="false" remarks="Whether this bond is currently active in the portfolio" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="6" name="added_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="bond_portfolio_constituents_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_bond_constituents_active" unique="false">
+            <column ascending="true" name="active"/>
+         </index>
+         <index name="idx_bond_constituents_bond" unique="false">
+            <column ascending="true" name="bond_id"/>
+         </index>
+         <index name="idx_bond_constituents_portfolio" unique="false">
+            <column ascending="true" name="portfolio_id"/>
+         </index>
+         <index name="unique_bond_in_portfolio" unique="true">
+            <column ascending="true" name="portfolio_id"/>
+            <column ascending="true" name="bond_id"/>
+         </index>
+         <checkConstraint constraint="(((weight_type)::text = ANY ((ARRAY['EQUAL'::character varying, 'NOTIONAL'::character varying, 'MARKET_VALUE'::character varying])::text[])))" name="bond_portfolio_constituents_weight_type_check"/>
+      </table>
+      <table name="bonds" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('bonds_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+            <child column="bond_id" foreignKey="fk_bond_constituent" implied="false" onDeleteCascade="true" schema="public" table="bond_portfolio_constituents"/>
+            <child column="obligation_id" foreignKey="fk_cds_trade_obligation" implied="false" onDeleteCascade="false" schema="public" table="cds_trades"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="isin" nullable="true" remarks="" size="12" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="issuer" nullable="false" remarks="" size="40" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="seniority" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="sector" nullable="true" remarks="" size="30" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="'USD'::character varying" digits="0" id="5" name="currency" nullable="false" remarks="" size="3" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="6" name="notional" nullable="false" remarks="" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="7" name="coupon_rate" nullable="false" remarks="" size="9" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="coupon_frequency" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="day_count" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="issue_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="maturity_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="2" digits="0" id="12" name="settlement_days" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="100.00" digits="2" id="13" name="face_value" nullable="true" remarks="" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="'CLEAN'::character varying" digits="0" id="14" name="price_convention" nullable="true" remarks="" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="15" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="16" name="updated_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="bonds_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_bonds_currency" unique="false">
+            <column ascending="true" name="currency"/>
+         </index>
+         <index name="idx_bonds_isin_unique" unique="true">
+            <column ascending="true" name="isin"/>
+         </index>
+         <index name="idx_bonds_issuer" unique="false">
+            <column ascending="true" name="issuer"/>
+         </index>
+         <index name="idx_bonds_maturity_date" unique="false">
+            <column ascending="true" name="maturity_date"/>
+         </index>
+         <index name="idx_bonds_sector" unique="false">
+            <column ascending="true" name="sector"/>
+         </index>
+         <checkConstraint constraint="((issue_date &lt; maturity_date))" name="bonds_check"/>
+         <checkConstraint constraint="((coupon_rate &gt;= (0)::numeric))" name="bonds_coupon_rate_check"/>
+         <checkConstraint constraint="((notional &gt; (0)::numeric))" name="bonds_notional_check"/>
+         <checkConstraint constraint="((settlement_days &gt;= 0))" name="bonds_settlement_days_check"/>
+      </table>
+      <table name="ccp_account_product_eligibility" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="ccp_account_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_ccp_account_eligibility" implied="false" onDeleteCascade="true" schema="public" table="ccp_accounts"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="product_type" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <primaryKey column="ccp_account_id" sequenceNumberInPK="1"/>
+         <primaryKey column="product_type" sequenceNumberInPK="2"/>
+         <index name="ccp_account_product_eligibility_pkey" unique="true">
+            <column ascending="true" name="ccp_account_id"/>
+            <column ascending="true" name="product_type"/>
+         </index>
+         <index name="idx_ccp_eligibility_product" unique="false">
+            <column ascending="true" name="product_type"/>
+         </index>
+      </table>
+      <table name="ccp_accounts" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('ccp_accounts_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+            <child column="ccp_account_id" foreignKey="fk_ccp_account_eligibility" implied="false" onDeleteCascade="true" schema="public" table="ccp_account_product_eligibility"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="ccp_name" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="member_firm" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="member_id" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="account_number" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="account_name" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="account_type" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="'PENDING_APPROVAL'::character varying" digits="0" id="7" name="status" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="8" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="9" name="updated_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="ccp_accounts_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_ccp_accounts_ccp_name" unique="false">
+            <column ascending="true" name="ccp_name"/>
+         </index>
+         <index name="idx_ccp_accounts_created_at" unique="false">
+            <column ascending="true" name="created_at"/>
+         </index>
+         <index name="idx_ccp_accounts_member_firm" unique="false">
+            <column ascending="true" name="member_firm"/>
+         </index>
+         <index name="idx_ccp_accounts_status" unique="false">
+            <column ascending="true" name="status"/>
+         </index>
+         <index name="uk_ccp_member_account" unique="true">
+            <column ascending="true" name="ccp_name"/>
+            <column ascending="true" name="member_firm"/>
+            <column ascending="true" name="account_number"/>
+         </index>
+         <checkConstraint constraint="(((account_type)::text = ANY ((ARRAY['HOUSE'::character varying, 'CLIENT'::character varying, 'SEGREGATED'::character varying])::text[])))" name="ccp_accounts_account_type_check"/>
+         <checkConstraint constraint="(((status)::text = ANY ((ARRAY['ACTIVE'::character varying, 'INACTIVE'::character varying, 'SUSPENDED'::character varying, 'PENDING_APPROVAL'::character varying])::text[])))" name="ccp_accounts_status_check"/>
+      </table>
+      <table name="cds_audit_log" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="gen_random_uuid()" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="entity_type" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="entity_id" nullable="false" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="action" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="4" name="timestamp" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="actor" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="summary" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="correlation_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="cds_audit_log_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_audit_log_actor" unique="false">
+            <column ascending="true" name="actor"/>
+         </index>
+         <index name="idx_audit_log_correlation" unique="false">
+            <column ascending="true" name="correlation_id"/>
+         </index>
+         <index name="idx_audit_log_entity" unique="false">
+            <column ascending="true" name="entity_type"/>
+            <column ascending="true" name="entity_id"/>
+         </index>
+         <index name="idx_audit_log_novation" unique="false">
+            <column ascending="true" name="action"/>
+            <column ascending="true" name="correlation_id"/>
+         </index>
+         <index name="idx_audit_log_saccr" unique="false">
+            <column ascending="true" name="entity_type"/>
+            <column ascending="true" name="entity_id"/>
+         </index>
+         <index name="idx_audit_log_simm" unique="false">
+            <column ascending="true" name="entity_type"/>
+            <column ascending="true" name="entity_id"/>
+         </index>
+         <index name="idx_audit_log_timestamp" unique="false">
+            <column ascending="true" name="timestamp"/>
+         </index>
+         <checkConstraint constraint="(((action)::text = ANY ((ARRAY['CREATE'::character varying, 'UPDATE'::character varying, 'DELETE'::character varying, 'TRANSITION'::character varying, 'CALCULATE'::character varying, 'NOVATION'::character varying])::text[])))" name="ck_action"/>
+         <checkConstraint constraint="(((entity_type)::text = ANY ((ARRAY['CREDIT_EVENT'::character varying, 'CASH_SETTLEMENT'::character varying, 'PHYSICAL_SETTLEMENT'::character varying, 'TRADE'::character varying, 'SIMM_CALCULATION'::character varying, 'SACCR_CALCULATION'::character varying])::text[])))" name="ck_entity_type"/>
+      </table>
+      <table name="cds_cash_settlements" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="gen_random_uuid()" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="credit_event_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="fk_cash_settlement_credit_event" implied="false" onDeleteCascade="false" schema="public" table="cds_credit_events"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="trade_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_cash_settlement_trade" implied="false" onDeleteCascade="false" schema="public" table="cds_trades"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="3" name="notional" nullable="false" remarks="" size="15" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="4" name="recovery_rate" nullable="false" remarks="" size="5" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="5" name="payout_amount" nullable="false" remarks="" size="15" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="6" name="calculated_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="cds_cash_settlements_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_cash_settlements_trade_id" unique="false">
+            <column ascending="true" name="trade_id"/>
+         </index>
+         <index name="uk_cash_settlement_event" unique="true">
+            <column ascending="true" name="credit_event_id"/>
+         </index>
+         <checkConstraint constraint="((payout_amount &gt;= (0)::numeric))" name="ck_non_negative_payout"/>
+         <checkConstraint constraint="((notional &gt; (0)::numeric))" name="ck_positive_notional"/>
+         <checkConstraint constraint="(((recovery_rate &gt;= (0)::numeric) AND (recovery_rate &lt;= (1)::numeric)))" name="ck_recovery_rate_range"/>
+      </table>
+      <table name="cds_credit_events" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="gen_random_uuid()" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <child column="credit_event_id" foreignKey="fk_cash_settlement_credit_event" implied="false" onDeleteCascade="false" schema="public" table="cds_cash_settlements"/>
+            <child column="credit_event_id" foreignKey="fk_physical_settlement_credit_event" implied="false" onDeleteCascade="false" schema="public" table="cds_physical_settlement_instructions"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="trade_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_credit_event_trade" implied="false" onDeleteCascade="false" schema="public" table="cds_trades"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="event_type" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="event_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="notice_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="settlement_method" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="comments" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="7" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="8" name="updated_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="cds_credit_events_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_credit_events_event_date" unique="false">
+            <column ascending="true" name="event_date"/>
+         </index>
+         <index name="idx_credit_events_trade_id" unique="false">
+            <column ascending="true" name="trade_id"/>
+         </index>
+         <index name="uk_credit_event_unique" unique="true">
+            <column ascending="true" name="trade_id"/>
+            <column ascending="true" name="event_type"/>
+            <column ascending="true" name="event_date"/>
+         </index>
+         <checkConstraint constraint="(((event_type)::text = ANY ((ARRAY['BANKRUPTCY'::character varying, 'FAILURE_TO_PAY'::character varying, 'RESTRUCTURING'::character varying, 'OBLIGATION_DEFAULT'::character varying, 'REPUDIATION_MORATORIUM'::character varying, 'PAYOUT'::character varying])::text[])))" name="ck_event_type"/>
+         <checkConstraint constraint="((notice_date &gt;= event_date))" name="ck_notice_date_after_event"/>
+         <checkConstraint constraint="(((settlement_method)::text = ANY ((ARRAY['CASH'::character varying, 'PHYSICAL'::character varying])::text[])))" name="ck_settlement_method"/>
+      </table>
+      <table name="cds_physical_settlement_instructions" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="gen_random_uuid()" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="credit_event_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="fk_physical_settlement_credit_event" implied="false" onDeleteCascade="false" schema="public" table="cds_credit_events"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="trade_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_physical_settlement_trade" implied="false" onDeleteCascade="false" schema="public" table="cds_trades"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="reference_obligation_isin" nullable="true" remarks="" size="12" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="proposed_delivery_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="notes" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="'DRAFT'::character varying" digits="0" id="6" name="status" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="7" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="8" name="updated_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="cds_physical_settlement_instructions_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_physical_settlements_trade_id" unique="false">
+            <column ascending="true" name="trade_id"/>
+         </index>
+         <index name="uk_physical_settlement_event" unique="true">
+            <column ascending="true" name="credit_event_id"/>
+         </index>
+         <checkConstraint constraint="(((status)::text = ANY ((ARRAY['DRAFT'::character varying, 'PENDING'::character varying, 'CONFIRMED'::character varying, 'COMPLETED'::character varying])::text[])))" name="ck_instruction_status"/>
+      </table>
+      <table name="cds_portfolio_constituents" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('cds_portfolio_constituents_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="portfolio_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_constituent_portfolio" implied="false" onDeleteCascade="true" schema="public" table="cds_portfolios"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="trade_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_constituent_trade" implied="false" onDeleteCascade="true" schema="public" table="cds_trades"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="weight_type" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="4" name="weight_value" nullable="false" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="true" digits="0" id="5" name="active" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="6" name="added_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="cds_portfolio_constituents_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_constituents_active" unique="false">
+            <column ascending="true" name="active"/>
+         </index>
+         <index name="idx_constituents_portfolio" unique="false">
+            <column ascending="true" name="portfolio_id"/>
+         </index>
+         <index name="idx_constituents_trade" unique="false">
+            <column ascending="true" name="trade_id"/>
+         </index>
+         <index name="uk_portfolio_trade" unique="true">
+            <column ascending="true" name="portfolio_id"/>
+            <column ascending="true" name="trade_id"/>
+         </index>
+         <checkConstraint constraint="(((weight_type)::text = ANY ((ARRAY['NOTIONAL'::character varying, 'PERCENT'::character varying])::text[])))" name="cds_portfolio_constituents_weight_type_check"/>
+      </table>
+      <table name="cds_portfolios" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('cds_portfolios_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+            <child column="portfolio_id" foreignKey="fk_basket_portfolio" implied="false" onDeleteCascade="true" schema="public" table="basket_portfolio_constituents"/>
+            <child column="portfolio_id" foreignKey="fk_bond_portfolio" implied="false" onDeleteCascade="true" schema="public" table="bond_portfolio_constituents"/>
+            <child column="portfolio_id" foreignKey="fk_constituent_portfolio" implied="false" onDeleteCascade="true" schema="public" table="cds_portfolio_constituents"/>
+            <child column="portfolio_id" foreignKey="fk_risk_cache_portfolio" implied="false" onDeleteCascade="true" schema="public" table="portfolio_risk_cache"/>
+            <child column="portfolio_id" foreignKey="fk_simulation_portfolio" implied="false" onDeleteCascade="true" schema="public" table="simulation_runs"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="name" nullable="false" remarks="" size="60" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="description" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="3" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="4" name="updated_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="cds_portfolios_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="uk_portfolio_name" unique="true"/>
+      </table>
+      <table name="cds_trades" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('cds_trades_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+            <child column="trade_id" foreignKey="accrual_events_trade_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="accrual_events"/>
+            <child column="trade_id" foreignKey="fk_cash_settlement_trade" implied="false" onDeleteCascade="false" schema="public" table="cds_cash_settlements"/>
+            <child column="trade_id" foreignKey="fk_credit_event_trade" implied="false" onDeleteCascade="false" schema="public" table="cds_credit_events"/>
+            <child column="trade_id" foreignKey="fk_physical_settlement_trade" implied="false" onDeleteCascade="false" schema="public" table="cds_physical_settlement_instructions"/>
+            <child column="trade_id" foreignKey="fk_constituent_trade" implied="false" onDeleteCascade="true" schema="public" table="cds_portfolio_constituents"/>
+            <child column="original_trade_id" foreignKey="fk_original_trade" implied="false" onDeleteCascade="false" schema="public" table="cds_trades"/>
+            <child column="trade_id" foreignKey="compression_proposal_items_trade_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="compression_proposal_items"/>
+            <child column="trade_id" foreignKey="coupon_periods_trade_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="coupon_periods"/>
+            <child column="trade_id" foreignKey="notional_adjustments_trade_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="notional_adjustments"/>
+            <child column="trade_id" foreignKey="sa_ccr_trade_mappings_trade_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="sa_ccr_trade_mappings"/>
+            <child column="trade_id" foreignKey="trade_amendments_trade_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="trade_amendments"/>
+            <child column="new_trade_id" foreignKey="trade_novations_new_trade_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="trade_novations"/>
+            <child column="original_trade_id" foreignKey="trade_novations_original_trade_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="trade_novations"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="reference_entity" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="2" name="notional_amount" nullable="false" remarks="" size="15" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="3" name="spread" nullable="false" remarks="" size="10" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="maturity_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="effective_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="counterparty" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="trade_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="'USD'::character varying" digits="0" id="8" name="currency" nullable="false" remarks="" size="3" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="'QUARTERLY'::character varying" digits="0" id="9" name="premium_frequency" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="'ACT_360'::character varying" digits="0" id="10" name="day_count_convention" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="buy_sell_protection" nullable="false" remarks="" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="restructuring_clause" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="'NYC'::character varying" digits="0" id="13" name="payment_calendar" nullable="false" remarks="" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="accrual_start_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="15" name="created_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="16" name="updated_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="17" name="trade_status" nullable="false" remarks="" size="40" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="1" digits="0" id="18" name="version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="40.00" digits="2" id="19" name="recovery_rate" nullable="false" remarks="Recovery rate as a percentage (0-100). Default is 40% for senior unsecured corporate debt." size="5" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="20" name="obligation_id" nullable="true" remarks="Optional reference to a specific bond (obligation) from the reference entity issuer" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_cds_trade_obligation" implied="false" onDeleteCascade="false" schema="public" table="bonds"/>
+         </column>
+         <column autoUpdated="false" defaultValue="'CASH'::character varying" digits="0" id="21" name="settlement_type" nullable="false" remarks="Settlement method for credit events: CASH or PHYSICAL" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="22" name="ccp_name" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="23" name="ccp_member_id" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="24" name="clearing_account" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="25" name="netting_set_id" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="26" name="original_trade_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_original_trade" implied="false" onDeleteCascade="false" schema="public" table="cds_trades"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="27" name="novation_timestamp" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="28" name="novation_reference" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="29" name="uti" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="30" name="usi" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="31" name="is_cleared" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="32" name="mark_to_market_value" nullable="true" remarks="" size="15" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="33" name="upfront_amount" nullable="true" remarks="" size="15" type="numeric" typeCode="2"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="cds_trades_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_cds_ccp_name" unique="false">
+            <column ascending="true" name="ccp_name"/>
+         </index>
+         <index name="idx_cds_counterparty" unique="false">
+            <column ascending="true" name="counterparty"/>
+         </index>
+         <index name="idx_cds_created_at" unique="false">
+            <column ascending="true" name="created_at"/>
+         </index>
+         <index name="idx_cds_is_cleared" unique="false">
+            <column ascending="true" name="is_cleared"/>
+         </index>
+         <index name="idx_cds_mark_to_market_value" unique="false">
+            <column ascending="true" name="mark_to_market_value"/>
+         </index>
+         <index name="idx_cds_novation_reference" unique="false">
+            <column ascending="true" name="novation_reference"/>
+         </index>
+         <index name="idx_cds_novation_timestamp" unique="false">
+            <column ascending="true" name="novation_timestamp"/>
+         </index>
+         <index name="idx_cds_original_trade_id" unique="false">
+            <column ascending="true" name="original_trade_id"/>
+         </index>
+         <index name="idx_cds_reference_entity" unique="false">
+            <column ascending="true" name="reference_entity"/>
+         </index>
+         <index name="idx_cds_settlement_type" unique="false">
+            <column ascending="true" name="settlement_type"/>
+         </index>
+         <index name="idx_cds_trade_date" unique="false">
+            <column ascending="true" name="trade_date"/>
+         </index>
+         <index name="idx_cds_trades_obligation" unique="false">
+            <column ascending="true" name="obligation_id"/>
+         </index>
+         <index name="idx_cds_usi_unique" unique="true">
+            <column ascending="true" name="usi"/>
+         </index>
+         <index name="idx_cds_uti_unique" unique="true">
+            <column ascending="true" name="uti"/>
+         </index>
+         <checkConstraint constraint="(((buy_sell_protection)::text = ANY ((ARRAY['BUY'::character varying, 'SELL'::character varying])::text[])))" name="cds_trades_buy_sell_protection_check"/>
+         <checkConstraint constraint="(((settlement_type)::text = ANY ((ARRAY['CASH'::character varying, 'PHYSICAL'::character varying])::text[])))" name="cds_trades_settlement_type_check"/>
+         <checkConstraint constraint="(((trade_status)::text = ANY ((ARRAY['PENDING'::character varying, 'ACTIVE'::character varying, 'CREDIT_EVENT_RECORDED'::character varying, 'TRIGGERED'::character varying, 'SETTLED_CASH'::character varying, 'SETTLED_PHYSICAL'::character varying, 'CANCELLED'::character varying, 'PARTIALLY_TERMINATED'::character varying, 'NOVATED'::character varying, 'TERMINATED'::character varying, 'COMPRESSED'::character varying])::text[])))" name="chk_trade_status_values"/>
+      </table>
+      <table name="collateral_ledger" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('collateral_ledger_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="ccp_name" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="member_firm" nullable="false" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="account_number" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="position_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="position_type" nullable="false" remarks="" size="2147483647" type="position_type" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="currency" nullable="false" remarks="" size="3" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="0" digits="4" id="7" name="opening_balance" nullable="true" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="0" digits="4" id="8" name="variation_margin" nullable="true" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="0" digits="4" id="9" name="initial_margin" nullable="true" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="0" digits="4" id="10" name="excess_collateral" nullable="true" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="11" name="closing_balance" nullable="false" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="source_statement_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="collateral_ledger_source_statement_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="margin_statements"/>
+         </column>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="13" name="created_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="14" name="updated_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="collateral_ledger_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="collateral_ledger_ccp_name_member_firm_account_number_posit_key" unique="true">
+            <column ascending="true" name="ccp_name"/>
+            <column ascending="true" name="member_firm"/>
+            <column ascending="true" name="account_number"/>
+            <column ascending="true" name="position_date"/>
+            <column ascending="true" name="position_type"/>
+            <column ascending="true" name="currency"/>
+         </index>
+         <index name="idx_collateral_ledger_account_date" unique="false">
+            <column ascending="true" name="ccp_name"/>
+            <column ascending="true" name="member_firm"/>
+            <column ascending="true" name="account_number"/>
+            <column ascending="true" name="position_date"/>
+         </index>
+         <index name="idx_collateral_ledger_position_date" unique="false">
+            <column ascending="true" name="position_date"/>
+         </index>
+      </table>
+      <table name="compression_proposal_items" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('compression_proposal_items_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="proposal_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="compression_proposal_items_proposal_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="compression_proposals"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="trade_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="compression_proposal_items_trade_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="cds_trades"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="3" name="original_notional" nullable="false" remarks="" size="15" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="4" name="adjusted_notional" nullable="false" remarks="" size="15" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="5" name="notional_change" nullable="false" remarks="" size="15" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="6" name="termination_flag" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="compression_proposal_items_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="compression_proposal_items_proposal_id_trade_id_key" unique="true">
+            <column ascending="true" name="proposal_id"/>
+            <column ascending="true" name="trade_id"/>
+         </index>
+         <index name="idx_compression_items_proposal" unique="false">
+            <column ascending="true" name="proposal_id"/>
+         </index>
+         <index name="idx_compression_items_trade" unique="false">
+            <column ascending="true" name="trade_id"/>
+         </index>
+      </table>
+      <table name="compression_proposals" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('compression_proposals_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+            <child column="proposal_id" foreignKey="compression_proposal_items_proposal_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="compression_proposal_items"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="proposal_id" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="proposal_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="execution_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="'PENDING'::character varying" digits="0" id="4" name="status" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="5" name="cs01_tolerance_check" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="6" name="total_gross_notional_before" nullable="true" remarks="" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="7" name="total_gross_notional_after" nullable="true" remarks="" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="8" name="net_notional_reduction" nullable="true" remarks="" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="number_of_trades_affected" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="10" name="created_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="compression_proposals_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="compression_proposals_proposal_id_key" unique="true">
+            <column ascending="true" name="proposal_id"/>
+         </index>
+         <index name="idx_compression_proposals_date" unique="false">
+            <column ascending="true" name="proposal_date"/>
+         </index>
+         <index name="idx_compression_proposals_status" unique="false">
+            <column ascending="true" name="status"/>
+         </index>
+         <checkConstraint constraint="(((status)::text = ANY ((ARRAY['PENDING'::character varying, 'EXECUTED'::character varying, 'REJECTED'::character varying, 'CANCELLED'::character varying])::text[])))" name="compression_proposals_status_check"/>
+      </table>
+      <table name="coupon_periods" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('coupon_periods_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+            <child column="coupon_period_id" foreignKey="accrual_events_coupon_period_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="accrual_events"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="trade_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="coupon_periods_trade_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="cds_trades"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="period_start_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="period_end_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="payment_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="accrual_days" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="6" name="notional_amount" nullable="false" remarks="" size="15" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="'ACT_360'::character varying" digits="0" id="7" name="day_count_convention" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="'MODIFIED_FOLLOWING'::character varying" digits="0" id="8" name="business_day_convention" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="9" name="created_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="10" name="paid" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="11" name="paid_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="coupon_periods_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="coupon_periods_trade_id_period_start_date_key" unique="true">
+            <column ascending="true" name="trade_id"/>
+            <column ascending="true" name="period_start_date"/>
+         </index>
+         <index name="idx_coupon_periods_paid" unique="false">
+            <column ascending="true" name="paid"/>
+            <column ascending="true" name="payment_date"/>
+         </index>
+         <index name="idx_coupon_periods_payment_date" unique="false">
+            <column ascending="true" name="payment_date"/>
+         </index>
+         <index name="idx_coupon_periods_trade_id" unique="false">
+            <column ascending="true" name="trade_id"/>
+         </index>
+         <index name="idx_coupon_periods_trade_paid" unique="false">
+            <column ascending="true" name="trade_id"/>
+            <column ascending="true" name="paid"/>
+         </index>
+      </table>
+      <table name="crif_sensitivities" remarks="CRIF (Common Risk Interchange Format) sensitivity records for SIMM calculations" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('crif_sensitivities_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="upload_id" nullable="false" remarks="Reference to the CRIF upload batch" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="crif_sensitivities_upload_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="crif_uploads"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="trade_id" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="portfolio_id" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="product_class" nullable="false" remarks="SIMM product class: RatesFX, Credit, Equity, Commodity" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="risk_type" nullable="false" remarks="Specific risk type (e.g., Risk_IRCurve, Risk_CreditQ)" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="risk_class" nullable="false" remarks="High-level risk class: IR, FX, EQ, CO, CR_Q, CR_NQ" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="bucket" nullable="true" remarks="SIMM bucket for correlation purposes" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="label1" nullable="true" remarks="First risk factor label (e.g., Currency, Index Name)" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="label2" nullable="true" remarks="Second risk factor label (e.g., Tenor, Sub-curve)" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="8" id="10" name="amount_base_currency" nullable="false" remarks="Sensitivity amount in base currency" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="8" id="11" name="amount_usd" nullable="true" remarks="Sensitivity amount converted to USD" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="collect_regulations" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="post_regulations" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="end_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="15" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="crif_sensitivities_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_crif_sensitivities_portfolio_id" unique="false">
+            <column ascending="true" name="portfolio_id"/>
+         </index>
+         <index name="idx_crif_sensitivities_product_class" unique="false">
+            <column ascending="true" name="product_class"/>
+         </index>
+         <index name="idx_crif_sensitivities_risk_class" unique="false">
+            <column ascending="true" name="risk_class"/>
+         </index>
+         <index name="idx_crif_sensitivities_trade_id" unique="false">
+            <column ascending="true" name="trade_id"/>
+         </index>
+         <index name="idx_crif_sensitivities_upload_id" unique="false">
+            <column ascending="true" name="upload_id"/>
+         </index>
+      </table>
+      <table name="crif_uploads" remarks="Tracks CRIF (Common Risk Interchange Format) file uploads for SIMM calculations" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('crif_uploads_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+            <child column="upload_id" foreignKey="crif_sensitivities_upload_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="crif_sensitivities"/>
+            <child column="upload_id" foreignKey="simm_calculations_upload_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="simm_calculations"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="upload_id" nullable="false" remarks="Unique identifier for the upload" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="filename" nullable="false" remarks="Name of the uploaded CRIF file" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="portfolio_id" nullable="true" remarks="Portfolio identifier from the CRIF file" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="valuation_date" nullable="false" remarks="Valuation date for the sensitivity data" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="currency" nullable="false" remarks="Base currency for the sensitivity amounts" size="3" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="6" name="upload_timestamp" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="0" digits="0" id="7" name="total_records" nullable="false" remarks="Total number of sensitivity records in the upload" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="0" digits="0" id="8" name="valid_records" nullable="false" remarks="Number of successfully processed records" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="0" digits="0" id="9" name="error_records" nullable="false" remarks="Number of records with processing errors" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="'PENDING'::character varying" digits="0" id="10" name="processing_status" nullable="false" remarks="Processing status: PENDING, PROCESSING, COMPLETED, FAILED" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="error_message" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="12" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="13" name="updated_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="crif_uploads_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="crif_uploads_upload_id_key" unique="true">
+            <column ascending="true" name="upload_id"/>
+         </index>
+         <index name="idx_crif_uploads_created_at" unique="false">
+            <column ascending="false" name="created_at"/>
+         </index>
+         <index name="idx_crif_uploads_portfolio_id" unique="false">
+            <column ascending="true" name="portfolio_id"/>
+         </index>
+         <index name="idx_crif_uploads_status" unique="false">
+            <column ascending="true" name="processing_status"/>
+         </index>
+         <index name="idx_crif_uploads_upload_id" unique="false">
+            <column ascending="true" name="upload_id"/>
+         </index>
+         <index name="idx_crif_uploads_valuation_date" unique="false">
+            <column ascending="true" name="valuation_date"/>
+         </index>
+      </table>
+      <table name="flyway_schema_history" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="installed_rank" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="version" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="description" nullable="false" remarks="" size="200" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="type" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="script" nullable="false" remarks="" size="1000" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="checksum" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="installed_by" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="7" name="installed_on" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="execution_time" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="success" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <primaryKey column="installed_rank" sequenceNumberInPK="1"/>
+         <index name="flyway_schema_history_pk" unique="true">
+            <column ascending="true" name="installed_rank"/>
+         </index>
+         <index name="flyway_schema_history_s_idx" unique="false">
+            <column ascending="true" name="success"/>
+         </index>
+      </table>
+      <table name="margin_positions" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('margin_positions_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="statement_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="margin_positions_statement_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="margin_statements"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="position_type" nullable="false" remarks="Position type as VARCHAR for JPA compatibility" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="3" name="amount" nullable="false" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="currency" nullable="false" remarks="" size="3" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="effective_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="account_number" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="portfolio_code" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="product_class" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="netting_set_id" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="10" name="created_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="margin_positions_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_margin_positions_account" unique="false">
+            <column ascending="true" name="account_number"/>
+            <column ascending="true" name="position_type"/>
+         </index>
+         <index name="idx_margin_positions_effective_date" unique="false">
+            <column ascending="true" name="effective_date"/>
+         </index>
+         <index name="idx_margin_positions_statement" unique="false">
+            <column ascending="true" name="statement_id"/>
+         </index>
+      </table>
+      <table name="margin_statements" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('margin_statements_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+            <child column="source_statement_id" foreignKey="collateral_ledger_source_statement_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="collateral_ledger"/>
+            <child column="statement_id" foreignKey="margin_positions_statement_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="margin_positions"/>
+            <child column="statement_id" foreignKey="position_discrepancies_statement_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="position_discrepancies"/>
+            <child column="statement_id" foreignKey="statement_processing_log_statement_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="statement_processing_log"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="statement_id" nullable="false" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="ccp_name" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="member_firm" nullable="false" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="account_number" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="statement_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="currency" nullable="false" remarks="" size="3" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="statement_format" nullable="false" remarks="Statement format as VARCHAR for JPA compatibility" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="file_name" nullable="true" remarks="" size="500" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="file_size" nullable="true" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="raw_content" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="'PENDING'::statement_status" digits="0" id="11" name="status" nullable="false" remarks="Statement status as VARCHAR for JPA compatibility" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="12" name="created_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="13" name="updated_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="14" name="processed_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="15" name="error_message" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="0" digits="0" id="16" name="retry_count" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="17" name="variation_margin" nullable="true" remarks="Daily variation margin amount - positive means payment required, negative means payment received" size="15" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="18" name="initial_margin" nullable="true" remarks="Required initial margin amount for positions covered by this statement" size="15" type="numeric" typeCode="2"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="margin_statements_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_margin_statements_ccp_date" unique="false">
+            <column ascending="true" name="ccp_name"/>
+            <column ascending="true" name="statement_date"/>
+         </index>
+         <index name="idx_margin_statements_created_at" unique="false">
+            <column ascending="true" name="created_at"/>
+         </index>
+         <index name="idx_margin_statements_initial_margin" unique="false">
+            <column ascending="true" name="initial_margin"/>
+         </index>
+         <index name="idx_margin_statements_status" unique="false">
+            <column ascending="true" name="status"/>
+         </index>
+         <index name="idx_margin_statements_variation_margin" unique="false">
+            <column ascending="true" name="variation_margin"/>
+         </index>
+         <index name="margin_statements_statement_id_ccp_name_statement_date_key" unique="true">
+            <column ascending="true" name="statement_id"/>
+            <column ascending="true" name="ccp_name"/>
+            <column ascending="true" name="statement_date"/>
+         </index>
+      </table>
+      <table name="margin_tolerance_config" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('margin_tolerance_config_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="ccp_name" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="position_type" nullable="false" remarks="" size="2147483647" type="position_type" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="currency" nullable="true" remarks="" size="3" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="4" name="absolute_threshold" nullable="true" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="5" name="percentage_threshold" nullable="true" remarks="" size="8" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="true" digits="0" id="6" name="is_active" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="7" name="created_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="8" name="updated_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="margin_tolerance_config_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="margin_tolerance_config_ccp_name_position_type_currency_key" unique="true">
+            <column ascending="true" name="ccp_name"/>
+            <column ascending="true" name="position_type"/>
+            <column ascending="true" name="currency"/>
+         </index>
+      </table>
+      <table name="netting_sets" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('netting_sets_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="netting_set_id" nullable="false" remarks="" size="100" type="varchar" typeCode="12">
+            <child column="netting_set_id" foreignKey="sa_ccr_calculations_netting_set_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="sa_ccr_calculations"/>
+            <child column="netting_set_id" foreignKey="sa_ccr_trade_mappings_netting_set_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="sa_ccr_trade_mappings"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="counterparty_id" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="legal_agreement_type" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="agreement_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="governing_law" nullable="true" remarks="" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="true" digits="0" id="6" name="netting_eligible" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="7" name="collateral_agreement" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="8" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="9" name="updated_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="netting_sets_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_netting_sets_counterparty" unique="false">
+            <column ascending="true" name="counterparty_id"/>
+         </index>
+         <index name="netting_sets_netting_set_id_key" unique="true">
+            <column ascending="true" name="netting_set_id"/>
+         </index>
+      </table>
+      <table name="notional_adjustments" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('notional_adjustments_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="trade_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="notional_adjustments_trade_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="cds_trades"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="adjustment_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="adjustment_type" nullable="false" remarks="" size="30" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="4" name="original_notional" nullable="false" remarks="" size="15" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="5" name="adjustment_amount" nullable="false" remarks="" size="15" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="6" name="remaining_notional" nullable="false" remarks="" size="15" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="7" name="unwind_cash_amount" nullable="true" remarks="" size="15" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="adjustment_reason" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="9" name="created_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="notional_adjustments_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_notional_adjustments_date" unique="false">
+            <column ascending="true" name="adjustment_date"/>
+         </index>
+         <index name="idx_notional_adjustments_trade_id" unique="false">
+            <column ascending="true" name="trade_id"/>
+         </index>
+         <checkConstraint constraint="(((adjustment_type)::text = ANY ((ARRAY['PARTIAL_TERMINATION'::character varying, 'FULL_TERMINATION'::character varying, 'REDUCTION'::character varying])::text[])))" name="notional_adjustments_adjustment_type_check"/>
+      </table>
+      <table name="portfolio_risk_cache" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('portfolio_risk_cache_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="portfolio_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_risk_cache_portfolio" implied="false" onDeleteCascade="true" schema="public" table="cds_portfolios"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="valuation_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="3" name="aggregate_pv" nullable="true" remarks="" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="4" name="aggregate_accrued" nullable="true" remarks="" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="5" name="premium_leg_pv" nullable="true" remarks="" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="6" name="protection_leg_pv" nullable="true" remarks="" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="7" name="fair_spread_bps_weighted" nullable="true" remarks="" size="10" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="8" name="cs01" nullable="true" remarks="" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="9" name="rec01" nullable="true" remarks="" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="10" name="jtd" nullable="true" remarks="" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="11" name="top_5_pct_cs01" nullable="true" remarks="" size="10" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="sector_breakdown" nullable="true" remarks="" size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="by_trade_breakdown" nullable="true" remarks="" size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="completeness_constituents" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="15" name="completeness_priced" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="16" name="calculated_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="17" name="total_notional" nullable="true" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="18" name="upfront_premium" nullable="true" remarks="" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="19" name="total_paid_coupons" nullable="true" remarks="" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="20" name="trade_count" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="21" name="net_protection_bought" nullable="true" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="22" name="average_maturity_years" nullable="true" remarks="" size="20" type="varchar" typeCode="12"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="portfolio_risk_cache_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_risk_cache_portfolio_date" unique="false">
+            <column ascending="true" name="portfolio_id"/>
+            <column ascending="false" name="valuation_date"/>
+         </index>
+         <index name="uk_portfolio_valuation_date" unique="true">
+            <column ascending="true" name="portfolio_id"/>
+            <column ascending="true" name="valuation_date"/>
+         </index>
+      </table>
+      <table name="position_discrepancies" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('position_discrepancies_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="statement_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="position_discrepancies_statement_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="margin_statements"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="account_number" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="position_type" nullable="false" remarks="" size="2147483647" type="position_type" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="currency" nullable="false" remarks="" size="3" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="5" name="expected_amount" nullable="false" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="6" name="actual_amount" nullable="false" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="7" name="variance_amount" nullable="false" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="8" name="variance_percentage" nullable="true" remarks="" size="8" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="9" name="tolerance_threshold" nullable="true" remarks="" size="8" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="10" name="is_material" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="'PENDING'::character varying" digits="0" id="11" name="resolution_status" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="resolution_notes" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="13" name="created_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="14" name="resolved_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="position_discrepancies_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_discrepancies_material" unique="false">
+            <column ascending="true" name="is_material"/>
+            <column ascending="true" name="resolution_status"/>
+         </index>
+         <index name="idx_discrepancies_statement" unique="false">
+            <column ascending="true" name="statement_id"/>
+         </index>
+      </table>
+      <table name="sa_ccr_audit_trail" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('sa_ccr_audit_trail_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="calculation_id" nullable="false" remarks="" size="100" type="varchar" typeCode="12">
+            <parent column="calculation_id" foreignKey="sa_ccr_audit_trail_calculation_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="sa_ccr_calculations"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="step_number" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="step_name" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="description" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="input_values" nullable="true" remarks="" size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="output_values" nullable="true" remarks="" size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="parameters_used" nullable="true" remarks="" size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="8" name="calculation_timestamp" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="sa_ccr_audit_trail_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_sa_ccr_audit_trail_calc" unique="false">
+            <column ascending="true" name="calculation_id"/>
+         </index>
+      </table>
+      <table name="sa_ccr_calculation_details" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('sa_ccr_calculation_details_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="calculation_id" nullable="false" remarks="" size="100" type="varchar" typeCode="12">
+            <parent column="calculation_id" foreignKey="sa_ccr_calculation_details_calculation_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="sa_ccr_calculations"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="asset_class" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="8" id="3" name="effective_notional" nullable="false" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="4" name="supervisory_factor" nullable="false" remarks="" size="10" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="8" id="5" name="supervisory_addon" nullable="false" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="0" digits="6" id="6" name="hedge_ratio" nullable="true" remarks="" size="10" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="7" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="sa_ccr_calculation_details_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="sa_ccr_calculations" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('sa_ccr_calculations_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="calculation_id" nullable="false" remarks="" size="100" type="varchar" typeCode="12">
+            <child column="calculation_id" foreignKey="sa_ccr_audit_trail_calculation_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="sa_ccr_audit_trail"/>
+            <child column="calculation_id" foreignKey="sa_ccr_calculation_details_calculation_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="sa_ccr_calculation_details"/>
+            <child column="calculation_id" foreignKey="sa_ccr_trade_mappings_calculation_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="sa_ccr_trade_mappings"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="netting_set_id" nullable="false" remarks="" size="100" type="varchar" typeCode="12">
+            <parent column="netting_set_id" foreignKey="sa_ccr_calculations_netting_set_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="netting_sets"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="calculation_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="jurisdiction" nullable="false" remarks="" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="1.4" digits="3" id="5" name="alpha_factor" nullable="false" remarks="" size="5" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="8" id="6" name="gross_mtm" nullable="false" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="0" digits="8" id="7" name="vm_received" nullable="false" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="0" digits="8" id="8" name="vm_posted" nullable="false" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="0" digits="8" id="9" name="im_received" nullable="false" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="0" digits="8" id="10" name="im_posted" nullable="false" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="8" id="11" name="replacement_cost" nullable="false" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="8" id="12" name="effective_notional" nullable="false" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="8" id="13" name="supervisory_addon" nullable="false" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="14" name="multiplier" nullable="false" remarks="" size="10" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="8" id="15" name="potential_future_exposure" nullable="false" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="8" id="16" name="exposure_at_default" nullable="false" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="'PENDING'::character varying" digits="0" id="17" name="calculation_status" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="18" name="created_by" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="19" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="20" name="completed_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="21" name="base_currency" nullable="true" remarks="Base currency for SA-CCR exposure calculation (jurisdiction-specific)" size="3" type="varchar" typeCode="12"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="sa_ccr_calculations_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_sa_ccr_calculations_date" unique="false">
+            <column ascending="true" name="calculation_date"/>
+         </index>
+         <index name="idx_sa_ccr_calculations_jurisdiction_date" unique="false">
+            <column ascending="true" name="jurisdiction"/>
+            <column ascending="true" name="calculation_date"/>
+         </index>
+         <index name="idx_sa_ccr_calculations_netting_set" unique="false">
+            <column ascending="true" name="netting_set_id"/>
+         </index>
+         <index name="sa_ccr_calculations_calculation_id_key" unique="true">
+            <column ascending="true" name="calculation_id"/>
+         </index>
+      </table>
+      <table name="sa_ccr_supervisory_parameters" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('sa_ccr_supervisory_parameters_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="jurisdiction" nullable="false" remarks="" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="asset_class" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="parameter_type" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="tenor_bucket" nullable="true" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="credit_quality" nullable="true" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="6" name="parameter_value" nullable="false" remarks="" size="10" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="effective_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="expiry_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="9" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="sa_ccr_supervisory_parameters_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_sa_ccr_supervisory_params_lookup" unique="false">
+            <column ascending="true" name="jurisdiction"/>
+            <column ascending="true" name="asset_class"/>
+            <column ascending="true" name="effective_date"/>
+         </index>
+         <index name="sa_ccr_supervisory_parameters_jurisdiction_asset_class_para_key" unique="true">
+            <column ascending="true" name="jurisdiction"/>
+            <column ascending="true" name="asset_class"/>
+            <column ascending="true" name="parameter_type"/>
+            <column ascending="true" name="tenor_bucket"/>
+            <column ascending="true" name="credit_quality"/>
+            <column ascending="true" name="effective_date"/>
+         </index>
+      </table>
+      <table name="sa_ccr_trade_mappings" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('sa_ccr_trade_mappings_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="calculation_id" nullable="false" remarks="" size="100" type="varchar" typeCode="12">
+            <parent column="calculation_id" foreignKey="sa_ccr_trade_mappings_calculation_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="sa_ccr_calculations"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="trade_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="sa_ccr_trade_mappings_trade_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="cds_trades"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="netting_set_id" nullable="false" remarks="" size="100" type="varchar" typeCode="12">
+            <parent column="netting_set_id" foreignKey="sa_ccr_trade_mappings_netting_set_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="netting_sets"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="asset_class" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="8" id="5" name="notional_amount" nullable="false" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="maturity_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="3" id="7" name="effective_maturity" nullable="true" remarks="" size="10" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="8" id="8" name="current_mtm" nullable="false" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="1.0" digits="6" id="9" name="supervisory_delta" nullable="true" remarks="" size="10" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="10" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="sa_ccr_trade_mappings_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_sa_ccr_trade_mappings_calc" unique="false">
+            <column ascending="true" name="calculation_id"/>
+         </index>
+      </table>
+      <table name="simm_bucket_mappings" remarks="SIMM bucket assignments for risk factors" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('simm_bucket_mappings_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="parameter_set_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="simm_bucket_mappings_parameter_set_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="simm_parameter_sets"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="risk_class" nullable="false" remarks="Risk class: IR, FX, EQ, CO, CR_Q, CR_NQ" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="risk_factor" nullable="false" remarks="Specific risk factor (e.g., currency, index name)" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="bucket" nullable="false" remarks="Assigned SIMM bucket" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="description" nullable="true" remarks="Description of the risk factor" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="6" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="simm_bucket_mappings_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_simm_bucket_mappings_lookup" unique="false">
+            <column ascending="true" name="parameter_set_id"/>
+            <column ascending="true" name="risk_class"/>
+            <column ascending="true" name="risk_factor"/>
+         </index>
+         <index name="idx_simm_bucket_mappings_parameter_set" unique="false">
+            <column ascending="true" name="parameter_set_id"/>
+         </index>
+         <index name="idx_simm_bucket_mappings_risk_class" unique="false">
+            <column ascending="true" name="risk_class"/>
+         </index>
+      </table>
+      <table name="simm_calculation_audit" remarks="Audit trail for SIMM calculation steps" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('simm_calculation_audit_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="calculation_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="simm_calculation_audit_calculation_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="simm_calculations"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="step_name" nullable="false" remarks="Name of the calculation step" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="step_order" nullable="false" remarks="Sequential order of the step" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="input_data" nullable="true" remarks="JSON input data for the step" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="output_data" nullable="true" remarks="JSON output data from the step" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="calculation_details" nullable="true" remarks="Detailed calculation methodology" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="processing_time_ms" nullable="true" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="8" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="simm_calculation_audit_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_simm_calculation_audit_calculation" unique="false">
+            <column ascending="true" name="calculation_id"/>
+         </index>
+         <index name="idx_simm_calculation_audit_step_order" unique="false">
+            <column ascending="true" name="calculation_id"/>
+            <column ascending="true" name="step_order"/>
+         </index>
+      </table>
+      <table name="simm_calculation_results" remarks="Detailed SIMM margin components by risk class and bucket" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('simm_calculation_results_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="calculation_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="simm_calculation_results_calculation_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="simm_calculations"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="risk_class" nullable="false" remarks="Risk class: IR, FX, EQ, CO, CR_Q, CR_NQ" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="bucket" nullable="true" remarks="" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="8" id="4" name="weighted_sensitivity" nullable="true" remarks="Risk-weighted sensitivity amount" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="8" id="5" name="correlation_adjustment" nullable="true" remarks="Correlation-adjusted amount" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="8" id="6" name="margin_component" nullable="true" remarks="Margin contribution in reporting currency" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="8" id="7" name="margin_component_usd" nullable="true" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="8" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="simm_calculation_results_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_simm_calculation_results_calculation" unique="false">
+            <column ascending="true" name="calculation_id"/>
+         </index>
+         <index name="idx_simm_calculation_results_lookup" unique="false">
+            <column ascending="true" name="calculation_id"/>
+            <column ascending="true" name="risk_class"/>
+            <column ascending="true" name="bucket"/>
+         </index>
+         <index name="idx_simm_calculation_results_risk_class" unique="false">
+            <column ascending="true" name="risk_class"/>
+         </index>
+      </table>
+      <table name="simm_calculations" remarks="SIMM Initial Margin calculation requests and results" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('simm_calculations_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+            <child column="calculation_id" foreignKey="simm_calculation_audit_calculation_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="simm_calculation_audit"/>
+            <child column="calculation_id" foreignKey="simm_calculation_results_calculation_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="simm_calculation_results"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="calculation_id" nullable="false" remarks="Unique identifier for the calculation" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="upload_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="simm_calculations_upload_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="crif_uploads"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="parameter_set_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="simm_calculations_parameter_set_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="simm_parameter_sets"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="portfolio_id" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="calculation_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="'USD'::character varying" digits="0" id="6" name="reporting_currency" nullable="false" remarks="" size="3" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="'PENDING'::character varying" digits="0" id="7" name="calculation_status" nullable="false" remarks="Status: PENDING, PROCESSING, COMPLETED, FAILED" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="8" id="8" name="total_im" nullable="true" remarks="Total initial margin in reporting currency" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="8" id="9" name="total_im_usd" nullable="true" remarks="" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="8" id="10" name="diversification_benefit" nullable="true" remarks="Cross-risk class diversification benefit" size="20" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="calculation_time_ms" nullable="true" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="error_message" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="13" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="14" name="updated_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="simm_calculations_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_simm_calculations_calculation_id" unique="false">
+            <column ascending="true" name="calculation_id"/>
+         </index>
+         <index name="idx_simm_calculations_created_at" unique="false">
+            <column ascending="false" name="created_at"/>
+         </index>
+         <index name="idx_simm_calculations_date" unique="false">
+            <column ascending="false" name="calculation_date"/>
+         </index>
+         <index name="idx_simm_calculations_portfolio_id" unique="false">
+            <column ascending="true" name="portfolio_id"/>
+         </index>
+         <index name="idx_simm_calculations_status" unique="false">
+            <column ascending="true" name="calculation_status"/>
+         </index>
+         <index name="idx_simm_calculations_upload_id" unique="false">
+            <column ascending="true" name="upload_id"/>
+         </index>
+         <index name="simm_calculations_calculation_id_key" unique="true">
+            <column ascending="true" name="calculation_id"/>
+         </index>
+      </table>
+      <table name="simm_correlations" remarks="SIMM correlation coefficients for risk aggregation" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('simm_correlations_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="parameter_set_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="simm_correlations_parameter_set_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="simm_parameter_sets"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="risk_class" nullable="false" remarks="Risk class: IR, FX, EQ, CO, CR_Q, CR_NQ" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="correlation_type" nullable="false" remarks="Type: WITHIN_BUCKET or CROSS_BUCKET" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="bucket_from" nullable="true" remarks="Source bucket for cross-bucket correlations" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="bucket_to" nullable="true" remarks="Target bucket for cross-bucket correlations" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="risk_factor_from" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="risk_factor_to" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="8" name="correlation" nullable="false" remarks="Correlation coefficient (-1 to 1)" size="8" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="9" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="simm_correlations_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_simm_correlations_buckets" unique="false">
+            <column ascending="true" name="parameter_set_id"/>
+            <column ascending="true" name="risk_class"/>
+            <column ascending="true" name="bucket_from"/>
+            <column ascending="true" name="bucket_to"/>
+         </index>
+         <index name="idx_simm_correlations_parameter_set" unique="false">
+            <column ascending="true" name="parameter_set_id"/>
+         </index>
+         <index name="idx_simm_correlations_risk_class" unique="false">
+            <column ascending="true" name="risk_class"/>
+         </index>
+         <index name="idx_simm_correlations_type" unique="false">
+            <column ascending="true" name="correlation_type"/>
+         </index>
+      </table>
+      <table name="simm_parameter_sets" remarks="ISDA SIMM parameter set versions for IM calculations - Default SIMM 2.6 inserted" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('simm_parameter_sets_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+            <child column="parameter_set_id" foreignKey="simm_bucket_mappings_parameter_set_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="simm_bucket_mappings"/>
+            <child column="parameter_set_id" foreignKey="simm_calculations_parameter_set_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="simm_calculations"/>
+            <child column="parameter_set_id" foreignKey="simm_correlations_parameter_set_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="simm_correlations"/>
+            <child column="parameter_set_id" foreignKey="simm_risk_weights_parameter_set_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="simm_risk_weights"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="version_name" nullable="false" remarks="Friendly version name" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="isda_version" nullable="false" remarks="ISDA SIMM version (e.g., 2.6, 2.7)" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="effective_date" nullable="false" remarks="Date from which this parameter set is effective" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="end_date" nullable="true" remarks="Date until which this parameter set is effective" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="description" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="6" name="is_active" nullable="false" remarks="Whether this is the currently active parameter set" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="7" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="8" name="updated_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="simm_parameter_sets_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_simm_parameter_sets_active" unique="false">
+            <column ascending="true" name="is_active"/>
+         </index>
+         <index name="idx_simm_parameter_sets_effective_date" unique="false">
+            <column ascending="true" name="effective_date"/>
+         </index>
+         <index name="idx_simm_parameter_sets_isda_version" unique="false">
+            <column ascending="true" name="isda_version"/>
+         </index>
+         <index name="idx_simm_parameter_sets_version" unique="false">
+            <column ascending="true" name="version_name"/>
+         </index>
+      </table>
+      <table name="simm_risk_weights" remarks="SIMM risk weights for sensitivity weighting" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('simm_risk_weights_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="parameter_set_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="simm_risk_weights_parameter_set_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="simm_parameter_sets"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="risk_class" nullable="false" remarks="Risk class: IR, FX, EQ, CO, CR_Q, CR_NQ" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="bucket" nullable="false" remarks="SIMM bucket identifier" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="4" name="risk_weight" nullable="false" remarks="Risk weight factor for the bucket" size="10" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="5" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="simm_risk_weights_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_simm_risk_weights_lookup" unique="false">
+            <column ascending="true" name="parameter_set_id"/>
+            <column ascending="true" name="risk_class"/>
+            <column ascending="true" name="bucket"/>
+         </index>
+         <index name="idx_simm_risk_weights_parameter_set" unique="false">
+            <column ascending="true" name="parameter_set_id"/>
+         </index>
+         <index name="idx_simm_risk_weights_risk_class" unique="false">
+            <column ascending="true" name="risk_class"/>
+         </index>
+      </table>
+      <table name="simulation_audit" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('simulation_audit_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="run_id" nullable="false" remarks="" size="50" type="varchar" typeCode="12">
+            <parent column="run_id" foreignKey="fk_audit_run" implied="false" onDeleteCascade="true" schema="public" table="simulation_runs"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="event_type" nullable="false" remarks="" size="30" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="3" name="event_timestamp" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="user_id" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="event_data" nullable="true" remarks="" size="2147483647" type="jsonb" typeCode="1111"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="simulation_audit_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_simulation_audit_run" unique="false">
+            <column ascending="true" name="run_id"/>
+         </index>
+         <index name="idx_simulation_audit_timestamp" unique="false">
+            <column ascending="false" name="event_timestamp"/>
+         </index>
+      </table>
+      <table name="simulation_contributors" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('simulation_contributors_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="run_id" nullable="false" remarks="" size="50" type="varchar" typeCode="12">
+            <parent column="run_id" foreignKey="fk_contributor_run" implied="false" onDeleteCascade="true" schema="public" table="simulation_runs"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="entity_name" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="3" name="marginal_el_pct" nullable="true" remarks="" size="10" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="4" name="beta" nullable="true" remarks="" size="6" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="5" name="standalone_el" nullable="true" remarks="" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="6" name="recovery_mean" nullable="true" remarks="" size="6" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="7" name="recovery_stdev" nullable="true" remarks="" size="6" type="numeric" typeCode="2"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="simulation_contributors_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_contributors_entity" unique="false">
+            <column ascending="true" name="entity_name"/>
+         </index>
+         <index name="idx_contributors_run" unique="false">
+            <column ascending="true" name="run_id"/>
+         </index>
+      </table>
+      <table name="simulation_horizon_metrics" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('simulation_horizon_metrics_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="run_id" nullable="false" remarks="" size="50" type="varchar" typeCode="12">
+            <parent column="run_id" foreignKey="fk_horizon_metrics_run" implied="false" onDeleteCascade="true" schema="public" table="simulation_runs"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="tenor" nullable="false" remarks="" size="10" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="3" name="p_any_default" nullable="true" remarks="" size="10" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="4" name="expected_defaults" nullable="true" remarks="" size="10" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="5" name="loss_mean" nullable="true" remarks="" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="6" name="loss_var95" nullable="true" remarks="" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="7" name="loss_var99" nullable="true" remarks="" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="8" name="loss_es97_5" nullable="true" remarks="" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="9" name="sum_standalone_el" nullable="true" remarks="" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="10" name="portfolio_el" nullable="true" remarks="" size="18" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="4" id="11" name="diversification_benefit_pct" nullable="true" remarks="" size="10" type="numeric" typeCode="2"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="simulation_horizon_metrics_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_horizon_metrics_run" unique="false">
+            <column ascending="true" name="run_id"/>
+         </index>
+         <index name="uk_run_tenor" unique="true">
+            <column ascending="true" name="run_id"/>
+            <column ascending="true" name="tenor"/>
+         </index>
+      </table>
+      <table name="simulation_runs" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('simulation_runs_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="run_id" nullable="false" remarks="" size="50" type="varchar" typeCode="12">
+            <child column="run_id" foreignKey="fk_audit_run" implied="false" onDeleteCascade="true" schema="public" table="simulation_audit"/>
+            <child column="run_id" foreignKey="fk_contributor_run" implied="false" onDeleteCascade="true" schema="public" table="simulation_contributors"/>
+            <child column="run_id" foreignKey="fk_horizon_metrics_run" implied="false" onDeleteCascade="true" schema="public" table="simulation_horizon_metrics"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="portfolio_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="fk_simulation_portfolio" implied="false" onDeleteCascade="true" schema="public" table="cds_portfolios"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="status" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="valuation_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="paths" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="request_payload" nullable="false" remarks="" size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="seed_used" nullable="true" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="error_message" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="9" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="10" name="started_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="11" name="completed_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="runtime_ms" nullable="true" remarks="" size="19" type="int8" typeCode="-5"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="simulation_runs_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_simulation_runs_created" unique="false">
+            <column ascending="false" name="created_at"/>
+         </index>
+         <index name="idx_simulation_runs_portfolio" unique="false">
+            <column ascending="true" name="portfolio_id"/>
+         </index>
+         <index name="idx_simulation_runs_run_id" unique="false">
+            <column ascending="true" name="run_id"/>
+         </index>
+         <index name="idx_simulation_runs_status" unique="false">
+            <column ascending="true" name="status"/>
+         </index>
+         <index name="simulation_runs_run_id_key" unique="true">
+            <column ascending="true" name="run_id"/>
+         </index>
+         <checkConstraint constraint="(((status)::text = ANY ((ARRAY['QUEUED'::character varying, 'RUNNING'::character varying, 'COMPLETE'::character varying, 'FAILED'::character varying, 'CANCELED'::character varying])::text[])))" name="simulation_runs_status_check"/>
+      </table>
+      <table name="statement_processing_log" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('statement_processing_log_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="statement_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="statement_processing_log_statement_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="margin_statements"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="processing_step" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="status" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="message" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="processing_time_ms" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="6" name="created_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="statement_processing_log_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_processing_log_statement" unique="false">
+            <column ascending="true" name="statement_id"/>
+         </index>
+         <index name="idx_processing_log_step" unique="false">
+            <column ascending="true" name="processing_step"/>
+            <column ascending="true" name="status"/>
+         </index>
+      </table>
+      <table name="trade_amendments" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('trade_amendments_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="trade_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="trade_amendments_trade_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="cds_trades"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="amendment_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="previous_version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="new_version" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="field_name" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="previous_value" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="new_value" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="amendment_reason" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="9" name="pnl_impact_estimate" nullable="true" remarks="" size="15" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="amended_by" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="11" name="created_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="trade_amendments_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_trade_amendments_trade_id" unique="false">
+            <column ascending="true" name="trade_id"/>
+         </index>
+         <index name="idx_trade_amendments_version" unique="false">
+            <column ascending="true" name="trade_id"/>
+            <column ascending="true" name="new_version"/>
+         </index>
+      </table>
+      <table name="trade_novations" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('trade_novations_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="original_trade_id" nullable="false" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="trade_novations_original_trade_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="cds_trades"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="new_trade_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent column="id" foreignKey="trade_novations_new_trade_id_fkey" implied="false" onDeleteCascade="false" schema="public" table="cds_trades"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="novation_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="original_counterparty" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="new_counterparty" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="novation_reason" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="2" id="7" name="fee_amount" nullable="true" remarks="" size="15" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="fee_currency" nullable="true" remarks="" size="3" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="'PENDING'::character varying" digits="0" id="9" name="status" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="10" name="created_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="trade_novations_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_trade_novations_date" unique="false">
+            <column ascending="true" name="novation_date"/>
+         </index>
+         <index name="idx_trade_novations_new_trade" unique="false">
+            <column ascending="true" name="new_trade_id"/>
+         </index>
+         <index name="idx_trade_novations_original_trade" unique="false">
+            <column ascending="true" name="original_trade_id"/>
+         </index>
+         <checkConstraint constraint="(((status)::text = ANY ((ARRAY['PENDING'::character varying, 'COMPLETED'::character varying, 'FAILED'::character varying])::text[])))" name="trade_novations_status_check"/>
+      </table>
+   </tables>
+</database>
