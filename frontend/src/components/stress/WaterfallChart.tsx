@@ -23,8 +23,8 @@ interface WaterfallChartProps {
 interface WaterfallDataPoint {
   name: string;
   fullName?: string;
-  value: number;
-  start: number;
+  base: number; // Invisible bar to position the visible bar
+  value: number; // The visible bar (delta)
   end: number;
   delta: number;
   isBase: boolean;
@@ -36,9 +36,10 @@ const WaterfallChart: React.FC<WaterfallChartProps> = ({ baseNpv, scenarios, cur
   const chartData = useMemo(() => {
     const data: WaterfallDataPoint[] = [];
     
-    // For waterfall chart, we show the ACTUAL stressed NPV for each scenario
-    // No sign flipping needed - we're showing absolute NPV levels, not P&L impact
-    // Each bar represents: baseNpv + deltaNpv = stressed NPV under that scenario
+    // For waterfall chart showing impact from base NPV:
+    // - Base case: show as marker at base NPV level (zero height bar)
+    // - Scenarios: show delta from base NPV (positive = up, negative = down from base)
+    // - This makes negative impacts VISIBLE as large downward bars
     
     // Determine if this is a protection buyer or seller
     const isBuyer = buySellProtection === 'BUY';
@@ -111,12 +112,12 @@ const WaterfallChart: React.FC<WaterfallChartProps> = ({ baseNpv, scenarios, cur
       );
     }
 
-    // Base case - add first
+    // Base case - show as a full bar from 0 to base NPV
     data.push({
       name: 'Base Case',
       fullName: 'Base Case',
-      value: baseNpv,
-      start: 0,
+      base: 0, // Start from zero
+      value: baseNpv, // Full height to base NPV
       end: baseNpv,
       delta: 0,
       isBase: true,
@@ -124,58 +125,69 @@ const WaterfallChart: React.FC<WaterfallChartProps> = ({ baseNpv, scenarios, cur
       color: 'rgb(0, 240, 0)', // fd-green
     });
 
-    // Add each scenario - show as individual bars from 0 to stressed NPV
+    // Add each scenario - TRUE WATERFALL from base NPV
     scenariosToShow.forEach((scenario) => {
       const stressedNpv = baseNpv + scenario.deltaNpv;
       
+      // Clean up scenario name (fix "+-" issue)
+      const cleanName = scenario.scenarioName.replace('+-', '-');
+      
       // Shorten scenario name for readability on X-axis
-      const shortName = scenario.scenarioName
+      const shortName = cleanName
         .replace('Recovery ', 'R')
         .replace('Spread ', 'S')
         .replace('Yield ', 'Y')
         .replace(' + ', '+');
       
-      // Each bar shows the stressed NPV value
+      // For waterfall effect with stacked bars:
+      // - base: invisible bar from 0 to baseNpv (or from 0 to stressedNpv if negative delta)
+      // - value: visible bar showing the delta (height = abs(delta))
+      const isNegative = scenario.deltaNpv < 0;
+      
       data.push({
         name: shortName,
-        fullName: scenario.scenarioName,
-        value: stressedNpv,
-        start: 0,
+        fullName: cleanName,
+        base: isNegative ? stressedNpv : baseNpv, // Start position
+        value: Math.abs(scenario.deltaNpv), // Height of the bar
         end: stressedNpv,
         delta: scenario.deltaNpv,
         isBase: false,
         isFinal: false,
         // Color logic: Red for losses (negative delta), Teal for gains (positive delta)
-        // Delta is already correctly signed after backend adjustment for SELL positions
-        color: scenario.deltaNpv < 0 ? 'rgb(239, 68, 68)' : 'rgb(0, 255, 195)', // negative = red (bad), positive = teal (good)
+        color: scenario.deltaNpv < 0 ? 'rgb(239, 68, 68)' : 'rgb(0, 255, 195)',
       });
     });
 
-    // Final total - show the worst case scenario (lowest stressed NPV)
+    // Final total - show the worst case scenario
     const worstScenario = scenariosToShow.reduce((worst, s) => 
       (baseNpv + s.deltaNpv) < (baseNpv + worst.deltaNpv) ? s : worst
     , scenariosToShow[0]);
     
     const worstCaseNpv = baseNpv + worstScenario.deltaNpv;
     
+    // Clean up worst case scenario name (fix "+-" issue)
+    const worstCaseCleanName = worstScenario.scenarioName.replace('+-', '-');
+    
     // Shorten worst case scenario name for display
-    const worstCaseShortName = worstScenario.scenarioName
+    const worstCaseShortName = worstCaseCleanName
       .replace('Combined: ', '')
       .replace('Recovery ', 'R')
       .replace('Spread ', 'S')
       .replace('Yield ', 'Y')
       .replace(' + ', '+');
 
+    const isWorstNegative = worstScenario.deltaNpv < 0;
+
     data.push({
       name: `Worst: ${worstCaseShortName}`,
-      fullName: `Worst Case: ${worstScenario.scenarioName}`,
-      value: worstCaseNpv,
-      start: 0,
+      fullName: `Worst Case: ${worstCaseCleanName}`,
+      base: isWorstNegative ? worstCaseNpv : baseNpv, // Start position
+      value: Math.abs(worstScenario.deltaNpv), // Height of the bar
       end: worstCaseNpv,
       delta: worstScenario.deltaNpv,
       isBase: false,
       isFinal: true,
-      color: worstScenario.deltaNpv < 0 ? 'rgb(220, 38, 38)' : 'rgb(0, 232, 247)', // negative = dark red (bad), positive = cyan (good)
+      color: worstScenario.deltaNpv < 0 ? 'rgb(220, 38, 38)' : 'rgb(0, 232, 247)',
     });
 
     console.log('🔍 WaterfallChart - Scenario Selection:', {
@@ -261,8 +273,24 @@ const WaterfallChart: React.FC<WaterfallChartProps> = ({ baseNpv, scenarios, cur
     const { x, y, width, height, index } = props;
     const data = chartData[index];
     
-    // Only show labels for significant impacts or base/final
-    if (!data.isBase && !data.isFinal && Math.abs(data.delta) < Math.abs(baseNpv * 0.02)) {
+    // For base case, show the NPV value at the top
+    if (data.isBase) {
+      return (
+        <text 
+          x={x + width / 2} 
+          y={y - 5} 
+          fill="rgb(0, 240, 0)" 
+          textAnchor="middle" 
+          fontSize={11}
+          fontWeight="600"
+        >
+          {formatCurrency(baseNpv)}
+        </text>
+      );
+    }
+    
+    // Only show labels for significant impacts or final
+    if (!data.isFinal && Math.abs(data.delta) < Math.abs(baseNpv * 0.02)) {
       return null;
     }
 
@@ -277,17 +305,18 @@ const WaterfallChart: React.FC<WaterfallChartProps> = ({ baseNpv, scenarios, cur
         fontSize={10}
         fontWeight="500"
       >
-        {!data.isBase && !data.isFinal ? formatCurrency(data.delta) : formatCurrency(data.value)}
+        {formatCurrency(data.delta)}
       </text>
     );
   };
 
   // Calculate Y-axis domain with some padding
-  const allValues = chartData.map(d => d.value);
-  const minValue = Math.min(...allValues);
-  const maxValue = Math.max(...allValues);
-  const range = maxValue - minValue;
-  const padding = range > 0 ? range * 0.1 : maxValue * 0.1;
+  // For stacked bars, we need to consider base + value
+  const allValues = chartData.flatMap(d => [d.base, d.base + d.value, d.end]);
+  const minVal = Math.min(...allValues);
+  const maxVal = Math.max(...allValues);
+  const range = maxVal - minVal;
+  const padding = range > 0 ? range * 0.1 : Math.abs(maxVal) * 0.1;
 
   const chartHeight = fullscreen ? 700 : 400;
 
@@ -311,18 +340,27 @@ const WaterfallChart: React.FC<WaterfallChartProps> = ({ baseNpv, scenarios, cur
               stroke="rgb(60, 75, 97)"
             />
             <YAxis
-              domain={[minValue - padding, maxValue + padding]}
+              domain={[minVal - padding, maxVal + padding]}
               tickFormatter={formatCurrency}
               tick={{ fill: 'rgb(156, 163, 175)', fontSize: 11 }}
               stroke="rgb(60, 75, 97)"
             />
             <Tooltip content={<CustomTooltip />} />
             
-            {/* Simple bars showing stressed NPV for each scenario */}
+            {/* Waterfall bars using stacked approach */}
+            {/* Invisible base bar to position the visible bar */}
+            <Bar 
+              dataKey="base" 
+              stackId="waterfall"
+              fill="transparent"
+              isAnimationActive={false}
+            />
+            {/* Visible bar showing the delta */}
             <Bar 
               dataKey="value" 
+              stackId="waterfall"
               label={<CustomizedLabel />}
-              radius={[4, 4, 0, 0]}
+              radius={[4, 4, 4, 4]}
               isAnimationActive={false}
             >
               {chartData.map((entry, index) => (
@@ -330,7 +368,7 @@ const WaterfallChart: React.FC<WaterfallChartProps> = ({ baseNpv, scenarios, cur
                   key={`cell-${index}`} 
                   fill={entry.color} 
                   stroke={entry.color}
-                  opacity={entry.isBase || entry.isFinal ? 1 : 0.85} 
+                  opacity={entry.isBase ? 1 : (entry.isFinal ? 1 : 0.85)}
                 />
               ))}
             </Bar>
@@ -407,18 +445,27 @@ const WaterfallChart: React.FC<WaterfallChartProps> = ({ baseNpv, scenarios, cur
             stroke="rgb(60, 75, 97)"
           />
           <YAxis
-            domain={[minValue - padding, maxValue + padding]}
+            domain={[minVal - padding, maxVal + padding]}
             tickFormatter={formatCurrency}
             tick={{ fill: 'rgb(156, 163, 175)', fontSize: 11 }}
             stroke="rgb(60, 75, 97)"
           />
           <Tooltip content={<CustomTooltip />} />
           
-          {/* Simple bars showing stressed NPV for each scenario */}
+          {/* Waterfall bars using stacked approach */}
+          {/* Invisible base bar to position the visible bar */}
+          <Bar 
+            dataKey="base" 
+            stackId="waterfall"
+            fill="transparent"
+            isAnimationActive={false}
+          />
+          {/* Visible bar showing the delta */}
           <Bar 
             dataKey="value" 
+            stackId="waterfall"
             label={<CustomizedLabel />}
-            radius={[4, 4, 0, 0]}
+            radius={[4, 4, 4, 4]}
             isAnimationActive={false}
           >
             {chartData.map((entry, index) => (
@@ -426,7 +473,7 @@ const WaterfallChart: React.FC<WaterfallChartProps> = ({ baseNpv, scenarios, cur
                 key={`cell-${index}`} 
                 fill={entry.color} 
                 stroke={entry.color}
-                opacity={entry.isBase || entry.isFinal ? 1 : 0.85} 
+                opacity={entry.isBase ? 1 : (entry.isFinal ? 1 : 0.85)}
               />
             ))}
           </Bar>

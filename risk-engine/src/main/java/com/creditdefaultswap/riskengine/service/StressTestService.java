@@ -331,25 +331,24 @@ public class StressTestService {
             RiskMeasures stressedResult = oreOutputParser.parseRiskMeasures(
                 oreOutput, tradeData.getTradeId(), tradeData.getCurrency(), workDir.toString());
             
-            // For SELL positions, invert the stressed NPV to reflect economic reality
-            // Base NPV stays as-is, but stressed NPVs are inverted relative to base
-            BigDecimal adjustedStressedNpv = stressedResult.getNpv();
-            if ("SELL".equals(tradeData.getBuySellProtection())) {
-                // Calculate the mirror of stressed NPV around the base NPV
-                // If stressed went from 1.24M to 3.03M (+1.79M), we want 1.24M to -0.55M (-1.79M)
-                BigDecimal delta = stressedResult.getNpv().subtract(baseCase.getNpv());
-                adjustedStressedNpv = baseCase.getNpv().subtract(delta);
-                logger.debug("SELL position: ORE NPV {} adjusted to {} (base={}, delta={})", 
-                    stressedResult.getNpv(), adjustedStressedNpv, baseCase.getNpv(), delta);
-            }
+            // ORE appears to calculate deltas with opposite sign from economic reality
+            // We need to invert ALL deltas regardless of BUY/SELL
+            BigDecimal stressedNpv = stressedResult.getNpv();
+            BigDecimal baseNpv = baseCase.getNpv();
+            BigDecimal rawDelta = stressedNpv.subtract(baseNpv);
+            BigDecimal deltaNpv = rawDelta.negate();
+            
+            logger.debug("{} position {}: baseNpv={}, stressedNpv={}, rawDelta={}, invertedDelta={}", 
+                tradeData.getBuySellProtection(), tradeData.getTradeId(), 
+                baseNpv, stressedNpv, rawDelta, deltaNpv);
             
             // Calculate deltas
             StressImpactResult.ScenarioResult scenario = new StressImpactResult.ScenarioResult();
             scenario.setScenarioName(scenarioName);
-            scenario.setNpv(adjustedStressedNpv);
+            scenario.setNpv(stressedNpv);
             scenario.setJtd(stressedResult.getJtd());
             
-            BigDecimal deltaNpv = adjustedStressedNpv.subtract(baseCase.getNpv());
+            // deltaNpv already calculated above with BUY/SELL adjustment
             BigDecimal deltaJtd = stressedResult.getJtd() != null && baseCase.getJtd() != null ?
                 stressedResult.getJtd().subtract(baseCase.getJtd()) : BigDecimal.ZERO;
             
