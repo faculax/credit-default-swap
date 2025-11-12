@@ -67,16 +67,19 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
-      - name: Run Maven tests and generate JaCoCo reports
-        run: |
-          if [ -f mvnw ]; then
-            chmod +x mvnw
-            ./mvnw -T 1C -DskipTests=false test jacoco:report
-          else
-            mvn -T 1C -DskipTests=false test jacoco:report
-          fi
+      - name: Run backend tests
+        working-directory: backend
+        run: mvn -T 1C clean test jacoco:report
+
+      - name: Run gateway tests
+        working-directory: gateway
+        run: mvn -T 1C clean test jacoco:report
+
+      - name: Run risk-engine tests
+        working-directory: risk-engine
+        run: mvn -T 1C clean test jacoco:report
 
       - name: Aggregate and check JaCoCo LINE coverage
         run: |
