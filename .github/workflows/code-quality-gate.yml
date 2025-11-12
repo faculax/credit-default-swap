@@ -36,7 +36,8 @@ jobs:
         working-directory: frontend
         run: |
           if grep -q "\"test\"" package.json >/dev/null 2>&1; then
-            npm test -- --coverage --coverageReporters="json-summary"
+            # Generate both JSON summary (for threshold check) and HTML (for aggregated quality report)
+            npm test -- --coverage --coverageReporters="json-summary,html"
           else
             echo "No frontend test script; skipping"
           fi
@@ -55,6 +56,13 @@ jobs:
           else
             echo "No frontend coverage report found; skipping coverage check"
           fi
+
+      - name: Upload frontend coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage
 
   backend-tests:
     name: Backend tests & coverage (JaCoCo)
@@ -84,3 +92,141 @@ jobs:
       - name: Aggregate and check JaCoCo LINE coverage
         run: |
           python3 scripts/ci/check_jacoco_coverage.py ${{ env.COVERAGE_THRESHOLD }}
+      - name: Collect JaCoCo HTML reports
+        if: always()
+        run: |
+          mkdir -p quality-artifacts/backend quality-artifacts/gateway quality-artifacts/risk-engine
+          # Copy HTML report directories if they exist
+          if [ -d backend/target/site/jacoco ]; then cp -r backend/target/site/jacoco quality-artifacts/backend/; fi
+          if [ -d gateway/target/site/jacoco ]; then cp -r gateway/target/site/jacoco quality-artifacts/gateway/; fi
+          if [ -d risk-engine/target/site/jacoco ]; then cp -r risk-engine/target/site/jacoco quality-artifacts/risk-engine/; fi
+
+      - name: Upload JaCoCo report artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-reports
+          path: quality-artifacts
+
+  quality-summary:
+    name: Aggregate Code Quality HTML Summary
+    needs: [frontend-tests, backend-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (for scripts/reference)
+        uses: actions/checkout@v4
+
+      - name: Download coverage & quality artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Generate aggregated HTML summary
+        run: |
+          set -e
+          mkdir -p quality-summary
+          # Copy HTML reports into artifact
+          for m in backend gateway risk-engine; do
+            if [ -d artifacts/jacoco-reports/$m/jacoco ]; then
+              cp -r artifacts/jacoco-reports/$m/jacoco quality-summary/$m || true
+            elif [ -d artifacts/jacoco-reports/$m/site/jacoco ]; then
+              cp -r artifacts/jacoco-reports/$m/site/jacoco quality-summary/$m || true
+            fi
+          done
+          if [ -d artifacts/frontend-coverage/lcov-report ]; then
+            cp -r artifacts/frontend-coverage/lcov-report quality-summary/frontend || true
+          fi
+          # Compute backend coverage roll-up from JaCoCo XMLs (grep-based parsing)
+          overall_covered=0; overall_missed=0
+          echo '### Coverage Roll-up' > quality-summary/summary.md
+          printf '| Service | Coverage %% | Covered | Missed | Total |\n' >> quality-summary/summary.md
+          printf '|---------|-----------:|--------:|-------:|------:|\n' >> quality-summary/summary.md
+          for m in backend gateway risk-engine; do
+            xml="artifacts/jacoco-reports/$m/jacoco/jacoco.xml"
+            [ -f "$xml" ] || xml="artifacts/jacoco-reports/$m/site/jacoco/jacoco.xml"
+            if [ -f "$xml" ]; then
+              line=$(grep -m1 'counter type="LINE"' "$xml" || true)
+              missed=$(echo "$line" | sed -n 's/.*missed="\([0-9]*\)".*/\1/p')
+              covered=$(echo "$line" | sed -n 's/.*covered="\([0-9]*\)".*/\1/p')
+              if [ -n "$covered" ] && [ -n "$missed" ]; then
+                total=$((covered+missed))
+                pct=$(awk -v c=$covered -v t=$total 'BEGIN { if (t==0) printf "0.00"; else printf "%.2f", (c*100.0)/t }')
+                overall_covered=$((overall_covered+covered))
+                overall_missed=$((overall_missed+missed))
+                printf '| %s | %s%% | %s | %s | %s |\n' "$m" "$pct" "$covered" "$missed" "$total" >> quality-summary/summary.md
+              else
+                printf '| %s | N/A | 0 | 0 | 0 |\n' "$m" >> quality-summary/summary.md
+              fi
+            else
+              printf '| %s | N/A | 0 | 0 | 0 |\n' "$m" >> quality-summary/summary.md
+            fi
+          done
+          overall_total=$((overall_covered+overall_missed))
+          overall_pct=$(awk -v c=$overall_covered -v t=$overall_total 'BEGIN { if (t==0) printf "0.00"; else printf "%.2f", (c*100.0)/t }')
+          echo "" >> quality-summary/summary.md
+          echo "*Overall backend line coverage:* **${overall_pct}%**" >> quality-summary/summary.md
+          # Frontend coverage
+          if [ -f artifacts/frontend-coverage/coverage-summary.json ]; then
+            f_pct=$(node -e "console.log((require('./artifacts/frontend-coverage/coverage-summary.json').total.lines.pct).toFixed(2))" || echo '')
+            if [ -n "$f_pct" ]; then
+              echo "" >> quality-summary/summary.md
+              echo "*Frontend line coverage:* **${f_pct}%**" >> quality-summary/summary.md
+            fi
+          fi
+          # Build HTML index with numeric coverage
+          cat > quality-summary/index.html <<HTML
+          <!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Code Quality Summary</title>
+          <style>body{font-family:Arial,Georgia;background:#fff;color:#3c4b61;margin:2rem;} table{border-collapse:collapse;margin:1em 0;} th,td{padding:6px 10px;border:1px solid #ccc;} th{background:#00e8f7;} .low{color:#c00;font-weight:bold;} .high{color:#00a860;font-weight:bold;} a{color:#00a8c3;text-decoration:none;} a:hover{text-decoration:underline;} h1{color:#00e8f7;} .section{margin-top:1.5em;} </style></head><body>
+          <h1>Code Quality Summary</h1>
+          <h2>Overall Backend Line Coverage: ${overall_pct}%</h2>
+          <div class="section"><h3>Backend Services Coverage</h3>
+          <table><tr><th>Service</th><th>Coverage %</th><th>Covered</th><th>Missed</th><th>Total</th><th>Report</th></tr>
+          HTML
+          for m in backend gateway risk-engine; do
+            report_link=""
+            if [ -f quality-summary/$m/index.html ]; then report_link="$m/index.html"; elif [ -f quality-summary/$m/jacoco/index.html ]; then report_link="$m/jacoco/index.html"; fi
+            row=$(grep "| $m |" quality-summary/summary.md || true)
+            cov=$(echo "$row" | awk -F '|' '{gsub(/ /,"",$0); print $3}')
+            covered=$(echo "$row" | awk -F '|' '{gsub(/ /,"",$0); print $4}')
+            missed=$(echo "$row" | awk -F '|' '{gsub(/ /,"",$0); print $5}')
+            total=$(echo "$row" | awk -F '|' '{gsub(/ /,"",$0); print $6}')
+            cls=""; cov_num=$(echo "$cov" | sed 's/%//')
+            if [ -n "$cov_num" ]; then
+              cov_int=$(printf '%.0f' "${cov_num}")
+              if [ "$cov_int" -lt 50 ]; then cls="low"; elif [ "$cov_int" -ge 85 ]; then cls="high"; fi
+            fi
+            link_cell='—'
+            [ -n "$report_link" ] && link_cell="<a href=\"$report_link\">Open</a>"
+            printf '<tr><td>%s</td><td class="%s">%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n' "$m" "$cls" "$cov" "$covered" "$missed" "$total" "$link_cell" >> quality-summary/index.html
+          done
+          cat >> quality-summary/index.html <<HTML
+          </table></div>
+          <div class="section"><h3>Frontend Coverage</h3>
+          HTML
+          if [ -f artifacts/frontend-coverage/coverage-summary.json ]; then
+            if [ -d quality-summary/frontend ]; then
+              echo "<p>Frontend coverage: ${f_pct}%</p><p><a href=\"frontend/index.html\">View Frontend Coverage Report</a></p>" >> quality-summary/index.html
+            else
+              echo "<p>Frontend coverage: ${f_pct}%</p>" >> quality-summary/index.html
+            fi
+          else
+            echo "<p>No frontend coverage data.</p>" >> quality-summary/index.html
+          fi
+          cat >> quality-summary/index.html <<HTML
+          <hr/><p style="font-size:0.85em;">Generated by code-quality-gate workflow.</p></body></html>
+          HTML
+          echo "Roll-up generated"
+
+      - name: Upload aggregated HTML summary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-quality-summary
+          path: quality-summary
+
+      - name: Add summary to workflow run
+        run: |
+          echo "## Code Quality Summary" >> $GITHUB_STEP_SUMMARY
+          echo >> $GITHUB_STEP_SUMMARY
+          cat quality-summary/summary.md >> $GITHUB_STEP_SUMMARY
+          echo >> $GITHUB_STEP_SUMMARY
+          echo "Download artifact 'code-quality-summary' to view full HTML reports." >> $GITHUB_STEP_SUMMARY
