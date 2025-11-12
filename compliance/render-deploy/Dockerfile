@@ -3,6 +3,7 @@ FROM defectdojo/defectdojo-django:2.36.0
 
 USER root
 
+# Set noninteractive frontend for apt-get
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install Node.js 20.x (LTS) first, then other packages
