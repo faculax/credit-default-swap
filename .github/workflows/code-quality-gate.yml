@@ -192,10 +192,16 @@ jobs:
             covered=$(echo "$row" | awk -F '|' '{gsub(/ /,"",$0); print $4}')
             missed=$(echo "$row" | awk -F '|' '{gsub(/ /,"",$0); print $5}')
             total=$(echo "$row" | awk -F '|' '{gsub(/ /,"",$0); print $6}')
-            cls=""; cov_num=$(echo "$cov" | sed 's/%//')
-            if [ -n "$cov_num" ]; then
-              cov_int=$(printf '%.0f' "${cov_num}")
-              if [ "$cov_int" -lt 50 ]; then cls="low"; elif [ "$cov_int" -ge 85 ]; then cls="high"; fi
+            cls=""
+            # Only classify if coverage is numeric (e.g. 82.34%)
+            if echo "$cov" | grep -Eq '^[0-9]+(\.[0-9]+)?%$'; then
+              cov_num=${cov%%%}
+              cov_int=$(printf '%.0f' "$cov_num") || cov_int=""
+              if [ -n "$cov_int" ]; then
+                if [ "$cov_int" -lt 50 ]; then cls="low"; elif [ "$cov_int" -ge 85 ]; then cls="high"; fi
+              fi
+            else
+              cov="N/A"
             fi
             link_cell='—'
             [ -n "$report_link" ] && link_cell="<a href=\"$report_link\">Open</a>"
