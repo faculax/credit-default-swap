@@ -2,6 +2,7 @@ import axios from 'axios';
 
 // Use relative URL to leverage the proxy in package.json (pointing to gateway:8081)
 const API_BASE_URL = '/api/lineage';
+const GRAPH_API_BASE_URL = '/api/lineage/graph';
 
 export interface LineageEvent {
   id: string;
@@ -17,7 +18,7 @@ export interface LineageEvent {
 export interface LineageNode {
   id: string;
   label: string;
-  type: 'dataset' | 'operation';
+  type: 'dataset' | 'operation' | 'endpoint' | 'service' | 'repository';
   metadata?: Record<string, any>;
 }
 
@@ -30,6 +31,27 @@ export interface LineageEdge {
 export interface LineageGraph {
   nodes: LineageNode[];
   edges: LineageEdge[];
+}
+
+export interface GraphNode {
+  id: string;
+  type: string;
+  label: string;
+  properties: Record<string, any>;
+}
+
+export interface GraphEdge {
+  id: string;
+  source: string;
+  target: string;
+  operation: string;
+  properties: Record<string, any>;
+}
+
+export interface GraphDTO {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  metadata: Record<string, any>;
 }
 
 class LineageService {
@@ -65,7 +87,72 @@ class LineageService {
   }
 
   /**
-   * Transform lineage events into a graph structure
+   * Fetch lineage graph for a specific dataset using the new Graph API
+   */
+  async getGraphForDataset(datasetName: string, since?: string): Promise<LineageGraph> {
+    const params: any = {};
+    if (since) params.since = since;
+    
+    const response = await axios.get(`${GRAPH_API_BASE_URL}/dataset/${datasetName}`, { params });
+    return this.transformGraphDTOToLineageGraph(response.data);
+  }
+
+  /**
+   * Fetch lineage graph for a specific event ID
+   */
+  async getGraphForEvent(eventId: string): Promise<LineageGraph> {
+    const response = await axios.get(`${GRAPH_API_BASE_URL}/event/${eventId}`);
+    return this.transformGraphDTOToLineageGraph(response.data);
+  }
+
+  /**
+   * Fetch lineage graph for a correlation ID (full request trace)
+   */
+  async getGraphForCorrelation(correlationId: string): Promise<LineageGraph> {
+    const response = await axios.get(`${GRAPH_API_BASE_URL}/correlation/${correlationId}`);
+    return this.transformGraphDTOToLineageGraph(response.data);
+  }
+
+  /**
+   * Fetch lineage graph for a specific run ID
+   */
+  async getGraphForRun(runId: string): Promise<LineageGraph> {
+    const response = await axios.get(`${GRAPH_API_BASE_URL}/run/${runId}`);
+    return this.transformGraphDTOToLineageGraph(response.data);
+  }
+
+  /**
+   * Fetch recent lineage activity graph
+   */
+  async getRecentActivityGraph(limit: number = 100): Promise<LineageGraph> {
+    const response = await axios.get(`${GRAPH_API_BASE_URL}/recent`, {
+      params: { limit }
+    });
+    return this.transformGraphDTOToLineageGraph(response.data);
+  }
+
+  /**
+   * Transform GraphDTO from backend API to LineageGraph format for React Flow
+   */
+  private transformGraphDTOToLineageGraph(graphDTO: GraphDTO): LineageGraph {
+    const nodes: LineageNode[] = graphDTO.nodes.map(node => ({
+      id: node.id,
+      label: node.label,
+      type: node.type as LineageNode['type'],
+      metadata: node.properties
+    }));
+
+    const edges: LineageEdge[] = graphDTO.edges.map(edge => ({
+      source: edge.source,
+      target: edge.target,
+      label: edge.operation
+    }));
+
+    return { nodes, edges };
+  }
+
+  /**
+   * Transform lineage events into a graph structure (legacy method for backward compatibility)
    */
   transformToGraph(events: LineageEvent[]): LineageGraph {
     const nodes: LineageNode[] = [];

@@ -1,12 +1,15 @@
 package com.creditdefaultswap.platform.model;
 
 import jakarta.persistence.*;
+import jakarta.persistence.EntityListeners;
+import com.creditdefaultswap.platform.lineage.LineageEntityListener;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
+@EntityListeners(LineageEntityListener.class)
 @Table(name = "ccp_accounts", uniqueConstraints = @UniqueConstraint(columnNames = {"ccp_name", "member_firm", "account_number"}))
 public class CCPAccount {
     

@@ -1,7 +1,8 @@
 package com.creditdefaultswap.platform.controller;
 
+import com.creditdefaultswap.platform.annotation.LineageOperationType;
+import com.creditdefaultswap.platform.annotation.TrackLineage;
 import com.creditdefaultswap.platform.model.CCPAccount;
-import com.creditdefaultswap.platform.service.LineageService;
 import com.creditdefaultswap.platform.service.NovationService;
 import com.creditdefaultswap.platform.repository.CCPAccountRepository;
 import jakarta.validation.Valid;
@@ -10,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,19 +21,23 @@ public class NovationController {
     
     private final NovationService novationService;
     private final CCPAccountRepository ccpAccountRepository;
-    private final LineageService lineageService;
     
     @Autowired
-    public NovationController(NovationService novationService, CCPAccountRepository ccpAccountRepository, LineageService lineageService) {
+    public NovationController(NovationService novationService, CCPAccountRepository ccpAccountRepository) {
         this.novationService = novationService;
         this.ccpAccountRepository = ccpAccountRepository;
-        this.lineageService = lineageService;
     }
     
     /**
      * Execute novation of a bilateral trade to CCP clearing
      */
     @PostMapping("/execute")
+    @TrackLineage(
+        operationType = LineageOperationType.NOVATION,
+        operation = "EXECUTE",
+        entityIdFromResult = "originalTradeId",
+        autoExtractDetails = true
+    )
     public ResponseEntity<?> executeNovation(@Valid @RequestBody NovationRequest request) {
         try {
             NovationService.NovationResult result = novationService.novateToClearing(
@@ -41,20 +45,6 @@ public class NovationController {
                 request.getCcpName(), 
                 request.getMemberFirm(), 
                 request.getActor()
-            );
-            
-            // Track novation lineage
-            Map<String, Object> novationDetails = new HashMap<>();
-            novationDetails.put("ccpName", request.getCcpName());
-            novationDetails.put("memberFirm", request.getMemberFirm());
-            novationDetails.put("newCounterparty", request.getCcpName());
-            novationDetails.put("novationReference", result.getNovationReference());
-            
-            lineageService.trackNovationOperation(
-                result.getOriginalTrade().getId(), 
-                result.getCcpTrade().getId(), 
-                request.getActor() != null ? request.getActor() : "system", 
-                novationDetails
             );
             
             return ResponseEntity.ok(Map.of(

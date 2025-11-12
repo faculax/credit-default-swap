@@ -1,11 +1,14 @@
 package com.creditdefaultswap.platform.model;
 
 import jakarta.persistence.*;
+import jakarta.persistence.EntityListeners;
+import com.creditdefaultswap.platform.lineage.LineageEntityListener;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
+@EntityListeners(LineageEntityListener.class)
 @Table(name = "margin_positions")
 public class MarginPosition {
     

@@ -1,6 +1,8 @@
 package com.creditdefaultswap.platform.model;
 
 import jakarta.persistence.*;
+import jakarta.persistence.EntityListeners;
+import com.creditdefaultswap.platform.lineage.LineageEntityListener;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -9,6 +11,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Entity
+@EntityListeners(LineageEntityListener.class)
 @Table(name = "lineage_events")
 public class LineageEvent {
 

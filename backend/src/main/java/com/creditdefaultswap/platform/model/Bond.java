@@ -1,5 +1,6 @@
 package com.creditdefaultswap.platform.model;
 
+import com.creditdefaultswap.platform.lineage.LineageEntityListener;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "bonds")
+@EntityListeners(LineageEntityListener.class)
 public class Bond {
     
     @Id

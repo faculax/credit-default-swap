@@ -1,5 +1,7 @@
 package com.creditdefaultswap.platform.controller;
 
+import com.creditdefaultswap.platform.annotation.LineageOperationType;
+import com.creditdefaultswap.platform.annotation.TrackLineage;
 import com.creditdefaultswap.platform.dto.CreateCreditEventRequest;
 import com.creditdefaultswap.platform.dto.CreditEventResponse;
 import com.creditdefaultswap.platform.dto.SettlementView;
@@ -9,7 +11,6 @@ import com.creditdefaultswap.platform.model.PhysicalSettlementInstruction;
 import com.creditdefaultswap.platform.service.CreditEventService;
 import com.creditdefaultswap.platform.service.SettlementService;
 import com.creditdefaultswap.platform.service.DemoCreditEventService;
-import com.creditdefaultswap.platform.service.LineageService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,17 +28,14 @@ public class CreditEventController {
     private final CreditEventService creditEventService;
     private final SettlementService settlementService;
     private final DemoCreditEventService demoCreditEventService;
-    private final LineageService lineageService;
     
     @Autowired
     public CreditEventController(CreditEventService creditEventService,
                                 SettlementService settlementService,
-                                DemoCreditEventService demoCreditEventService,
-                                LineageService lineageService) {
+                                DemoCreditEventService demoCreditEventService) {
         this.creditEventService = creditEventService;
         this.settlementService = settlementService;
         this.demoCreditEventService = demoCreditEventService;
-        this.lineageService = lineageService;
     }
     
     /**
@@ -48,15 +46,17 @@ public class CreditEventController {
      * (includes propagated trades for BANKRUPTCY and RESTRUCTURING events)
      */
     @PostMapping("/{tradeId}/credit-events")
+    @TrackLineage(
+        operationType = LineageOperationType.CREDIT_EVENT,
+        operation = "RECORD",
+        entityIdParam = "tradeId",
+        autoExtractDetails = true
+    )
     public ResponseEntity<CreditEventResponse> recordCreditEvent(
             @PathVariable Long tradeId,
             @Valid @RequestBody CreateCreditEventRequest request) {
         
         CreditEventResponse response = creditEventService.recordCreditEvent(tradeId, request);
-        
-        // Track lineage
-        lineageService.trackCreditEvent(tradeId, request.getEventType().toString(), 
-            response.getCreditEvent().getId(), "system");
         
         // Return 201 for new creation, 200 for existing (idempotent)
         HttpStatus status = response.getCreditEvent().getCreatedAt().equals(response.getCreditEvent().getUpdatedAt()) ? 
@@ -123,6 +123,12 @@ public class CreditEventController {
      * Generate demo credit events for a trade (for testing/demo purposes)
      */
     @PostMapping("/{tradeId}/demo-credit-events")
+    @TrackLineage(
+        operationType = LineageOperationType.CREDIT_EVENT,
+        operation = "DEMO_GENERATE",
+        entityIdParam = "tradeId",
+        autoExtractDetails = true
+    )
     public ResponseEntity<List<CreditEvent>> generateDemoCreditEvents(@PathVariable Long tradeId) {
         try {
             List<CreditEvent> generatedEvents = demoCreditEventService.generateDemoCreditEvents(tradeId);

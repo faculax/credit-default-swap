@@ -1,5 +1,6 @@
 package com.creditdefaultswap.platform.model.saccr;
 
+import com.creditdefaultswap.platform.lineage.LineageEntityListener;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "netting_sets")
+@EntityListeners(LineageEntityListener.class)
 public class NettingSet {
     
     @Id

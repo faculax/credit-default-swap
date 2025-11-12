@@ -1,6 +1,8 @@
 package com.creditdefaultswap.platform.model;
 
 import jakarta.persistence.*;
+import jakarta.persistence.EntityListeners;
+import com.creditdefaultswap.platform.lineage.LineageEntityListener;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -10,6 +12,7 @@ import java.time.LocalDateTime;
  * Supports reduction and termination scenarios with cash unwind calculations.
  */
 @Entity
+@EntityListeners(LineageEntityListener.class)
 @Table(name = "notional_adjustments")
 public class NotionalAdjustment {
 

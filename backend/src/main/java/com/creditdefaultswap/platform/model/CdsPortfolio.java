@@ -1,5 +1,6 @@
 package com.creditdefaultswap.platform.model;
 
+import com.creditdefaultswap.platform.lineage.LineageEntityListener;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -8,6 +9,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "cds_portfolios")
+@EntityListeners(LineageEntityListener.class)
 public class CdsPortfolio {
     
     @Id

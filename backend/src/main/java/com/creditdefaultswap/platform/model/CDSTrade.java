@@ -1,5 +1,6 @@
 package com.creditdefaultswap.platform.model;
 
+import com.creditdefaultswap.platform.lineage.LineageEntityListener;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
@@ -8,6 +9,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "cds_trades")
+@EntityListeners(LineageEntityListener.class)
 public class CDSTrade {
     
     @Id

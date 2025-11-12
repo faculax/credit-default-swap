@@ -2,10 +2,13 @@ package com.creditdefaultswap.platform.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import jakarta.persistence.EntityListeners;
+import com.creditdefaultswap.platform.lineage.LineageEntityListener;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
+@EntityListeners(LineageEntityListener.class)
 @Table(name = "bond_portfolio_constituents")
 public class BondPortfolioConstituent {
     

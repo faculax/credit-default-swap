@@ -1,5 +1,7 @@
 package com.creditdefaultswap.platform.controller;
 
+import com.creditdefaultswap.platform.annotation.TrackLineage;
+import com.creditdefaultswap.platform.annotation.LineageOperationType;
 import com.creditdefaultswap.platform.dto.SimulationRequest;
 import com.creditdefaultswap.platform.dto.SimulationResponse;
 import com.creditdefaultswap.platform.service.SimulationService;
@@ -24,6 +26,12 @@ public class SimulationController {
      * Submit a new correlated Monte Carlo simulation
      */
     @PostMapping("/portfolio/{portfolioId}")
+    @TrackLineage(
+        operationType = LineageOperationType.GENERIC,
+        operation = "SIMULATION_RUN",
+        entityIdParam = "portfolioId",
+        autoExtractDetails = true
+    )
     public ResponseEntity<SimulationResponse> runSimulation(
             @PathVariable Long portfolioId,
             @RequestBody SimulationRequest request) {
@@ -73,6 +81,12 @@ public class SimulationController {
      * Cancel running simulation
      */
     @DeleteMapping("/runs/{runId}")
+    @TrackLineage(
+        operationType = LineageOperationType.GENERIC,
+        operation = "SIMULATION_CANCEL",
+        entityIdParam = "runId",
+        autoExtractDetails = true
+    )
     public ResponseEntity<Void> cancelSimulation(@PathVariable String runId) {
         
         log.info("Canceling simulation: {}", runId);

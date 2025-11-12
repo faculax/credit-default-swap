@@ -95,21 +95,65 @@ const LineageGraph: React.FC<LineageGraphProps> = ({ lineageData, onNodeClick })
     // Transform lineage data to ReactFlow format
     const flowNodes: Node[] = lineageData.nodes.map((node: LineageNodeType) => {
       const isDataset = node.type === 'dataset';
+      const isEndpoint = node.type === 'endpoint';
+      const isService = node.type === 'service';
+      const isRepository = node.type === 'repository';
+      
       const displayLabel = node.label.length > 25 
         ? node.label.substring(0, 22) + '...' 
         : node.label;
       
+      // Get icon based on type
+      const getIcon = () => {
+        if (isDataset) return '📊';
+        if (isEndpoint) return '🌐';
+        if (isService) return '⚙️';
+        if (isRepository) return '💾';
+        return '🔹';
+      };
+      
+      // Use only the existing color palette, no gradients
+      const getColors = () => {
+        if (isDataset) return {
+          background: '#1ee6be', // RGB(30, 230, 190)
+          color: '#3c4b61',      // RGB(60, 75, 97)
+          border: '#00ffc3'      // RGB(0, 255, 195)
+        };
+        if (isEndpoint) return {
+          background: '#00e8f7', // RGB(0, 232, 247)
+          color: '#3c4b61',
+          border: '#00f000'      // RGB(0, 240, 0)
+        };
+        if (isService) return {
+          background: '#3c4b61',
+          color: '#fff',
+          border: '#00e8f7'
+        };
+        if (isRepository) return {
+          background: '#3c4b61',
+          color: '#1ee6be',
+          border: '#1ee6be'
+        };
+        return {
+          background: '#3c4b61',
+          color: '#fff',
+          border: '#00e8f7'
+        };
+      };
+
+      const colors = getColors();
+
       return {
         id: node.id,
         data: { 
           label: (
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
-                {displayLabel}
+                {getIcon()} {displayLabel}
               </div>
               {node.metadata && Object.keys(node.metadata).length > 0 && (
                 <div style={{ fontSize: '10px', opacity: 0.8 }}>
-                  {isDataset ? '📊 Dataset' : '⚙️ Operation'}
+                  {node.type.toUpperCase()}
                 </div>
               )}
             </div>
@@ -120,14 +164,16 @@ const LineageGraph: React.FC<LineageGraphProps> = ({ lineageData, onNodeClick })
         },
         position: { x: 0, y: 0 },
         style: {
-          background: isDataset ? 'rgb(30, 230, 190)' : 'rgb(60, 75, 97)',
-          color: isDataset ? 'rgb(60, 75, 97)' : 'rgb(255, 255, 255)',
-          border: isDataset ? '2px solid rgb(0, 255, 195)' : '2px solid rgb(0, 232, 247)',
-          borderRadius: '8px',
-          padding: '12px',
+          background: colors.background,
+          color: colors.color,
+          border: `2px solid ${colors.border}`,
+          borderRadius: '10px',
+          padding: '14px',
           minWidth: 180,
-          fontSize: '12px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+          fontSize: '13px',
+          fontWeight: '500',
+          boxShadow: '0 2px 8px rgba(60,75,97,0.10)',
+          transition: 'all 0.3s ease'
         },
         sourcePosition: Position.Right,
         targetPosition: Position.Left
@@ -141,27 +187,27 @@ const LineageGraph: React.FC<LineageGraphProps> = ({ lineageData, onNodeClick })
       label: edge.label,
       type: 'smoothstep',
       animated: true,
-      style: { stroke: 'rgb(0, 240, 0)', strokeWidth: 2 },
+      style: { stroke: '#00e8f7', strokeWidth: 3 },
       labelStyle: { 
-        fill: 'rgb(60, 75, 97)', 
+        fill: '#3c4b61', // RGB(60, 75, 97)
         fontWeight: 700,
         fontSize: '11px',
-        background: 'rgba(255, 255, 255, 0.9)',
+        background: '#fff',
         padding: '4px 8px',
         borderRadius: '4px',
-        border: '1px solid rgb(0, 240, 0)'
+        border: '1px solid #00e8f7'
       },
       labelBgPadding: [8, 4] as [number, number],
       labelBgBorderRadius: 4,
       labelBgStyle: { 
-        fill: 'rgba(255, 255, 255, 0.9)', 
-        fillOpacity: 0.9,
-        stroke: 'rgb(0, 240, 0)',
-        strokeWidth: 1
+        fill: '#fff',
+        fillOpacity: 0.95,
+        stroke: '#00e8f7',
+        strokeWidth: 2
       },
       markerEnd: {
         type: MarkerType.ArrowClosed,
-        color: 'rgb(0, 240, 0)'
+        color: '#00e8f7'
       }
     }));
 
@@ -182,7 +228,7 @@ const LineageGraph: React.FC<LineageGraphProps> = ({ lineageData, onNodeClick })
   };
 
   return (
-    <div style={{ width: '100%', height: '600px', background: 'rgb(255, 255, 255)' }}>
+  <div style={{ width: '100%', height: '700px', background: '#fff' }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -190,20 +236,43 @@ const LineageGraph: React.FC<LineageGraphProps> = ({ lineageData, onNodeClick })
         onEdgesChange={onEdgesChange}
         onNodeClick={handleNodeClick}
         fitView
+        fitViewOptions={{ padding: 0.3, maxZoom: 1 }}
         attributionPosition="bottom-left"
+        minZoom={0.1}
+        maxZoom={2}
       >
-        <Controls />
+        <Controls 
+          style={{
+            background: 'rgb(60, 75, 97)',
+            border: '1px solid rgb(0, 240, 0)',
+            borderRadius: '8px'
+          }}
+        />
         <MiniMap 
           nodeColor={(node: any) => {
             const nodeData = node.data as { type: string };
-            return nodeData.type === 'dataset' ? 'rgb(30, 230, 190)' : 'rgb(60, 75, 97)';
+            switch(nodeData.type) {
+              case 'dataset': return 'rgb(30, 230, 190)';
+              case 'endpoint': return 'rgb(0, 232, 247)';
+              case 'service': return 'rgb(60, 75, 97)';
+              case 'repository': return 'rgb(60, 75, 97)';
+              default: return 'rgb(100, 100, 100)';
+            }
           }}
-          style={{ background: 'rgb(255, 255, 255)' }}
+          style={{ 
+            background: 'rgb(255, 255, 255)',
+            border: '1px solid rgb(0, 240, 0)',
+            borderRadius: '8px'
+          }}
+          maskColor="rgba(60, 75, 97, 0.1)"
         />
-        <Background color="rgb(60, 75, 97)" gap={16} />
+        <Background 
+          color="rgba(60, 75, 97, 0.15)" 
+          gap={24} 
+          size={1}
+        />
       </ReactFlow>
     </div>
   );
 };
-
 export default LineageGraph;

@@ -1,5 +1,7 @@
 package com.creditdefaultswap.platform.controller;
 
+import com.creditdefaultswap.platform.annotation.TrackLineage;
+import com.creditdefaultswap.platform.annotation.LineageOperationType;
 import com.creditdefaultswap.platform.model.MarginStatement;
 import com.creditdefaultswap.platform.model.MarginPosition;
 import com.creditdefaultswap.platform.repository.MarginStatementRepository;
@@ -51,6 +53,12 @@ public class MarginStatementController {
      * Upload a new margin statement
      */
     @PostMapping("/upload")
+    @TrackLineage(
+        operationType = LineageOperationType.MARGIN,
+        operation = "STATEMENT_UPLOAD",
+        entityIdFromResult = "statementId",
+        autoExtractDetails = true
+    )
     public ResponseEntity<?> uploadStatement(
             @RequestParam("file") MultipartFile file,
             @RequestParam("statementId") String statementId,
@@ -195,6 +203,11 @@ public class MarginStatementController {
      * Retry failed statements
      */
     @PostMapping("/retry-failed")
+    @TrackLineage(
+        operationType = LineageOperationType.MARGIN,
+        operation = "STATEMENT_RETRY",
+        autoExtractDetails = true
+    )
     public ResponseEntity<?> retryFailedStatements() {
         try {
             statementService.retryFailedStatements();
@@ -236,6 +249,11 @@ public class MarginStatementController {
      * Now generates a single consolidated statement per day with netting set breakdowns
      */
     @PostMapping("/actions/generate-automated")
+    @TrackLineage(
+        operationType = LineageOperationType.MARGIN,
+        operation = "STATEMENT_AUTO_GENERATE",
+        autoExtractDetails = true
+    )
     public ResponseEntity<?> generateAutomatedStatements(
             @RequestParam(required = false) 
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) 

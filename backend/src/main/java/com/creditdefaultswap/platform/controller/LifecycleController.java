@@ -1,5 +1,7 @@
 package com.creditdefaultswap.platform.controller;
 
+import com.creditdefaultswap.platform.annotation.LineageOperationType;
+import com.creditdefaultswap.platform.annotation.TrackLineage;
 import com.creditdefaultswap.platform.dto.AmendTradeRequest;
 import com.creditdefaultswap.platform.dto.NotionalAdjustmentRequest;
 import com.creditdefaultswap.platform.dto.PayCouponRequest;
@@ -15,7 +17,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -41,13 +42,16 @@ public class LifecycleController {
 
     @Autowired
     private NotionalAdjustmentService notionalAdjustmentService;
-    
-    @Autowired
-    private LineageService lineageService;
 
     // Coupon Schedule Endpoints
 
     @PostMapping("/trades/{tradeId}/coupon-schedule")
+    @TrackLineage(
+        operationType = LineageOperationType.LIFECYCLE,
+        operation = "COUPON_SCHEDULE_GENERATE",
+        entityIdParam = "tradeId",
+        autoExtractDetails = true
+    )
     public ResponseEntity<List<CouponPeriod>> generateCouponSchedule(@PathVariable Long tradeId) {
         List<CouponPeriod> schedule = couponScheduleService.generateImmSchedule(tradeId);
         return ResponseEntity.ok(schedule);
@@ -69,6 +73,12 @@ public class LifecycleController {
     }
 
     @PostMapping("/trades/{tradeId}/coupon-periods/{periodId}/pay")
+    @TrackLineage(
+        operationType = LineageOperationType.LIFECYCLE,
+        operation = "COUPON",
+        entityIdParam = "tradeId",
+        autoExtractDetails = true
+    )
     public ResponseEntity<CouponPeriod> payCoupon(
             @PathVariable Long tradeId,
             @PathVariable Long periodId,
@@ -91,18 +101,16 @@ public class LifecycleController {
         
         CouponPeriod paidPeriod = couponScheduleService.payCoupon(periodId, paymentTimestamp);
         
-        // Track lifecycle lineage
-        Map<String, Object> lifecycleDetails = new HashMap<>();
-        lifecycleDetails.put("periodId", periodId);
-        lifecycleDetails.put("paymentDate", paidPeriod.getPaymentDate().toString());
-        lifecycleDetails.put("couponAmount", paidPeriod.getCouponAmount());
-        
-        lineageService.trackLifecycleOperation("COUPON", tradeId, "system", lifecycleDetails);
-        
         return ResponseEntity.ok(paidPeriod);
     }
 
     @PostMapping("/trades/{tradeId}/coupon-periods/{periodId}/unpay")
+    @TrackLineage(
+        operationType = LineageOperationType.LIFECYCLE,
+        operation = "COUPON_UNPAY",
+        entityIdParam = "tradeId",
+        autoExtractDetails = true
+    )
     public ResponseEntity<CouponPeriod> unpayCoupon(
             @PathVariable Long tradeId,
             @PathVariable Long periodId) {
@@ -113,6 +121,12 @@ public class LifecycleController {
     // Accrual Endpoints
 
     @PostMapping("/trades/{tradeId}/accruals/daily")
+    @TrackLineage(
+        operationType = LineageOperationType.LIFECYCLE,
+        operation = "ACCRUAL_DAILY",
+        entityIdParam = "tradeId",
+        autoExtractDetails = true
+    )
     public ResponseEntity<AccrualEvent> postDailyAccrual(
             @PathVariable Long tradeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate accrualDate) {
@@ -121,6 +135,12 @@ public class LifecycleController {
     }
 
     @PostMapping("/trades/{tradeId}/accruals/period")
+    @TrackLineage(
+        operationType = LineageOperationType.LIFECYCLE,
+        operation = "ACCRUAL_PERIOD",
+        entityIdParam = "tradeId",
+        autoExtractDetails = true
+    )
     public ResponseEntity<List<AccrualEvent>> postAccrualsForPeriod(
             @PathVariable Long tradeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -155,6 +175,12 @@ public class LifecycleController {
     // Amendment Endpoints
 
     @PostMapping("/trades/{tradeId}/amendments")
+    @TrackLineage(
+        operationType = LineageOperationType.LIFECYCLE,
+        operation = "AMENDMENT",
+        entityIdParam = "tradeId",
+        autoExtractDetails = true
+    )
     public ResponseEntity<List<TradeAmendment>> amendTrade(
             @PathVariable Long tradeId,
             @RequestBody AmendTradeRequest request) {
@@ -180,6 +206,12 @@ public class LifecycleController {
     // Notional Adjustment Endpoints
 
     @PostMapping("/trades/{tradeId}/notional-adjustments")
+    @TrackLineage(
+        operationType = LineageOperationType.LIFECYCLE,
+        operation = "NOTIONAL_ADJUST",
+        entityIdParam = "tradeId",
+        autoExtractDetails = true
+    )
     public ResponseEntity<NotionalAdjustment> adjustNotional(
             @PathVariable Long tradeId,
             @RequestBody NotionalAdjustmentRequest request) {
@@ -200,6 +232,12 @@ public class LifecycleController {
     }
 
     @PostMapping("/trades/{tradeId}/partial-termination")
+    @TrackLineage(
+        operationType = LineageOperationType.LIFECYCLE,
+        operation = "PARTIAL_TERMINATION",
+        entityIdParam = "tradeId",
+        autoExtractDetails = true
+    )
     public ResponseEntity<NotionalAdjustment> partiallyTerminate(
             @PathVariable Long tradeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate terminationDate,
@@ -211,6 +249,12 @@ public class LifecycleController {
     }
 
     @PostMapping("/trades/{tradeId}/full-termination")
+    @TrackLineage(
+        operationType = LineageOperationType.LIFECYCLE,
+        operation = "FULL_TERMINATION",
+        entityIdParam = "tradeId",
+        autoExtractDetails = true
+    )
     public ResponseEntity<NotionalAdjustment> fullyTerminate(
             @PathVariable Long tradeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate terminationDate,

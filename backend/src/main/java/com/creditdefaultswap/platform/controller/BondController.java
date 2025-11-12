@@ -1,10 +1,11 @@
 package com.creditdefaultswap.platform.controller;
 
+import com.creditdefaultswap.platform.annotation.LineageOperationType;
+import com.creditdefaultswap.platform.annotation.TrackLineage;
 import com.creditdefaultswap.platform.dto.BondPricingResponse;
 import com.creditdefaultswap.platform.dto.BondRequest;
 import com.creditdefaultswap.platform.model.Bond;
 import com.creditdefaultswap.platform.service.BondService;
-import com.creditdefaultswap.platform.service.LineageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -12,9 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * REST Controller for Bond operations
@@ -27,28 +26,19 @@ public class BondController {
     @Autowired
     private BondService bondService;
     
-    @Autowired
-    private LineageService lineageService;
-    
     /**
      * POST /api/bonds - Create a new bond
      */
     @PostMapping
+    @TrackLineage(
+        operationType = LineageOperationType.BOND,
+        operation = "CREATE",
+        entityIdFromResult = "id",
+        autoExtractDetails = true
+    )
     public ResponseEntity<?> createBond(@RequestBody BondRequest request) {
         try {
             Bond bond = bondService.createBond(request);
-            
-            // Track comprehensive lineage
-            Map<String, Object> bondDetails = new HashMap<>();
-            bondDetails.put("issuer", bond.getIssuer());
-            bondDetails.put("faceValue", bond.getFaceValue());
-            bondDetails.put("couponRate", bond.getCouponRate());
-            bondDetails.put("maturityDate", bond.getMaturityDate() != null ? bond.getMaturityDate().toString() : "");
-            bondDetails.put("currency", bond.getCurrency());
-            bondDetails.put("sector", bond.getSector());
-            bondDetails.put("seniority", bond.getSeniority());
-            
-            lineageService.trackBondOperation("CREATE", bond.getId(), "system", bondDetails);
             
             return new ResponseEntity<>(bond, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
@@ -91,18 +81,15 @@ public class BondController {
      * PUT /api/bonds/{id} - Update bond
      */
     @PutMapping("/{id}")
+    @TrackLineage(
+        operationType = LineageOperationType.BOND,
+        operation = "UPDATE",
+        entityIdParam = "id",
+        autoExtractDetails = true
+    )
     public ResponseEntity<?> updateBond(@PathVariable Long id, @RequestBody BondRequest request) {
         try {
             Bond bond = bondService.updateBond(id, request);
-            
-            // Track comprehensive lineage
-            Map<String, Object> bondDetails = new HashMap<>();
-            bondDetails.put("issuer", bond.getIssuer());
-            bondDetails.put("faceValue", bond.getFaceValue());
-            bondDetails.put("couponRate", bond.getCouponRate());
-            bondDetails.put("maturityDate", bond.getMaturityDate() != null ? bond.getMaturityDate().toString() : "");
-            
-            lineageService.trackBondOperation("UPDATE", bond.getId(), "system", bondDetails);
             
             return ResponseEntity.ok(bond);
         } catch (IllegalArgumentException e) {
@@ -121,6 +108,12 @@ public class BondController {
      * - hazardRate (optional, defaults to 0)
      */
     @PostMapping("/{id}/price")
+    @TrackLineage(
+        operationType = LineageOperationType.PRICING,
+        operation = "PRICE_BOND",
+        entityIdParam = "id",
+        autoExtractDetails = false
+    )
     public ResponseEntity<?> priceBond(
             @PathVariable Long id,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate valuationDate,
@@ -130,9 +123,6 @@ public class BondController {
         try {
             LocalDate valDate = valuationDate != null ? valuationDate : LocalDate.now();
             BondPricingResponse response = bondService.priceBond(id, valDate, discountRate, hazardRate);
-            
-            // Track pricing calculation lineage
-            lineageService.trackPricingCalculation("BOND", id, "DISCOUNTED_CASHFLOW", "system");
             
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {

@@ -1,5 +1,7 @@
 package com.creditdefaultswap.platform.controller;
 
+import com.creditdefaultswap.platform.annotation.LineageOperationType;
+import com.creditdefaultswap.platform.annotation.TrackLineage;
 import com.creditdefaultswap.platform.dto.AttachTradesRequest;
 import com.creditdefaultswap.platform.dto.PortfolioPricingResponse;
 import com.creditdefaultswap.platform.model.BondPortfolioConstituent;
@@ -8,7 +10,6 @@ import com.creditdefaultswap.platform.model.CdsPortfolio;
 import com.creditdefaultswap.platform.model.CdsPortfolioConstituent;
 import com.creditdefaultswap.platform.model.WeightType;
 import com.creditdefaultswap.platform.service.CdsPortfolioService;
-import com.creditdefaultswap.platform.service.LineageService;
 import com.creditdefaultswap.platform.service.PortfolioBondService;
 import com.creditdefaultswap.platform.service.PortfolioBasketService;
 import com.creditdefaultswap.platform.service.PortfolioPricingService;
@@ -21,7 +22,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,26 +35,29 @@ public class CdsPortfolioController {
     private final PortfolioPricingService pricingService;
     private final PortfolioBondService bondService;
     private final PortfolioBasketService basketService;
-    private final LineageService lineageService;
     
     @Autowired
     public CdsPortfolioController(
             CdsPortfolioService portfolioService,
             PortfolioPricingService pricingService,
             PortfolioBondService bondService,
-            PortfolioBasketService basketService,
-            LineageService lineageService) {
+            PortfolioBasketService basketService) {
         this.portfolioService = portfolioService;
         this.pricingService = pricingService;
         this.bondService = bondService;
         this.basketService = basketService;
-        this.lineageService = lineageService;
     }
     
     /**
      * POST /api/cds-portfolios - Create a new portfolio
      */
     @PostMapping
+    @TrackLineage(
+        operationType = LineageOperationType.PORTFOLIO,
+        operation = "CREATE",
+        entityIdFromResult = "id",
+        autoExtractDetails = true
+    )
     public ResponseEntity<?> createPortfolio(@RequestBody Map<String, String> request) {
         try {
             String name = request.get("name");
@@ -65,16 +68,6 @@ public class CdsPortfolioController {
             }
             
             CdsPortfolio portfolio = portfolioService.createPortfolio(name, description);
-            
-            // Track lineage
-            Map<String, Object> portfolioDetails = new HashMap<>();
-            portfolioDetails.put("name", name);
-            portfolioDetails.put("description", description != null ? description : "");
-            portfolioDetails.put("tradeCount", 0);
-            portfolioDetails.put("bondCount", 0);
-            portfolioDetails.put("totalPositions", 0);
-            
-            lineageService.trackPortfolioOperation("CREATE", portfolio.getId(), "system", portfolioDetails);
             
             return new ResponseEntity<>(portfolio, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
@@ -160,18 +153,17 @@ public class CdsPortfolioController {
      * POST /api/cds-portfolios/{id}/constituents - Attach trades to portfolio
      */
     @PostMapping("/{id}/constituents")
+    @TrackLineage(
+        operationType = LineageOperationType.PORTFOLIO,
+        operation = "ATTACH_TRADES",
+        entityIdParam = "id",
+        autoExtractDetails = true
+    )
     public ResponseEntity<?> attachTrades(
             @PathVariable Long id,
             @RequestBody AttachTradesRequest request) {
         try {
             List<CdsPortfolioConstituent> constituents = portfolioService.attachTrades(id, request);
-            
-            // Track lineage for attaching trades to portfolio
-            Map<String, Object> portfolioDetails = new HashMap<>();
-            portfolioDetails.put("portfolioId", id);
-            portfolioDetails.put("tradesAttached", request.getTrades() != null ? request.getTrades().size() : 0);
-            portfolioDetails.put("totalConstituents", constituents.size());
-            lineageService.trackPortfolioOperation("ATTACH_TRADES", id, "system", portfolioDetails);
             
             return new ResponseEntity<>(constituents, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
@@ -220,21 +212,17 @@ public class CdsPortfolioController {
      * POST /api/cds-portfolios/{id}/price - Price portfolio for a valuation date
      */
     @PostMapping("/{id}/price")
+    @TrackLineage(
+        operationType = LineageOperationType.PRICING,
+        operation = "PRICE_PORTFOLIO",
+        entityIdParam = "id",
+        autoExtractDetails = true
+    )
     public ResponseEntity<?> pricePortfolio(
             @PathVariable Long id,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate valuationDate) {
         try {
             PortfolioPricingResponse response = pricingService.pricePortfolio(id, valuationDate);
-            
-            // Track lineage for portfolio pricing
-            Map<String, Object> portfolioDetails = new HashMap<>();
-            portfolioDetails.put("portfolioId", id);
-            portfolioDetails.put("valuationDate", valuationDate.toString());
-            if (response.getAggregate() != null) {
-                portfolioDetails.put("totalPV", response.getAggregate().getPv() != null ? response.getAggregate().getPv().doubleValue() : 0.0);
-                portfolioDetails.put("tradeCount", response.getAggregate().getTradeCount());
-            }
-            lineageService.trackPortfolioOperation("PRICE", id, "system", portfolioDetails);
             
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
@@ -265,6 +253,12 @@ public class CdsPortfolioController {
      * POST /api/cds-portfolios/{id}/bonds - Attach a bond to portfolio
      */
     @PostMapping("/{id}/bonds")
+    @TrackLineage(
+        operationType = LineageOperationType.PORTFOLIO,
+        operation = "ATTACH_BOND",
+        entityIdParam = "id",
+        autoExtractDetails = true
+    )
     public ResponseEntity<?> attachBond(
             @PathVariable Long id,
             @RequestBody Map<String, Object> request) {
@@ -280,14 +274,6 @@ public class CdsPortfolioController {
                     : java.math.BigDecimal.ONE;
             
             BondPortfolioConstituent constituent = bondService.attachBond(id, bondId, weightType, weightValue);
-            
-            // Track lineage for attaching bond to portfolio
-            Map<String, Object> portfolioDetails = new HashMap<>();
-            portfolioDetails.put("portfolioId", id);
-            portfolioDetails.put("bondId", bondId);
-            portfolioDetails.put("weightType", weightType.name());
-            portfolioDetails.put("weightValue", weightValue.doubleValue());
-            lineageService.trackPortfolioOperation("ATTACH_BOND", id, "system", portfolioDetails);
             
             return new ResponseEntity<>(constituent, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
@@ -334,6 +320,12 @@ public class CdsPortfolioController {
      * POST /api/cds-portfolios/{id}/baskets - Attach a basket to portfolio
      */
     @PostMapping("/{id}/baskets")
+    @TrackLineage(
+        operationType = LineageOperationType.PORTFOLIO,
+        operation = "ATTACH_BASKET",
+        entityIdParam = "id",
+        autoExtractDetails = true
+    )
     public ResponseEntity<?> attachBasket(
             @PathVariable Long id,
             @RequestBody Map<String, Object> request) {
@@ -349,14 +341,6 @@ public class CdsPortfolioController {
                     : java.math.BigDecimal.ONE;
             
             BasketPortfolioConstituent constituent = basketService.attachBasket(id, basketId, weightType, weightValue);
-            
-            // Track lineage for attaching basket to portfolio
-            Map<String, Object> portfolioDetails = new HashMap<>();
-            portfolioDetails.put("portfolioId", id);
-            portfolioDetails.put("basketId", basketId);
-            portfolioDetails.put("weightType", weightType.name());
-            portfolioDetails.put("weightValue", weightValue.doubleValue());
-            lineageService.trackPortfolioOperation("ATTACH_BASKET", id, "system", portfolioDetails);
             
             return new ResponseEntity<>(constituent, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {

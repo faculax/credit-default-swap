@@ -1,12 +1,15 @@
 package com.creditdefaultswap.platform.model;
 
 import jakarta.persistence.*;
+import jakarta.persistence.EntityListeners;
+import com.creditdefaultswap.platform.lineage.LineageEntityListener;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
+@EntityListeners(LineageEntityListener.class)
 @Table(name = "cds_physical_settlement_instructions")
 public class PhysicalSettlementInstruction {
     

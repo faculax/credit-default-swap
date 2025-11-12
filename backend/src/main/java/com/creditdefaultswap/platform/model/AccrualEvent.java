@@ -1,6 +1,8 @@
 package com.creditdefaultswap.platform.model;
 
 import jakarta.persistence.*;
+import jakarta.persistence.EntityListeners;
+import com.creditdefaultswap.platform.lineage.LineageEntityListener;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -10,6 +12,7 @@ import java.time.LocalDateTime;
  * Tracks accrual amounts using ACT/360 day count convention.
  */
 @Entity
+@EntityListeners(LineageEntityListener.class)
 @Table(name = "accrual_events", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"trade_id", "accrual_date", "trade_version"})
 })

@@ -1,5 +1,7 @@
 package com.creditdefaultswap.platform.controller;
 
+import com.creditdefaultswap.platform.annotation.TrackLineage;
+import com.creditdefaultswap.platform.annotation.LineageOperationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -25,6 +27,11 @@ public class AutomatedMarginController {
      * Generate automated VM/IM statements using existing CCP data and netting sets
      */
     @PostMapping("/generate")
+    @TrackLineage(
+        operationType = LineageOperationType.MARGIN,
+        operation = "AUTO_MARGIN_GENERATE",
+        autoExtractDetails = true
+    )
     public ResponseEntity<?> generateAutomatedStatements(
             @RequestParam(required = false) 
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) 

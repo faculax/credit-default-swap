@@ -44,6 +44,12 @@ nav:
 cds:
   default-recovery-rate: 0.40 # 40% default recovery rate for cash settlements
 
+lineage:
+  auto-tracking:
+    enabled: true # Enable automatic database operation tracking
+  correlation:
+    enabled: true # Enable request correlation tracking across all layers
+
 risk:
   engine:
     url: ${RISK_ENGINE_URL:http://risk-engine:8082}

@@ -2,15 +2,20 @@ package com.creditdefaultswap.platform.aspect;
 
 import com.creditdefaultswap.platform.annotation.LineageOperationType;
 import com.creditdefaultswap.platform.annotation.TrackLineage;
+import com.creditdefaultswap.platform.lineage.DatabaseOperationTracker;
 import com.creditdefaultswap.platform.service.LineageService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,21 +43,70 @@ import java.util.*;
  */
 @Aspect
 @Component
+@Order(5)
 public class LineageAspect {
     
     private static final Logger logger = LoggerFactory.getLogger(LineageAspect.class);
     
+    public LineageAspect() {
+        logger.error("==== LineageAspect BEAN CREATED ====");
+    }
+    
     @Autowired
     private LineageService lineageService;
     
+    @Value("${lineage.auto-tracking.enabled:true}")
+    private boolean autoTrackingEnabled;
+    
     /**
-     * Intercept methods annotated with @TrackLineage after successful execution
+     * Intercept methods annotated with @TrackLineage using @Around to wrap execution.
+     * This enables automatic database operation tracking before calling LineageService.
      */
-    @AfterReturning(
-        pointcut = "@annotation(trackLineage)",
-        returning = "result"
-    )
-    public void trackLineageAfterSuccess(JoinPoint joinPoint, TrackLineage trackLineage, Object result) {
+    @Around("@annotation(com.creditdefaultswap.platform.annotation.TrackLineage)")
+    public Object trackLineageAround(ProceedingJoinPoint joinPoint) throws Throwable {
+        logger.error("==== LineageAspect @Around TRIGGERED for: {} ====", joinPoint.getSignature().getName());
+        
+        // Extract the annotation from the method
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        Method method = signature.getMethod();
+        TrackLineage trackLineage = method.getAnnotation(TrackLineage.class);
+        
+        if (trackLineage == null) {
+            logger.error("@TrackLineage annotation not found on method!");
+            return joinPoint.proceed();
+        }
+        Object result = null;
+        
+        try {
+            // Enable automatic database operation tracking
+            if (autoTrackingEnabled) {
+                DatabaseOperationTracker.enableTracking();
+                logger.debug("Auto-tracking enabled for: {}", joinPoint.getSignature().getName());
+            }
+            
+            // Execute the actual method (triggers database operations)
+            result = joinPoint.proceed();
+            
+            // After successful execution, track lineage
+            trackLineageAfterExecution(joinPoint, trackLineage, result);
+            
+        } catch (Throwable throwable) {
+            logger.debug("Method execution failed, skipping lineage tracking: {}", throwable.getMessage());
+            throw throwable;
+        } finally {
+            // Always clean up tracking state (but correlation metadata is already merged in trackLineageAfterExecution)
+            if (autoTrackingEnabled) {
+                DatabaseOperationTracker.clear();
+            }
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Track lineage after successful method execution
+     */
+    private void trackLineageAfterExecution(JoinPoint joinPoint, TrackLineage trackLineage, Object result) {
         try {
             // Extract method details
             MethodSignature signature = (MethodSignature) joinPoint.getSignature();
@@ -68,6 +122,11 @@ public class LineageAspect {
             // Build lineage details map
             Map<String, Object> details = buildDetailsMap(trackLineage, args, result, signature);
             
+            // Add automatically tracked database operations to details
+            if (autoTrackingEnabled) {
+                addTrackedOperations(details);
+            }
+            
             // Get operation name
             String operation = trackLineage.operation().isEmpty() 
                 ? signature.getName().toUpperCase() 
@@ -76,13 +135,57 @@ public class LineageAspect {
             // Route to appropriate tracking method
             routeToTracker(trackLineage.operationType(), operation, entityId, trackLineage.actor(), details);
             
-            logger.debug("Lineage tracked: {} {} for entity {}", 
-                trackLineage.operationType(), operation, entityId);
+            logger.debug("Lineage tracked: {} {} for entity {} (auto-tracking: {})", 
+                trackLineage.operationType(), operation, entityId, autoTrackingEnabled);
             
         } catch (Exception e) {
             // Never break business logic due to lineage tracking failures
             logger.error("Lineage tracking failed for {}: {}", 
                 joinPoint.getSignature().getName(), e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Add automatically tracked database operations to details map
+     */
+    private void addTrackedOperations(Map<String, Object> details) {
+        try {
+            Set<DatabaseOperationTracker.TableOperation> operations = 
+                DatabaseOperationTracker.getTrackedOperations();
+            
+            if (operations.isEmpty()) {
+                logger.debug("No database operations were tracked");
+                return;
+            }
+            
+            // Group operations by table
+            Map<String, List<String>> tableOperations = new LinkedHashMap<>();
+            for (DatabaseOperationTracker.TableOperation op : operations) {
+                String key = op.getTableName();
+                tableOperations.computeIfAbsent(key, k -> new ArrayList<>())
+                    .add(op.getType().name());
+            }
+            
+            // Add to details under special key
+            details.put("_tracked_tables_read", DatabaseOperationTracker.getReadOperations()
+                .stream().map(DatabaseOperationTracker.TableOperation::getTableName).distinct().toList());
+            details.put("_tracked_tables_written", DatabaseOperationTracker.getWriteOperations()
+                .stream().map(DatabaseOperationTracker.TableOperation::getTableName).distinct().toList());
+            details.put("_operation_count", operations.size());
+            
+            // Merge correlation metadata injected by EnhancedLineageAspect (Order=2)
+            Map<String, Object> correlationMetadata = DatabaseOperationTracker.getCorrelationMetadata();
+            if (!correlationMetadata.isEmpty()) {
+                logger.debug("Merging {} correlation fields from EnhancedLineageAspect", 
+                    correlationMetadata.size());
+                details.putAll(correlationMetadata);
+            }
+            
+            logger.debug("Tracked {} database operations across {} tables", 
+                operations.size(), tableOperations.size());
+            
+        } catch (Exception e) {
+            logger.warn("Failed to add tracked operations: {}", e.getMessage());
         }
     }
     
@@ -182,6 +285,27 @@ public class LineageAspect {
             Set<String> includeSet = includeFields.length > 0 ? new HashSet<>(Arrays.asList(includeFields)) : null;
             Set<String> excludeSet = new HashSet<>(Arrays.asList(excludeFields));
             
+            // Handle Map parameters (e.g., Map<String, String> request bodies)
+            if (obj instanceof Map) {
+                Map<?, ?> map = (Map<?, ?>) obj;
+                for (Map.Entry<?, ?> entry : map.entrySet()) {
+                    String key = String.valueOf(entry.getKey());
+                    
+                    // Skip excluded fields
+                    if (excludeSet.contains(key)) continue;
+                    
+                    // Check include list
+                    if (includeSet != null && !includeSet.contains(key)) continue;
+                    
+                    Object value = entry.getValue();
+                    if (value != null) {
+                        details.put(key, convertToSerializable(value));
+                    }
+                }
+                return;
+            }
+            
+            // Handle regular objects via reflection
             Field[] fields = obj.getClass().getDeclaredFields();
             for (Field field : fields) {
                 field.setAccessible(true);
@@ -317,11 +441,24 @@ public class LineageAspect {
                     }
                     break;
                 case PRICING:
-                    lineageService.trackPricingCalculation(operation, Long.parseLong(entityId), "MARKET", actor);
+                    String entityType = details.containsKey("entityType") ? 
+                        details.get("entityType").toString() : "trade";
+                    String pricingMethod = details.containsKey("pricingMethod") ?
+                        details.get("pricingMethod").toString() : "MARKET";
+                    lineageService.trackPricingCalculationWithDetails(entityType, Long.parseLong(entityId), 
+                        pricingMethod, actor, details);
                     break;
                 case CREDIT_EVENT:
-                    // trackCreditEvent has different signature, log for now
-                    logger.info("Credit event lineage: {} for entity {}", operation, entityId);
+                    // Extract credit event details from the details map
+                    String eventType = details.containsKey("eventType") ? 
+                        details.get("eventType").toString() : operation;
+                    UUID eventId = details.containsKey("id") ? 
+                        UUID.fromString(details.get("id").toString()) : UUID.randomUUID();
+                    // Pass full details map for rich lineage
+                    lineageService.trackCreditEventWithDetails(Long.parseLong(entityId), eventType, 
+                        eventId, actor, details);
+                    logger.info("Credit event lineage tracked: {} for trade {} with event ID {}", 
+                        eventType, entityId, eventId);
                     break;
                 case GENERIC:
                 default:

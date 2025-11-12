@@ -1,6 +1,8 @@
 package com.creditdefaultswap.platform.model;
 
 import jakarta.persistence.*;
+import jakarta.persistence.EntityListeners;
+import com.creditdefaultswap.platform.lineage.LineageEntityListener;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.NotBlank;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -9,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
+@EntityListeners(LineageEntityListener.class)
 @Table(name = "cds_credit_events", 
        uniqueConstraints = @UniqueConstraint(columnNames = {"trade_id", "event_type", "event_date"}))
 public class CreditEvent {

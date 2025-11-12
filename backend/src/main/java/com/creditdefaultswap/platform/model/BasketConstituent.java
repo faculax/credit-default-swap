@@ -2,6 +2,8 @@ package com.creditdefaultswap.platform.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import jakarta.persistence.EntityListeners;
+import com.creditdefaultswap.platform.lineage.LineageEntityListener;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -10,6 +12,7 @@ import java.time.LocalDateTime;
  * Epic 15: Basket & Multi-Name Credit Derivatives
  */
 @Entity
+@EntityListeners(LineageEntityListener.class)
 @Table(name = "basket_constituents", 
        uniqueConstraints = @UniqueConstraint(columnNames = {"basket_id", "issuer"}))
 public class BasketConstituent {

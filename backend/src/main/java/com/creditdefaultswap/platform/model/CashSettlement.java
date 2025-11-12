@@ -1,6 +1,8 @@
 package com.creditdefaultswap.platform.model;
 
 import jakarta.persistence.*;
+import jakarta.persistence.EntityListeners;
+import com.creditdefaultswap.platform.lineage.LineageEntityListener;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.DecimalMax;
@@ -9,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
+@EntityListeners(LineageEntityListener.class)
 @Table(name = "cds_cash_settlements")
 public class CashSettlement {
     

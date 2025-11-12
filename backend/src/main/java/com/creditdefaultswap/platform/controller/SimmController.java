@@ -1,10 +1,11 @@
 package com.creditdefaultswap.platform.controller;
 
+import com.creditdefaultswap.platform.annotation.LineageOperationType;
+import com.creditdefaultswap.platform.annotation.TrackLineage;
 import com.creditdefaultswap.platform.service.simm.CrifParserService;
 import com.creditdefaultswap.platform.service.simm.CrifGenerationService;
 import com.creditdefaultswap.platform.service.simm.SimmCalculationService;
 import com.creditdefaultswap.platform.service.AuditService;
-import com.creditdefaultswap.platform.service.LineageService;
 import com.creditdefaultswap.platform.model.AuditLog;
 import com.creditdefaultswap.platform.model.simm.CrifUpload;
 import com.creditdefaultswap.platform.model.simm.SimmCalculation;
@@ -60,9 +61,6 @@ public class SimmController {
     private AuditService auditService;
     
     @Autowired
-    private LineageService lineageService;
-    
-    @Autowired
     private CrifUploadRepository crifUploadRepository;
     
     @Autowired
@@ -75,6 +73,12 @@ public class SimmController {
      * Upload and process a CRIF file
      */
     @PostMapping("/crif/upload")
+    @TrackLineage(
+        operationType = LineageOperationType.MARGIN,
+        operation = "CRIF_UPLOAD",
+        entityIdFromResult = "uploadId",
+        autoExtractDetails = true
+    )
     public ResponseEntity<?> uploadCrifFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "portfolioId", required = false) String portfolioId,
@@ -179,6 +183,12 @@ public class SimmController {
      * Auto-generate CRIF sensitivities from CDS trades in a portfolio
      */
     @PostMapping("/crif/generate-from-portfolio")
+    @TrackLineage(
+        operationType = LineageOperationType.MARGIN,
+        operation = "CRIF_GENERATE",
+        entityIdFromResult = "portfolioId",
+        autoExtractDetails = true
+    )
     public ResponseEntity<?> generateCrifFromPortfolio(
             @RequestParam("portfolioId") String portfolioId,
             @RequestParam("valuationDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate valuationDate) {
@@ -223,6 +233,12 @@ public class SimmController {
      * Delete a CRIF upload and all associated sensitivities and calculations
      */
     @DeleteMapping("/crif/upload/{uploadId}")
+    @TrackLineage(
+        operationType = LineageOperationType.MARGIN,
+        operation = "CRIF_DELETE",
+        entityIdParam = "uploadId",
+        autoExtractDetails = true
+    )
     public ResponseEntity<?> deleteCrifUpload(@PathVariable String uploadId) {
         try {
             logger.info("Deleting CRIF upload: {}", uploadId);
@@ -339,6 +355,12 @@ public class SimmController {
      * Execute SIMM calculation for a portfolio
      */
     @PostMapping("/calculate")
+    @TrackLineage(
+        operationType = LineageOperationType.MARGIN,
+        operation = "SIMM_CALCULATE",
+        entityIdFromResult = "portfolioId",
+        autoExtractDetails = true
+    )
     public ResponseEntity<?> executeCalculation(@RequestBody SimmCalculationRequest request) {
         try {
             logger.info("Executing SIMM calculation for portfolio: {}", request.getPortfolioId());
@@ -433,23 +455,6 @@ public class SimmController {
             }
             
             logger.info("SIMM calculation response prepared successfully: {}", calculationId);
-            
-            // Track lineage for SIMM margin calculation
-            Map<String, Object> marginDetails = new HashMap<>();
-            marginDetails.put("calculationId", calculation.getCalculationId());
-            marginDetails.put("portfolioId", calculation.getPortfolioId());
-            marginDetails.put("totalIM", calculation.getTotalIm() != null ? calculation.getTotalIm().doubleValue() : 0.0);
-            marginDetails.put("calculationDate", calculation.getCalculationDate().toString());
-            marginDetails.put("parameterSetVersion", parameterSet.getVersionName());
-            marginDetails.put("isdaVersion", parameterSet.getIsdaVersion());
-            marginDetails.put("calculationTimeMs", calculation.getCalculationTimeMs());
-            marginDetails.put("status", calculation.getCalculationStatus().name());
-            if (response.containsKey("marginByRiskClass")) {
-                marginDetails.put("breakdown", response.get("marginByRiskClass"));
-            } else if (response.containsKey("marginByProductClass")) {
-                marginDetails.put("breakdown", response.get("marginByProductClass"));
-            }
-            lineageService.trackMarginOperation("SIMM", calculation.getPortfolioId(), "system", marginDetails);
             
             return ResponseEntity.ok(response);
             

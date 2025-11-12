@@ -1,6 +1,8 @@
 package com.creditdefaultswap.platform.model;
 
 import jakarta.persistence.*;
+import jakarta.persistence.EntityListeners;
+import com.creditdefaultswap.platform.lineage.LineageEntityListener;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -10,6 +12,7 @@ import java.time.LocalDateTime;
  * Supports ACT/360 day count convention and modified following business day convention.
  */
 @Entity
+@EntityListeners(LineageEntityListener.class)
 @Table(name = "coupon_periods", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"trade_id", "period_start_date"})
 })
