@@ -110,6 +110,8 @@ jobs:
 
   quality-summary:
     name: Aggregate Code Quality HTML Summary
+    # Ensure this job runs even if test/coverage jobs fail so we still get a summary artifact.
+    if: ${{ always() }}
     needs: [frontend-tests, backend-tests]
     runs-on: ubuntu-latest
     steps:
