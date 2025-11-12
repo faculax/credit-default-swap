@@ -195,10 +195,11 @@ jobs:
             cls=""
             # Only classify if coverage is numeric (e.g. 82.34%)
             if echo "$cov" | grep -Eq '^[0-9]+(\.[0-9]+)?%$'; then
-              cov_num=${cov%%%}
-              cov_int=$(printf '%.0f' "$cov_num") || cov_int=""
-              if [ -n "$cov_int" ]; then
-                if [ "$cov_int" -lt 50 ]; then cls="low"; elif [ "$cov_int" -ge 85 ]; then cls="high"; fi
+              cov_num=${cov%%%}               # strip trailing %
+              cov_whole=${cov_num%%.*}        # integer part
+              # Guard: ensure cov_whole is digits before numeric comparison
+              if echo "$cov_whole" | grep -Eq '^[0-9]+$'; then
+                if [ "$cov_whole" -lt 50 ]; then cls="low"; elif [ "$cov_whole" -ge 85 ]; then cls="high"; fi
               fi
             else
               cov="N/A"
