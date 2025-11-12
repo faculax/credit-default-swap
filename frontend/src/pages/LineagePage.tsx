@@ -917,11 +917,71 @@ const LineagePage: React.FC = () => {
                     {intelligenceSubTab === 'path-detail' && currentEvent.outputs.path && (
                       <div className="space-y-4">
                         <h3 className="text-lg font-semibold text-fd-green mb-4">📊 Data Path</h3>
-                        <div className="bg-fd-dark border border-fd-border rounded-lg p-4">
-                          <pre className="text-fd-text text-sm whitespace-pre-wrap overflow-x-auto">
-                            {JSON.stringify(currentEvent.outputs.path, null, 2)}
-                          </pre>
-                        </div>
+                        {Array.isArray(currentEvent.outputs.path) ? (
+                          <div className="space-y-4">
+                            {currentEvent.outputs.path.map((stage: any, idx: number) => (
+                              <div key={idx} className="flex items-start gap-4">
+                                <div className="flex flex-col items-center">
+                                  <div className="w-10 h-10 rounded-full bg-fd-green text-fd-darker flex items-center justify-center font-bold shadow-lg">
+                                    {idx + 1}
+                                  </div>
+                                  {idx < currentEvent.outputs.path.length - 1 && (
+                                    <div className="w-0.5 h-16 bg-fd-green my-2"></div>
+                                  )}
+                                </div>
+                                <div className="flex-1 bg-fd-dark border border-fd-border rounded-lg p-4 hover:border-fd-green/50 transition-all">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-3">
+                                      <span className="text-fd-text font-bold text-lg">{stage.stage}</span>
+                                      <span className="px-3 py-1 text-xs bg-fd-green/20 text-fd-green rounded-full font-medium">
+                                        {stage.layer}
+                                      </span>
+                                    </div>
+                                    {stage.timestamp && (
+                                      <span className="text-xs text-fd-text-muted font-mono">
+                                        {new Date(Number.parseInt(stage.timestamp)).toLocaleTimeString()}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="space-y-2 text-sm">
+                                    {stage.endpoint && (
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-fd-text-muted">→</span>
+                                        <code className="text-fd-green bg-fd-darker/50 px-2 py-1 rounded">{stage.method} {stage.endpoint}</code>
+                                      </div>
+                                    )}
+                                    {stage.class && (
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-fd-text-muted">→</span>
+                                        <code className="text-fd-cyan bg-fd-darker/50 px-2 py-1 rounded">{stage.class}.{stage.method}()</code>
+                                      </div>
+                                    )}
+                                    {stage.interface && (
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-fd-text-muted">→</span>
+                                        <code className="text-fd-green-light bg-fd-darker/50 px-2 py-1 rounded">{stage.interface}.{stage.method}()</code>
+                                        {stage.type && <span className="text-fd-text-muted text-xs">({stage.type})</span>}
+                                      </div>
+                                    )}
+                                    {stage.dataset && (
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-fd-text-muted">→</span>
+                                        <code className="text-fd-green bg-fd-darker/50 px-2 py-1 rounded font-bold">{stage.dataset}</code>
+                                        {stage.operation && <span className="text-fd-text-muted text-xs">({stage.operation})</span>}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="bg-fd-dark border border-fd-border rounded-lg p-4">
+                            <pre className="text-fd-text text-sm whitespace-pre-wrap overflow-x-auto">
+                              {JSON.stringify(currentEvent.outputs.path, null, 2)}
+                            </pre>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -929,15 +989,45 @@ const LineagePage: React.FC = () => {
                     {intelligenceSubTab === 'origin' && currentEvent.outputs.origin && (
                       <div className="space-y-4">
                         <h3 className="text-lg font-semibold text-fd-green mb-4">📍 Data Origin</h3>
-                        <div className="grid gap-4">
-                          {Object.entries(currentEvent.outputs.origin).map(([key, value]) => (
-                            <div key={key} className="bg-fd-dark border border-fd-border rounded-lg p-4">
-                              <div className="text-sm text-fd-text-muted mb-1">{key}</div>
-                              <div className="text-fd-text font-mono text-sm">
-                                {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                        <div className="space-y-6">
+                          <div className="grid grid-cols-2 gap-4">
+                            {currentEvent.outputs.origin.primary_dataset && (
+                              <div className="bg-fd-dark border border-fd-border rounded-lg p-4">
+                                <div className="text-fd-text-muted text-sm mb-2">Primary Dataset</div>
+                                <code className="text-fd-green text-lg font-bold">{currentEvent.outputs.origin.primary_dataset}</code>
+                              </div>
+                            )}
+                            {currentEvent.outputs.origin.source_type && (
+                              <div className="bg-fd-dark border border-fd-border rounded-lg p-4">
+                                <div className="text-fd-text-muted text-sm mb-2">Source Type</div>
+                                <span className="text-fd-text font-medium">{currentEvent.outputs.origin.source_type}</span>
+                              </div>
+                            )}
+                          </div>
+                          {currentEvent.outputs.origin.input_sources && currentEvent.outputs.origin.input_sources.length > 0 && (
+                            <div>
+                              <h4 className="text-fd-green font-semibold mb-3">Input Sources</h4>
+                              <div className="space-y-3">
+                                {currentEvent.outputs.origin.input_sources.map((source: any, idx: number) => (
+                                  <div key={idx} className="bg-fd-dark border border-fd-border rounded-lg p-4 hover:border-fd-green/50 transition-all">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <code className="text-fd-cyan font-semibold">{source.input_name}</code>
+                                      {source.source_system && (
+                                        <span className="px-2 py-1 text-xs bg-fd-green/20 text-fd-green rounded-full">
+                                          {source.source_system}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {source.dataset && (
+                                      <div className="text-sm text-fd-text-muted">
+                                        Dataset: <code className="text-fd-green">{source.dataset}</code>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
                               </div>
                             </div>
-                          ))}
+                          )}
                         </div>
                       </div>
                     )}
