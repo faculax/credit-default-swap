@@ -1,20 +1,19 @@
 import React from 'react';
-import { render, screen, act, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { useSimulationPolling } from '../useSimulationPolling';
 
-// Mock simulationService
+// Mock simulationService with deterministic sequence via setter
 jest.mock('../../services/simulationService', () => {
-  let callCount = 0;
+  let mockSequence: any[] = [];
   return {
     simulationService: {
-      getSimulationResults: jest.fn(async () => {
-        callCount += 1;
-        if (callCount === 1) {
-          return { runId: 'r1', status: 'RUNNING' };
-        }
-        return { runId: 'r1', status: 'COMPLETE' };
+      getSimulationResults: jest.fn(() => {
+        const next = mockSequence.shift();
+        if (next instanceof Error) return Promise.reject(next);
+        return Promise.resolve(next);
       })
-    }
+    },
+    __setMockSequence: (seq: any[]) => { mockSequence = seq; }
   };
 });
 
@@ -44,20 +43,24 @@ describe('useSimulationPolling', () => {
   });
 
   it('polls until COMPLETE status', async () => {
+    // Prepare sequence: RUNNING then COMPLETE
+  const { __setMockSequence } = require('../../services/simulationService');
+  __setMockSequence([ { runId: 'r1', status: 'RUNNING' }, { runId: 'r1', status: 'COMPLETE' } ]);
     render(<Harness runId={'r1'} />);
-    // Allow initial fetch and state update
-    await act(async () => {
-      jest.advanceTimersByTime(50);
-    });
-    await waitFor(() => {
-      expect(screen.getByTestId('status').textContent).toBe('RUNNING');
-    });
-    // Advance enough time for second poll (>=2000ms)
-    await act(async () => {
-      jest.advanceTimersByTime(2100);
-    });
-    await waitFor(() => {
-      expect(screen.getByTestId('status').textContent).toBe('COMPLETE');
-    });
+    // Initial async fetch microtask flush
+    await Promise.resolve();
+    await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('RUNNING'));
+    // Advance timers to trigger interval callback
+    jest.advanceTimersByTime(2000);
+    await Promise.resolve();
+    await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('COMPLETE'));
+  });
+
+  it('handles fetch error and stops polling', async () => {
+  const { __setMockSequence } = require('../../services/simulationService');
+  __setMockSequence([ new Error('network fail') ]);
+    render(<Harness runId={'err1'} />);
+    await Promise.resolve();
+    await waitFor(() => expect(screen.getByTestId('error').textContent).toMatch(/network fail/));
   });
 });
