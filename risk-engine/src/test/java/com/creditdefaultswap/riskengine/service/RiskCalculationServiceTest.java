@@ -10,6 +10,7 @@ import com.creditdefaultswap.riskengine.ore.OrePortfolioGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -26,7 +27,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class RiskCalculationServiceTest {
+@Tag("unit")
+class RiskCalculationServiceTest {
 
     @Mock
     private RiskEngineConfigProperties config;
@@ -196,10 +198,7 @@ public class RiskCalculationServiceTest {
         measures.setTradeId(tradeId);
         measures.setCurrency(currency);
         measures.setNpv(new BigDecimal("50000.00"));
-        measures.setDv01(new BigDecimal("100.50"));
-        measures.setGamma(new BigDecimal("0.001234"));
-        measures.setVar95(new BigDecimal("75000.00"));
-        measures.setExpectedShortfall(new BigDecimal("95000.00"));
+    // Deprecated risk metric setters removed to align with current model
         return measures;
     }
 }

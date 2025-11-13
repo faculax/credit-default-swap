@@ -10,9 +10,10 @@ Also computes line coverage percent from JaCoCo reports per module.
 Outputs: Backend_TEST_REPORT.md at repository root.
 """
 import os
+import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 MODULES = ["backend", "gateway", "risk-engine"]
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -28,17 +29,41 @@ skipped = 0
 module_breakdown = {m: {"unit":0, "contract":0, "integration":0, "passed":0, "failed":0, "skipped":0} for m in MODULES}
 coverage_info = {}
 
+TAG_PATTERN = re.compile(r"@Tag\(\s*\"(unit|contract|integration)\"\s*\)")
+tag_map = {}
+
+def scan_tags():
+    for module in MODULES:
+        test_src = REPO_ROOT / module / "src" / "test" / "java"
+        if not test_src.exists():
+            continue
+        for java_file in test_src.rglob("*.java"):
+            try:
+                content = java_file.read_text(encoding="utf-8", errors="ignore")
+            except Exception:
+                continue
+            m = TAG_PATTERN.search(content)
+            if m:
+                # Extract simple class name
+                class_match = re.search(r"class\s+(\w+)", content)
+                if class_match:
+                    tag_map[class_match.group(1)] = m.group(1)
+
 def classify(classname: str) -> str:
-    if classname is None:
+    if not classname:
         return "unit"
-    if "Contract" in classname:
+    simple = classname.split('.')[-1]
+    if simple in tag_map:
+        return tag_map[simple]
+    if "Contract" in simple:
         return "contract"
-    if "Integration" in classname or classname.endswith("IT"):
+    if "Integration" in simple or simple.endswith("IT"):
         return "integration"
-    if classname.endswith("Test"):
+    if simple.endswith("Test"):
         return "unit"
-    # default fallback (ignore helper classes)
     return "unit"
+
+scan_tags()
 
 for module in MODULES:
     reports_dir = REPO_ROOT / module / "target" / "surefire-reports"
@@ -92,7 +117,12 @@ for module in MODULES:
             pass
 
 # Use timezone-aware UTC time
-now = datetime.now(datetime.timezone.utc).isoformat()
+# Robust UTC timestamp generation supporting older Python where attribute access may differ
+try:
+    now = datetime.now(timezone.utc).isoformat()
+except Exception:
+    # Fallback: naive UTC timestamp using fromtimestamp
+    now = datetime.fromtimestamp(datetime.now().timestamp(), timezone.utc).isoformat()
 
 lines = []
 lines.append("## Backend Test Report")

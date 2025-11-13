@@ -3,6 +3,7 @@ package com.creditdefaultswap.riskengine.ore;
 import com.creditdefaultswap.riskengine.config.RiskEngineConfigProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -11,6 +12,7 @@ import java.util.concurrent.CompletableFuture;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
+@Tag("unit")
 class OreProcessManagerTest {
     
     private RiskEngineConfigProperties config;

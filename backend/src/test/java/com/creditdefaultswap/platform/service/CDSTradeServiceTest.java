@@ -5,6 +5,7 @@ import com.creditdefaultswap.platform.model.TradeStatus;
 import com.creditdefaultswap.platform.repository.CDSTradeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -20,7 +21,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class CDSTradeServiceTest {
+@Tag("unit")
+class CDSTradeServiceTest {
 
     @Mock
     private CDSTradeRepository cdsTradeRepository;
