@@ -8,11 +8,11 @@ import com.creditdefaultswap.platform.repository.CDSTradeRepository;
 import com.creditdefaultswap.platform.repository.CouponPeriodRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -25,7 +25,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-public class CouponScheduleServiceTest {
+@Tag("integration")
+class CouponScheduleServiceTest {
 
     @Autowired
     private CouponScheduleService couponScheduleService;
@@ -105,8 +106,8 @@ public class CouponScheduleServiceTest {
 
     @Test
     void testUpdateScheduleForNotionalChange() {
-        // Generate initial schedule
-        List<CouponPeriod> initialSchedule = couponScheduleService.generateImmSchedule(testTrade.getId());
+        // Generate initial schedule (discard result, just ensure existing periods)
+        couponScheduleService.generateImmSchedule(testTrade.getId());
         
         // Update notional for future periods
         BigDecimal newNotional = new BigDecimal("5000000.00");

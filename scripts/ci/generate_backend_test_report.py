@@ -28,6 +28,7 @@ failed = 0
 skipped = 0
 module_breakdown = {m: {"unit":0, "contract":0, "integration":0, "passed":0, "failed":0, "skipped":0} for m in MODULES}
 coverage_info = {}
+untagged_classes = set()
 
 TAG_PATTERN = re.compile(r"@Tag\(\s*\"(unit|contract|integration)\"\s*\)")
 tag_map = {}
@@ -79,6 +80,9 @@ for module in MODULES:
         for tc in root.findall('.//testcase'):
             classname = tc.get('classname') or ''
             category = classify(classname.split('.')[-1])
+            simple = classname.split('.')[-1]
+            if simple.endswith('Test') and simple not in tag_map:
+                untagged_classes.add(simple)
             has_failure = tc.find('failure') is not None
             has_error = tc.find('error') is not None
             is_skipped = tc.find('skipped') is not None
@@ -176,6 +180,11 @@ lines.append("- Increase integration coverage for cross-module orchestration.")
 lines.append("- Add contract tests for external API adapters if missing.")
 lines.append("- Consider tagging tests with @Tag to refine classification later.")
 lines.append("")
+if untagged_classes:
+    lines.append("### Untagged Test Classes (auto-classified as unit)")
+    for c in sorted(untagged_classes):
+        lines.append(f"- {c}")
+    lines.append("")
 
 OUTPUT_PATH.write_text("\n".join(lines), encoding="utf-8")
 print(f"Backend test report written to {OUTPUT_PATH}")
