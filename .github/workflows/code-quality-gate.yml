@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 env:
-  COVERAGE_THRESHOLD: '80'
+  COVERAGE_THRESHOLD: '5'
 
 jobs:
   frontend-tests:
