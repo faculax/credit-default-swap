@@ -1,23 +1,22 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import { useSimulationPolling } from '../useSimulationPolling';
 
-// Mock simulationService with deterministic sequence via setter
-jest.mock('../../services/simulationService', () => {
-  let mockSequence: any[] = [];
-  return {
-    simulationService: {
-      getSimulationResults: jest.fn(() => {
-        const next = mockSequence.shift();
-        if (next instanceof Error) return Promise.reject(next);
-        return Promise.resolve(next);
-      })
-    },
-    __setMockSequence: (seq: any[]) => { mockSequence = seq; }
-  };
-});
+// Deterministic mock: first call RUNNING, subsequent calls COMPLETE unless throwError set
+let throwError = false;
+let callCount = 0;
+jest.mock('../../services/simulationService', () => ({
+  simulationService: {
+    getSimulationResults: jest.fn(() => {
+      callCount += 1;
+      if (throwError) return Promise.reject(new Error('network fail'));
+      if (callCount === 1) return Promise.resolve({ runId: 'r1', status: 'RUNNING' });
+      return Promise.resolve({ runId: 'r1', status: 'COMPLETE' });
+    })
+  }
+}));
 
-function Harness({ runId }: { runId: string | null }) {
+function Harness({ runId }: Readonly<{ runId: string | null }>) {
   const { simulation, loading, error } = useSimulationPolling(runId, true);
   return (
     <div>
@@ -43,24 +42,18 @@ describe('useSimulationPolling', () => {
   });
 
   it('polls until COMPLETE status', async () => {
-    // Prepare sequence: RUNNING then COMPLETE
-  const { __setMockSequence } = require('../../services/simulationService');
-  __setMockSequence([ { runId: 'r1', status: 'RUNNING' }, { runId: 'r1', status: 'COMPLETE' } ]);
+    throwError = false;
+    callCount = 0;
     render(<Harness runId={'r1'} />);
-    // Initial async fetch microtask flush
-    await Promise.resolve();
     await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('RUNNING'));
-    // Advance timers to trigger interval callback
-    jest.advanceTimersByTime(2000);
-    await Promise.resolve();
+    await act(async () => { jest.advanceTimersByTime(2100); });
     await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('COMPLETE'));
   });
 
   it('handles fetch error and stops polling', async () => {
-  const { __setMockSequence } = require('../../services/simulationService');
-  __setMockSequence([ new Error('network fail') ]);
+    throwError = true;
+    callCount = 0;
     render(<Harness runId={'err1'} />);
-    await Promise.resolve();
     await waitFor(() => expect(screen.getByTestId('error').textContent).toMatch(/network fail/));
   });
 });

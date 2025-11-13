@@ -37,10 +37,23 @@ jobs:
         run: |
           if grep -q "\"test\"" package.json >/dev/null 2>&1; then
             # Generate both JSON summary (for threshold check) and HTML (for aggregated quality report)
-            npm test -- --coverage --coverageReporters="json-summary,html"
+            npm test -- --coverage --coverageReporters="json-summary,html" --json --outputFile=coverage/test-results.json
           else
             echo "No frontend test script; skipping"
           fi
+
+      - name: Generate frontend test breakdown
+        if: always()
+        working-directory: frontend
+        run: |
+          node scripts/generate-frontend-test-report.js || echo "Test breakdown generation failed"
+
+      - name: Upload frontend test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-report
+          path: frontend/TEST_REPORT.md
 
       - name: Check frontend coverage
         if: always()
@@ -122,6 +135,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+
+      - name: Download frontend test report artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-test-report
+          path: artifacts/frontend-test-report
 
       - name: Generate aggregated HTML summary
         run: |
@@ -238,4 +257,9 @@ jobs:
           echo >> $GITHUB_STEP_SUMMARY
           cat quality-summary/summary.md >> $GITHUB_STEP_SUMMARY
           echo >> $GITHUB_STEP_SUMMARY
+          if [ -f artifacts/frontend-test-report/TEST_REPORT.md ]; then
+            echo "## Frontend Test Breakdown" >> $GITHUB_STEP_SUMMARY
+            awk 'NR>1' artifacts/frontend-test-report/TEST_REPORT.md >> $GITHUB_STEP_SUMMARY
+            echo >> $GITHUB_STEP_SUMMARY
+          fi
           echo "Download artifact 'code-quality-summary' to view full HTML reports." >> $GITHUB_STEP_SUMMARY
