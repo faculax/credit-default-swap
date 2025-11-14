@@ -50,3 +50,9 @@ risk:
 
 server:
   port: 8080
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping: TRACE
+

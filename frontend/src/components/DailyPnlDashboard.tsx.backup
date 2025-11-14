@@ -1,0 +1,354 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { apiUrl } from '../config/api';
+
+interface DailyPnlResult {
+  id: number;
+  tradeId: number;
+  pnlDate: string;
+  totalPnl: number;
+  pnlPercentage: number;
+  marketPnl: number;
+  thetaPnl: number;
+  accruedPnl: number;
+  creditEventPnl: number;
+  tradePnl: number;
+  unexplainedPnl: number;
+  cs01Pnl: number;
+  ir01Pnl: number;
+  largePnlFlag: boolean;
+  unexplainedPnlFlag: boolean;
+  creditEventFlag: boolean;
+  newTradeFlag: boolean;
+  referenceEntity: string;
+  buySellProtection: string;
+  portfolioName?: string;
+  traderName?: string;
+}
+
+interface PnlSummary {
+  date: string;
+  totalTrades: number;
+  totalPnl: number;
+  totalMarketPnl: number;
+  totalThetaPnl: number;
+  totalAccruedPnl: number;
+  totalCreditEventPnl?: number;
+  totalTradePnl?: number;
+  totalUnexplainedPnl?: number;
+  largeMoversCount: number;
+  unexplainedCount: number;
+  creditEventsCount: number;
+  newTradesCount: number;
+}
+
+interface AttributionData {
+  marketPnl: number;
+  thetaPnl: number;
+  accruedPnl: number;
+  creditEventPnl: number;
+  tradePnl: number;
+  unexplainedPnl: number;
+}
+
+interface TimeSeriesPoint {
+  date: string;
+  totalPnl: number;
+  marketPnl: number;
+  thetaPnl: number;
+}
+
+const DailyPnlDashboard: React.FC = () => {
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toISOString().split('T')[0]
+  );
+  const [summary, setSummary] = useState<PnlSummary | null>(null);
+  const [pnlResults, setPnlResults] = useState<DailyPnlResult[]>([]);
+  const [activeTab, setActiveTab] = useState<'all' | 'winners' | 'losers' | 'large' | 'unexplained'>('all');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchData();
+  }, [selectedDate, activeTab]);
+
+  const fetchData = async () => {
+    if (!selectedDate) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Fetch summary
+      const summaryResponse = await fetch(
+        apiUrl(`/eod/daily-pnl/date/${selectedDate}/summary`)
+      );
+      
+      if (summaryResponse.ok) {
+        const summaryData = await summaryResponse.json();
+        setSummary(summaryData);
+      } else if (summaryResponse.status === 404) {
+        setSummary(null);
+        setPnlResults([]);
+        setError(`No P&L data found for ${selectedDate}`);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch P&L results based on active tab
+      let endpoint = '';
+      switch (activeTab) {
+        case 'winners':
+          endpoint = `/eod/daily-pnl/date/${selectedDate}/winners?limit=20`;
+          break;
+        case 'losers':
+          endpoint = `/eod/daily-pnl/date/${selectedDate}/losers?limit=20`;
+          break;
+        case 'large':
+          endpoint = `/eod/daily-pnl/date/${selectedDate}/large-movers`;
+          break;
+        case 'unexplained':
+          endpoint = `/eod/daily-pnl/date/${selectedDate}/unexplained`;
+          break;
+        default:
+          endpoint = `/eod/daily-pnl/date/${selectedDate}`;
+      }
+
+      const pnlResponse = await fetch(apiUrl(endpoint));
+      if (pnlResponse.ok) {
+        const pnlData = await pnlResponse.json();
+        setPnlResults(pnlData);
+      }
+
+    } catch (err) {
+      console.error('Error fetching P&L data:', err);
+      setError('Failed to fetch P&L data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatCurrency = (value: number | undefined | null) => {
+    if (value === undefined || value === null) return '$0';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
+  const formatPercent = (value: number | undefined | null) => {
+    if (value === undefined || value === null) return '0%';
+    return `${value.toFixed(2)}%`;
+  };
+
+  const getPnlColor = (value: number | undefined | null) => {
+    if (!value) return 'text-fd-text';
+    return value >= 0 ? 'text-green-400' : 'text-red-400';
+  };
+
+  return (
+    <div className="p-6 max-w-screen-2xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-fd-text mb-2">
+          Daily P&L Dashboard
+        </h1>
+        <p className="text-fd-muted">
+          View daily profit & loss with full attribution breakdown
+        </p>
+      </div>
+
+      {/* Date Selector */}
+      <div className="bg-fd-card border border-fd-border rounded-lg p-6 mb-6">
+        <label htmlFor="pnl-date" className="block text-sm font-medium text-fd-text mb-2">
+          Valuation Date
+        </label>
+        <input
+          type="date"
+          id="pnl-date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          className="px-4 py-2 border border-fd-border rounded-md bg-fd-card text-fd-text focus:outline-none focus:ring-2 focus:ring-fd-primary"
+        />
+      </div>
+
+      {/* Summary Cards */}
+      {summary && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="bg-fd-card border border-fd-border rounded-lg p-6">
+            <div className="text-sm text-fd-muted mb-1">Total P&L</div>
+            <div className={`text-2xl font-bold ${getPnlColor(summary.totalPnl)}`}>
+              {formatCurrency(summary.totalPnl)}
+            </div>
+            <div className="text-xs text-fd-muted mt-1">
+              {summary.totalTrades} trades
+            </div>
+          </div>
+
+          <div className="bg-fd-card border border-fd-border rounded-lg p-6">
+            <div className="text-sm text-fd-muted mb-1">Market P&L</div>
+            <div className={`text-2xl font-bold ${getPnlColor(summary.totalMarketPnl)}`}>
+              {formatCurrency(summary.totalMarketPnl)}
+            </div>
+            <div className="text-xs text-fd-muted mt-1">
+              Spread & rate moves
+            </div>
+          </div>
+
+          <div className="bg-fd-card border border-fd-border rounded-lg p-6">
+            <div className="text-sm text-fd-muted mb-1">Theta P&L</div>
+            <div className={`text-2xl font-bold ${getPnlColor(summary.totalThetaPnl)}`}>
+              {formatCurrency(summary.totalThetaPnl)}
+            </div>
+            <div className="text-xs text-fd-muted mt-1">
+              Time decay / carry
+            </div>
+          </div>
+
+          <div className="bg-fd-card border border-fd-border rounded-lg p-6">
+            <div className="text-sm text-fd-muted mb-1">Accrued P&L</div>
+            <div className={`text-2xl font-bold ${getPnlColor(summary.totalAccruedPnl)}`}>
+              {formatCurrency(summary.totalAccruedPnl)}
+            </div>
+            <div className="text-xs text-fd-muted mt-1">
+              Accrued interest change
+            </div>
+          </div>
+
+          <div className="bg-fd-card border border-fd-border rounded-lg p-4">
+            <div className="text-sm text-fd-muted mb-1">Large Movers</div>
+            <div className="text-xl font-bold text-fd-accent">{summary.largeMoversCount}</div>
+          </div>
+
+          <div className="bg-fd-card border border-fd-border rounded-lg p-4">
+            <div className="text-sm text-fd-muted mb-1">Unexplained</div>
+            <div className="text-xl font-bold text-yellow-400">{summary.unexplainedCount}</div>
+          </div>
+
+          <div className="bg-fd-card border border-fd-border rounded-lg p-4">
+            <div className="text-sm text-fd-muted mb-1">Credit Events</div>
+            <div className="text-xl font-bold text-red-400">{summary.creditEventsCount}</div>
+          </div>
+
+          <div className="bg-fd-card border border-fd-border rounded-lg p-4">
+            <div className="text-sm text-fd-muted mb-1">New Trades</div>
+            <div className="text-xl font-bold text-blue-400">{summary.newTradesCount}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-900/20 border border-red-500 text-red-400 rounded-lg p-4 mb-6">
+          {error}
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="bg-fd-card border border-fd-border rounded-lg mb-6">
+        <div className="flex border-b border-fd-border">
+          {[
+            { key: 'all', label: 'All Trades' },
+            { key: 'winners', label: 'Top Winners' },
+            { key: 'losers', label: 'Top Losers' },
+            { key: 'large', label: 'Large Movers' },
+            { key: 'unexplained', label: 'Unexplained' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key as any)}
+              className={`px-6 py-3 text-sm font-medium transition-colors ${
+                activeTab === tab.key
+                  ? 'border-b-2 border-fd-primary text-fd-primary'
+                  : 'text-fd-muted hover:text-fd-text'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Results Table */}
+        <div className="p-6">
+          {loading ? (
+            <div className="text-center py-12 text-fd-muted">Loading P&L data...</div>
+          ) : pnlResults.length === 0 ? (
+            <div className="text-center py-12 text-fd-muted">No P&L results available</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left text-sm text-fd-muted border-b border-fd-border">
+                    <th className="pb-3 pr-4">Trade ID</th>
+                    <th className="pb-3 pr-4">Reference Entity</th>
+                    <th className="pb-3 pr-4 text-right">Total P&L</th>
+                    <th className="pb-3 pr-4 text-right">Market P&L</th>
+                    <th className="pb-3 pr-4 text-right">Theta P&L</th>
+                    <th className="pb-3 pr-4 text-right">Accrued P&L</th>
+                    <th className="pb-3 pr-4 text-right">Unexplained</th>
+                    <th className="pb-3 pr-4">Flags</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pnlResults.map((result) => (
+                    <tr key={result.id} className="border-b border-fd-border hover:bg-fd-hover">
+                      <td className="py-3 pr-4">
+                        <span className="font-mono text-sm">{result.tradeId}</span>
+                      </td>
+                      <td className="py-3 pr-4">
+                        <div className="text-sm">{result.referenceEntity}</div>
+                        <div className="text-xs text-fd-muted">{result.buySellProtection}</div>
+                      </td>
+                      <td className={`py-3 pr-4 text-right font-semibold ${getPnlColor(result.totalPnl)}`}>
+                        {formatCurrency(result.totalPnl)}
+                        <div className="text-xs text-fd-muted">{formatPercent(result.pnlPercentage)}</div>
+                      </td>
+                      <td className={`py-3 pr-4 text-right ${getPnlColor(result.marketPnl)}`}>
+                        {formatCurrency(result.marketPnl)}
+                      </td>
+                      <td className={`py-3 pr-4 text-right ${getPnlColor(result.thetaPnl)}`}>
+                        {formatCurrency(result.thetaPnl)}
+                      </td>
+                      <td className={`py-3 pr-4 text-right ${getPnlColor(result.accruedPnl)}`}>
+                        {formatCurrency(result.accruedPnl)}
+                      </td>
+                      <td className={`py-3 pr-4 text-right ${getPnlColor(result.unexplainedPnl)}`}>
+                        {formatCurrency(result.unexplainedPnl)}
+                      </td>
+                      <td className="py-3 pr-4">
+                        <div className="flex flex-wrap gap-1">
+                          {result.largePnlFlag && (
+                            <span className="px-2 py-1 text-xs rounded bg-fd-accent/20 text-fd-accent">
+                              LARGE
+                            </span>
+                          )}
+                          {result.unexplainedPnlFlag && (
+                            <span className="px-2 py-1 text-xs rounded bg-yellow-400/20 text-yellow-400">
+                              UNEXP
+                            </span>
+                          )}
+                          {result.creditEventFlag && (
+                            <span className="px-2 py-1 text-xs rounded bg-red-400/20 text-red-400">
+                              CE
+                            </span>
+                          )}
+                          {result.newTradeFlag && (
+                            <span className="px-2 py-1 text-xs rounded bg-blue-400/20 text-blue-400">
+                              NEW
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DailyPnlDashboard;

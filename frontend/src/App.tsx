@@ -12,10 +12,14 @@ import SaCcrDashboard from './components/SaCcrDashboard';
 import ReconciliationDashboard from './components/dashboard/ReconciliationDashboard';
 import BondPage from './components/bond/BondPage';
 import BasketPage from './components/basket/BasketPage';
+import DailyPnlDashboard from './components/DailyPnlDashboard';
+import AccountingEventsDashboard from './components/AccountingEventsDashboard';
+import EodJobMonitor from './components/EodJobMonitor';
+import RiskReportingDashboard from './components/RiskReportingDashboard';
 import { CDSTrade } from './data/referenceData';
 import { cdsTradeService, CDSTradeRequest, CDSTradeResponse } from './services/cdsTradeService';
 
-type ViewMode = 'form' | 'blotter' | 'portfolios' | 'margin-statements' | 'simm' | 'sa-ccr' | 'reconciliation' | 'bonds' | 'baskets';
+type ViewMode = 'form' | 'blotter' | 'portfolios' | 'margin-statements' | 'simm' | 'sa-ccr' | 'reconciliation' | 'bonds' | 'baskets' | 'daily-pnl' | 'accounting-events' | 'eod-jobs' | 'risk-reporting';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewMode>('form');
@@ -180,6 +184,46 @@ function App() {
             >
               Reconciliation Dashboard
             </button>
+            <button
+              onClick={() => setCurrentView('daily-pnl')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                currentView === 'daily-pnl'
+                  ? 'bg-fd-green text-fd-dark'
+                  : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
+              }`}
+            >
+              Daily P&L
+            </button>
+            <button
+              onClick={() => setCurrentView('eod-jobs')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                currentView === 'eod-jobs'
+                  ? 'bg-fd-green text-fd-dark'
+                  : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
+              }`}
+            >
+              EOD Jobs
+            </button>
+            <button
+              onClick={() => setCurrentView('risk-reporting')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                currentView === 'risk-reporting'
+                  ? 'bg-fd-green text-fd-dark'
+                  : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
+              }`}
+            >
+              Risk Reporting
+            </button>
+            <button
+              onClick={() => setCurrentView('accounting-events')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                currentView === 'accounting-events'
+                  ? 'bg-fd-green text-fd-dark'
+                  : 'text-fd-text hover:text-fd-green hover:bg-fd-dark'
+              }`}
+            >
+              Accounting Events
+            </button>
           </div>
         </div>
       </div>
@@ -205,6 +249,14 @@ function App() {
           <BondPage />
         ) : currentView === 'baskets' ? (
           <BasketPage />
+        ) : currentView === 'daily-pnl' ? (
+          <DailyPnlDashboard />
+        ) : currentView === 'eod-jobs' ? (
+          <EodJobMonitor />
+        ) : currentView === 'risk-reporting' ? (
+          <RiskReportingDashboard />
+        ) : currentView === 'accounting-events' ? (
+          <AccountingEventsDashboard />
         ) : null}
 
         <ConfirmationModal

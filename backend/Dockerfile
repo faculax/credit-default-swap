@@ -4,7 +4,8 @@ FROM maven:3.9.6-eclipse-temurin-21-alpine AS builder
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy only what's needed to cache dependencies
+# Copy only what's needed to cache dependencies  
+# CACHE BUST: 2025-11-14-06-37
 COPY pom.xml .
 COPY src ./src
 

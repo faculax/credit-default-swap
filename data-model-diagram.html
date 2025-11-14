@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDS Platform - Data Model ERD</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, Georgia, sans-serif;
+            background: rgb(60, 75, 97);
+            color: rgb(255, 255, 255);
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        #header {
+            background: rgb(60, 75, 97);
+            padding: 15px 20px;
+            border-bottom: 2px solid rgb(0, 255, 195);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        h1 {
+            font-size: 24px;
+            color: rgb(0, 240, 0);
+        }
+        
+        #controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        button {
+            background: rgb(0, 232, 247);
+            color: rgb(60, 75, 97);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: rgb(0, 255, 195);
+            transform: scale(1.05);
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        #zoom-info {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: rgb(30, 230, 190);
+            min-width: 100px;
+            text-align: center;
+        }
+        
+        #diagram-container {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 70px);
+            overflow: hidden;
+            background: rgb(60, 75, 97);
+        }
+        
+        #diagram-wrapper {
+            position: absolute;
+            transform-origin: 0 0;
+            cursor: grab;
+            transition: transform 0.05s ease-out;
+        }
+        
+        #diagram-wrapper.grabbing {
+            cursor: grabbing;
+        }
+        
+        .mermaid {
+            background: rgb(60, 75, 97);
+            min-width: 100%;
+            min-height: 100%;
+        }
+        
+        /* Mermaid styling overrides */
+        .mermaid .er.entityBox {
+            fill: rgb(30, 230, 190) !important;
+            stroke: rgb(0, 255, 195) !important;
+            stroke-width: 2px !important;
+        }
+        
+        .mermaid .er.relationshipLabelBox {
+            fill: rgb(60, 75, 97) !important;
+            stroke: rgb(0, 232, 247) !important;
+        }
+        
+        .mermaid .er.entityLabel {
+            fill: rgb(60, 75, 97) !important;
+            font-weight: bold !important;
+            font-size: 14px !important;
+        }
+        
+        .mermaid .er.attributeBoxOdd,
+        .mermaid .er.attributeBoxEven {
+            fill: rgb(255, 255, 255) !important;
+            stroke: rgb(0, 232, 247) !important;
+        }
+        
+        .mermaid text {
+            fill: rgb(60, 75, 97) !important;
+        }
+        
+        .mermaid .relationshipLine {
+            stroke: rgb(0, 240, 0) !important;
+            stroke-width: 2px !important;
+        }
+        
+        .mermaid line {
+            stroke: rgb(0, 240, 0) !important;
+        }
+        
+        #help-overlay {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: rgb(0, 255, 195);
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            border: 1px solid rgb(0, 232, 247);
+            z-index: 1000;
+        }
+        
+        #help-overlay h3 {
+            color: rgb(0, 240, 0);
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        #help-overlay ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        #help-overlay li {
+            margin: 5px 0;
+            padding-left: 15px;
+            position: relative;
+        }
+        
+        #help-overlay li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: rgb(0, 232, 247);
+        }
+        
+        .fullscreen {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 9999 !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>📊 CDS Platform - Data Model Entity Relationship Diagram</h1>
+        <div id="controls">
+            <button onclick="zoomIn()">➕ Zoom In</button>
+            <button onclick="zoomOut()">➖ Zoom Out</button>
+            <button onclick="resetView()">🔄 Reset</button>
+            <button onclick="toggleFullscreen()">⛶ Fullscreen</button>
+            <div id="zoom-info">100%</div>
+        </div>
+    </div>
+    
+    <div id="diagram-container">
+        <div id="diagram-wrapper">
+            <div class="mermaid">
+erDiagram
+    %% Core Trade Entities
+    CDSTrade ||--o{ CreditEvent : "has"
+    CDSTrade ||--o| Bond : "references as obligation"
+    CDSTrade ||--o{ TradeAmendment : "has"
+    CDSTrade ||--o{ NotionalAdjustment : "has"
+    CDSTrade ||--o{ AccrualEvent : "generates"
+    CDSTrade ||--o{ CouponPeriod : "has"
+    
+    %% Credit Event Settlement
+    CreditEvent ||--o| CashSettlement : "settled via"
+    CreditEvent ||--o| PhysicalSettlementInstruction : "settled via"
+    
+    %% Bond Structure
+    Bond ||--o{ CouponPeriod : "has"
+    
+    %% Portfolio Management
+    CdsPortfolio ||--o{ CdsPortfolioConstituent : "contains"
+    CdsPortfolio ||--o{ BondPortfolioConstituent : "contains"
+    CdsPortfolio ||--o{ BasketPortfolioConstituent : "contains"
+    
+    CdsPortfolioConstituent }o--|| CDSTrade : "references"
+    BondPortfolioConstituent }o--|| Bond : "references"
+    BasketPortfolioConstituent }o--|| BasketDefinition : "references"
+    
+    %% Basket Derivatives
+    BasketDefinition ||--o{ BasketConstituent : "contains"
+    
+    %% Margin & Clearing
+    MarginStatement ||--o{ MarginPosition : "contains"
+    CCPAccount ||--o{ MarginStatement : "receives"
+    
+    %% SIMM Calculations
+    CrifUpload ||--o{ CrifSensitivity : "contains"
+    CrifUpload ||--o{ SimmCalculation : "triggers"
+    SimmCalculation }o--|| SimmParameterSet : "uses"
+    SimmCalculation ||--o{ SimmCalculationResult : "produces"
+    SimmCalculation ||--o{ SimmCalculationAudit : "audited by"
+    SimmParameterSet ||--o{ SimmRiskWeight : "defines"
+    SimmParameterSet ||--o{ SimmCorrelation : "defines"
+    SimmBucketMapping ||--o{ CrifSensitivity : "maps"
+    
+    %% SA-CCR Calculations
+    NettingSet ||--o{ SaCcrCalculation : "has"
+    SaCcrCalculation }o--|| SaCcrSupervisoryParameter : "uses"
+    
+    %% Correlation Simulation
+    SimulationRun ||--o{ SimulationHorizonMetrics : "produces"
+    SimulationRun ||--o{ SimulationContributor : "analyzes"
+    
+    %% Risk Cache
+    PortfolioRiskCache }o--|| CdsPortfolio : "caches for"
+    
+    %% Audit Trail
+    AuditLog ||--o{ CDSTrade : "tracks"
+    AuditLog ||--o{ CreditEvent : "tracks"
+    AuditLog ||--o{ SimmCalculation : "tracks"
+    
+    %% Entity Definitions
+    CDSTrade {
+        bigint id PK
+        string reference_entity
+        decimal notional_amount
+        decimal spread
+        date maturity_date
+        date effective_date
+        string counterparty
+        string currency
+        enum buy_sell_protection
+        enum trade_status
+        enum settlement_type
+        string netting_set_id
+        string ccp_name
+        boolean is_cleared
+    }
+    
+    CreditEvent {
+        uuid id PK
+        bigint trade_id FK
+        enum event_type
+        date event_date
+        date notice_date
+        enum settlement_method
+        text comments
+    }
+    
+    Bond {
+        bigint id PK
+        string isin
+        string issuer
+        enum seniority
+        string sector
+        string currency
+        decimal notional
+        decimal coupon_rate
+        enum coupon_frequency
+        enum day_count
+        date issue_date
+        date maturity_date
+    }
+    
+    TradeAmendment {
+        bigint id PK
+        bigint trade_id FK
+        date amendment_date
+        decimal old_notional
+        decimal new_notional
+        decimal old_spread
+        decimal new_spread
+        string reason
+        enum status
+    }
+    
+    NotionalAdjustment {
+        bigint id PK
+        bigint trade_id FK
+        date adjustment_date
+        decimal old_notional
+        decimal new_notional
+        enum adjustment_type
+        decimal cash_settlement_amount
+    }
+    
+    CashSettlement {
+        uuid id PK
+        uuid credit_event_id FK
+        date valuation_date
+        date settlement_date
+        decimal final_price
+        decimal auction_price
+        decimal settlement_amount
+        enum status
+    }
+    
+    PhysicalSettlementInstruction {
+        bigint id PK
+        uuid credit_event_id FK
+        bigint deliverable_bond_id FK
+        decimal face_amount
+        date delivery_date
+        string custodian
+        enum status
+    }
+    
+    CdsPortfolio {
+        bigint id PK
+        string name
+        text description
+        timestamp created_at
+    }
+    
+    CdsPortfolioConstituent {
+        bigint id PK
+        bigint portfolio_id FK
+        bigint trade_id FK
+        decimal weight
+        int sequence_order
+    }
+    
+    BondPortfolioConstituent {
+        bigint id PK
+        bigint portfolio_id FK
+        bigint bond_id FK
+        decimal weight
+        int sequence_order
+    }
+    
+    BasketPortfolioConstituent {
+        bigint id PK
+        bigint portfolio_id FK
+        bigint basket_id FK
+        decimal weight
+        int sequence_order
+    }
+    
+    BasketDefinition {
+        bigint id PK
+        string name
+        enum type
+        int nth
+        decimal attachment_point
+        decimal detachment_point
+        decimal notional
+        date maturity_date
+    }
+    
+    BasketConstituent {
+        bigint id PK
+        bigint basket_id FK
+        string issuer
+        decimal weight
+        decimal recovery_override
+        string seniority
+        string sector
+    }
+    
+    MarginStatement {
+        bigint id PK
+        string statement_id
+        string ccp_name
+        string member_firm
+        string account_number
+        date statement_date
+        enum status
+        decimal variation_margin
+        decimal initial_margin
+    }
+    
+    MarginPosition {
+        bigint id PK
+        bigint statement_id FK
+        enum position_type
+        decimal amount
+        string currency
+        date effective_date
+        string netting_set_id
+    }
+    
+    CCPAccount {
+        bigint id PK
+        string ccp_name
+        string member_firm
+        string member_id
+        string account_number
+        enum account_type
+        enum status
+    }
+    
+    CrifUpload {
+        bigint id PK
+        string upload_id
+        string filename
+        string portfolio_id
+        date valuation_date
+        string currency
+        enum processing_status
+        int total_records
+        int valid_records
+    }
+    
+    CrifSensitivity {
+        bigint id PK
+        bigint upload_id FK
+        string product_class
+        string risk_type
+        string qualifier
+        string bucket
+        decimal amount_usd
+    }
+    
+    SimmCalculation {
+        bigint id PK
+        string calculation_id
+        bigint upload_id FK
+        bigint parameter_set_id FK
+        date calculation_date
+        enum calculation_status
+        decimal total_im
+        decimal diversification_benefit
+    }
+    
+    SimmCalculationResult {
+        bigint id PK
+        bigint calculation_id FK
+        string risk_class
+        string bucket
+        decimal weighted_sensitivity
+        decimal concentration_risk
+        decimal delta_margin
+    }
+    
+    SimmCalculationAudit {
+        bigint id PK
+        bigint calculation_id FK
+        string step_name
+        text calculation_detail
+        decimal intermediate_result
+        int sequence_number
+    }
+    
+    SimmParameterSet {
+        bigint id PK
+        string version
+        date effective_date
+        string regulation
+        boolean is_active
+    }
+    
+    SimmRiskWeight {
+        bigint id PK
+        bigint parameter_set_id FK
+        string risk_class
+        string bucket
+        decimal risk_weight
+    }
+    
+    SimmCorrelation {
+        bigint id PK
+        bigint parameter_set_id FK
+        string risk_class
+        string bucket1
+        string bucket2
+        decimal correlation
+    }
+    
+    SimmBucketMapping {
+        bigint id PK
+        string product_class
+        string risk_type
+        string qualifier
+        string bucket
+    }
+    
+    NettingSet {
+        bigint id PK
+        string netting_set_id
+        string counterparty
+        string regulation
+        date valuation_date
+    }
+    
+    SaCcrCalculation {
+        bigint id PK
+        bigint netting_set_id FK
+        bigint supervisory_param_id FK
+        date calculation_date
+        decimal pfe
+        decimal rc
+        decimal ead
+        decimal alpha
+    }
+    
+    SaCcrSupervisoryParameter {
+        bigint id PK
+        string asset_class
+        string supervisory_factor
+        decimal value
+        date effective_date
+    }
+    
+    SimulationRun {
+        bigint id PK
+        bigint portfolio_id FK
+        date valuation_date
+        int num_paths
+        int time_horizon_days
+        enum status
+        decimal mean_loss
+        decimal var_95
+        decimal cvar_95
+    }
+    
+    SimulationHorizonMetrics {
+        bigint id PK
+        bigint simulation_id FK
+        int horizon_days
+        decimal mean_exposure
+        decimal max_exposure
+        decimal probability_default
+    }
+    
+    SimulationContributor {
+        bigint id PK
+        bigint simulation_id FK
+        bigint trade_id FK
+        decimal contribution_to_var
+        decimal marginal_contribution
+    }
+    
+    PortfolioRiskCache {
+        bigint id PK
+        bigint portfolio_id FK
+        date calculation_date
+        decimal cs01
+        decimal dv01
+        decimal jump_to_default
+        json risk_ladder
+    }
+    
+    CouponPeriod {
+        bigint id PK
+        bigint instrument_id FK
+        string instrument_type
+        date period_start
+        date period_end
+        decimal accrued_amount
+        decimal payment_amount
+    }
+    
+    AccrualEvent {
+        bigint id PK
+        bigint trade_id FK
+        date accrual_date
+        decimal accrued_premium
+        int days_accrued
+    }
+    
+    AuditLog {
+        uuid id PK
+        enum entity_type
+        string entity_id
+        enum action
+        timestamp timestamp
+        string actor
+        text summary
+    }
+            </div>
+        </div>
+    </div>
+    
+    <div id="help-overlay">
+        <h3>🎮 Controls</h3>
+        <ul>
+            <li><strong>Mouse Wheel:</strong> Zoom in/out</li>
+            <li><strong>Click + Drag:</strong> Pan around</li>
+            <li><strong>+ / -:</strong> Zoom buttons</li>
+            <li><strong>F:</strong> Toggle fullscreen</li>
+            <li><strong>R:</strong> Reset view</li>
+        </ul>
+    </div>
+    
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            er: {
+                layoutDirection: 'TB',
+                minEntityWidth: 180,
+                minEntityHeight: 60,
+                entityPadding: 15,
+                fontSize: 12
+            }
+        });
+        
+        // Pan and Zoom functionality
+        let scale = 1;
+        let translateX = 0;
+        let translateY = 0;
+        let isDragging = false;
+        let startX, startY;
+        
+        const container = document.getElementById('diagram-container');
+        const wrapper = document.getElementById('diagram-wrapper');
+        const zoomInfo = document.getElementById('zoom-info');
+        
+        // Update transform
+        function updateTransform() {
+            wrapper.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+            zoomInfo.textContent = Math.round(scale * 100) + '%';
+        }
+        
+        // Zoom functions
+        function zoomIn() {
+            scale = Math.min(scale * 1.2, 5);
+            updateTransform();
+        }
+        
+        function zoomOut() {
+            scale = Math.max(scale / 1.2, 0.1);
+            updateTransform();
+        }
+        
+        function resetView() {
+            scale = 1;
+            translateX = 0;
+            translateY = 0;
+            updateTransform();
+        }
+        
+        // Mouse wheel zoom
+        container.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            const newScale = Math.max(0.1, Math.min(5, scale * delta));
+            
+            // Zoom towards mouse position
+            const rect = container.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            const scaleChange = newScale / scale;
+            translateX = mouseX - (mouseX - translateX) * scaleChange;
+            translateY = mouseY - (mouseY - translateY) * scaleChange;
+            
+            scale = newScale;
+            updateTransform();
+        });
+        
+        // Pan with mouse drag
+        container.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+            wrapper.classList.add('grabbing');
+        });
+        
+        container.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            translateX = e.clientX - startX;
+            translateY = e.clientY - startY;
+            updateTransform();
+        });
+        
+        container.addEventListener('mouseup', () => {
+            isDragging = false;
+            wrapper.classList.remove('grabbing');
+        });
+        
+        container.addEventListener('mouseleave', () => {
+            isDragging = false;
+            wrapper.classList.remove('grabbing');
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            switch(e.key.toLowerCase()) {
+                case 'f':
+                    toggleFullscreen();
+                    break;
+                case '+':
+                case '=':
+                    zoomIn();
+                    break;
+                case '-':
+                case '_':
+                    zoomOut();
+                    break;
+                case 'r':
+                    resetView();
+                    break;
+            }
+        });
+        
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                container.requestFullscreen().catch(err => {
+                    console.log('Fullscreen error:', err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+        
+        // Initial centering
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const diagramContent = wrapper.querySelector('.mermaid');
+                if (diagramContent) {
+                    const containerRect = container.getBoundingClientRect();
+                    const contentRect = diagramContent.getBoundingClientRect();
+                    
+                    // Center the diagram
+                    translateX = (containerRect.width - contentRect.width) / 2;
+                    translateY = 50; // Small top padding
+                    updateTransform();
+                }
+            }, 500);
+        });
+    </script>
+</body>
+</html>
