@@ -31,10 +31,32 @@ jest.mock('../../../services/risk/riskService', () => ({
 jest.mock('../../../services/creditEventService', () => ({
   creditEventService: { getCreditEventsForTrade: jest.fn().mockResolvedValue([]), recordCreditEvent: jest.fn() }
 }));
-jest.mock('../../../services/cdsTradeService', () => {
-  const inlineTrade = { ...mockTradeData };
-  return { cdsTradeService: { getTradeById: jest.fn().mockResolvedValue(inlineTrade) } };
-});
+jest.mock('../../../services/cdsTradeService', () => ({
+  cdsTradeService: {
+    getTradeById: jest.fn().mockResolvedValue({
+      id: 10,
+      referenceEntity: 'ACME',
+      counterparty: 'BANK_X',
+      currency: 'USD',
+      notionalAmount: 5000000,
+      spread: 120,
+      buySellProtection: 'BUY',
+      settlementType: 'CASH',
+      tradeStatus: 'ACTIVE',
+      tradeDate: '2024-01-01',
+      effectiveDate: '2024-01-02',
+      maturityDate: '2029-01-01',
+      accrualStartDate: '2024-01-02',
+      premiumFrequency: 'QUARTERLY',
+      dayCountConvention: 'ACT_360',
+      paymentCalendar: 'NYC',
+      createdAt: '2025-01-02T10:00:00Z',
+      updatedAt: '2025-01-03T10:00:00Z',
+      recoveryRate: 40,
+      obligation: { isin: 'US1234567890', issuer: 'ACME', seniority: 'SENIOR', couponRate: 0.05, maturityDate: '2028-12-31' }
+    })
+  }
+}));
 
 describe('TradeDetailModal', () => {
   it('renders and switches tabs', () => {
@@ -43,6 +65,6 @@ describe('TradeDetailModal', () => {
     fireEvent.click(screen.getByRole('button', { name: /Risk/i }));
     expect(screen.getByText(/Risk Analytics/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Credit Events/i }));
-    expect(screen.getByText(/Credit Events/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Credit Events/i })).toBeInTheDocument();
   });
 });

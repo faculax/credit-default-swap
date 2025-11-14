@@ -368,10 +368,10 @@ const CDSTradeForm: React.FC<CDSTradeFormProps> = ({ onSubmit }) => {
               >
                 <option value="">Select Obligation</option>
                 {loadingBonds && <option value="">Loading bonds...</option>}
-                {!loadingBonds && availableBonds.length === 0 && (
+                {!loadingBonds && (availableBonds?.length ?? 0) === 0 && (
                   <option value="">No bonds available for {formData.referenceEntity}</option>
                 )}
-                {!loadingBonds && availableBonds.map((bond) => (
+                {!loadingBonds && (availableBonds ?? []).map((bond) => (
                   <option key={bond.id} value={bond.id}>
                     {bond.isin ? `${bond.isin} - ` : ''}
                     {bond.issuer} {bond.seniority} - 

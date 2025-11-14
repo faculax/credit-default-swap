@@ -1,18 +1,12 @@
 import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { useSimulationPolling } from '../useSimulationPolling';
+import { simulationService } from '../../services/simulationService';
 
-// Deterministic mock: first call RUNNING, subsequent calls COMPLETE unless mockThrowError set
-let mockThrowError = false; // prefixed with 'mock' to allow safe jest.mock factory reference
-let mockCallCount = 0; // renamed for jest.mock factory safety
+// Stub module and control implementations per-test to avoid hoisting issues
 jest.mock('../../services/simulationService', () => ({
   simulationService: {
-    getSimulationResults: jest.fn(() => {
-      mockCallCount += 1;
-      if (mockThrowError) return Promise.reject(new Error('network fail'));
-      if (mockCallCount === 1) return Promise.resolve({ runId: 'r1', status: 'RUNNING' });
-      return Promise.resolve({ runId: 'r1', status: 'COMPLETE' });
-    })
+    getSimulationResults: jest.fn()
   }
 }));
 
@@ -42,8 +36,12 @@ describe('useSimulationPolling', () => {
   });
 
   it('polls until COMPLETE status', async () => {
-    mockThrowError = false;
-  mockCallCount = 0;
+    let callCount = 0;
+    (simulationService.getSimulationResults as jest.Mock).mockImplementation(() => {
+      callCount += 1;
+      if (callCount === 1) return Promise.resolve({ runId: 'r1', status: 'RUNNING' });
+      return Promise.resolve({ runId: 'r1', status: 'COMPLETE' });
+    });
     render(<Harness runId={'r1'} />);
     await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('RUNNING'));
     await act(async () => { jest.advanceTimersByTime(2100); });
@@ -51,8 +49,7 @@ describe('useSimulationPolling', () => {
   });
 
   it('handles fetch error and stops polling', async () => {
-    mockThrowError = true;
-  mockCallCount = 0;
+    (simulationService.getSimulationResults as jest.Mock).mockRejectedValue(new Error('network fail'));
     render(<Harness runId={'err1'} />);
     await waitFor(() => expect(screen.getByTestId('error').textContent).toMatch(/network fail/));
   });

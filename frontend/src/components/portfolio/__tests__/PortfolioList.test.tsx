@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import PortfolioList from '../PortfolioList';
-import { portfolioService } from '../../services/portfolioService';
+import { portfolioService } from '../../../services/portfolioService';
 
 beforeEach(() => {
   jest.spyOn(portfolioService, 'getAllPortfolios').mockResolvedValue([
@@ -24,7 +24,7 @@ describe('PortfolioList', () => {
     render(<PortfolioList />);
     await screen.findByText(/CDS Portfolios/i);
     fireEvent.click(screen.getByRole('button', { name: /Create Portfolio/i }));
-    // Modal renders a form title maybe
-    expect(screen.getByText(/Create Portfolio/i)).toBeInTheDocument();
+    // Modal renders a form title
+    expect(await screen.findByText(/Create New Portfolio/i)).toBeInTheDocument();
   });
 });
