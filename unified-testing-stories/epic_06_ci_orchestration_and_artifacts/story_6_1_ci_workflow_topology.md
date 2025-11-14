@@ -2,7 +2,7 @@
 
 **As a** DevOps architect  
 **I want** a modular GitHub Actions workflow that orchestrates all automated test tiers  
-**So that** every pull request and main branch build receives comprehensive quality signals.
+**So that** every commit, pull request and main branch build receives comprehensive quality signals.
 
 ## Acceptance Criteria
 - Workflow definition includes triggers for pull requests and main branch pushes.
