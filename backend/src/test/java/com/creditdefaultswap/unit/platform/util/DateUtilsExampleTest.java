@@ -1,6 +1,6 @@
 package com.creditdefaultswap.unit.platform.util;
 
-import com.creditdefaultswap.platform.testing.story.StoryId;
+import com.creditdefaultswap.unit.platform.testing.story.StoryId;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;

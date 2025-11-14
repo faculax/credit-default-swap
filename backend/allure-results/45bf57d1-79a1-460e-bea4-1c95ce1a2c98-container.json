@@ -1,0 +1,1 @@
+{"uuid":"45bf57d1-79a1-460e-bea4-1c95ce1a2c98","name":"recordCreditEvent_Success_NewEvent()","children":["fbfa7b85-4474-4923-9d14-5ab6ac7a35e4"],"befores":[{"name":"setUp","status":"passed","stage":"finished","steps":[],"attachments":[],"parameters":[],"start":1763146020533,"stop":1763146020534}],"afters":[],"start":1763146020326,"stop":1763146020554}

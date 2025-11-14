@@ -5,7 +5,7 @@ import com.creditdefaultswap.platform.model.CDSTrade;
 import com.creditdefaultswap.platform.model.SettlementMethod;
 import com.creditdefaultswap.platform.model.TradeStatus;
 import com.creditdefaultswap.platform.repository.CDSTradeRepository;
-import com.creditdefaultswap.platform.testing.story.StoryId;
+import com.creditdefaultswap.unit.platform.testing.story.StoryId;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
