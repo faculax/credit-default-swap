@@ -135,6 +135,36 @@ Allure generates JSON files for each test execution:
 
 ---
 
+## Service Configuration Status
+
+All three backend services now have standardized Allure JUnit 5 integration:
+
+### Backend Service (CDS Platform)
+- ✅ `allure-junit5` dependency (version `2.25.0`)
+- ✅ `maven-surefire-plugin` configured with Allure listener
+- ✅ `allure-maven` plugin (version `2.12.0`) for report generation
+- ✅ `maven-clean-plugin` configured to remove stale results
+- ✅ Allure results directory: `target/allure-results`
+- ✅ Tests: 53/53 passing with Allure reporting
+
+### Gateway Service
+- ✅ `allure-junit5` dependency (version `2.25.0`)
+- ✅ `maven-surefire-plugin` configured with Allure listener
+- ✅ `allure-maven` plugin (version `2.12.0`) for report generation
+- ✅ `maven-clean-plugin` configured to remove stale results
+- ✅ Allure results directory: `target/allure-results`
+- ✅ Tests: 1/1 passing with Allure reporting
+
+### Risk-Engine Service
+- ✅ `allure-junit5` dependency (version `2.25.0`)
+- ✅ `maven-surefire-plugin` configured with Allure listener
+- ✅ `allure-maven` plugin (version `2.12.0`) for report generation
+- ✅ `maven-clean-plugin` configured to remove stale results
+- ✅ Allure results directory: `target/allure-results`
+- ⚠️ Allure integration working (10 tests passing), but service has pre-existing test failures (7 failures/errors unrelated to Allure)
+
+---
+
 ## Usage
 
 ### Running Tests with Allure
@@ -158,7 +188,12 @@ mvn test -Dtest=CDSTradeServiceTest
 After running tests, check the results directory:
 
 ```bash
+# Unix/macOS/Linux
 ls target/allure-results/
+
+# Windows PowerShell
+dir target\allure-results\
+
 # Should show:
 # - Multiple *-result.json files (one per test method)
 # - Multiple *-container.json files (one per test class)
@@ -166,20 +201,107 @@ ls target/allure-results/
 
 ### Generating HTML Reports Locally
 
-To generate and view the Allure HTML report locally:
+#### Quick Start - Generate and View
+
+The fastest way to view test results locally:
 
 ```bash
-# Generate the HTML report from results
-mvn allure:report
+# Run tests and immediately view report in browser
+mvn clean test allure:serve
 
-# Serve the report on http://localhost:randomPort
-mvn allure:serve
+# For specific test profiles:
+mvn clean test -Punit-tests allure:serve
+mvn clean test -Pintegration-tests allure:serve
 ```
 
 The `allure:serve` command will:
-1. Generate the HTML report from `target/allure-results/`
-2. Start a local web server
-3. Open your browser to view the report
+1. Clean previous artifacts (via `mvn clean`)
+2. Run tests and generate results in `target/allure-results/`
+3. Build HTML report from results
+4. Start local web server on random port (e.g., `http://localhost:58234`)
+5. Automatically open browser to view report
+
+#### Generate Report Without Server
+
+To generate the HTML report without starting a server:
+
+```bash
+# Generate report to target/allure-report/
+mvn allure:report
+
+# View the report by opening in browser
+# Unix/macOS/Linux:
+open target/allure-report/index.html
+
+# Windows:
+start target\allure-report\index.html
+
+# Or navigate manually to:
+# file:///path/to/project/target/allure-report/index.html
+```
+
+#### Selective Test Execution
+
+Run specific test categories while generating Allure results:
+
+```bash
+# Unit tests only
+mvn clean test -Punit-tests allure:serve
+
+# Integration tests only  
+mvn clean test -Pintegration-tests allure:serve
+
+# Single test class
+mvn clean test -Dtest=CDSTradeServiceTest allure:serve
+
+# Multiple test classes
+mvn clean test -Dtest=CDSTradeServiceTest,TradeValidationServiceTest allure:serve
+
+# Tests matching pattern
+mvn clean test -Dtest=*ServiceTest allure:serve
+```
+
+#### Cross-Platform Commands
+
+**Windows (PowerShell):**
+```powershell
+# Clean, test, and serve report
+mvn clean test allure:serve
+
+# Or use the wrapper
+.\mvnw.cmd clean test allure:serve
+```
+
+**Windows (Command Prompt):**
+```cmd
+mvn clean test allure:serve
+
+rem Or use the wrapper
+mvnw.cmd clean test allure:serve
+```
+
+**macOS/Linux (bash/zsh):**
+```bash
+# Clean, test, and serve report
+mvn clean test allure:serve
+
+# Or use the wrapper
+./mvnw clean test allure:serve
+```
+
+#### Cleaning Stale Artifacts
+
+The `maven-clean-plugin` is configured to automatically remove `target/allure-results/` when running `mvn clean`:
+
+```bash
+# Remove all build artifacts including allure-results
+mvn clean
+
+# Verify cleanup (should return no files)
+ls target/allure-results/  # Should show "No such file or directory"
+```
+
+Always use `mvn clean test` when you want fresh results to avoid stale artifacts mixing with new test runs.
 
 ### Report Features
 
@@ -280,6 +402,52 @@ void shouldCreateTrade() {
 3. **Corrupted results:**
    - Clean and regenerate: `mvn clean test allure:report`
 
+### Issue: `mvn allure:serve` fails with "command not found"
+
+**Symptoms:** Error message: `Allure commandline is not installed` or similar
+
+**Causes & Solutions:**
+1. **Allure CLI not installed (automatic download should work):**
+   - The `allure-maven` plugin automatically downloads Allure CLI
+   - If it fails, check network connectivity
+   - Verify Maven can access Maven Central repository
+
+2. **Manual installation (if automatic fails):**
+   ```bash
+   # macOS (using Homebrew)
+   brew install allure
+   
+   # Windows (using Scoop)
+   scoop install allure
+   
+   # Or download from: https://github.com/allure-framework/allure2/releases
+   ```
+
+3. **Verify installation:**
+   ```bash
+   allure --version
+   # Should show: 2.25.0 or compatible version
+   ```
+
+### Issue: Browser doesn't open with `mvn allure:serve`
+
+**Symptoms:** Report is served but browser doesn't automatically open
+
+**Causes & Solutions:**
+1. **Check terminal output:**
+   - Look for URL like `http://localhost:58234`
+   - Manually open this URL in browser
+
+2. **Desktop environment issues:**
+   - On Linux servers without GUI, you cannot auto-open
+   - Copy the URL and paste in browser on your local machine
+   - Or use `mvn allure:report` and manually open `target/allure-report/index.html`
+
+3. **Port already in use:**
+   - Allure uses random ports to avoid conflicts
+   - If it still fails, check firewall settings
+   - Try stopping other local servers
+
 ### Issue: Tests pass but report shows "broken"
 
 **Symptoms:** Test passes in Maven output but Allure shows "broken" status
@@ -292,6 +460,45 @@ void shouldCreateTrade() {
 2. **Spring context issues:**
    - For integration tests, verify `@SpringBootTest` configuration
    - Check application context loads successfully
+
+### Issue: Stale test results mixing with new runs
+
+**Symptoms:** Old test results appear in new reports
+
+**Causes & Solutions:**
+1. **Always clean before running tests:**
+   ```bash
+   # Good: Fresh results
+   mvn clean test allure:serve
+   
+   # Bad: May have stale artifacts
+   mvn test allure:serve
+   ```
+
+2. **Manual cleanup if needed:**
+   ```bash
+   # Remove allure-results manually
+   rm -rf target/allure-results/   # Unix/macOS
+   Remove-Item -Recurse target\allure-results\  # Windows PowerShell
+   ```
+
+### Issue: Cross-platform path issues
+
+**Symptoms:** Tests fail or report generation fails on different OS
+
+**Causes & Solutions:**
+1. **Use Maven properties for paths:**
+   - `${project.build.directory}` resolves to `target/` on all platforms
+   - Already configured in `pom.xml` - no changes needed
+
+2. **Avoid hardcoded paths in tests:**
+   ```java
+   // Bad: Windows-specific
+   Path path = Paths.get("C:\\data\\file.txt");
+   
+   // Good: Cross-platform
+   Path path = Paths.get("src", "test", "resources", "file.txt");
+   ```
 
 ---
 

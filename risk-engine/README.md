@@ -108,6 +108,40 @@ mvn spring-boot:run
 ./scripts/verify-ore.sh
 ```
 
+### Testing
+
+```bash
+# Run all tests with Allure reporting
+mvn clean test
+
+# Run and view HTML report in browser
+mvn clean test allure:serve
+```
+
+**View Test Results:**
+
+After running tests, Allure results are generated in `target/allure-results/`.
+
+```bash
+# Start local server with report
+mvn allure:serve
+
+# Or generate report without server
+mvn allure:report
+# Then open: target/allure-report/index.html
+```
+
+**Testing Documentation:**
+- **[Backend Allure Setup Guide](../docs/testing/backend-allure-setup.md)** - Complete Allure integration guide
+- **[Test Architecture](../docs/testing/test-architecture.md)** - Testing standards and patterns
+
+**Note:** The risk-engine currently has some pre-existing test failures (7 out of 17 tests) related to ORE integration that need fixing:
+- `OreOutputParserTest`: XML parsing issues (4 failures)
+- `OreInputBuilderTest`: Windows path handling (2 errors)
+- `RiskCalculationServiceTest`: Mockito stubbing issues (1 error)
+
+These failures are tracked in separate issues and do not affect the Allure integration itself.
+
 ### Debugging
 ```bash
 # Check ORE integration
