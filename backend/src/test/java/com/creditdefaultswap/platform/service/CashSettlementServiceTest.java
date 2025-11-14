@@ -3,6 +3,7 @@ package com.creditdefaultswap.platform.service;
 import com.creditdefaultswap.platform.model.CDSTrade;
 import com.creditdefaultswap.platform.model.CashSettlement;
 import com.creditdefaultswap.platform.repository.CashSettlementRepository;
+import com.creditdefaultswap.platform.testing.story.StoryId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,7 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -49,6 +49,7 @@ class CashSettlementServiceTest {
     }
 
     @Test
+    @StoryId(value = "UTS-403", testType = StoryId.TestType.UNIT, microservice = "cds-platform")
     void calculateCashSettlement_Success_NewCalculation() {
         // Arrange
         when(cashSettlementRepository.findByCreditEventId(creditEventId))
@@ -96,6 +97,7 @@ class CashSettlementServiceTest {
     }
 
     @Test
+    @StoryId(value = "UTS-403", testType = StoryId.TestType.UNIT, microservice = "cds-platform")
     void calculateCashSettlement_WithRecoveryRateOverride() {
         // Arrange
         BigDecimal customRecoveryRate = BigDecimal.valueOf(0.60);

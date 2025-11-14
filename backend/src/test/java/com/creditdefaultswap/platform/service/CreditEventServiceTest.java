@@ -6,6 +6,7 @@ import com.creditdefaultswap.platform.model.*;
 import com.creditdefaultswap.platform.repository.CDSTradeRepository;
 import com.creditdefaultswap.platform.repository.CreditEventRepository;
 import com.creditdefaultswap.platform.repository.PhysicalSettlementRepository;
+import com.creditdefaultswap.platform.testing.story.StoryId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,7 +18,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -68,6 +68,7 @@ class CreditEventServiceTest {
     }
 
     @Test
+    @StoryId(value = "UTS-401", testType = StoryId.TestType.INTEGRATION, microservice = "cds-platform")
     void recordCreditEvent_Success_NewEvent() {
         // Arrange
         when(tradeRepository.findById(1L)).thenReturn(Optional.of(mockTrade));

@@ -23,3 +23,8 @@
 
 ## Dependencies
 - Requires labeling work from Stories 1.2 through 1.4.
+
+## Implementation Notes
+- Export command: `node scripts/export-traceability-matrix.mjs --results-dir backend/allure-results --expected-catalog unified-testing-config/story-catalog.json`
+- Story catalog lives at `unified-testing-config/story-catalog.json` and records links back to `user-stories` for audit alignment.
+- Script emits JSON by default and supports CSV via `--format csv`. Use `--fail-on-missing` in CI to enforce coverage once catalog completeness improves.

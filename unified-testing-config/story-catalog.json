@@ -1,0 +1,35 @@
+{
+  "formatVersion": 1,
+  "stories": [
+    {
+      "id": "UTS-401",
+      "title": "Record credit event persists new entry",
+      "epic": "epic_04_cds_credit_event_processing",
+      "userStories": [
+        "user-stories/epic_04_cds_credit_event_processing/story_4_1_record_credit_event.md"
+      ],
+      "microservice": "cds-platform",
+      "requiresCoverage": true
+    },
+    {
+      "id": "UTS-403",
+      "title": "Cash settlement payout calculation",
+      "epic": "epic_04_cds_credit_event_processing",
+      "userStories": [
+        "user-stories/epic_04_cds_credit_event_processing/story_4_3_cash_settlement_calculation.md"
+      ],
+      "microservice": "cds-platform",
+      "requiresCoverage": true
+    },
+    {
+      "id": "UTS-501",
+      "title": "Risk regression status display",
+      "epic": "epic_07_pricing_and_risk_analytics",
+      "userStories": [
+        "user-stories/epic_07_pricing_and_risk_analytics/story_7_5_regression_status_ui.md"
+      ],
+      "microservice": "risk-ui",
+      "requiresCoverage": true
+    }
+  ]
+}
