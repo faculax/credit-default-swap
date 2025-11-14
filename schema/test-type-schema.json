@@ -1,0 +1,243 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Test Type Label Schema",
+  "description": "Unified schema defining valid test types, metadata, and constraints for consistent test reporting across frontend and backend services",
+  "version": "1.0.0",
+  "lastUpdated": "2025-01-14",
+  "testTypes": [
+    {
+      "id": "unit",
+      "displayName": "Unit Test",
+      "description": "Tests a single function, class, or component in complete isolation with all dependencies mocked",
+      "defaultSeverity": "normal",
+      "allowedSeverities": ["trivial", "minor", "normal", "critical", "blocker"],
+      "allureLabels": {
+        "epic": "unit",
+        "feature": "isolation-testing"
+      },
+      "characteristics": [
+        "Fast execution (milliseconds)",
+        "No external dependencies (DB, network, filesystem)",
+        "High test count relative to other types",
+        "Mocks all collaborators",
+        "Tests single responsibility"
+      ],
+      "examples": [
+        "Testing utility function logic",
+        "Testing React component rendering with mocked props",
+        "Testing Java service method with mocked repositories"
+      ],
+      "applicableServices": ["frontend", "backend", "gateway", "risk-engine"],
+      "recommendedCoverageTarget": 80
+    },
+    {
+      "id": "integration",
+      "displayName": "Integration Test",
+      "description": "Tests interaction between multiple components, modules, or services with real or embedded dependencies",
+      "defaultSeverity": "critical",
+      "allowedSeverities": ["minor", "normal", "critical", "blocker"],
+      "allureLabels": {
+        "epic": "integration",
+        "feature": "component-interaction"
+      },
+      "characteristics": [
+        "Moderate execution time (seconds)",
+        "Uses real implementations for key dependencies",
+        "Tests data flow between components",
+        "May use embedded databases or test containers",
+        "Verifies interface contracts"
+      ],
+      "examples": [
+        "Testing Spring Boot repository layer with embedded H2 database",
+        "Testing React component tree with state management",
+        "Testing service-to-service REST API calls with mocked HTTP responses"
+      ],
+      "applicableServices": ["frontend", "backend", "gateway", "risk-engine"],
+      "recommendedCoverageTarget": 60
+    },
+    {
+      "id": "contract",
+      "displayName": "Contract Test",
+      "description": "Tests consumer-provider API contracts to ensure backward compatibility and interface adherence",
+      "defaultSeverity": "critical",
+      "allowedSeverities": ["normal", "critical", "blocker"],
+      "allureLabels": {
+        "epic": "contract",
+        "feature": "api-compatibility"
+      },
+      "characteristics": [
+        "Fast to moderate execution time",
+        "Consumer-driven contract testing (e.g., Pact)",
+        "Validates request/response schemas",
+        "Ensures API versioning compatibility",
+        "No business logic testing"
+      ],
+      "examples": [
+        "Testing frontend API client against backend contract",
+        "Testing gateway routing against downstream service contracts",
+        "Testing message queue payload schemas"
+      ],
+      "applicableServices": ["frontend", "backend", "gateway"],
+      "recommendedCoverageTarget": 100,
+      "note": "All public APIs should have contract tests"
+    },
+    {
+      "id": "e2e",
+      "displayName": "End-to-End Test",
+      "description": "Tests complete user workflows across the entire system from UI to database and back",
+      "defaultSeverity": "blocker",
+      "allowedSeverities": ["critical", "blocker"],
+      "allureLabels": {
+        "epic": "e2e",
+        "feature": "user-workflows"
+      },
+      "characteristics": [
+        "Slow execution time (tens of seconds to minutes)",
+        "Tests full system integration",
+        "Uses real browsers or API clients",
+        "Validates end-user scenarios",
+        "Highest confidence but most expensive"
+      ],
+      "examples": [
+        "Testing complete CDS trade creation workflow from UI to database",
+        "Testing credit event processing from trigger to settlement",
+        "Testing user authentication and authorization flows"
+      ],
+      "applicableServices": ["frontend"],
+      "recommendedCoverageTarget": 30,
+      "note": "Focus on critical user journeys; high maintenance cost"
+    },
+    {
+      "id": "performance",
+      "displayName": "Performance Test",
+      "description": "Tests system performance, load handling, and resource utilization under various conditions",
+      "defaultSeverity": "normal",
+      "allowedSeverities": ["minor", "normal", "critical"],
+      "allureLabels": {
+        "epic": "performance",
+        "feature": "load-testing"
+      },
+      "characteristics": [
+        "Long execution time (minutes to hours)",
+        "Measures throughput, latency, resource usage",
+        "Often requires dedicated environment",
+        "May use tools like JMeter, Gatling, k6",
+        "Not typically run in standard CI pipelines"
+      ],
+      "examples": [
+        "Testing API throughput under 1000 req/sec",
+        "Testing database query performance with large datasets",
+        "Testing frontend rendering performance with complex portfolios"
+      ],
+      "applicableServices": ["backend", "gateway", "risk-engine"],
+      "recommendedCoverageTarget": null,
+      "note": "Run periodically or on dedicated branches"
+    },
+    {
+      "id": "security",
+      "displayName": "Security Test",
+      "description": "Tests security vulnerabilities, authentication, authorization, and data protection mechanisms",
+      "defaultSeverity": "blocker",
+      "allowedSeverities": ["critical", "blocker"],
+      "allureLabels": {
+        "epic": "security",
+        "feature": "vulnerability-testing"
+      },
+      "characteristics": [
+        "Variable execution time",
+        "Tests authentication/authorization flows",
+        "Validates input sanitization and SQL injection protection",
+        "Checks for common vulnerabilities (OWASP Top 10)",
+        "May include static analysis and dependency scanning"
+      ],
+      "examples": [
+        "Testing JWT token validation and expiration",
+        "Testing SQL injection protection in query parameters",
+        "Testing CORS configuration and XSS prevention"
+      ],
+      "applicableServices": ["frontend", "backend", "gateway"],
+      "recommendedCoverageTarget": null,
+      "note": "Critical for production readiness"
+    }
+  ],
+  "microservices": [
+    {
+      "id": "frontend",
+      "displayName": "Frontend (React)",
+      "description": "React TypeScript web application",
+      "supportedTestTypes": ["unit", "integration", "contract", "e2e"],
+      "testFrameworks": ["Jest", "React Testing Library", "Playwright", "Cypress"]
+    },
+    {
+      "id": "backend",
+      "displayName": "Backend (CDS Platform)",
+      "description": "Main Spring Boot backend service for CDS trading platform",
+      "supportedTestTypes": ["unit", "integration", "contract", "performance", "security"],
+      "testFrameworks": ["JUnit 5", "Spring Boot Test", "Pact", "TestContainers"]
+    },
+    {
+      "id": "gateway",
+      "displayName": "API Gateway",
+      "description": "Spring Cloud Gateway for routing and cross-cutting concerns",
+      "supportedTestTypes": ["unit", "integration", "contract", "security"],
+      "testFrameworks": ["JUnit 5", "Spring Boot Test", "Pact"]
+    },
+    {
+      "id": "risk-engine",
+      "displayName": "Risk Engine",
+      "description": "Computational service for pricing and risk analytics",
+      "supportedTestTypes": ["unit", "integration", "performance"],
+      "testFrameworks": ["JUnit 5", "Spring Boot Test", "JMeter"]
+    }
+  ],
+  "validationRules": {
+    "requiredLabels": ["storyId", "testType", "service"],
+    "optionalLabels": ["microservice", "severity", "epic", "feature", "owner"],
+    "storyIdPattern": "^(UTS|PROJ|EPIC)-[0-9]+(\\.[0-9]+)?$",
+    "testTypeEnum": ["unit", "integration", "contract", "e2e", "performance", "security"],
+    "severityEnum": ["trivial", "minor", "normal", "critical", "blocker"]
+  },
+  "allureConfiguration": {
+    "categories": [
+      {
+        "name": "Product defects",
+        "matchedStatuses": ["failed"],
+        "messageRegex": ".*AssertionError.*"
+      },
+      {
+        "name": "Test defects",
+        "matchedStatuses": ["broken"],
+        "messageRegex": ".*"
+      },
+      {
+        "name": "Ignored tests",
+        "matchedStatuses": ["skipped"]
+      }
+    ],
+    "environmentInfo": {
+      "Platform": "Credit Default Swap Trading Platform",
+      "Test.Framework.Backend": "JUnit 5 + Spring Boot Test",
+      "Test.Framework.Frontend": "Jest + React Testing Library + Playwright",
+      "Reporting": "Allure"
+    }
+  },
+  "changeManagement": {
+    "approvalRequired": true,
+    "approvers": ["tech-lead", "qa-lead"],
+    "notificationChannels": ["slack-testing", "email-team"],
+    "backwardCompatibility": "Must maintain backward compatibility for at least 2 minor versions",
+    "deprecationProcess": [
+      "Announce deprecation in schema with 'deprecated: true' flag",
+      "Provide migration timeline (minimum 2 sprints)",
+      "Update documentation and developer guides",
+      "Remove deprecated type after migration period"
+    ]
+  },
+  "metadata": {
+    "repository": "credit-default-swap",
+    "owner": "platform-engineering",
+    "maintainers": ["tech-lead@example.com", "qa-lead@example.com"],
+    "documentationUrl": "docs/testing/test-type-schema.md",
+    "schemaUrl": "schema/test-type-schema.json"
+  }
+}
