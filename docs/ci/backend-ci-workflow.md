@@ -449,8 +449,8 @@ Before pushing backend code changes:
 
 ```bash
 # Use same Java version
-sdk use java 17.0.9-tem  # SDKMAN
-# Or: export JAVA_HOME=/path/to/jdk-17
+sdk use java 21.0.1-tem  # SDKMAN
+# Or: export JAVA_HOME=/path/to/jdk-21
 
 # Use same Maven opts
 export MAVEN_OPTS="-Xmx2048m -Xms512m"
@@ -470,12 +470,12 @@ ls -la target/allure-results/
 
 ```yaml
 env:
-  JAVA_VERSION: '17'           # JDK version for all services
+  JAVA_VERSION: '21'           # JDK version for all services
   MAVEN_OPTS: -Xmx2048m -Xms512m  # JVM heap settings
 ```
 
 **Why these values:**
-- **Java 17:** Current LTS version, used by all services
+- **Java 21:** Current LTS version, used by all services
 - **Maven heap:** 2GB max prevents OOM during compilation/tests
 - **Maven min heap:** 512MB reduces startup overhead
 

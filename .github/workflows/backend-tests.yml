@@ -18,7 +18,7 @@ on:
   workflow_dispatch: # Allow manual trigger
 
 env:
-  JAVA_VERSION: '17'
+  JAVA_VERSION: '21'
   MAVEN_OPTS: -Xmx2048m -Xms512m
 
 jobs:
