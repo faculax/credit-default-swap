@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import TopBar from '../TopBar';
 
 jest.useFakeTimers();
@@ -14,7 +14,9 @@ describe('TopBar render basics', () => {
     const titleBtn = screen.getByText(/CREDIT DEFAULT SWAP PLATFORM/i);
     expect(titleBtn).toBeInTheDocument();
     const initialTime = screen.getByText(/:/); // contains time
-    jest.advanceTimersByTime(1100); // advance more than 1s
+    act(() => {
+      jest.advanceTimersByTime(1100); // advance more than 1s
+    });
     const updatedTime = screen.getByText(/:/);
     expect(updatedTime.textContent).not.toBe(initialTime.textContent); // time ticked
   });
@@ -22,10 +24,8 @@ describe('TopBar render basics', () => {
   it('opens services modal when title clicked', () => {
     render(<TopBar />);
     const titleBtn = screen.getByText(/CREDIT DEFAULT SWAP PLATFORM/i);
-    fireEvent.click(titleBtn);
-    // Modal component likely renders some content; assert presence of close button if predictable
-    // Fallback: ensure aria-modal or dialog is present
-    const modal = screen.getByRole('dialog', { hidden: true });
-    expect(modal).toBeTruthy();
+  fireEvent.click(titleBtn);
+  const modal = screen.getByRole('dialog');
+  expect(modal).toBeInTheDocument();
   });
 });

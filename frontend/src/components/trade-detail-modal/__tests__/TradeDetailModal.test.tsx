@@ -25,13 +25,13 @@ const mockTrade = {
   obligation: { isin: 'US1234567890', issuer: 'ACME', seniority: 'SENIOR', couponRate: 0.05, maturityDate: '2028-12-31' }
 };
 
-jest.mock('../../services/risk/riskService', () => ({
+jest.mock('../../../services/risk/riskService', () => ({
   fetchRiskMeasures: jest.fn().mockResolvedValue({ npv: 1000, currency: 'USD', valuationTimestamp: Date.now() })
 }));
-jest.mock('../../services/creditEventService', () => ({
+jest.mock('../../../services/creditEventService', () => ({
   creditEventService: { getCreditEventsForTrade: jest.fn().mockResolvedValue([]), recordCreditEvent: jest.fn() }
 }));
-jest.mock('../../services/cdsTradeService', () => ({
+jest.mock('../../../services/cdsTradeService', () => ({
   cdsTradeService: { getTradeById: jest.fn().mockResolvedValue(mockTrade) }
 }));
 

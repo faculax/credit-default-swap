@@ -14,7 +14,8 @@ describe('SimulationConfigForm', () => {
     expect(screen.getByLabelText(/Valuation Date/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Monte Carlo Paths/i)).toBeInTheDocument();
     expect(screen.getByText('Horizons (select one or more)')).toBeInTheDocument();
-    expect(screen.getByText('Default Systemic Loading')).toBeInTheDocument();
+  // Label text includes extra symbols (β) and current value; use partial regex match
+  expect(screen.getByText(/Default Systemic Loading/i)).toBeInTheDocument();
   });
 
   it('toggles horizons selection', () => {

@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">90% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/10</span>
+                <span class='fraction'>9/10</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">77.14% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/35</span>
+                <span class='fraction'>27/35</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">80% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/5</span>
+                <span class='fraction'>4/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">88.88% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/9</span>
+                <span class='fraction'>8/9</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -266,22 +266,29 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -304,6 +311,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -311,7 +319,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -356,14 +363,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -456,22 +456,22 @@ interface SimulationResultsProps {
   onReset: () =&gt; void;
 }
 &nbsp;
-const SimulationResults: React.FC&lt;SimulationResultsProps&gt; = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >({</span></span>
+const SimulationResults: React.FC&lt;SimulationResultsProps&gt; = ({
   simulation,
   onCancel,
   onDownload,
   onReset,
 }) =&gt; {
-  const isRunning = <span class="cstat-no" title="statement not covered" >simulation.status === 'RUNNING' || simulation.status === 'QUEUED';</span>
-  const isComplete = <span class="cstat-no" title="statement not covered" >simulation.status === 'COMPLETE';</span>
-  const isFailed = <span class="cstat-no" title="statement not covered" >simulation.status === 'FAILED';</span>
+  const isRunning = simulation.status === 'RUNNING' || simulation.status === 'QUEUED';
+  const isComplete = simulation.status === 'COMPLETE';
+  const isFailed = simulation.status === 'FAILED';
 &nbsp;
   // For display, use the horizon with most data (prefer 5Y, then 3Y, then 1Y)
-  const displayHorizon = <span class="cstat-no" title="statement not covered" >simulation.horizons?.find(<span class="fstat-no" title="function not covered" >h </span>=&gt; <span class="cstat-no" title="statement not covered" >h.tenor === '5Y') </span></span>
+  const displayHorizon = simulation.horizons?.find(h =&gt; h.tenor === '5Y') 
     || simulation.horizons?.find(<span class="fstat-no" title="function not covered" >h </span>=&gt; <span class="cstat-no" title="statement not covered" >h.tenor === '3Y')</span>
     || simulation.horizons?.[0];
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return (</span>
+  return (
     &lt;div className="space-y-6"&gt;
       {/* Status Header */}
       &lt;div className="bg-fd-darker rounded-lg border border-fd-border p-4"&gt;
@@ -492,22 +492,22 @@ const SimulationResults: React.FC&lt;SimulationResultsProps&gt; = <span class="c
         &lt;div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm"&gt;
           &lt;div&gt;
             &lt;span className="text-fd-text-muted"&gt;Valuation Date:&lt;/span&gt;
-            &lt;p className="text-fd-text font-medium"&gt;{simulation.valuationDate || 'N/A'}&lt;/p&gt;
+            &lt;p className="text-fd-text font-medium"&gt;{simulation.valuationDate || <span class="branch-1 cbranch-no" title="branch not covered" >'N/A'}</span>&lt;/p&gt;
           &lt;/div&gt;
           &lt;div&gt;
             &lt;span className="text-fd-text-muted"&gt;Paths:&lt;/span&gt;
-            &lt;p className="text-fd-text font-medium"&gt;{simulation.paths?.toLocaleString() || 'N/A'}&lt;/p&gt;
+            &lt;p className="text-fd-text font-medium"&gt;{simulation.paths?.toLocaleString() || <span class="branch-1 cbranch-no" title="branch not covered" >'N/A'}</span>&lt;/p&gt;
           &lt;/div&gt;
           &lt;div&gt;
             &lt;span className="text-fd-text-muted"&gt;Horizons:&lt;/span&gt;
             &lt;p className="text-fd-text font-medium"&gt;
-              {simulation.horizons?.map(<span class="fstat-no" title="function not covered" >h </span>=&gt; <span class="cstat-no" title="statement not covered" >h.tenor)</span>.join(', ') || 'N/A'}
+              {simulation.horizons?.map(h =&gt; h.tenor).join(', ') || 'N/A'}
             &lt;/p&gt;
           &lt;/div&gt;
           &lt;div&gt;
             &lt;span className="text-fd-text-muted"&gt;Seed:&lt;/span&gt;
             &lt;p className="text-fd-text font-medium"&gt;
-              {simulation.seedUsed ?? 'Random'}
+              {simulation.seedUsed ?? <span class="branch-1 cbranch-no" title="branch not covered" >'Random'}</span>
             &lt;/p&gt;
           &lt;/div&gt;
         &lt;/div&gt;
@@ -552,15 +552,15 @@ const SimulationResults: React.FC&lt;SimulationResultsProps&gt; = <span class="c
       {/* Metrics Grid - Show ALL Horizons */}
       {isComplete &amp;&amp; simulation.horizons &amp;&amp; simulation.horizons.length &gt; 0 &amp;&amp; (
         &lt;&gt;
-          {simulation.horizons.map(<span class="fstat-no" title="function not covered" >(h</span>orizon, idx) =&gt; (
-<span class="cstat-no" title="statement not covered" >            &lt;div key={horizon.tenor}&gt;</span>
+          {simulation.horizons.map((horizon, idx) =&gt; (
+            &lt;div key={horizon.tenor}&gt;
               &lt;h3 className="text-lg font-medium text-fd-text mb-4"&gt;
                 Risk Metrics ({horizon.tenor})
               &lt;/h3&gt;
               &lt;div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"&gt;
                 &lt;MetricsCard
                   label="Probability of Any Default"
-                  value={`${((horizon.pAnyDefault || horizon.panyDefault || 0) * 100).toFixed(2)}%`}
+                  value={`${((horizon.pAnyDefault || <span class="branch-1 cbranch-no" title="branch not covered" >horizon.panyDefault </span>|| <span class="branch-2 cbranch-no" title="branch not covered" >0)</span> * 100).toFixed(2)}%`}
                   description="Likelihood that at least one entity defaults"
                 /&gt;
                 &lt;MetricsCard
@@ -605,8 +605,8 @@ const SimulationResults: React.FC&lt;SimulationResultsProps&gt; = <span class="c
           ))}
 &nbsp;
           {/* Contributors Table */}
-          {simulation.contributors &amp;&amp; simulation.contributors.length &gt; 0 &amp;&amp; (
-            &lt;div&gt;
+          {simulation.contributors &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >simulation.contributors.length &gt; 0 </span>&amp;&amp; (
+<span class="branch-2 cbranch-no" title="branch not covered" >            &lt;div&gt;</span>
               &lt;h3 className="text-lg font-medium text-fd-text mb-4"&gt;
                 Top Contributors to Expected Loss
               &lt;/h3&gt;
@@ -621,7 +621,7 @@ const SimulationResults: React.FC&lt;SimulationResultsProps&gt; = <span class="c
         &lt;div className="bg-fd-darker rounded-lg border border-fd-border p-8 text-center"&gt;
           &lt;div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fd-green mx-auto mb-4"&gt;&lt;/div&gt;
           &lt;p className="text-fd-text-muted"&gt;
-            {simulation.status === 'QUEUED' ? 'Simulation queued...' : 'Running Monte Carlo simulation...'}
+            {simulation.status === 'QUEUED' ? <span class="branch-0 cbranch-no" title="branch not covered" >'Simulation queued...' </span>: 'Running Monte Carlo simulation...'}
           &lt;/p&gt;
           &lt;p className="text-fd-text-muted text-sm mt-2"&gt;
             This may take a minute or two depending on the number of paths
@@ -640,7 +640,7 @@ export default SimulationResults;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-13T09:37:24.712Z
+                at 2025-11-13T22:02:43.846Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

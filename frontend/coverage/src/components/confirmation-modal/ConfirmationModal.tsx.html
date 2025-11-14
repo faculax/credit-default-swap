@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">81.81% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/11</span>
+                <span class='fraction'>9/11</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">55.55% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/18</span>
+                <span class='fraction'>10/18</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">75% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/4</span>
+                <span class='fraction'>3/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">80% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/10</span>
+                <span class='fraction'>8/10</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -226,35 +226,35 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -380,25 +380,25 @@ interface ConfirmationModalProps {
   onClose: () =&gt; void;
 }
 &nbsp;
-const ConfirmationModal: React.FC&lt;ConfirmationModalProps&gt; = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >({</span> isOpen, trade, onClose }) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >  if (!isOpen || !trade) <span class="cstat-no" title="statement not covered" >return null;</span></span>
+const ConfirmationModal: React.FC&lt;ConfirmationModalProps&gt; = ({ isOpen, trade, onClose }) =&gt; {
+  if (!isOpen || !trade) return null;
 &nbsp;
-  const formatCurrency = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(a</span>mount: number, currency: string) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    return new Intl.NumberFormat('en-US', {</span>
+  const formatCurrency = (amount: number, currency: string) =&gt; {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: currency || 'USD'
+      currency: currency || <span class="branch-1 cbranch-no" title="branch not covered" >'USD'</span>
     }).format(amount);
   };
 &nbsp;
-  const formatDate = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(d</span>ateString: string) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    return new Date(dateString).toLocaleDateString('en-US', {</span>
+  const formatDate = (dateString: string) =&gt; {
+    return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
   };
 &nbsp;
-  const formatRestructuringClause = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(c</span>lause: string) =&gt; {</span>
+  const formatRestructuringClause = <span class="fstat-no" title="function not covered" >(c</span>lause: string) =&gt; {
     const labels: { [key: string]: string } = <span class="cstat-no" title="statement not covered" >{</span>
       'NO_RESTRUCTURING': 'No R',
       'MODIFIED_RESTRUCTURING': 'Mod R',
@@ -408,7 +408,7 @@ const ConfirmationModal: React.FC&lt;ConfirmationModalProps&gt; = <span class="c
 <span class="cstat-no" title="statement not covered" >    return labels[clause] || clause.replace(/_/g, ' ');</span>
   };
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return (</span>
+  return (
     &lt;div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"&gt;
       &lt;div className="bg-fd-darker rounded-lg shadow-fd border border-fd-border p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"&gt;
         &lt;div className="flex items-center justify-between mb-6"&gt;
@@ -456,14 +456,14 @@ const ConfirmationModal: React.FC&lt;ConfirmationModalProps&gt; = <span class="c
               &lt;/div&gt;
               &lt;div className="flex justify-between"&gt;
                 &lt;span className="text-fd-text-muted"&gt;Direction:&lt;/span&gt;
-                &lt;span className={`${trade.buySellProtection === 'BUY' ? 'text-blue-400' : 'text-orange-400'}`}&gt;
-                  {trade.buySellProtection === 'BUY' ? 'Buy Protection' : 'Sell Protection'}
+                &lt;span className={`${trade.buySellProtection === 'BUY' ? 'text-blue-400' : <span class="branch-1 cbranch-no" title="branch not covered" >'text-orange-400'}</span>`}&gt;
+                  {trade.buySellProtection === 'BUY' ? 'Buy Protection' : <span class="branch-1 cbranch-no" title="branch not covered" >'Sell Protection'}</span>
                 &lt;/span&gt;
               &lt;/div&gt;
               &lt;div className="flex justify-between"&gt;
                 &lt;span className="text-fd-text-muted"&gt;Settlement Type:&lt;/span&gt;
-                &lt;span className={`${trade.settlementType === 'CASH' ? 'text-fd-cyan' : 'text-fd-teal'}`}&gt;
-                  {trade.settlementType === 'CASH' ? 'Cash Settlement' : 'Physical Settlement'}
+                &lt;span className={`${trade.settlementType === 'CASH' ? 'text-fd-cyan' : <span class="branch-1 cbranch-no" title="branch not covered" >'text-fd-teal'}</span>`}&gt;
+                  {trade.settlementType === 'CASH' ? 'Cash Settlement' : <span class="branch-1 cbranch-no" title="branch not covered" >'Physical Settlement'}</span>
                 &lt;/span&gt;
               &lt;/div&gt;
               &lt;div className="flex justify-between"&gt;
@@ -503,7 +503,7 @@ const ConfirmationModal: React.FC&lt;ConfirmationModalProps&gt; = <span class="c
           &lt;/div&gt;
 &nbsp;
           {trade.restructuringClause &amp;&amp; (
-            &lt;div className="pt-2 border-t border-fd-border"&gt;
+<span class="branch-1 cbranch-no" title="branch not covered" >            &lt;div className="pt-2 border-t border-fd-border"&gt;</span>
               &lt;div className="flex justify-between"&gt;
                 &lt;span className="text-fd-text-muted"&gt;Restructuring Clause:&lt;/span&gt;
                 &lt;span className="text-fd-text"&gt;{formatRestructuringClause(trade.restructuringClause)}&lt;/span&gt;
@@ -532,7 +532,7 @@ export default ConfirmationModal;</pre></td></tr></table></pre>
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-13T09:37:24.712Z
+                at 2025-11-13T22:02:43.846Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

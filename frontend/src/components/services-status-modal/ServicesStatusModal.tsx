@@ -127,14 +127,7 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
 
   if (!isOpen) return null;
 
-  const getStatusColor = (status: ServiceStatus['status']) => {
-    switch (status) {
-      case 'ONLINE': return 'text-fd-green';
-      case 'OFFLINE': return 'text-red-500';
-      case 'UNKNOWN': return 'text-fd-text-muted';
-      default: return 'text-fd-text-muted';
-    }
-  };
+  // Removed unused getStatusColor helper (lint reported unused assignment)
 
   const getStatusBadgeColor = (status: ServiceStatus['status']) => {
     switch (status) {
@@ -154,14 +147,14 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-fd-darker border border-fd-border rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+      <dialog open className="bg-fd-darker border border-fd-border rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto" data-testid="services-status-modal" aria-label="Services Status Modal">
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-fd-border">
           <h2 className="text-2xl font-bold text-fd-text">Services Status</h2>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <span className="text-fd-text-muted text-sm">Auto Refresh (5 seconds)</span>
-              <label className="relative inline-flex items-center cursor-pointer">
+              <label className="relative inline-flex items-center cursor-pointer" aria-label="Toggle auto refresh every 5 seconds">
                 <input
                   type="checkbox"
                   checked={autoRefresh}
@@ -243,8 +236,8 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
         <div className="p-6">
           <h3 className="text-lg font-semibold text-fd-text mb-4">Service Details</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {services.map((service, index) => (
-              <div key={index} className="bg-fd-dark border border-fd-border rounded-lg p-4">
+            {services.map((service) => (
+              <div key={service.name} className="bg-fd-dark border border-fd-border rounded-lg p-4">
                 <div className="flex justify-between items-start mb-3">
                   <h4 className="font-semibold text-fd-text">{service.name}</h4>
                   <div className="flex items-center space-x-2">
@@ -292,7 +285,7 @@ const ServicesStatusModal: React.FC<ServicesStatusModalProps> = ({ isOpen, onClo
             ))}
           </div>
         </div>
-      </div>
+      </dialog>
     </div>
   );
 };

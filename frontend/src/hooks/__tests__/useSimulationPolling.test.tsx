@@ -2,14 +2,14 @@ import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { useSimulationPolling } from '../useSimulationPolling';
 
-// Deterministic mock: first call RUNNING, subsequent calls COMPLETE unless throwError set
-let throwError = false;
+// Deterministic mock: first call RUNNING, subsequent calls COMPLETE unless mockThrowError set
+let mockThrowError = false; // prefixed with 'mock' to allow safe jest.mock factory reference
 let callCount = 0;
 jest.mock('../../services/simulationService', () => ({
   simulationService: {
     getSimulationResults: jest.fn(() => {
       callCount += 1;
-      if (throwError) return Promise.reject(new Error('network fail'));
+      if (mockThrowError) return Promise.reject(new Error('network fail'));
       if (callCount === 1) return Promise.resolve({ runId: 'r1', status: 'RUNNING' });
       return Promise.resolve({ runId: 'r1', status: 'COMPLETE' });
     })
@@ -42,7 +42,7 @@ describe('useSimulationPolling', () => {
   });
 
   it('polls until COMPLETE status', async () => {
-    throwError = false;
+    mockThrowError = false;
     callCount = 0;
     render(<Harness runId={'r1'} />);
     await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('RUNNING'));
@@ -51,7 +51,7 @@ describe('useSimulationPolling', () => {
   });
 
   it('handles fetch error and stops polling', async () => {
-    throwError = true;
+    mockThrowError = true;
     callCount = 0;
     render(<Harness runId={'err1'} />);
     await waitFor(() => expect(screen.getByTestId('error').textContent).toMatch(/network fail/));
