@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import TradeDetailModal from '../TradeDetailModal';
 
-const mockTrade = {
+const mockTradeData = {
   id: 10,
   referenceEntity: 'ACME',
   counterparty: 'BANK_X',
@@ -31,13 +31,14 @@ jest.mock('../../../services/risk/riskService', () => ({
 jest.mock('../../../services/creditEventService', () => ({
   creditEventService: { getCreditEventsForTrade: jest.fn().mockResolvedValue([]), recordCreditEvent: jest.fn() }
 }));
-jest.mock('../../../services/cdsTradeService', () => ({
-  cdsTradeService: { getTradeById: jest.fn().mockResolvedValue(mockTrade) }
-}));
+jest.mock('../../../services/cdsTradeService', () => {
+  const inlineTrade = { ...mockTradeData };
+  return { cdsTradeService: { getTradeById: jest.fn().mockResolvedValue(inlineTrade) } };
+});
 
 describe('TradeDetailModal', () => {
   it('renders and switches tabs', () => {
-    render(<TradeDetailModal isOpen trade={mockTrade as any} onClose={jest.fn()} />);
+  render(<TradeDetailModal isOpen trade={mockTradeData as any} onClose={jest.fn()} />);
     expect(screen.getByText(/CDS Trade Details/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Risk/i }));
     expect(screen.getByText(/Risk Analytics/i)).toBeInTheDocument();

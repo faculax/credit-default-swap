@@ -4,13 +4,13 @@ import { useSimulationPolling } from '../useSimulationPolling';
 
 // Deterministic mock: first call RUNNING, subsequent calls COMPLETE unless mockThrowError set
 let mockThrowError = false; // prefixed with 'mock' to allow safe jest.mock factory reference
-let callCount = 0;
+let mockCallCount = 0; // renamed for jest.mock factory safety
 jest.mock('../../services/simulationService', () => ({
   simulationService: {
     getSimulationResults: jest.fn(() => {
-      callCount += 1;
+      mockCallCount += 1;
       if (mockThrowError) return Promise.reject(new Error('network fail'));
-      if (callCount === 1) return Promise.resolve({ runId: 'r1', status: 'RUNNING' });
+      if (mockCallCount === 1) return Promise.resolve({ runId: 'r1', status: 'RUNNING' });
       return Promise.resolve({ runId: 'r1', status: 'COMPLETE' });
     })
   }
@@ -43,7 +43,7 @@ describe('useSimulationPolling', () => {
 
   it('polls until COMPLETE status', async () => {
     mockThrowError = false;
-    callCount = 0;
+  mockCallCount = 0;
     render(<Harness runId={'r1'} />);
     await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('RUNNING'));
     await act(async () => { jest.advanceTimersByTime(2100); });
@@ -52,7 +52,7 @@ describe('useSimulationPolling', () => {
 
   it('handles fetch error and stops polling', async () => {
     mockThrowError = true;
-    callCount = 0;
+  mockCallCount = 0;
     render(<Harness runId={'err1'} />);
     await waitFor(() => expect(screen.getByTestId('error').textContent).toMatch(/network fail/));
   });

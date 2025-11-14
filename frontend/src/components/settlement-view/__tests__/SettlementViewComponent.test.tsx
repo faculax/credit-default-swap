@@ -3,9 +3,10 @@ import { render, screen } from '@testing-library/react';
 import SettlementViewComponent, { SettlementView } from '../SettlementView';
 
 describe('SettlementViewComponent', () => {
-  it('renders loading state', () => {
+  it('renders loading state without empty message yet', () => {
     render(<SettlementViewComponent settlement={null} isLoading />);
-    expect(screen.getByText(/No settlement information/i)).not.toBeInTheDocument();
+    // Should not render the "No settlement information" placeholder while loading
+    expect(screen.queryByText(/No settlement information/i)).toBeNull();
   });
 
   it('renders error state', () => {

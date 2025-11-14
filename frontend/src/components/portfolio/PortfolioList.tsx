@@ -171,7 +171,7 @@ const PortfolioList: React.FC<PortfolioListProps> = ({ onPortfolioSelect }) => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-fd-text">
-                      {portfolio.constituents?.filter(c => c.active).length || 0}
+                      {portfolio.constituents?.filter((c: any) => c.active).length || 0}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

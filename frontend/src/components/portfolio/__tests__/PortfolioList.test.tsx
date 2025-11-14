@@ -1,15 +1,16 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import PortfolioList from '../PortfolioList';
+import { portfolioService } from '../../services/portfolioService';
 
-jest.mock('../../services/portfolioService', () => {
-  return {
-    portfolioService: {
-      getAllPortfolios: jest.fn().mockResolvedValue([
-        { id: 1, name: 'Test Portfolio', description: 'Desc', constituents: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
-      ])
-    }
-  };
+beforeEach(() => {
+  jest.spyOn(portfolioService, 'getAllPortfolios').mockResolvedValue([
+    { id: 1, name: 'Test Portfolio', description: 'Desc', constituents: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+  ] as any);
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
 });
 
 describe('PortfolioList', () => {

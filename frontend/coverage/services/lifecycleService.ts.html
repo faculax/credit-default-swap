@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">3.27% </span>
+                <span class="strong">14.75% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>2/61</span>
+                <span class='fraction'>9/61</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">23.52% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/17</span>
+                <span class='fraction'>4/17</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">15.78% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/19</span>
+                <span class='fraction'>3/19</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">3.38% </span>
+                <span class="strong">15.25% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>2/59</span>
+                <span class='fraction'>9/59</span>
             </div>
         
             
@@ -206,24 +206,24 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
@@ -242,19 +242,19 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -341,8 +341,8 @@ import { apiUrl } from '../config/api';
 // Gateway-routed lifecycle base
 const API_BASE = apiUrl('/lifecycle');
 &nbsp;
-async function <span class="fstat-no" title="function not covered" >handleResponse&lt;</span>T&gt;(response: Response): Promise&lt;T&gt; {
-<span class="cstat-no" title="statement not covered" >  if (!response.ok) {</span>
+async function handleResponse&lt;T&gt;(response: Response): Promise&lt;T&gt; {
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (!response.ok) {
     const text = <span class="cstat-no" title="statement not covered" >await response.text();</span>
     
     // Try to parse JSON error response for better error messages
@@ -359,7 +359,7 @@ async function <span class="fstat-no" title="function not covered" >handleRespon
 <span class="cstat-no" title="statement not covered" >      throw new Error(`Lifecycle API error ${response.status}: ${text}`);</span>
     }
   }
-<span class="cstat-no" title="statement not covered" >  return response.json();</span>
+  return response.json();
 }
 &nbsp;
 export const lifecycleService = {
@@ -377,20 +377,20 @@ export const lifecycleService = {
     const res = <span class="cstat-no" title="statement not covered" >await fetch(`${API_BASE}/trades/${tradeId}/coupon-schedule/range?${params.toString()}`);</span>
 <span class="cstat-no" title="statement not covered" >    return handleResponse&lt;CouponPeriod[]&gt;(res);</span>
   },
-<span class="fstat-no" title="function not covered" >  as</span>ync payCoupon(tradeId: number, periodId: number, payOnTime?: boolean): Promise&lt;CouponPeriod&gt; {
-    const requestBody = <span class="cstat-no" title="statement not covered" >payOnTime !== undefined ? { payOnTime } : undefined;</span>
-    const res = <span class="cstat-no" title="statement not covered" >await fetch(`${API_BASE}/trades/${tradeId}/coupon-periods/${periodId}/pay`, { </span>
+  async payCoupon(tradeId: number, periodId: number, payOnTime?: boolean): Promise&lt;CouponPeriod&gt; {
+    const requestBody = payOnTime !== undefined ? { payOnTime } : <span class="branch-1 cbranch-no" title="branch not covered" >undefined;</span>
+    const res = await fetch(`${API_BASE}/trades/${tradeId}/coupon-periods/${periodId}/pay`, { 
       method: 'POST',
-      headers: requestBody ? { 'Content-Type': 'application/json' } : {},
-      body: requestBody ? JSON.stringify(requestBody) : undefined
+      headers: requestBody ? { 'Content-Type': 'application/json' } : <span class="branch-1 cbranch-no" title="branch not covered" >{},</span>
+      body: requestBody ? JSON.stringify(requestBody) : <span class="branch-1 cbranch-no" title="branch not covered" >undefined</span>
     });
-<span class="cstat-no" title="statement not covered" >    return handleResponse&lt;CouponPeriod&gt;(res);</span>
+    return handleResponse&lt;CouponPeriod&gt;(res);
   },
-<span class="fstat-no" title="function not covered" >  as</span>ync unpayCoupon(tradeId: number, periodId: number): Promise&lt;CouponPeriod&gt; {
-    const res = <span class="cstat-no" title="statement not covered" >await fetch(`${API_BASE}/trades/${tradeId}/coupon-periods/${periodId}/unpay`, { </span>
+  async unpayCoupon(tradeId: number, periodId: number): Promise&lt;CouponPeriod&gt; {
+    const res = await fetch(`${API_BASE}/trades/${tradeId}/coupon-periods/${periodId}/unpay`, { 
       method: 'POST'
     });
-<span class="cstat-no" title="statement not covered" >    return handleResponse&lt;CouponPeriod&gt;(res);</span>
+    return handleResponse&lt;CouponPeriod&gt;(res);
   },
 &nbsp;
   // Accruals
@@ -478,7 +478,7 @@ export const lifecycleService = {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-14T09:32:15.160Z
+                at 2025-11-14T09:39:13.058Z
             </div>
         <script src="../prettify.js"></script>
         <script>
