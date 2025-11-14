@@ -1,0 +1,15 @@
+{
+  "pattern": "^[A-Z]{2,5}-\\d{3,}$",
+  "examples": [
+    "UTS-101",
+    "QA-2501",
+    "US-500"
+  ],
+  "reservedBranches": [
+    "main",
+    "develop",
+    "release/.*",
+    "hotfix/.*"
+  ],
+  "description": "Story identifiers must use an uppercase prefix followed by a hyphen and three or more digits."
+}

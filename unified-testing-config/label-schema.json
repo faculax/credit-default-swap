@@ -1,0 +1,35 @@
+{
+  "testTypes": [
+    {
+      "name": "unit",
+      "description": "Narrow-scope tests focusing on individual classes or functions"
+    },
+    {
+      "name": "integration",
+      "description": "Tests covering interactions between components or layers"
+    },
+    {
+      "name": "contract",
+      "description": "Consumer and producer contract tests enforcing service APIs"
+    },
+    {
+      "name": "e2e",
+      "description": "End-to-end scenarios exercising the system from the user journey"
+    }
+  ],
+  "services": [
+    {
+      "id": "backend",
+      "name": "Spring Boot Backend Services"
+    },
+    {
+      "id": "frontend",
+      "name": "React Frontend Application"
+    }
+  ],
+  "labels": {
+    "story": "story",
+    "testType": "testType",
+    "service": "service"
+  }
+}
