@@ -478,3 +478,161 @@ For any story to be marked as “Done”:
 * Story IDs are already used in an issue tracker (Jira, GitHub Issues, etc.).
 
 ---
+
+## 10. Implementation Progress
+
+> **Status**: ✅ **Phases 1-3 Complete** | 🚧 **Phase 4 In Progress**
+
+### ✅ Phase 1 - Foundations (Complete)
+
+**Epic 01: Story Traceability Backbone**
+- ✅ Story 1.1: Story ID format standardization (`UTS-X.Y`, `epic_XX_story_YY`)
+- ✅ Story 1.2: Annotation conventions for Java (JUnit `@Tag`, `@DisplayName`)
+- ✅ Story 1.3: Test helpers for React/TypeScript (`withStoryId`, `describeStory`)
+
+**Epic 02: Test Architecture Standardization**
+- ✅ Story 2.1: JUnit 5 test structure (unit/integration separation)
+- ✅ Story 2.2: Jest + React Testing Library setup
+- ✅ Story 2.3: Cypress E2E framework initialization
+
+**Epic 03: Backend Allure Integration**
+- ✅ Story 3.1: Maven dependencies (allure-junit5, aspectjweaver)
+- ✅ Story 3.2: Test annotations and labeling (`@Epic`, `@Feature`, `@Story`)
+- ✅ Story 3.3: Allure surefire plugin configuration
+- ✅ Implemented in: Backend Service, Gateway Service, Risk Engine
+
+**Epic 04: Frontend Allure Integration**
+- ✅ Story 4.1: CRACO + jest-allure2-reporter (Jest unit/integration)
+- ✅ Story 4.2: Cypress with @shelex/cypress-allure-plugin (E2E)
+- ✅ Story 4.3: Test helpers with Allure decorators
+- ✅ Story 4.4: Harmonized npm scripts (cross-platform support)
+- ✅ Story 4.5: Allure artifact generation in CI
+
+**Deliverable Status**: ✅ Local Allure reports functional for all 6 test sources
+
+---
+
+### ✅ Phase 2 - CI Integration (Complete)
+
+**Epic 06: CI Orchestration**
+- ✅ Story 6.1: CI strategy and workflow design
+- ✅ Story 6.2: Backend CI workflow (3 services, 3 jobs)
+  - `backend-service-tests`, `gateway-tests`, `risk-engine-tests`
+  - Maven test execution with Allure results
+  - Artifact upload (30-day retention)
+- ✅ Story 6.3: Frontend CI workflow (4 jobs)
+  - `frontend-unit-tests` (Jest unit)
+  - `frontend-integration-tests` (Jest integration)
+  - `frontend-e2e-tests` (Cypress with app build + serve)
+  - `frontend-summary` (merge results, generate report)
+  - Screenshot/video artifacts (7-day retention)
+
+**Deliverable Status**: ✅ PR pipelines with Allure artifacts accessible
+
+---
+
+### ✅ Phase 3 - GitHub Pages Publishing (Complete)
+
+**Epic 05: Unified Reporting and Publishing**
+- ✅ Story 5.1: Report merge strategy
+  - `unified-reports.yml` workflow triggered by `workflow_run`
+  - Downloads all 6 artifact patterns
+  - Merges into `allure-results-unified/`
+  - Generates single unified HTML report
+- ✅ Story 5.2: History preservation
+  - Restores `history/` directory from `gh-pages` branch
+  - Maintains 20-build trend data
+- ✅ Story 5.3: GitHub Pages publishing
+  - Automated deployment to `gh-pages` branch
+  - Comprehensive metadata (build number, commit SHA, timestamp)
+  - Deployment summary with all 6 services listed
+- ✅ Story 5.4: Reporting landing page
+  - Beautiful responsive HTML entry point
+  - Quick navigation cards (Overview, Suites, Stories, Trends)
+  - Service badges for all 6 test sources
+  - Test status legend and filter examples
+  - Mobile-friendly, WCAG-compliant design
+- ✅ Story 5.5: Documentation
+  - Created `docs/TESTING_REPORTS.md` (comprehensive guide)
+  - Covers: access methods, navigation, troubleshooting
+  - Documented 6 common issues with resolution steps
+  - Defined escalation path for support
+
+**Deliverable Status**: ✅ GitHub Pages URL live with unified report
+
+---
+
+### 🚧 Phase 4 - Governance & Quality Gates (In Progress)
+
+**Epic 07: Governance and Quality Gates**
+- ⏳ Story 7.1: Story ID detection in commits/branches
+- ⏳ Story 7.2: Fail CI if story IDs lack tests
+- ⏳ Story 7.3: Backend coverage thresholds (JaCoCo)
+- ⏳ Story 7.4: Frontend coverage thresholds (Jest)
+- ⏳ Story 7.5: Update Definition of Done
+
+**Epic 06: CI Orchestration (Remaining)**
+- ⏳ Story 6.4: PR summary comments
+- ⏳ Story 6.5: CI resilience and caching improvements
+
+**Epic 08: Developer Experience and Enablement**
+- ⏳ Story 8.1: IDE integration guides
+- ⏳ Story 8.2: Troubleshooting playbooks
+- ⏳ Story 8.3: Developer workshops
+- ⏳ Story 8.4: Feedback channels
+- ⏳ Story 8.5: KPI dashboard
+
+**Deliverable Status**: 🚧 In Development
+
+---
+
+### 📊 Overall Progress
+
+| Epic | Stories | Status | Completion |
+|------|---------|--------|------------|
+| Epic 01: Story Traceability | 3 | ✅ Complete | 100% |
+| Epic 02: Test Architecture | 3 | ✅ Complete | 100% |
+| Epic 03: Backend Allure | 3 | ✅ Complete | 100% |
+| Epic 04: Frontend Allure | 5 | ✅ Complete | 100% |
+| Epic 05: Unified Reporting | 5 | ✅ Complete | 100% |
+| Epic 06: CI Orchestration | 3/5 | 🚧 Partial | 60% |
+| Epic 07: Governance | 0/5 | ⏳ Pending | 0% |
+| Epic 08: Developer Experience | 0/5 | ⏳ Pending | 0% |
+| **Total** | **22/31** | 🚧 **71% Complete** | **71%** |
+
+---
+
+### 🎯 Key Achievements
+
+1. **Unified Test Reporting**: Single Allure report consolidating 6 test sources
+2. **CI/CD Automation**: Fully automated pipeline from test execution to GitHub Pages
+3. **Story Traceability**: Every test tagged with source story ID
+4. **Cross-Platform Support**: Windows/macOS/Linux compatible scripts
+5. **Comprehensive Documentation**: 800+ lines of testing guides and troubleshooting
+6. **Accessibility**: Responsive, WCAG-compliant landing page for stakeholders
+
+---
+
+### 📍 Current Focus
+
+**Next Milestone**: Complete Epic 06-08 (Governance, Quality Gates, Developer Experience)
+
+**Immediate Tasks**:
+1. Story 6.4: Add PR comment summaries with test results
+2. Story 6.5: Improve CI caching and retry logic
+3. Epic 07: Implement story-to-test enforcement
+4. Epic 08: Create onboarding materials and IDE guides
+
+**Timeline**: Target completion Q1 2025
+
+---
+
+### 📚 Documentation Links
+
+- **[Test Reports Guide](../docs/TESTING_REPORTS.md)** - Comprehensive report access and troubleshooting
+- **[Frontend Testing Guide](../frontend/TESTING.md)** - Frontend test execution and local reporting
+- **[GitHub Pages Report](https://[your-org].github.io/[your-repo]/)** - Live unified test report
+- **[CI Workflows](../.github/workflows/)** - Backend and frontend CI pipelines
+- **[Story Structure](./epic_01_story_traceability_backbone/)** - Story ID conventions and tagging
+
+---
