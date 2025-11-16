@@ -572,7 +572,7 @@ For any story to be marked as “Done”:
 - ⏳ Story 7.5: Update Definition of Done
 
 **Epic 06: CI Orchestration (Remaining)**
-- ⏳ Story 6.4: PR summary comments
+- ✅ Story 6.4: PR summary comments
 - ⏳ Story 6.5: CI resilience and caching improvements
 
 **Epic 08: Developer Experience and Enablement**
@@ -595,10 +595,10 @@ For any story to be marked as “Done”:
 | Epic 03: Backend Allure | 3 | ✅ Complete | 100% |
 | Epic 04: Frontend Allure | 5 | ✅ Complete | 100% |
 | Epic 05: Unified Reporting | 5 | ✅ Complete | 100% |
-| Epic 06: CI Orchestration | 3/5 | 🚧 Partial | 60% |
+| Epic 06: CI Orchestration | 4/5 | 🚧 Partial | 80% |
 | Epic 07: Governance | 0/5 | ⏳ Pending | 0% |
 | Epic 08: Developer Experience | 0/5 | ⏳ Pending | 0% |
-| **Total** | **22/31** | 🚧 **71% Complete** | **71%** |
+| **Total** | **23/31** | 🚧 **74% Complete** | **74%** |
 
 ---
 
@@ -618,7 +618,7 @@ For any story to be marked as “Done”:
 **Next Milestone**: Complete Epic 06-08 (Governance, Quality Gates, Developer Experience)
 
 **Immediate Tasks**:
-1. Story 6.4: Add PR comment summaries with test results
+1. Story 6.5: Add retry logic and caching improvements to CI
 2. Story 6.5: Improve CI caching and retry logic
 3. Epic 07: Implement story-to-test enforcement
 4. Epic 08: Create onboarding materials and IDE guides
