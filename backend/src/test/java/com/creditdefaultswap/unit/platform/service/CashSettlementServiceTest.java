@@ -6,6 +6,8 @@ import com.creditdefaultswap.platform.repository.CashSettlementRepository;
 import com.creditdefaultswap.platform.service.AuditService;
 import com.creditdefaultswap.platform.service.CashSettlementService;
 import com.creditdefaultswap.unit.platform.testing.story.StoryId;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +25,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@Feature("Backend Service")
+@Story("Cash Settlement")
 class CashSettlementServiceTest {
 
     @Mock

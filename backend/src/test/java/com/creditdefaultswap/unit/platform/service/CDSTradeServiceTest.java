@@ -5,6 +5,8 @@ import com.creditdefaultswap.platform.model.TradeStatus;
 import com.creditdefaultswap.platform.repository.CDSTradeRepository;
 import com.creditdefaultswap.platform.service.CDSTradeService;
 import com.creditdefaultswap.platform.service.NettingSetAssignmentService;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +24,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@Feature("Backend Service")
+@Story("CDS Trade Management")
 public class CDSTradeServiceTest {
 
     @Mock

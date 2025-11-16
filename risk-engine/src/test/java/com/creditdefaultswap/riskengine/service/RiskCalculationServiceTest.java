@@ -7,6 +7,8 @@ import com.creditdefaultswap.riskengine.ore.OreInputBuilder;
 import com.creditdefaultswap.riskengine.ore.OreOutputParser;
 import com.creditdefaultswap.riskengine.ore.OreProcessManager;
 import com.creditdefaultswap.riskengine.ore.OrePortfolioGenerator;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +29,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@Feature("Risk Engine Service")
+@Story("Risk Calculation")
 public class RiskCalculationServiceTest {
 
     @Mock

@@ -1,0 +1,225 @@
+name: PR Test Summary
+
+on:
+  workflow_run:
+    workflows: ["Backend Tests", "Frontend Tests"]
+    types: [completed]
+
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+
+jobs:
+  post-pr-comment:
+    name: Post Test Summary to PR
+    runs-on: ubuntu-latest
+    if: >
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion != 'cancelled'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download backend artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: allure-results-backend-*
+          path: backend-artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+      
+      - name: Download gateway artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: allure-results-gateway-*
+          path: backend-artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+      
+      - name: Download risk-engine artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: allure-results-risk-engine-*
+          path: backend-artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+      
+      - name: Download frontend unit artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: allure-results-frontend-unit-*
+          path: frontend-artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+      
+      - name: Download frontend integration artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: allure-results-frontend-integration-*
+          path: frontend-artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+      
+      - name: Download frontend E2E artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: allure-results-frontend-e2e-*
+          path: frontend-artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Merge all Allure results
+        run: |
+          mkdir -p allure-results-unified
+          
+          echo "🔄 Merging backend service results..."
+          if [ -d "backend-artifacts" ]; then
+            find backend-artifacts -name '*-result.json' -o -name '*-container.json' | while read file; do
+              cp "$file" allure-results-unified/ 2>/dev/null || true
+            done
+            BACKEND_COUNT=$(find allure-results-unified -name '*-result.json' | wc -l)
+            echo "✅ Backend results merged: $BACKEND_COUNT files"
+          fi
+          
+          echo "🔄 Merging frontend test results..."
+          if [ -d "frontend-artifacts" ]; then
+            find frontend-artifacts -name '*-result.json' -o -name '*-container.json' | while read file; do
+              cp "$file" allure-results-unified/ 2>/dev/null || true
+            done
+            FRONTEND_COUNT=$(find allure-results-unified -name '*-result.json' | wc -l)
+            echo "✅ Frontend results merged: Total now $FRONTEND_COUNT files"
+          fi
+          
+          TOTAL_RESULTS=$(find allure-results-unified -name '*-result.json' | wc -l)
+          echo "📊 Total merged results: $TOTAL_RESULTS"
+          
+          if [ "$TOTAL_RESULTS" -eq 0 ]; then
+            echo "::warning::No Allure results found to process"
+            exit 0
+          fi
+
+      - name: Generate PR comment
+        id: generate-comment
+        run: |
+          # Make script executable
+          chmod +x scripts/generate-pr-comment.sh
+          
+          # Generate comment with report URL (will be available after unified-reports workflow)
+          REPORT_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+          ./scripts/generate-pr-comment.sh allure-results-unified pr-comment.md "$REPORT_URL"
+          
+          # Read the generated comment and set as output (escaped for JSON)
+          COMMENT_BODY=$(cat pr-comment.md)
+          echo "comment<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMENT_BODY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Find PR number
+        id: find-pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const allPRs = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: '${{ github.event.workflow_run.head_sha }}'
+            });
+            
+            if (allPRs.data.length > 0) {
+              const pr = allPRs.data[0];
+              console.log(`Found PR #${pr.number}`);
+              return pr.number;
+            } else {
+              console.log('No PR found for this commit');
+              return null;
+            }
+
+      - name: Find existing comment
+        if: steps.find-pr.outputs.result != 'null'
+        id: find-comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = ${{ steps.find-pr.outputs.result }};
+            
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber
+            });
+            
+            const botComment = comments.data.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('## ✅ Test Results Summary') ||
+              comment.body.includes('## ❌ Test Results Summary')
+            );
+            
+            if (botComment) {
+              console.log(`Found existing comment: ${botComment.id}`);
+              return botComment.id;
+            } else {
+              console.log('No existing comment found');
+              return null;
+            }
+
+      - name: Post or update PR comment
+        if: steps.find-pr.outputs.result != 'null'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = ${{ steps.find-pr.outputs.result }};
+            const commentId = ${{ steps.find-comment.outputs.result }};
+            const commentBody = `${{ steps.generate-comment.outputs.comment }}`;
+            
+            const footer = `\n\n---\n📋 **Workflow:** [${{ github.event.workflow_run.name }}](${{ github.event.workflow_run.html_url }})\n🔗 **Run:** [#${{ github.event.workflow_run.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }})\n💾 **Commit:** [\`${{ github.event.workflow_run.head_sha }}\`.substring(0, 7)](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.event.workflow_run.head_sha }})`;
+            
+            const fullComment = commentBody + footer;
+            
+            if (commentId) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: commentId,
+                body: fullComment
+              });
+              console.log(`Updated comment ${commentId} on PR #${prNumber}`);
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: fullComment
+              });
+              console.log(`Created new comment on PR #${prNumber}`);
+            }
+
+      - name: Add workflow summary
+        if: always()
+        run: |
+          echo "## 💬 PR Comment Posted" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.find-pr.outputs.result }}" != "null" ]; then
+            echo "✅ Test summary posted to PR #${{ steps.find-pr.outputs.result }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "🔗 [View PR](${{ github.server_url }}/${{ github.repository }}/pull/${{ steps.find-pr.outputs.result }})" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ No PR found for commit ${{ github.event.workflow_run.head_sha }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "This is expected for direct pushes to branches without an open PR." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Test Results Preview:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat pr-comment.md >> $GITHUB_STEP_SUMMARY || echo "No comment generated" >> $GITHUB_STEP_SUMMARY

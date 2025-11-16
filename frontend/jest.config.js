@@ -59,37 +59,39 @@ module.exports = {
         resultsDir: 'allure-results',
         overwrite: false,
         
-        // Extract metadata from test names using tag patterns
-        testCase: {
-          labels: {
-            story: ({ testCase }) => {
-              const match = testCase.fullName.match(/\[story:([\w-]+(?:\.[\w-]+)?)\]/);
-              return match ? [match[1]] : [];
-            },
-            testType: ({ testCase }) => {
-              const match = testCase.fullName.match(/\[testType:([\w-]+)\]/);
-              return match ? [match[1]] : ['unit'];
-            },
-            service: ({ testCase }) => {
-              const match = testCase.fullName.match(/\[service:([\w-]+)\]/);
-              return match ? [match[1]] : ['frontend'];
-            },
-            microservice: ({ testCase }) => {
-              const match = testCase.fullName.match(/\[microservice:([\w-]+)\]/);
-              return match ? [match[1]] : [];
-            },
-            severity: ({ testCase }) => {
-              const match = testCase.fullName.match(/\[severity:([\w-]+)\]/);
-              return match ? [match[1]] : ['normal'];
-            },
-            epic: ({ testCase }) => {
-              const match = testCase.fullName.match(/\[epic:([\w-]+)\]/);
-              return match ? [match[1]] : [];
-            },
-            feature: ({ testCase }) => {
-              const match = testCase.fullName.match(/\[feature:([\w-]+)\]/);
-              return match ? [match[1]] : [];
-            }
+        // Extract labels from test names
+        testCase: ({ testCase }) => {
+          const fullName = testCase.fullName || '';
+          
+          // Extract feature (maps to Allure Feature in Behaviors)
+          const featureMatch = fullName.match(/\[feature:([\w\s-]+)\]/);
+          if (featureMatch) {
+            testCase.addLabel('feature', featureMatch[1]);
+          } else {
+            testCase.addLabel('feature', 'Frontend Service');
+          }
+          
+          // Extract epic (maps to Allure Story in Behaviors)
+          const epicMatch = fullName.match(/\[epic:([\w\s-]+)\]/);
+          if (epicMatch) {
+            testCase.addLabel('story', epicMatch[1]);
+          }
+          
+          // Extract story ID
+          const storyMatch = fullName.match(/\[story:([\w.-]+)\]/);
+          if (storyMatch) {
+            testCase.addLabel('story', storyMatch[1]);
+          }
+          
+          // Extract other metadata
+          const serviceMatch = fullName.match(/\[service:([\w-]+)\]/);
+          if (serviceMatch) {
+            testCase.addLabel('service', serviceMatch[1]);
+          }
+          
+          const testTypeMatch = fullName.match(/\[testType:([\w-]+)\]/);
+          if (testTypeMatch) {
+            testCase.addLabel('testType', testTypeMatch[1]);
           }
         },
         

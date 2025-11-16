@@ -109,17 +109,21 @@ export function withStoryId(options: StoryIdOptions) {
   }
 
   return (testName: string, testFn: TestFn, timeout?: number) => {
+    // Auto-generate feature label based on service for Allure Behaviors grouping
+    const defaultFeature = `Frontend Service`;
+    const defaultStory = microservice ? `${microservice} Tests` : `${testType} Tests`;
+    
     // Build metadata tags for Allure extraction
     const tags: string[] = [
       `[story:${storyId}]`,
       `[testType:${testType}]`,
-      `[service:${service}]`
+      `[service:${service}]`,
+      `[feature:${feature || defaultFeature}]`,
+      `[epic:${epic || defaultStory}]`
     ];
     
     if (microservice) tags.push(`[microservice:${microservice}]`);
     if (severity) tags.push(`[severity:${severity}]`);
-    if (epic) tags.push(`[epic:${epic}]`);
-    if (feature) tags.push(`[feature:${feature}]`);
     
     const enrichedTestName = `${testName} ${tags.join(' ')}`;
     
@@ -173,17 +177,21 @@ export function describeStory(options: StoryIdOptions, suiteName: string, suiteF
     );
   }
   
+  // Auto-generate feature label based on service for Allure Behaviors grouping
+  const defaultFeature = `Frontend Service`;
+  const defaultStory = microservice ? `${microservice} Tests` : `${testType} Tests`;
+  
   // Build metadata tags for Allure extraction
   const tags: string[] = [
     `[story:${storyId}]`,
     `[testType:${testType}]`,
-    `[service:${service}]`
+    `[service:${service}]`,
+    `[feature:${feature || defaultFeature}]`,
+    `[epic:${epic || defaultStory}]`
   ];
   
   if (microservice) tags.push(`[microservice:${microservice}]`);
   if (severity) tags.push(`[severity:${severity}]`);
-  if (epic) tags.push(`[epic:${epic}]`);
-  if (feature) tags.push(`[feature:${feature}]`);
   
   const enrichedSuiteName = `${suiteName} ${tags.join(' ')}`;
   
