@@ -5,6 +5,7 @@ import com.creditdefaultswap.platform.model.TradeStatus;
 import com.creditdefaultswap.platform.repository.CDSTradeRepository;
 import com.creditdefaultswap.platform.service.CDSTradeService;
 import com.creditdefaultswap.platform.service.NettingSetAssignmentService;
+import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,9 +24,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+@Epic("Unit Tests")
 @ExtendWith(MockitoExtension.class)
-@Feature("Backend Service")
-@Story("CDS Trade Management")
 public class CDSTradeServiceTest {
 
     @Mock
@@ -60,6 +60,8 @@ public class CDSTradeServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("CDS Trade Management - Save Trade")
     void testSaveTrade() {
         // Given
         when(nettingSetAssignmentService.determineNettingSetId(
@@ -78,6 +80,8 @@ public class CDSTradeServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("CDS Trade Management - Get Trade By ID")
     void testGetTradeById() {
         // Given
         when(cdsTradeRepository.findById(1L)).thenReturn(Optional.of(sampleTrade));
@@ -92,6 +96,8 @@ public class CDSTradeServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("CDS Trade Management - Get Trade Not Found")
     void testGetTradeById_NotFound() {
         // Given
         when(cdsTradeRepository.findById(999L)).thenReturn(Optional.empty());
@@ -105,6 +111,8 @@ public class CDSTradeServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("CDS Trade Management - Delete Trade")
     void testDeleteTrade() {
         // When
         cdsTradeService.deleteTrade(1L);
@@ -114,6 +122,8 @@ public class CDSTradeServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("CDS Trade Management - Get Trade Count")
     void testGetTradeCount() {
         // Given
         when(cdsTradeRepository.count()).thenReturn(5L);

@@ -5,7 +5,7 @@ import com.creditdefaultswap.platform.model.CashSettlement;
 import com.creditdefaultswap.platform.repository.CashSettlementRepository;
 import com.creditdefaultswap.platform.service.AuditService;
 import com.creditdefaultswap.platform.service.CashSettlementService;
-import com.creditdefaultswap.unit.platform.testing.story.StoryId;
+import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,9 +24,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@Epic("Unit Tests")
 @ExtendWith(MockitoExtension.class)
-@Feature("Backend Service")
-@Story("Cash Settlement")
 class CashSettlementServiceTest {
 
     @Mock
@@ -55,7 +54,8 @@ class CashSettlementServiceTest {
     }
 
     @Test
-    @StoryId(value = "UTS-403", testType = StoryId.TestType.UNIT, microservice = "cds-platform")
+    @Feature("Backend Service")
+    @Story("Cash Settlement - New Calculation")
     void calculateCashSettlement_Success_NewCalculation() {
         // Arrange
         when(cashSettlementRepository.findByCreditEventId(creditEventId))
@@ -86,6 +86,8 @@ class CashSettlementServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("Cash Settlement - Idempotent Existing Calculation")
     void calculateCashSettlement_ExistingCalculation_Idempotent() {
         // Arrange
         CashSettlement existingSettlement = new CashSettlement();
@@ -103,7 +105,8 @@ class CashSettlementServiceTest {
     }
 
     @Test
-    @StoryId(value = "UTS-403", testType = StoryId.TestType.UNIT, microservice = "cds-platform")
+    @Feature("Backend Service")
+    @Story("Cash Settlement - Custom Recovery Rate")
     void calculateCashSettlement_WithRecoveryRateOverride() {
         // Arrange
         BigDecimal customRecoveryRate = BigDecimal.valueOf(0.60);
@@ -125,6 +128,8 @@ class CashSettlementServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("Cash Settlement - Decimal Precision")
     void calculateCashSettlement_PrecisionTest() {
         // Arrange
         mockTrade.setNotionalAmount(BigDecimal.valueOf(1000000.37)); // Test precision
@@ -147,6 +152,8 @@ class CashSettlementServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("Cash Settlement - Rounding Half Up")
     void calculateCashSettlement_RoundingHalfUp() {
         // Arrange
         mockTrade.setNotionalAmount(BigDecimal.valueOf(100));
@@ -168,6 +175,8 @@ class CashSettlementServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("Cash Settlement - Get Settlement Found")
     void getCashSettlement_Found() {
         // Arrange
         CashSettlement settlement = new CashSettlement();
@@ -183,6 +192,8 @@ class CashSettlementServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("Cash Settlement - Get Settlement Not Found")
     void getCashSettlement_NotFound() {
         // Arrange
         when(cashSettlementRepository.findByCreditEventId(creditEventId))

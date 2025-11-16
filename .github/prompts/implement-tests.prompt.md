@@ -20,27 +20,73 @@ You are a senior software development assistant focused exclusively on creating 
    - Cross-check supporting implementation notes in `unified-testing-stories/` when present.
 
 2. **Traceability & Label Enforcement**
-   - Backend Java tests MUST use `@Feature` and `@Story` annotations at the class level:
-     - `@Feature("<Service Name>")` - e.g., `@Feature("Backend Service")`, `@Feature("Gateway Service")`
-     - `@Story("<Story Description>")` - e.g., `@Story("Credit Event Processing")`, `@Story("Cash Settlement")`
-     - These annotations create the Behaviors view grouping in Allure reports
-     - Import from: `io.qameta.allure.Feature` and `io.qameta.allure.Story`
-   - Frontend tests MUST include feature/epic tags in test names using helpers from `frontend/src/utils/testHelpers.ts`:
-     - Use `withStoryId()` or `describeStory()` which automatically add `[feature:Frontend Service]` and `[epic:microservice Tests]` tags
+   - Backend Java tests MUST use `@Epic`, `@Feature`, and `@Story` annotations at DIFFERENT LEVELS for proper 3-level Allure Behaviors hierarchy:
+     - **@Epic at CLASS level ONLY** - Categorizes the test TYPE:
+       - `@Epic("Unit Tests")` - Pure unit tests with mocked dependencies (@ExtendWith(MockitoExtension.class))
+       - `@Epic("Integration Tests")` - Tests using Spring context (@SpringBootTest) or database (Testcontainers)
+       - `@Epic("E2E Tests")` - Full system tests across multiple services
+     - **@Feature and @Story at METHOD level (each @Test method)** - Provides unique identity per test:
+       - `@Feature("<Service Name>")` - e.g., `@Feature("Backend Service")`, `@Feature("Gateway Service")`, `@Feature("Risk Engine Service")`
+       - `@Story("<Component> - <Specific Scenario>")` - e.g., `@Story("Credit Event Processing - Record New Event")`, `@Story("Cash Settlement - Custom Recovery Rate")`
+     - **CORRECT Pattern Example:**
+       ```java
+       @Epic("Unit Tests")  // Class level ONLY
+       @ExtendWith(MockitoExtension.class)
+       class CreditEventServiceTest {
+           
+           @Test
+           @Feature("Backend Service")  // Method level
+           @Story("Credit Event Processing - Record New Event")  // Method level
+           void testRecordCreditEvent_Success() { }
+           
+           @Test
+           @Feature("Backend Service")
+           @Story("Credit Event Processing - Idempotent Existing Event")
+           void testRecordCreditEvent_Idempotent() { }
+       }
+       ```
+     - **WRONG Pattern (DO NOT USE):**
+       ```java
+       @Epic("Unit Tests")
+       @Feature("Backend Service")  // ❌ Wrong - wastes Feature at class level
+       @Story("Credit Event Processing")  // ❌ Wrong - all methods share same story
+       class Test {
+           @Test
+           void testMethod() { }  // ❌ No Feature/Story - invisible in Behaviors
+       }
+       ```
+     - This creates proper 3-level Behaviors view: Epic (test type) → Feature (service) → Story (unique per test)
+     - Import from: `io.qameta.allure.Epic`, `io.qameta.allure.Feature`, and `io.qameta.allure.Story`
+     - Annotation order at class: @Epic, then other class annotations
+     - Annotation order at method: @Test, @Feature, @Story, then test method
+   - Frontend tests MUST include epic/feature/story tags in test names using helpers from `frontend/src/utils/testHelpers.ts`:
+     - Use `withStoryId({ storyId: '...', testType: 'unit|integration|e2e', ... })` or `describeStory()` with testType parameter
+     - Helper automatically generates epic label based on testType: 'unit' → 'Unit Tests', 'integration' → 'Integration Tests', 'e2e' → 'E2E Tests'
+     - Adds tags: `[epic:Unit Tests]`, `[feature:Frontend Service]`, `[story:...]` to test names
      - A post-processing script (`scripts/add-frontend-labels.ps1`) extracts these tags into Allure labels
    - Do not invent new story IDs. If one is missing, STOP and surface an error.
 
 3. **Test Authoring Standards**
-   - **Backend**: Spring Boot, JUnit 5, Mockito/Testcontainers as appropriate. Follow existing package structures and naming patterns. Integration tests should bootstrap Spring context or Testcontainers when touching persistence. Add `@Feature` and `@Story` annotations at class level for Allure Behaviors grouping.
-   - **Frontend**: React TypeScript with Jest + React Testing Library or Cypress/Playwright for E2E. Mirror component folder structures and reuse shared testing utilities. Use `withStoryId()` or `describeStory()` helpers to add feature/epic tags to test names.
-   - **Contract / API**: Apply Pact or HTTP-based tests consistent with repository conventions. Ensure providers and consumers emit Allure labels using `@Feature`/`@Story` or tag-based approaches.
+   - **Backend**: Spring Boot, JUnit 5, Mockito/Testcontainers as appropriate. Follow existing package structures and naming patterns. Integration tests should bootstrap Spring context or Testcontainers when touching persistence. 
+     - **Allure Annotations Pattern (CRITICAL):**
+       - Add `@Epic("<Test Type>")` at CLASS level ONLY to categorize test type
+       - Add `@Feature("<Service Name>")` and `@Story("<Component> - <Specific Scenario>")` at EACH @Test METHOD level
+       - This creates proper 3-level Behaviors hierarchy: Epic (test type) → Feature (service) → Story (unique per test)
+       - See `docs/testing/CORRECT-ALLURE-PATTERN.md` for visual examples
+     - Use `@Epic("Unit Tests")` for pure unit tests with mocks (@ExtendWith(MockitoExtension.class))
+     - Use `@Epic("Integration Tests")` for tests with Spring context (@SpringBootTest) or database
+   - **Frontend**: React TypeScript with Jest + React Testing Library or Cypress/Playwright for E2E. Mirror component folder structures and reuse shared testing utilities. Use `withStoryId({ storyId: '...', testType: 'unit|integration|e2e', ... })` or `describeStory()` helpers to add epic/feature/story tags to test names. The testType parameter auto-generates the appropriate epic label.
+   - **Contract / API**: Apply Pact or HTTP-based tests consistent with repository conventions. Ensure providers and consumers emit Allure labels using `@Epic` at class level, `@Feature`/`@Story` at method level, or tag-based approaches for non-Java tests.
    - Prefer deterministic data setups. Wrap asynchronous flows with timeouts that keep CI reliable. Comment only when test intent would otherwise be unclear.
 
 4. **Validation & Tooling**
    - Update or create test fixtures, mocks, seed data, and configuration required for deterministic execution.
    - If tests depend on new utilities (e.g., Allure metadata helpers, test decorators), add them to the appropriate shared module with coverage.
    - Run the narrowest possible test command (e.g., `mvn -f backend/pom.xml -Dtest=ClassName test`, `npm test -- <pattern>`) and capture results. If local execution is impossible, provide exact command and reason.
-   - Verify `@Feature` and `@Story` annotations are present on backend test classes. For frontend, ensure test names include feature/epic tags via helper functions.
+   - **Verify correct Allure annotation placement:**
+     - Backend: `@Epic` at class level, `@Feature` and `@Story` at EACH @Test method level
+     - Frontend: Test names include epic/feature/story tags via helper functions with testType parameter
+   - Each test method MUST have its own unique `@Story` annotation describing its specific scenario
 
 5. **Reporting & Output Contract**
 
@@ -103,7 +149,8 @@ Respond with JSON adhering to the schema below. Do NOT include additional narrat
 - **Story catalog**: `user-stories/`
 - **Implementation playbooks**: `unified-testing-stories/`
 - **Allure annotations guide**: `docs/testing/allure-annotations.md`
-- **Backend test examples**: `backend/src/test/java/**/*Test.java` (see `@Feature`/`@Story` usage)
+- **CORRECT Allure pattern**: `docs/testing/CORRECT-ALLURE-PATTERN.md` ⭐ **READ THIS FIRST**
+- **Backend test examples**: `backend/src/test/java/**/*Test.java` (see @Epic at class, @Feature/@Story at method)
 - **Frontend test helpers**: `frontend/src/utils/testHelpers.ts` (see `withStoryId()`, `describeStory()`)
 - **Post-processing script**: `scripts/add-frontend-labels.ps1`
 

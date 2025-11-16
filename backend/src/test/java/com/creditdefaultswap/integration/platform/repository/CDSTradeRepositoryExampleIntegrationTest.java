@@ -5,7 +5,9 @@ import com.creditdefaultswap.platform.model.CDSTrade;
 import com.creditdefaultswap.platform.model.SettlementMethod;
 import com.creditdefaultswap.platform.model.TradeStatus;
 import com.creditdefaultswap.platform.repository.CDSTradeRepository;
-import com.creditdefaultswap.unit.platform.testing.story.StoryId;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * interactions with an embedded H2 database. Integration tests are slower but verify
  * that components work together correctly.
  */
+@Epic("Integration Tests")
 @SpringBootTest(classes = CDSPlatformApplication.class)
 @ActiveProfiles("test")
 @Transactional
@@ -34,7 +37,8 @@ class CDSTradeRepositoryExampleIntegrationTest {
     private CDSTradeRepository tradeRepository;
     
     @Test
-    @StoryId(value = "UTS-2.1", testType = StoryId.TestType.INTEGRATION, microservice = "cds-platform")
+    @Feature("Backend Service")
+    @Story("CDS Trade Repository - Save And Retrieve")
     void shouldSaveAndRetrieveCDSTrade() {
         // Arrange
         CDSTrade trade = new CDSTrade();
@@ -67,7 +71,8 @@ class CDSTradeRepositoryExampleIntegrationTest {
     }
     
     @Test
-    @StoryId(value = "UTS-2.1", testType = StoryId.TestType.INTEGRATION, microservice = "cds-platform")
+    @Feature("Backend Service")
+    @Story("CDS Trade Repository - Find All Trades")
     void shouldFindAllTrades() {
         // Arrange
         CDSTrade trade1 = createExampleTrade("ACME Corp", BigDecimal.valueOf(1000000));
@@ -86,7 +91,8 @@ class CDSTradeRepositoryExampleIntegrationTest {
     }
     
     @Test
-    @StoryId(value = "UTS-2.1", testType = StoryId.TestType.INTEGRATION, microservice = "cds-platform")
+    @Feature("Backend Service")
+    @Story("CDS Trade Repository - Delete By ID")
     void shouldDeleteTradeById() {
         // Arrange
         CDSTrade trade = createExampleTrade("Delete Example", BigDecimal.valueOf(100000));

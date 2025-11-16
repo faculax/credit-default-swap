@@ -111,7 +111,18 @@ export function withStoryId(options: StoryIdOptions) {
   return (testName: string, testFn: TestFn, timeout?: number) => {
     // Auto-generate feature label based on service for Allure Behaviors grouping
     const defaultFeature = `Frontend Service`;
-    const defaultStory = microservice ? `${microservice} Tests` : `${testType} Tests`;
+    
+    // Determine Epic based on test type for 3-level hierarchy in Allure Behaviors
+    let defaultEpic: string;
+    if (testType === 'unit') {
+      defaultEpic = 'Unit Tests';
+    } else if (testType === 'integration') {
+      defaultEpic = 'Integration Tests';
+    } else if (testType === 'e2e') {
+      defaultEpic = 'E2E Tests';
+    } else {
+      defaultEpic = `${testType} Tests`;
+    }
     
     // Build metadata tags for Allure extraction
     const tags: string[] = [
@@ -119,7 +130,7 @@ export function withStoryId(options: StoryIdOptions) {
       `[testType:${testType}]`,
       `[service:${service}]`,
       `[feature:${feature || defaultFeature}]`,
-      `[epic:${epic || defaultStory}]`
+      `[epic:${epic || defaultEpic}]`
     ];
     
     if (microservice) tags.push(`[microservice:${microservice}]`);
@@ -179,7 +190,18 @@ export function describeStory(options: StoryIdOptions, suiteName: string, suiteF
   
   // Auto-generate feature label based on service for Allure Behaviors grouping
   const defaultFeature = `Frontend Service`;
-  const defaultStory = microservice ? `${microservice} Tests` : `${testType} Tests`;
+  
+  // Determine Epic based on test type for 3-level hierarchy in Allure Behaviors
+  let defaultEpic: string;
+  if (testType === 'unit') {
+    defaultEpic = 'Unit Tests';
+  } else if (testType === 'integration') {
+    defaultEpic = 'Integration Tests';
+  } else if (testType === 'e2e') {
+    defaultEpic = 'E2E Tests';
+  } else {
+    defaultEpic = `${testType} Tests`;
+  }
   
   // Build metadata tags for Allure extraction
   const tags: string[] = [
@@ -187,7 +209,7 @@ export function describeStory(options: StoryIdOptions, suiteName: string, suiteF
     `[testType:${testType}]`,
     `[service:${service}]`,
     `[feature:${feature || defaultFeature}]`,
-    `[epic:${epic || defaultStory}]`
+    `[epic:${epic || defaultEpic}]`
   ];
   
   if (microservice) tags.push(`[microservice:${microservice}]`);

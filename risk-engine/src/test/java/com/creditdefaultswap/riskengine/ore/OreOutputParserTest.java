@@ -1,6 +1,9 @@
 package com.creditdefaultswap.riskengine.ore;
 
 import com.creditdefaultswap.riskengine.model.RiskMeasures;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -10,6 +13,7 @@ import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Epic("Unit Tests")
 class OreOutputParserTest {
     
     private OreOutputParser oreOutputParser;
@@ -24,6 +28,8 @@ class OreOutputParserTest {
     }
     
     @Test
+    @Feature("Risk Engine Service")
+    @Story("ORE Output Parsing - Parse Valid Output")
     void testParseRiskMeasures_ValidOutput() {
         String validOreOutput = """
             <?xml version="1.0"?>
@@ -71,6 +77,8 @@ class OreOutputParserTest {
     }
     
     @Test
+    @Feature("Risk Engine Service")
+    @Story("ORE Output Parsing - Parse Invalid XML")
     void testParseRiskMeasures_InvalidXml() {
         String invalidXml = "not valid xml";
         
@@ -83,6 +91,8 @@ class OreOutputParserTest {
     }
     
     @Test
+    @Feature("Risk Engine Service")
+    @Story("ORE Output Parsing - Validate Valid XML")
     void testIsValidOutput_ValidXml() {
         String validOreOutput = """
             <?xml version="1.0"?>
@@ -97,6 +107,8 @@ class OreOutputParserTest {
     }
     
     @Test
+    @Feature("Risk Engine Service")
+    @Story("ORE Output Parsing - Validate Invalid XML")
     void testIsValidOutput_InvalidXml() {
         assertFalse(oreOutputParser.isValidOutput("invalid xml"));
         assertFalse(oreOutputParser.isValidOutput(null));
@@ -104,6 +116,8 @@ class OreOutputParserTest {
     }
     
     @Test
+    @Feature("Risk Engine Service")
+    @Story("ORE Output Parsing - Extract Error Message")
     void testExtractErrorMessage() {
         String errorOutput = """
             <?xml version="1.0"?>
@@ -118,6 +132,8 @@ class OreOutputParserTest {
     }
     
     @Test
+    @Feature("Risk Engine Service")
+    @Story("ORE Output Parsing - Extract Warning Message")
     void testExtractErrorMessage_WithWarning() {
         String warningOutput = """
             <?xml version="1.0"?>

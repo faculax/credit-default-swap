@@ -9,7 +9,7 @@ import com.creditdefaultswap.platform.repository.PhysicalSettlementRepository;
 import com.creditdefaultswap.platform.service.AuditService;
 import com.creditdefaultswap.platform.service.CashSettlementService;
 import com.creditdefaultswap.platform.service.CreditEventService;
-import com.creditdefaultswap.unit.platform.testing.story.StoryId;
+import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,9 +31,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+@Epic("Unit Tests")
 @ExtendWith(MockitoExtension.class)
-@Feature("Backend Service")
-@Story("Credit Event Processing")
 class CreditEventServiceTest {
 
     @Mock
@@ -75,7 +74,8 @@ class CreditEventServiceTest {
     }
 
     @Test
-    @StoryId(value = "UTS-401", testType = StoryId.TestType.INTEGRATION, microservice = "cds-platform")
+    @Feature("Backend Service")
+    @Story("Credit Event Processing - Record New Event")
     void recordCreditEvent_Success_NewEvent() {
         // Arrange
         when(tradeRepository.findById(1L)).thenReturn(Optional.of(mockTrade));
@@ -112,6 +112,8 @@ class CreditEventServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("Credit Event Processing - Idempotent Existing Event")
     void recordCreditEvent_Success_ExistingEvent_Idempotent() {
         // Arrange
         when(tradeRepository.findById(1L)).thenReturn(Optional.of(mockTrade));
@@ -135,6 +137,8 @@ class CreditEventServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("Credit Event Processing - Trade Not Found Error")
     void recordCreditEvent_TradeNotFound_ThrowsException() {
         // Arrange
         when(tradeRepository.findById(1L)).thenReturn(Optional.empty());
@@ -149,6 +153,8 @@ class CreditEventServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("Credit Event Processing - Inactive Trade Error")
     void recordCreditEvent_TradeNotActive_ThrowsException() {
         // Arrange
         mockTrade.setTradeStatus(TradeStatus.CANCELLED);
@@ -164,6 +170,8 @@ class CreditEventServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("Credit Event Processing - Future Event Date Validation")
     void recordCreditEvent_InvalidEventDate_Future_ThrowsException() {
         // Arrange
         validRequest.setEventDate(LocalDate.now().plusDays(1));
@@ -178,6 +186,8 @@ class CreditEventServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("Credit Event Processing - Notice Date Validation")
     void recordCreditEvent_InvalidNoticeDateBeforeEventDate_ThrowsException() {
         // Arrange
         validRequest.setEventDate(LocalDate.now());
@@ -193,6 +203,8 @@ class CreditEventServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("Credit Event Processing - Physical Settlement Creation")
     void recordCreditEvent_PhysicalSettlement_CreatesScaffold() {
         // Arrange
         validRequest.setSettlementMethod(SettlementMethod.PHYSICAL);
@@ -221,6 +233,8 @@ class CreditEventServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("Credit Event Processing - Bankruptcy Propagation")
     void recordCreditEvent_BankruptcyEvent_PropagatesOtherActiveTrades() {
         // Arrange
         validRequest.setEventType(CreditEventType.BANKRUPTCY);
@@ -273,6 +287,8 @@ class CreditEventServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("Credit Event Processing - Restructuring Propagation")
     void recordCreditEvent_RestructuringEvent_PropagatesOtherActiveTrades() {
         // Arrange
         validRequest.setEventType(CreditEventType.RESTRUCTURING);
@@ -317,6 +333,8 @@ class CreditEventServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("Credit Event Processing - Non-Terminal Event Behavior")
     void recordCreditEvent_NonTerminalEvent_DoesNotPropagate() {
         // Arrange
         validRequest.setEventType(CreditEventType.FAILURE_TO_PAY);

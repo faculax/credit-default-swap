@@ -8,6 +8,9 @@ import com.creditdefaultswap.platform.model.TradeStatus;
 import com.creditdefaultswap.platform.repository.CDSTradeRepository;
 import com.creditdefaultswap.platform.repository.CouponPeriodRepository;
 import com.creditdefaultswap.platform.service.CouponScheduleService;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Test class for CouponScheduleService - Epic 5 Story 5.1
  */
+@Epic("Integration Tests")
 @SpringBootTest(classes = CDSPlatformApplication.class)
 @ActiveProfiles("test")
 @Transactional
@@ -65,6 +69,8 @@ public class CouponScheduleServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("Coupon Schedule Service - Generate IMM Schedule")
     void testGenerateImmSchedule() {
         // Generate IMM schedule
         List<CouponPeriod> schedule = couponScheduleService.generateImmSchedule(testTrade.getId());
@@ -94,6 +100,8 @@ public class CouponScheduleServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("Coupon Schedule Service - Get Coupon Periods")
     void testGetCouponPeriods() {
         // First generate a schedule
         couponScheduleService.generateImmSchedule(testTrade.getId());
@@ -106,6 +114,8 @@ public class CouponScheduleServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("Coupon Schedule Service - Update Schedule For Notional Change")
     void testUpdateScheduleForNotionalChange() {
         // Generate initial schedule
         List<CouponPeriod> initialSchedule = couponScheduleService.generateImmSchedule(testTrade.getId());
@@ -129,6 +139,8 @@ public class CouponScheduleServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("Coupon Schedule Service - Get Coupon Periods In Range")
     void testGetCouponPeriodsInRange() {
         // Generate schedule
         couponScheduleService.generateImmSchedule(testTrade.getId());
@@ -152,6 +164,8 @@ public class CouponScheduleServiceTest {
     }
 
     @Test
+    @Feature("Backend Service")
+    @Story("Coupon Schedule Service - Schedule Not Duplicated")
     void testScheduleNotDuplicated() {
         // Generate schedule twice
         List<CouponPeriod> firstGeneration = couponScheduleService.generateImmSchedule(testTrade.getId());

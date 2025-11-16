@@ -1,6 +1,8 @@
 package com.creditdefaultswap.unit.platform.util;
 
-import com.creditdefaultswap.unit.platform.testing.story.StoryId;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -13,10 +15,12 @@ import static org.junit.jupiter.api.Assertions.*;
  * This is a pure unit test with no external dependencies or Spring context.
  * Unit tests should be fast (<100ms) and test individual methods in isolation.
  */
+@Epic("Unit Tests")
 class DateUtilsExampleTest {
     
     @Test
-    @StoryId(value = "UTS-2.1", testType = StoryId.TestType.UNIT, microservice = "cds-platform")
+    @Feature("Backend Service")
+    @Story("Date Utilities - Calculate Days Between")
     void shouldCalculateDaysBetweenTwoDates() {
         // Arrange
         LocalDate startDate = LocalDate.of(2024, 1, 1);
@@ -30,7 +34,8 @@ class DateUtilsExampleTest {
     }
     
     @Test
-    @StoryId(value = "UTS-2.1", testType = StoryId.TestType.UNIT, microservice = "cds-platform")
+    @Feature("Backend Service")
+    @Story("Date Utilities - Leap Year Validation")
     void shouldHandleLeapYearCorrectly() {
         // Arrange
         LocalDate leapYear = LocalDate.of(2024, 2, 29);
@@ -46,7 +51,8 @@ class DateUtilsExampleTest {
     }
     
     @Test
-    @StoryId(value = "UTS-2.1", testType = StoryId.TestType.UNIT, microservice = "cds-platform")
+    @Feature("Backend Service")
+    @Story("Date Utilities - Past Date Validation")
     void shouldValidateDateIsInPast() {
         // Arrange
         LocalDate pastDate = LocalDate.now().minusDays(1);
