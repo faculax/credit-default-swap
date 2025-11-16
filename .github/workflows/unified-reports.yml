@@ -208,6 +208,22 @@ jobs:
           
           echo "✅ Metadata added to report"
       
+      - name: Add landing page
+        run: |
+          # Copy landing page to root of report
+          cp docs/reporting/landing-page.html allure-report/landing.html
+          
+          # Rename Allure's index.html to report.html
+          mv allure-report/index.html allure-report/report.html
+          
+          # Copy landing page as new index.html
+          cp docs/reporting/landing-page.html allure-report/index.html
+          
+          # Update link in landing page to point to report.html
+          sed -i 's/href="index.html"/href="report.html"/g' allure-report/index.html
+          
+          echo "✅ Landing page added as entry point"
+      
       - name: Setup Pages
         uses: actions/configure-pages@v4
       

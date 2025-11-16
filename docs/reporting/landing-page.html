@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CDS Platform - Unified Test Reporting Portal">
+    <title>CDS Platform - Test Reports</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-bg: #1e293b;
+            --light-bg: #f8fafc;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 
+                         'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .hero-cta {
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .card p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .card-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-link:hover {
+            color: var(--secondary-color);
+        }
+
+        .services-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .service-badge {
+            padding: 1rem;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .service-badge:hover {
+            border-color: var(--primary-color);
+            background: var(--light-bg);
+        }
+
+        .service-badge h4 {
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .service-badge .test-count {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .legend {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .legend h2 {
+            margin-bottom: 1rem;
+        }
+
+        .legend-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        .status-passed { background: var(--success-color); }
+        .status-failed { background: var(--danger-color); }
+        .status-broken { background: var(--warning-color); }
+        .status-skipped { background: var(--text-secondary); }
+
+        footer {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .info-box strong {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧪 CDS Platform Test Reports</h1>
+            <p class="subtitle">Unified Quality Dashboard for Credit Default Swap Trading Platform</p>
+            <div class="hero-cta">
+                <a href="index.html" class="btn btn-primary">
+                    📊 View Latest Test Report →
+                </a>
+            </div>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-icon">📈</div>
+                <h3>Overview Dashboard</h3>
+                <p>View comprehensive test statistics, pass rates, and trends across all services.</p>
+                <a href="index.html#overview" class="card-link">
+                    Go to Overview →
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">🔍</div>
+                <h3>Test Suites</h3>
+                <p>Browse all test suites organized by service and functionality.</p>
+                <a href="index.html#suites" class="card-link">
+                    Browse Suites →
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">📋</div>
+                <h3>Story Coverage</h3>
+                <p>Track test coverage for user stories and requirements.</p>
+                <a href="index.html#behaviors" class="card-link">
+                    View Stories →
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">📊</div>
+                <h3>Trend Analysis</h3>
+                <p>Historical data showing test stability and improvements over time.</p>
+                <a href="index.html#timeline" class="card-link">
+                    View Trends →
+                </a>
+            </div>
+        </div>
+
+        <div class="services-section">
+            <h2>🎯 Tested Services</h2>
+            <p>Our unified report includes test results from the following services:</p>
+            
+            <div class="services-grid">
+                <div class="service-badge">
+                    <h4>🔧 Backend Service</h4>
+                    <p class="test-count">Core business logic • Unit + Integration tests</p>
+                </div>
+
+                <div class="service-badge">
+                    <h4>🌐 Gateway Service</h4>
+                    <p class="test-count">API Gateway • Security + Routing tests</p>
+                </div>
+
+                <div class="service-badge">
+                    <h4>⚡ Risk Engine</h4>
+                    <p class="test-count">Risk calculations • Performance tests</p>
+                </div>
+
+                <div class="service-badge">
+                    <h4>💻 Frontend (Unit)</h4>
+                    <p class="test-count">Component tests • React Testing Library</p>
+                </div>
+
+                <div class="service-badge">
+                    <h4>🔗 Frontend (Integration)</h4>
+                    <p class="test-count">API integration • MSW mocking</p>
+                </div>
+
+                <div class="service-badge">
+                    <h4>🎭 Frontend (E2E)</h4>
+                    <p class="test-count">User workflows • Cypress tests</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <h2>📖 Understanding Test Results</h2>
+            
+            <h3 style="margin-top: 1.5rem;">Test Status Legend</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color status-passed"></div>
+                    <span><strong>Passed:</strong> Test executed successfully</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color status-failed"></div>
+                    <span><strong>Failed:</strong> Test assertion failed</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color status-broken"></div>
+                    <span><strong>Broken:</strong> Test error (not assertion)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color status-skipped"></div>
+                    <span><strong>Skipped:</strong> Test not executed</span>
+                </div>
+            </div>
+
+            <div class="info-box" style="margin-top: 1.5rem;">
+                <strong>💡 Pro Tip:</strong> Use the "Behaviors" tab to filter tests by story ID (e.g., UTS-2.2) 
+                and track requirement coverage across all services.
+            </div>
+        </div>
+
+        <div class="services-section">
+            <h2>🚀 Quick Navigation Guide</h2>
+            
+            <h3 style="margin-top: 1.5rem;">Finding What You Need</h3>
+            <ul style="margin-left: 2rem; color: var(--text-secondary);">
+                <li style="margin-bottom: 0.5rem;">
+                    <strong>Overview Tab:</strong> High-level dashboard with pass rates and trends
+                </li>
+                <li style="margin-bottom: 0.5rem;">
+                    <strong>Suites Tab:</strong> All test suites grouped by package/module
+                </li>
+                <li style="margin-bottom: 0.5rem;">
+                    <strong>Behaviors Tab:</strong> Tests organized by epic/feature/story
+                </li>
+                <li style="margin-bottom: 0.5rem;">
+                    <strong>Packages Tab:</strong> Tests grouped by code package structure
+                </li>
+                <li style="margin-bottom: 0.5rem;">
+                    <strong>Timeline Tab:</strong> Visual timeline of test execution
+                </li>
+                <li style="margin-bottom: 0.5rem;">
+                    <strong>Categories Tab:</strong> Tests grouped by failure categories
+                </li>
+            </ul>
+
+            <h3 style="margin-top: 1.5rem;">Filter by Service</h3>
+            <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+                Use Allure's built-in filters to show results for specific services:
+            </p>
+            <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+                <li>Filter by <code>service:backend</code> for backend tests</li>
+                <li>Filter by <code>service:frontend</code> for frontend tests</li>
+                <li>Filter by <code>testType:e2e</code> for end-to-end tests</li>
+                <li>Filter by <code>testType:unit</code> for unit tests</li>
+            </ul>
+        </div>
+
+        <footer>
+            <p>
+                <strong>CDS Platform</strong> - Unified Testing Infrastructure
+            </p>
+            <p style="margin-top: 0.5rem;">
+                Built with ❤️ using Allure Framework • 
+                <a href="https://github.com/faculax/credit-default-swap" target="_blank">GitHub Repository</a> •
+                <a href="https://docs.qameta.io/allure/" target="_blank">Allure Docs</a>
+            </p>
+            <p style="margin-top: 1rem; font-size: 0.9rem;">
+                Questions or issues? Contact the QA team or file an issue on GitHub.
+            </p>
+        </footer>
+    </div>
+</body>
+</html>
