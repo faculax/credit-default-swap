@@ -157,7 +157,6 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
     const today = new Date();
     const target = new Date(today);
     
-    let addedDays = 0;
     let daysToAdd = days;
     
     while (daysToAdd > 0) {
@@ -165,7 +164,6 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
       const dayOfWeek = target.getDay();
       // Skip weekends (0 = Sunday, 6 = Saturday)
       if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-        addedDays++;
         daysToAdd--;
       }
     }

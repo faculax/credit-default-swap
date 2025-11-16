@@ -582,11 +582,12 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
   );
 };
 
-const MetricCard: React.FC<{ label: string; value: string }> = ({ label, value }) => (
-  <div className="bg-fd-dark p-4 rounded-lg border border-fd-border">
-    <p className="text-sm text-fd-text-muted mb-1">{label}</p>
-    <p className="text-xl font-semibold text-fd-text">{value}</p>
-  </div>
-);
+// Commented out as not currently used in UI - can be re-enabled when needed
+// const MetricCard: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+//   <div className="bg-fd-dark p-4 rounded-lg border border-fd-border">
+//     <p className="text-sm text-fd-text-muted mb-1">{label}</p>
+//     <p className="text-xl font-semibold text-fd-text">{value}</p>
+//   </div>
+// );
 
 export default PortfolioDetail;

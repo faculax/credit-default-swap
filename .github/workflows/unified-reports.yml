@@ -164,8 +164,46 @@ jobs:
       
       - name: Generate unified Allure report
         run: |
-          allure generate allure-results-unified --clean -o allure-report
-          echo "::notice::Unified Allure HTML report generated"
+          # Validate JSON files before generating report
+          echo "Validating Allure result files..."
+          INVALID_FILES=0
+          for file in allure-results-unified/*.json; do
+            if [ -f "$file" ]; then
+              if ! jq empty "$file" 2>/dev/null; then
+                echo "::warning::Invalid JSON file: $file"
+                INVALID_FILES=$((INVALID_FILES + 1))
+                mv "$file" "$file.invalid"
+              fi
+            fi
+          done
+          
+          if [ $INVALID_FILES -gt 0 ]; then
+            echo "::warning::Moved $INVALID_FILES invalid JSON files"
+          fi
+          
+          # Ensure executor.json exists to prevent NullPointerException
+          if [ ! -f "allure-results-unified/executor.json" ]; then
+            cat > allure-results-unified/executor.json << EOF
+          {
+            "name": "GitHub Actions",
+            "type": "github",
+            "buildName": "Run #${{ github.run_number }}",
+            "buildUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "reportUrl": "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/",
+            "reportName": "Unified Test Report"
+          }
+          EOF
+          fi
+          
+          # Generate report with better error handling
+          if ! allure generate allure-results-unified --clean -o allure-report; then
+            echo "::error::Allure report generation failed"
+            echo "Listing allure-results-unified contents:"
+            ls -la allure-results-unified/
+            exit 1
+          fi
+          
+          echo "::notice::Unified Allure HTML report generated successfully"
       
       - name: Add comprehensive metadata
         run: |
