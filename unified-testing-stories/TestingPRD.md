@@ -571,9 +571,12 @@ For any story to be marked as “Done”:
 - ⏳ Story 7.4: Frontend coverage thresholds (Jest)
 - ⏳ Story 7.5: Update Definition of Done
 
-**Epic 06: CI Orchestration (Remaining)**
+**Epic 06: CI Orchestration**
+- ✅ Story 6.1: CI workflow topology
+- ✅ Story 6.2: Backend CI jobs  
+- ✅ Story 6.3: Frontend CI jobs
 - ✅ Story 6.4: PR summary comments
-- ⏳ Story 6.5: CI resilience and caching improvements
+- ✅ Story 6.5: CI resilience and caching improvements
 
 **Epic 08: Developer Experience and Enablement**
 - ⏳ Story 8.1: IDE integration guides
@@ -595,10 +598,10 @@ For any story to be marked as “Done”:
 | Epic 03: Backend Allure | 3 | ✅ Complete | 100% |
 | Epic 04: Frontend Allure | 5 | ✅ Complete | 100% |
 | Epic 05: Unified Reporting | 5 | ✅ Complete | 100% |
-| Epic 06: CI Orchestration | 4/5 | 🚧 Partial | 80% |
+| Epic 06: CI Orchestration | 5 | ✅ Complete | 100% |
 | Epic 07: Governance | 0/5 | ⏳ Pending | 0% |
 | Epic 08: Developer Experience | 0/5 | ⏳ Pending | 0% |
-| **Total** | **23/31** | 🚧 **74% Complete** | **74%** |
+| **Total** | **24/31** | 🚧 **77% Complete** | **77%** |
 
 ---
 
@@ -618,7 +621,7 @@ For any story to be marked as “Done”:
 **Next Milestone**: Complete Epic 06-08 (Governance, Quality Gates, Developer Experience)
 
 **Immediate Tasks**:
-1. Story 6.5: Add retry logic and caching improvements to CI
+1. Epic 07: Start governance and quality gates implementation
 2. Story 6.5: Improve CI caching and retry logic
 3. Epic 07: Implement story-to-test enforcement
 4. Epic 08: Create onboarding materials and IDE guides

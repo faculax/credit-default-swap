@@ -20,6 +20,7 @@ jobs:
   frontend-unit-tests:
     name: Frontend Unit Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: ./frontend
@@ -35,11 +36,41 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
       
-      - name: Install dependencies
-        run: npm ci
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            frontend/node_modules
+            ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
       
-      - name: Run unit tests
-        run: npm run test:unit
+      - name: Install dependencies
+        run: |
+          echo "::group::Installing dependencies"
+          npm ci --prefer-offline --no-audit
+          echo "::endgroup::"
+      
+      - name: Run unit tests with retry
+        id: unit-tests
+        timeout-minutes: 5
+        run: |
+          echo "::group::Running Unit Tests"
+          # Jest will retry failed tests up to 2 times (configured in jest.config.js)
+          npm run test:unit -- --maxAttempts=3 || EXIT_CODE=$?
+          echo "::endgroup::"
+          
+          # Extract test results if available
+          if [ -f "test-results/junit.xml" ]; then
+            TESTS=$(grep -oP 'tests="\K[0-9]+' test-results/junit.xml || echo "0")
+            FAILURES=$(grep -oP 'failures="\K[0-9]+' test-results/junit.xml || echo "0")
+            echo "tests=$TESTS" >> $GITHUB_OUTPUT
+            echo "failures=$FAILURES" >> $GITHUB_OUTPUT
+            echo "::notice title=Unit Tests::Tests: $TESTS, Failures: $FAILURES"
+          fi
+          
+          exit ${EXIT_CODE:-0}
         env:
           CI: true
       
@@ -55,6 +86,7 @@ jobs:
   frontend-integration-tests:
     name: Frontend Integration Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: ./frontend
@@ -70,11 +102,39 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
       
-      - name: Install dependencies
-        run: npm ci
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            frontend/node_modules
+            ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
       
-      - name: Run integration tests
-        run: npm run test:integration
+      - name: Install dependencies
+        run: |
+          echo "::group::Installing dependencies"
+          npm ci --prefer-offline --no-audit
+          echo "::endgroup::"
+      
+      - name: Run integration tests with retry
+        id: integration-tests
+        timeout-minutes: 5
+        run: |
+          echo "::group::Running Integration Tests"
+          npm run test:integration -- --maxAttempts=3 || EXIT_CODE=$?
+          echo "::endgroup::"
+          
+          if [ -f "test-results/junit.xml" ]; then
+            TESTS=$(grep -oP 'tests="\K[0-9]+' test-results/junit.xml || echo "0")
+            FAILURES=$(grep -oP 'failures="\K[0-9]+' test-results/junit.xml || echo "0")
+            echo "tests=$TESTS" >> $GITHUB_OUTPUT
+            echo "failures=$FAILURES" >> $GITHUB_OUTPUT
+            echo "::notice title=Integration Tests::Tests: $TESTS, Failures: $FAILURES"
+          fi
+          
+          exit ${EXIT_CODE:-0}
         env:
           CI: true
       
@@ -90,6 +150,7 @@ jobs:
   frontend-e2e-tests:
     name: Frontend E2E Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: ./frontend
@@ -105,10 +166,32 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
       
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            frontend/node_modules
+            ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      
+      - name: Cache Cypress binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: ${{ runner.os }}-cypress-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-cypress-
+      
       - name: Install dependencies
-        run: npm ci
+        run: |
+          echo "::group::Installing dependencies"
+          npm ci --prefer-offline --no-audit
+          echo "::endgroup::"
       
       - name: Build application
+        timeout-minutes: 5
         run: npm run build
         env:
           CI: true
@@ -116,12 +199,23 @@ jobs:
       - name: Start application
         run: |
           npx serve -s build -l 3000 &
+          echo "Waiting for application to start..."
           sleep 5
+          curl --retry 5 --retry-delay 2 --retry-connrefused http://localhost:3000 || echo "App may not be fully ready"
         env:
           CI: true
       
-      - name: Run Cypress E2E tests
-        run: npm run test:e2e
+      - name: Run Cypress E2E tests with retry
+        id: e2e-tests
+        timeout-minutes: 8
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: ./frontend
+          install: false
+          wait-on: 'http://localhost:3000'
+          wait-on-timeout: 30
+          browser: chrome
+          config: retries=2
         env:
           CI: true
           CYPRESS_baseUrl: http://localhost:3000

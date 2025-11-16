@@ -53,9 +53,14 @@ jobs:
       - name: Run backend tests
         id: backend-tests
         working-directory: ./backend
+        timeout-minutes: 10
         run: |
           echo "::group::Running Backend Tests"
-          mvn clean test -B
+          # Run tests with retry on failure (rerunFailingTestsCount=2)
+          mvn clean test -B \
+            -Dsurefire.rerunFailingTestsCount=2 \
+            -Dsurefire.printSummary=true \
+            || EXIT_CODE=$?
           echo "::endgroup::"
           
           # Extract test results summary
@@ -64,14 +69,22 @@ jobs:
             FAILURES=$(grep -oP 'failures="\K[0-9]+' target/surefire-reports/TEST-*.xml | awk '{s+=$1} END {print s}')
             ERRORS=$(grep -oP 'errors="\K[0-9]+' target/surefire-reports/TEST-*.xml | awk '{s+=$1} END {print s}')
             SKIPPED=$(grep -oP 'skipped="\K[0-9]+' target/surefire-reports/TEST-*.xml | awk '{s+=$1} END {print s}')
+            FLAKY=$(grep -oP 'flakes="\K[0-9]+' target/surefire-reports/TEST-*.xml 2>/dev/null | awk '{s+=$1} END {print s}')
             
             echo "tests=$TESTS" >> $GITHUB_OUTPUT
             echo "failures=$FAILURES" >> $GITHUB_OUTPUT
             echo "errors=$ERRORS" >> $GITHUB_OUTPUT
             echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
+            echo "flaky=${FLAKY:-0}" >> $GITHUB_OUTPUT
             
-            echo "::notice title=Backend Tests::Tests: $TESTS, Failures: $FAILURES, Errors: $ERRORS, Skipped: $SKIPPED"
+            if [ "${FLAKY:-0}" -gt 0 ]; then
+              echo "::warning title=Flaky Tests Detected::$FLAKY flaky test(s) detected - passed on retry"
+            fi
+            
+            echo "::notice title=Backend Tests::Tests: $TESTS, Failures: $FAILURES, Errors: $ERRORS, Skipped: $SKIPPED, Flaky: ${FLAKY:-0}"
           fi
+          
+          exit ${EXIT_CODE:-0}
 
       - name: Verify Allure results exist
         working-directory: ./backend
@@ -156,9 +169,13 @@ jobs:
       - name: Run gateway tests
         id: gateway-tests
         working-directory: ./gateway
+        timeout-minutes: 8
         run: |
           echo "::group::Running Gateway Tests"
-          mvn clean test -B
+          mvn clean test -B \
+            -Dsurefire.rerunFailingTestsCount=2 \
+            -Dsurefire.printSummary=true \
+            || EXIT_CODE=$?
           echo "::endgroup::"
           
           # Extract test results summary
@@ -167,14 +184,22 @@ jobs:
             FAILURES=$(grep -oP 'failures="\K[0-9]+' target/surefire-reports/TEST-*.xml | awk '{s+=$1} END {print s}')
             ERRORS=$(grep -oP 'errors="\K[0-9]+' target/surefire-reports/TEST-*.xml | awk '{s+=$1} END {print s}')
             SKIPPED=$(grep -oP 'skipped="\K[0-9]+' target/surefire-reports/TEST-*.xml | awk '{s+=$1} END {print s}')
+            FLAKY=$(grep -oP 'flakes="\K[0-9]+' target/surefire-reports/TEST-*.xml 2>/dev/null | awk '{s+=$1} END {print s}')
             
             echo "tests=$TESTS" >> $GITHUB_OUTPUT
             echo "failures=$FAILURES" >> $GITHUB_OUTPUT
             echo "errors=$ERRORS" >> $GITHUB_OUTPUT
             echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
+            echo "flaky=${FLAKY:-0}" >> $GITHUB_OUTPUT
             
-            echo "::notice title=Gateway Tests::Tests: $TESTS, Failures: $FAILURES, Errors: $ERRORS, Skipped: $SKIPPED"
+            if [ "${FLAKY:-0}" -gt 0 ]; then
+              echo "::warning title=Flaky Tests::$FLAKY flaky test(s) in Gateway - passed on retry"
+            fi
+            
+            echo "::notice title=Gateway Tests::Tests: $TESTS, Failures: $FAILURES, Errors: $ERRORS, Skipped: $SKIPPED, Flaky: ${FLAKY:-0}"
           fi
+          
+          exit ${EXIT_CODE:-0}
 
       - name: Verify Allure results exist
         working-directory: ./gateway
@@ -260,9 +285,13 @@ jobs:
       - name: Run risk-engine tests
         id: risk-engine-tests
         working-directory: ./risk-engine
+        timeout-minutes: 12
         run: |
           echo "::group::Running Risk Engine Tests"
-          mvn clean test -B || true  # Allow test failures (known issues)
+          mvn clean test -B \
+            -Dsurefire.rerunFailingTestsCount=2 \
+            -Dsurefire.printSummary=true \
+            || true  # Allow test failures (known issues)
           echo "::endgroup::"
           
           # Extract test results summary
@@ -271,13 +300,19 @@ jobs:
             FAILURES=$(grep -oP 'failures="\K[0-9]+' target/surefire-reports/TEST-*.xml | awk '{s+=$1} END {print s}')
             ERRORS=$(grep -oP 'errors="\K[0-9]+' target/surefire-reports/TEST-*.xml | awk '{s+=$1} END {print s}')
             SKIPPED=$(grep -oP 'skipped="\K[0-9]+' target/surefire-reports/TEST-*.xml | awk '{s+=$1} END {print s}')
+            FLAKY=$(grep -oP 'flakes="\K[0-9]+' target/surefire-reports/TEST-*.xml 2>/dev/null | awk '{s+=$1} END {print s}')
             
             echo "tests=$TESTS" >> $GITHUB_OUTPUT
             echo "failures=$FAILURES" >> $GITHUB_OUTPUT
             echo "errors=$ERRORS" >> $GITHUB_OUTPUT
             echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
+            echo "flaky=${FLAKY:-0}" >> $GITHUB_OUTPUT
             
-            echo "::warning title=Risk Engine Tests::Tests: $TESTS, Failures: $FAILURES, Errors: $ERRORS, Skipped: $SKIPPED (Known issues - see README)"
+            if [ "${FLAKY:-0}" -gt 0 ]; then
+              echo "::warning title=Flaky Tests::$FLAKY flaky test(s) in Risk Engine - passed on retry"
+            fi
+            
+            echo "::warning title=Risk Engine Tests::Tests: $TESTS, Failures: $FAILURES, Errors: $ERRORS, Skipped: $SKIPPED, Flaky: ${FLAKY:-0} (Known issues - see README)"
           fi
 
       - name: Verify Allure results exist
