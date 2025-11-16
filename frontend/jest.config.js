@@ -57,10 +57,49 @@ module.exports = {
       'jest-allure2-reporter',
       {
         resultsDir: 'allure-results',
-        testMapper: (testResult) => {
-          // Extract story labels from test metadata
-          return testResult;
-        }
+        overwrite: false,
+        
+        // Extract metadata from test names using tag patterns
+        testCase: {
+          labels: {
+            story: ({ testCase }) => {
+              const match = testCase.fullName.match(/\[story:([\w-]+(?:\.[\w-]+)?)\]/);
+              return match ? [match[1]] : [];
+            },
+            testType: ({ testCase }) => {
+              const match = testCase.fullName.match(/\[testType:([\w-]+)\]/);
+              return match ? [match[1]] : ['unit'];
+            },
+            service: ({ testCase }) => {
+              const match = testCase.fullName.match(/\[service:([\w-]+)\]/);
+              return match ? [match[1]] : ['frontend'];
+            },
+            microservice: ({ testCase }) => {
+              const match = testCase.fullName.match(/\[microservice:([\w-]+)\]/);
+              return match ? [match[1]] : [];
+            },
+            severity: ({ testCase }) => {
+              const match = testCase.fullName.match(/\[severity:([\w-]+)\]/);
+              return match ? [match[1]] : ['normal'];
+            },
+            epic: ({ testCase }) => {
+              const match = testCase.fullName.match(/\[epic:([\w-]+)\]/);
+              return match ? [match[1]] : [];
+            },
+            feature: ({ testCase }) => {
+              const match = testCase.fullName.match(/\[feature:([\w-]+)\]/);
+              return match ? [match[1]] : [];
+            }
+          }
+        },
+        
+        // Add environment information
+        environment: () => ({
+          'Test Framework': 'Jest',
+          'Test Type': 'Frontend Unit/Integration',
+          'Node Version': process.version,
+          'Platform': process.platform
+        })
       }
     ]
   ]

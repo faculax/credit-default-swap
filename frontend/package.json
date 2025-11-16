@@ -15,6 +15,7 @@
     "typescript": "^4.9.0"
   },
   "devDependencies": {
+    "@craco/craco": "^7.1.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@types/jest": "^30.0.0",
@@ -25,15 +26,19 @@
     "tailwindcss": "^3.3.0"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test --testPathPattern=__tests__/unit",
-    "test:unit": "react-scripts test --testPathPattern=__tests__/unit",
-    "test:integration": "react-scripts test --testPathPattern=__tests__/integration",
-    "test:all": "react-scripts test --testPathPattern=__tests__",
-    "test:watch": "react-scripts test --testPathPattern=__tests__/unit --watch",
-    "test:coverage": "react-scripts test --testPathPattern=__tests__ --coverage --watchAll=false",
-    "test:allure": "JEST_JUNIT_OUTPUT_DIR=allure-results react-scripts test --watchAll=false --reporters=default --reporters=jest-allure2-reporter",
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test --testPathPattern=__tests__/unit --watchAll=false",
+    "test:unit": "craco test --testPathPattern=__tests__/unit --watchAll=false",
+    "test:integration": "craco test --testPathPattern=__tests__/integration --watchAll=false",
+    "test:all": "craco test --testPathPattern=__tests__ --watchAll=false",
+    "test:watch": "craco test --testPathPattern=__tests__/unit --watch",
+    "test:coverage": "craco test --testPathPattern=__tests__ --coverage --watchAll=false",
+    "test:allure": "npm run test:all",
+    "allure:clean": "rm -rf allure-results allure-report 2>/dev/null || true",
+    "allure:generate": "allure generate allure-results --clean -o allure-report",
+    "allure:serve": "allure generate allure-results --clean -o allure-report && allure open allure-report",
+    "allure:report": "npm run test:allure && npm run allure:serve",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
