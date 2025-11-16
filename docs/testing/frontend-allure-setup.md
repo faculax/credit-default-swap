@@ -598,12 +598,105 @@ withStoryId({ storyId: 'UTS-2.2', severity: 'trivial' })('button color', () => {
 
 ## Next Steps
 
-- **Story 4.2**: Configure Allure for E2E tests (Cypress/Playwright)
+- **Story 4.2**: ✅ Configure Allure for E2E tests (Cypress with @shelex/cypress-allure-plugin)
 - **Story 4.3**: Enhance label decorators with more metadata
 - **Story 4.4**: Harmonize npm scripts across services
 - **Story 4.5**: Validate in CI with GitHub Actions
 
 ---
+
+## E2E Testing with Cypress (Story 4.2)
+
+### Cypress Setup
+
+The project uses **Cypress** for end-to-end testing with **@shelex/cypress-allure-plugin** for Allure integration.
+
+**Configuration**: `cypress.config.ts`
+
+```typescript
+export default defineConfig({
+  e2e: {
+    baseUrl: 'http://localhost:3000',
+    setupNodeEvents(on, config) {
+      allureWriter(on, config);
+      return config;
+    }
+  },
+  env: {
+    allure: true,
+    allureResultsPath: 'allure-results'
+  }
+});
+```
+
+### Running E2E Tests
+
+```bash
+# Run E2E tests headlessly (CI mode)
+npm run test:e2e
+
+# Open Cypress Test Runner (interactive)
+npm run test:e2e:open
+
+# Run E2E tests and generate Allure report
+npm run allure:report:e2e
+```
+
+### E2E Test Structure
+
+E2E tests use story metadata in test titles:
+
+```typescript
+describe('Homepage Navigation [story:UTS-4.2] [testType:e2e] [service:frontend]', () => {
+  it('should load successfully [story:UTS-4.2] [severity:critical]', () => {
+    cy.visit('/');
+    cy.get('body').should('be.visible');
+    cy.screenshot('homepage-loaded');
+    cy.allure().step('Homepage loaded', () => {
+      // Step logic
+    });
+  });
+});
+```
+
+### E2E Test Metadata
+
+Cypress extracts metadata from test titles automatically via `cypress/support/e2e.ts`:
+
+- `[story:UTS-X.X]` → Story ID label
+- `[testType:e2e]` → Test type (defaults to 'e2e')
+- `[service:frontend]` → Service (defaults to 'frontend')
+- `[severity:critical]` → Severity level
+- `[epic:name]` → Epic grouping
+- `[feature:name]` → Feature grouping
+
+### Attachments
+
+Cypress automatically attaches:
+- **Screenshots**: Taken on test failure or via `cy.screenshot()`
+- **Videos**: Full test execution videos (in CI mode)
+- **Network Requests**: HTTP requests/responses (when `allureAttachRequests: true`)
+
+Files are stored in:
+- `cypress/screenshots/` (screenshots)
+- `cypress/videos/` (videos)
+- `allure-results/` (Allure JSON with attachment references)
+
+### Custom Commands
+
+Use the `cy.tagTest()` custom command for programmatic tagging:
+
+```typescript
+cy.tagTest({
+  storyId: 'UTS-2.2',
+  severity: 'blocker',
+  epic: 'trade-capture'
+});
+```
+
+---
+
+## Next Steps
 
 ## Related Documentation
 
