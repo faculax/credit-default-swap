@@ -7,7 +7,6 @@ import ScenarioRunModal from '../risk/ScenarioRunModal';
 import RegressionStatusBadge from '../risk/RegressionStatusBadge';
 import { fetchRiskMeasures } from '../../services/risk/riskService';
 import { RiskMeasures } from '../../services/risk/riskTypes';
-import { bondService, Bond } from '../../services/bondService';
 import CreditEventModal, { CreateCreditEventRequest } from '../credit-event-modal/CreditEventModal';
 import LifecycleTimeline from '../lifecycle/LifecycleTimeline';
 import CashflowPanel from '../lifecycle/CashflowPanel';

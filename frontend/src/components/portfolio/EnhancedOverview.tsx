@@ -171,7 +171,7 @@ const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
     });
 
     setSectorExposures(sectors.sort((a, b) => b.notional - a.notional));
-  }, []); // useCallback dependency array
+  }, [basketConstituents, bondConstituents, cdsConstituents]); // useCallback dependency array
 
   const getSectorFromIssuer = (issuer: string): string => {
     const sectorMap: Record<string, string> = {

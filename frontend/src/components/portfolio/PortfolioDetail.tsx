@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { portfolioService, CdsPortfolio, CdsPortfolioConstituent, BondPortfolioConstituent, BasketPortfolioConstituent, PortfolioPricingResponse } from '../../services/portfolioService';
-import { cdsTradeService, CDSTradeResponse } from '../../services/cdsTradeService';
 import AttachInstrumentsModal from './AttachInstrumentsModal';
 import SimulationPanel from './simulation/SimulationPanel';
 import EnhancedOverview from './EnhancedOverview';
@@ -22,10 +21,6 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
   const [activeTab, setActiveTab] = useState<'overview' | 'constituents' | 'concentration' | 'simulation'>('overview');
   const [showAttachModal, setShowAttachModal] = useState(false);
   const [valuationDate, setValuationDate] = useState<string>('');
-
-  useEffect(() => {
-    loadPortfolioData();
-  }, [portfolioId]);
 
   const loadPortfolioData = async () => {
     try {
@@ -61,6 +56,10 @@ const PortfolioDetail: React.FC<PortfolioDetailProps> = ({ portfolioId, onBack }
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadPortfolioData();
+  }, [portfolioId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const getBusinessDaysFromToday = (days: number): string => {
     const today = new Date();

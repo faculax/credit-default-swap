@@ -15,7 +15,7 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({ portfolioId }) => {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showGlossary, setShowGlossary] = useState(false);
 
-  const { simulation, loading: polling, error: pollingError } = useSimulationPolling(runId, !!runId);
+  const { simulation, error: pollingError } = useSimulationPolling(runId, !!runId);
 
   const handleSubmit = async (request: SimulationRequest) => {
     try {

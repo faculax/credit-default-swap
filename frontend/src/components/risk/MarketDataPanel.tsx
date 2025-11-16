@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MarketDataSnapshot, DiscountCurveData, DefaultCurveData } from '../../services/risk/riskTypes';
+import { MarketDataSnapshot } from '../../services/risk/riskTypes';
 
 interface Props {
   marketDataSnapshot?: MarketDataSnapshot | null;

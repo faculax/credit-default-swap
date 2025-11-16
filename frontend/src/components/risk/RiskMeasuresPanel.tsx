@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { fetchRiskMeasures } from '../../services/risk/riskService';
 import { RiskMeasures } from '../../services/risk/riskTypes';
-import CashflowScheduleTable from './CashflowScheduleTable';
 import { lifecycleService } from '../../services/lifecycleService';
 import { CouponPeriod } from '../../types/lifecycle';
 import { CDSTradeResponse } from '../../services/cdsTradeService';
@@ -21,7 +20,6 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
   const [recalculating, setRecalculating] = useState(false);
   const [generatingSchedule, setGeneratingSchedule] = useState(false);
   const [valuationDate, setValuationDate] = useState<string | undefined>(undefined); // undefined means "today"
-  const [refreshKey, setRefreshKey] = useState(0); // Used to force refresh when clicking same button
   const [hasPayoutEvent, setHasPayoutEvent] = useState(false);
 
   // Check if trade is in a final state (settled or terminated) where no modifications are allowed
@@ -214,7 +212,7 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
     loadRiskMeasures();
     loadCouponPeriods();
     checkForPayoutEvent();
-  }, [tradeId]);
+  }, [tradeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if(!tradeId) return <div className="text-fd-text">No trade selected</div>;
   
@@ -429,7 +427,6 @@ const RiskMeasuresPanel: React.FC<Props> = ({ tradeId, trade }) => {
   // Calculate coupon statistics
   const totalCoupons = couponPeriods.length;
   const paidCoupons = couponPeriods.filter(p => p.paid).length;
-  const unpaidCoupons = totalCoupons - paidCoupons;
   const totalPaidAmount = couponPeriods
     .filter(p => p.paid && p.couponAmount)
     .reduce((sum, p) => sum + (p.couponAmount || 0), 0);
