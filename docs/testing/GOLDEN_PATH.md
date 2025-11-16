@@ -1,7 +1,7 @@
 # Testing Golden Path Guide
 
 **Epic 02: Test Architecture Standardization**  
-**Last Updated:** November 14, 2025
+**Last Updated:** November 16, 2025
 
 This guide provides the recommended approach for creating new tests in the CDS Trading Platform. Following these patterns ensures consistency, maintainability, and proper integration with our reporting infrastructure.
 
@@ -76,7 +76,8 @@ npm test
 package com.creditdefaultswap.unit.platform.service;
 
 import com.creditdefaultswap.platform.service.YourService;
-import com.creditdefaultswap.unit.platform.testing.story.StoryId;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -87,6 +88,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@Feature("Backend Service")
+@Story("Your Service Operations")
 @ExtendWith(MockitoExtension.class)
 class YourServiceTest {
 
@@ -97,7 +100,6 @@ class YourServiceTest {
     private YourService yourService;
 
     @Test
-    @StoryId(value = "UTS-X.Y", testType = StoryId.TestType.UNIT, microservice = "cds-platform")
     void shouldDoSomethingExpected() {
         // Arrange
         when(dependencyService.getData()).thenReturn("test-data");
@@ -114,10 +116,11 @@ class YourServiceTest {
 
 **Key Points:**
 - ✅ Package name matches directory: `com.creditdefaultswap.unit.{domain}`
+- ✅ Use `@Feature` and `@Story` annotations at class level for Allure Behaviors grouping
+- ✅ Import from `io.qameta.allure.Feature` and `io.qameta.allure.Story`
 - ✅ Use `@ExtendWith(MockitoExtension.class)` for Mockito support
 - ✅ Mock external dependencies with `@Mock`
 - ✅ Inject mocks into the class under test with `@InjectMocks`
-- ✅ Every test annotated with `@StoryId`
 - ✅ Follow Arrange-Act-Assert pattern
 
 **Real Example:** [`CDSTradeServiceTest.java`](../../backend/src/test/java/com/creditdefaultswap/unit/platform/service/CDSTradeServiceTest.java)
@@ -136,7 +139,8 @@ package com.creditdefaultswap.integration.platform.repository;
 import com.creditdefaultswap.platform.CDSPlatformApplication;
 import com.creditdefaultswap.platform.model.YourEntity;
 import com.creditdefaultswap.platform.repository.YourRepository;
-import com.creditdefaultswap.unit.platform.testing.story.StoryId;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -145,6 +149,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Feature("Backend Service")
+@Story("Repository Integration")
 @SpringBootTest(classes = CDSPlatformApplication.class)
 @ActiveProfiles("test")
 @Transactional
@@ -154,7 +160,6 @@ class YourRepositoryIntegrationTest {
     private YourRepository repository;
 
     @Test
-    @StoryId(value = "UTS-X.Y", testType = StoryId.TestType.INTEGRATION, microservice = "cds-platform")
     void shouldPersistAndRetrieveEntity() {
         // Arrange
         YourEntity entity = new YourEntity();
@@ -194,7 +199,8 @@ package com.creditdefaultswap.unit.platform.service;
 
 import com.creditdefaultswap.platform.CDSPlatformApplication;
 import com.creditdefaultswap.platform.service.YourService;
-import com.creditdefaultswap.unit.platform.testing.story.StoryId;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -203,6 +209,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Feature("Backend Service")
+@Story("Service Business Logic")
 @SpringBootTest(classes = CDSPlatformApplication.class)
 @ActiveProfiles("test")
 @Transactional
@@ -212,7 +220,6 @@ class YourServiceTest {
     private YourService yourService;
 
     @Test
-    @StoryId(value = "UTS-X.Y", testType = StoryId.TestType.UNIT, microservice = "cds-platform")
     void shouldExecuteBusinessLogic() {
         // Test implementation
     }
@@ -407,39 +414,73 @@ describe('YourPage Integration', () => {
 
 ## Story Traceability
 
-### Using @StoryId Annotation
+### Using @Feature and @Story Annotations
 
-Every test must be annotated with `@StoryId` to enable traceability in Allure reports.
+All backend test classes MUST include both `@Feature` and `@Story` annotations at the class level to enable Allure Behaviors grouping.
 
 **Syntax:**
 
 ```java
-@StoryId(
-    value = "UTS-X.Y",                    // Story ID from user stories
-    testType = StoryId.TestType.UNIT,     // UNIT, INTEGRATION, or E2E
-    microservice = "cds-platform"         // Service name
-)
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+
+@Feature("Backend Service")           // Service or feature area
+@Story("Credit Event Processing")     // Specific story or scenario
+class YourTest {
+    // Tests
+}
 ```
 
 **Example:**
 
 ```java
-@Test
-@StoryId(value = "UTS-5.1", testType = StoryId.TestType.UNIT, microservice = "cds-platform")
-void shouldGenerateImmCouponSchedule() {
-    // Test implementation
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+
+@Feature("Backend Service")
+@Story("Coupon Schedule Generation")
+class CouponScheduleServiceTest {
+    
+    @Test
+    void shouldGenerateImmCouponSchedule() {
+        // Test implementation
+    }
 }
 ```
 
-**Test Type Values:**
-- `StoryId.TestType.UNIT` - Unit tests
-- `StoryId.TestType.INTEGRATION` - Integration tests
-- `StoryId.TestType.E2E` - End-to-end tests
+**Standard Feature Values:**
+- `"Backend Service"` - Core platform services (cds-platform)
+- `"Gateway Service"` - API gateway services  
+- `"Risk Engine Service"` - Risk calculation services
+- `"Frontend Service"` - Frontend components and workflows
 
-**Microservice Values:**
-- `cds-platform` - Main backend service
-- `risk-engine` - Risk calculation service
-- `gateway` - API gateway
+**Story Values:**
+- Should be human-readable and match story titles from `user-stories/`
+- Examples: `"Credit Event Processing"`, `"Cash Settlement"`, `"CDS Trade Management"`
+
+### Frontend Story Tagging
+
+Frontend tests use helper functions to add feature/epic tags that get post-processed into Allure labels:
+
+```typescript
+import { withStoryId, describeStory } from '../utils/testHelpers';
+
+// Option 1: Using withStoryId wrapper
+describe('Component Tests', withStoryId(() => {
+    it('should render correctly', () => {
+        // Test implementation
+    });
+}, 'COMP-001'));
+
+// Option 2: Using describeStory
+describeStory('Component Behavior', 'COMP-001', () => {
+    it('should handle interactions', () => {
+        // Test implementation
+    });
+});
+```
+
+These helpers automatically add `[feature:Frontend Service]` and `[epic:microservice Tests]` tags to test names, which are extracted by the post-processing script (`scripts/add-frontend-labels.ps1`).
 
 ### Finding Story IDs
 
@@ -455,7 +496,6 @@ Story IDs are documented in:
 
 ```java
 @Test
-@StoryId(value = "UTS-X.Y", testType = StoryId.TestType.UNIT, microservice = "cds-platform")
 void shouldThrowExceptionWhenInvalidInput() {
     // Arrange
     InvalidInput input = new InvalidInput();
@@ -471,7 +511,6 @@ void shouldThrowExceptionWhenInvalidInput() {
 
 ```java
 @Test
-@StoryId(value = "UTS-X.Y", testType = StoryId.TestType.UNIT, microservice = "cds-platform")
 void shouldCompleteAsyncOperation() throws Exception {
     // Arrange
     CompletableFuture<Result> future = service.asyncOperation();
@@ -488,7 +527,6 @@ void shouldCompleteAsyncOperation() throws Exception {
 
 ```java
 @Test
-@StoryId(value = "UTS-X.Y", testType = StoryId.TestType.UNIT, microservice = "cds-platform")
 void shouldCalculateDateCorrectly() {
     // Arrange
     LocalDate startDate = LocalDate.of(2025, 1, 15);
@@ -505,7 +543,6 @@ void shouldCalculateDateCorrectly() {
 
 ```java
 @Test
-@StoryId(value = "UTS-X.Y", testType = StoryId.TestType.UNIT, microservice = "cds-platform")
 void shouldReturnExpectedList() {
     // Act
     List<Trade> trades = service.getActiveTrades();
@@ -584,11 +621,15 @@ it('should submit form with valid data', async () => {
 ```
 **Solution:** Update package declaration to match the file path under `src/test/java/`
 
-**Issue:** Cannot find @StoryId annotation
+**Issue:** Cannot find @Feature or @Story annotations
 ```
-[ERROR] cannot find symbol: @StoryId
+[ERROR] cannot find symbol: @Feature
 ```
-**Solution:** Add import: `import com.creditdefaultswap.unit.platform.testing.story.StoryId;`
+**Solution:** Add imports: 
+```java
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+```
 
 **Issue:** Spring Boot test can't find application class
 ```
@@ -607,8 +648,10 @@ Module not found: Can't resolve '../../../components/YourComponent'
 ## Additional Resources
 
 - **Test Architecture:** [`docs/testing/TEST_ARCHITECTURE.md`](./TEST_ARCHITECTURE.md)
+- **Allure Annotations Guide:** [`docs/testing/allure-annotations.md`](./allure-annotations.md)
+- **Frontend Test Helpers:** [`frontend/src/utils/testHelpers.ts`](../../frontend/src/utils/testHelpers.ts)
+- **Post-Processing Script:** [`scripts/add-frontend-labels.ps1`](../../scripts/add-frontend-labels.ps1)
 - **Folder Conventions:** Backend [`docs/testing/backend-test-conventions.md`](./backend-test-conventions.md), Frontend [`docs/testing/frontend-test-conventions.md`](./frontend-test-conventions.md)
-- **Shared Schema:** [`docs/testing/test-type-schema.json`](./test-type-schema.json)
 - **Testing PRD:** [`unified-testing-stories/TestingPRD.md`](../../unified-testing-stories/TestingPRD.md)
 
 ---

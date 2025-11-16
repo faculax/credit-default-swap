@@ -884,14 +884,18 @@ docker stats
 ### D. Allure Annotations Reference
 
 ```java
-// Story/Epic linking
-@StoryId(value = "UTS-3.5", testType = StoryId.TestType.UNIT, 
-         microservice = "cds-platform")
+// Allure Feature/Story annotations (at class level)
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 
-// Allure native annotations
+@Feature("Backend Service")
+@Story("CDS Trade Creation")
+class CDSTradeServiceTest {
+    // Tests
+}
+
+// Additional Allure annotations (optional)
 @Epic("Trade Management")
-@Feature("CDS Trade Lifecycle")
-@Story("User creates a new trade")
 @Severity(SeverityLevel.CRITICAL)
 @Description("Verifies that a new CDS trade can be created with valid data")
 @Link(name = "Jira Ticket", url = "https://jira.example.com/TICKET-123")

@@ -120,16 +120,18 @@ mvn test -P contract-tests
 ```java
 package com.creditdefaultswap.unit.platform.service;
 
-import com.creditdefaultswap.platform.testing.story.StoryId;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+@Feature("Backend Service")
+@Story("Credit Event Processing")
 @ExtendWith(MockitoExtension.class)
 class CreditEventServiceTest {
     
     @Test
-    @StoryId(value = "UTS-401", testType = StoryId.TestType.UNIT, microservice = "cds-platform")
     void shouldCalculateNotionalCorrectly() {
         // Pure unit test with mocked dependencies
     }
@@ -140,17 +142,19 @@ class CreditEventServiceTest {
 ```java
 package com.creditdefaultswap.integration.platform.service;
 
-import com.creditdefaultswap.platform.testing.story.StoryId;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+@Feature("Backend Service")
+@Story("Credit Event Integration")
 @SpringBootTest
 @ActiveProfiles("test")
 class CreditEventServiceIntegrationTest {
     
     @Test
-    @StoryId(value = "UTS-402", testType = StoryId.TestType.INTEGRATION, microservice = "cds-platform")
     void shouldPersistCreditEventToDatabase() {
         // Integration test with real Spring beans and embedded DB
     }
@@ -167,7 +171,7 @@ When migrating existing tests to this structure:
 2. **Move file** — Relocate from `src/test/java/.../service/` to `src/test/java/.../unit/service/` or `integration/service/`
 3. **Update package declaration** — Change `package com.creditdefaultswap.platform.service;` to `package com.creditdefaultswap.unit.platform.service;`
 4. **Update test name** — Add `IntegrationTest` suffix if it's an integration test
-5. **Update @StoryId** — Set correct `testType = StoryId.TestType.UNIT` or `INTEGRATION`
+5. **Add @Feature/@Story** — Add annotations at class level for Allure Behaviors grouping
 6. **Update imports** — Production code imports remain the same (no `unit.` or `integration.` prefix)
 7. **Run tests** — Verify with `mvn test` (unit) or `mvn test -P integration-tests`
 

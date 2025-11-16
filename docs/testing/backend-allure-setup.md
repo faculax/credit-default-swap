@@ -319,25 +319,29 @@ The Allure HTML report provides:
 
 ## Test Annotations & Metadata
 
-### Basic @StoryId Usage
+### Basic @Feature and @Story Usage
 
-All tests should use the `@StoryId` annotation for traceability:
+All test classes should use `@Feature` and `@Story` annotations at the class level for Allure Behaviors grouping:
 
 ```java
-import com.creditdefaultswap.unit.platform.testing.story.StoryId;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+import org.junit.jupiter.api.Test;
 
-@Test
-@StoryId(value = "UTS-3.1", testType = StoryId.TestType.UNIT, 
-         microservice = "cds-platform")
-void shouldCreateTrade() {
-    // Test implementation
+@Feature("Backend Service")
+@Story("CDS Trade Creation")
+class CDSTradeServiceTest {
+    
+    @Test
+    void shouldCreateTrade() {
+        // Test implementation
+    }
 }
 ```
 
-The @StoryId annotation automatically adds Allure labels for:
-- Story ID filtering
-- Test type categorization
-- Microservice attribution
+The `@Feature` and `@Story` annotations create the Behaviors view hierarchy in Allure reports:
+- **@Feature**: Service or major feature area (e.g., "Backend Service", "Gateway Service")
+- **@Story**: Specific story or scenario being tested (e.g., "CDS Trade Creation", "Credit Event Processing")
 
 ### Additional Allure Annotations (Optional)
 
@@ -347,12 +351,15 @@ You can add more metadata using Allure annotations:
 import io.qameta.allure.*;
 
 @Epic("Trade Management")
-@Feature("CDS Trade Creation")
-@Story("User creates a new CDS trade")
+@Feature("Backend Service")
+@Story("CDS Trade Creation")
 @Severity(SeverityLevel.CRITICAL)
-@Test
-void shouldCreateTrade() {
-    // Test implementation
+class CDSTradeServiceTest {
+    
+    @Test
+    void shouldCreateTrade() {
+        // Test implementation
+    }
 }
 ```
 

@@ -1,8 +1,8 @@
 # Testing Quick Reference Cheatsheet
 
 **Epic 02: Test Architecture Standardization**  
-**Version:** 1.0  
-**Last Updated:** November 14, 2025
+**Version:** 1.1  
+**Last Updated:** November 16, 2025
 
 One-page reference for common testing tasks in the CDS Trading Platform.
 
@@ -84,7 +84,8 @@ npm test -- --coverage
 ```java
 package com.creditdefaultswap.unit.platform.service;
 
-import com.creditdefaultswap.unit.platform.testing.story.StoryId;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -93,14 +94,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@Feature("Backend Service")
+@Story("Service Operations")
 @ExtendWith(MockitoExtension.class)
 class ServiceTest {
     @Mock private Dependency dependency;
     @InjectMocks private Service service;
 
     @Test
-    @StoryId(value = "UTS-X.Y", testType = StoryId.TestType.UNIT, 
-             microservice = "cds-platform")
     void shouldDoSomething() {
         when(dependency.getData()).thenReturn("data");
         assertEquals("expected", service.action());
@@ -114,7 +115,8 @@ class ServiceTest {
 package com.creditdefaultswap.integration.platform.repository;
 
 import com.creditdefaultswap.platform.CDSPlatformApplication;
-import com.creditdefaultswap.unit.platform.testing.story.StoryId;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -122,6 +124,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import static org.junit.jupiter.api.Assertions.*;
 
+@Feature("Backend Service")
+@Story("Repository Integration")
 @SpringBootTest(classes = CDSPlatformApplication.class)
 @ActiveProfiles("test")
 @Transactional
@@ -129,8 +133,6 @@ class RepositoryIntegrationTest {
     @Autowired private Repository repository;
 
     @Test
-    @StoryId(value = "UTS-X.Y", testType = StoryId.TestType.INTEGRATION,
-             microservice = "cds-platform")
     void shouldPersist() {
         Entity saved = repository.save(new Entity());
         assertNotNull(saved.getId());
@@ -288,24 +290,42 @@ await user.type(input, 'text');
 
 ---
 
-## @StoryId Annotation
+## Allure Annotations
 
+### Backend (@Feature / @Story)
 ```java
-@StoryId(
-    value = "UTS-X.Y",                     // Story ID
-    testType = StoryId.TestType.UNIT,      // Test type
-    microservice = "cds-platform"          // Service name
-)
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 
-// Test Types
-StoryId.TestType.UNIT
-StoryId.TestType.INTEGRATION
-StoryId.TestType.E2E
+@Feature("Backend Service")           // Service or feature area
+@Story("Credit Event Processing")     // Specific story/scenario
+class YourTest {
+    // Tests
+}
 
-// Microservices
-"cds-platform"
-"risk-engine"
-"gateway"
+// Standard Feature values:
+// - "Backend Service" (cds-platform)
+// - "Gateway Service" (gateway)
+// - "Risk Engine Service" (risk-engine)
+// - "Frontend Service" (frontend)
+```
+
+### Frontend (Test Helpers)
+```typescript
+import { withStoryId, describeStory } from '../utils/testHelpers';
+
+// Option 1: withStoryId wrapper
+describe('Tests', withStoryId(() => {
+    it('should work', () => { });
+}, 'STORY-001'));
+
+// Option 2: describeStory
+describeStory('Feature Name', 'STORY-001', () => {
+    it('should work', () => { });
+});
+
+// Automatically adds [feature:Frontend Service] and [epic:...] tags
+// Post-processed by scripts/add-frontend-labels.ps1
 ```
 
 ---
@@ -349,8 +369,9 @@ afterAll(() => { });       // Once after all tests
 
 ### Backend
 ```java
-// Story traceability
-import com.creditdefaultswap.unit.platform.testing.story.StoryId;
+// Allure annotations
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 
 // Service classes (production code)
 import com.creditdefaultswap.platform.service.YourService;
@@ -368,6 +389,9 @@ import { util } from '../../../utils/util';
 
 // From integration test  
 import { Page } from '../../../pages/Page';
+
+// Test helpers for Allure
+import { withStoryId, describeStory } from '../utils/testHelpers';
 ```
 
 ---
@@ -377,7 +401,7 @@ import { Page } from '../../../pages/Page';
 | Issue | Solution |
 |-------|----------|
 | Package doesn't match directory | Update package to `com.creditdefaultswap.{unit\|integration\|e2e}.{domain}` |
-| Can't find @StoryId | Import `com.creditdefaultswap.unit.platform.testing.story.StoryId` |
+| Can't find @Feature/@Story | Import `io.qameta.allure.Feature` and `io.qameta.allure.Story` |
 | SpringBootTest fails | Add `@SpringBootTest(classes = CDSPlatformApplication.class)` |
 | Frontend import error | Count `../` from test location to `src/` |
 | Test timeout | Increase timeout or mock slow operations |

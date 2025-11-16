@@ -148,25 +148,39 @@ class CreditEventServiceIntegrationTest { ... }
 
 ---
 
-### Step 5: Update @StoryId Annotation
+### Step 5: Add @Feature and @Story Annotations
 
-Ensure the `testType` parameter matches the test location:
+Add `@Feature` and `@Story` annotations at the class level for Allure Behaviors grouping:
 
 **Unit Test:**
 ```java
-@Test
-@StoryId(value = "UTS-401", testType = StoryId.TestType.UNIT, microservice = "cds-platform")
-void shouldCalculateNotionalCorrectly() { ... }
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+
+@Feature("Backend Service")
+@Story("Credit Event Processing")
+class CreditEventServiceTest {
+    
+    @Test
+    void shouldCalculateNotionalCorrectly() { ... }
+}
 ```
 
 **Integration Test:**
 ```java
-@Test
-@StoryId(value = "UTS-402", testType = StoryId.TestType.INTEGRATION, microservice = "cds-platform")
-void shouldPersistCreditEventToDatabase() { ... }
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+
+@Feature("Backend Service")
+@Story("Credit Event Integration")
+class CreditEventServiceIntegrationTest {
+    
+    @Test
+    void shouldPersistCreditEventToDatabase() { ... }
+}
 ```
 
-**⚠️ Validation:** The `LabelValidator` will throw an exception if the `testType` label is invalid or mismatched.
+**⚠️ Best Practice:** Use consistent Feature names across related tests for proper Behaviors view grouping.
 
 ---
 
@@ -291,7 +305,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 
+@Feature("Backend Service")
+@Story("Credit Event Processing")
 @ExtendWith(MockitoExtension.class)
 class CreditEventServiceTest {
     
@@ -302,7 +320,6 @@ class CreditEventServiceTest {
     private CreditEventService service;
     
     @Test
-    @StoryId(value = "UTS-401", testType = StoryId.TestType.UNIT, microservice = "cds-platform")
     void shouldCalculateNotional() {
         // Unit test logic
     }
@@ -318,7 +335,7 @@ class CreditEventServiceTest {
 | ❌ Importing production classes with `unit.` prefix | ✅ Import from production packages directly |
 | ❌ Mixing unit and integration tests in same file | ✅ Split into separate files (unit vs integration) |
 | ❌ Using `@SpringBootTest` in unit tests | ✅ Use `@ExtendWith(MockitoExtension.class)` instead |
-| ❌ Forgetting to update `testType` in `@StoryId` | ✅ Set `testType = StoryId.TestType.UNIT` or `INTEGRATION` |
+| ❌ Missing @Feature/@Story annotations | ✅ Add at class level for Allure Behaviors grouping |
 | ❌ Renaming integration test but keeping `Test` suffix | ✅ Use `IntegrationTest` suffix |
 | ❌ Running `mvn test` expecting all tests | ✅ Use `mvn test -P all-tests` to run all test types |
 
@@ -335,7 +352,7 @@ Use this checklist to track migration progress:
 - [ ] Move integration tests to `integration/` folders
 - [ ] Update package declarations in all moved tests
 - [ ] Rename integration test classes with `IntegrationTest` suffix
-- [ ] Update `@StoryId` annotations with correct `testType`
+- [ ] Add `@Feature` and `@Story` annotations at class level
 - [ ] Run `mvn test` to verify unit tests pass
 - [ ] Run `mvn test -P integration-tests` to verify integration tests pass
 - [ ] Run `mvn test -P all-tests` to verify all tests pass
