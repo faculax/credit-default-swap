@@ -1,0 +1,237 @@
+name: Unified Test Reports
+
+on:
+  workflow_run:
+    workflows: ["Backend Tests with Allure", "Frontend Tests with Allure"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  merge-and-publish:
+    name: Merge Reports & Publish to GitHub Pages
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Download backend artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: allure-results-backend-*
+          path: backend-artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+      
+      - name: Download gateway artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: allure-results-gateway-*
+          path: backend-artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+      
+      - name: Download risk-engine artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: allure-results-risk-engine-*
+          path: backend-artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+      
+      - name: Download frontend unit artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: allure-results-frontend-unit-*
+          path: frontend-artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+      
+      - name: Download frontend integration artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: allure-results-frontend-integration-*
+          path: frontend-artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+      
+      - name: Download frontend E2E artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: allure-results-frontend-e2e-*
+          path: frontend-artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+      
+      - name: List all artifacts
+        run: |
+          echo "## Downloaded Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Backend Artifacts:" >> $GITHUB_STEP_SUMMARY
+          if [ -d "backend-artifacts" ]; then
+            ls -la backend-artifacts/ | tee -a $GITHUB_STEP_SUMMARY
+            BACKEND_COUNT=$(find backend-artifacts -name '*-result.json' | wc -l)
+            echo "Backend test results: $BACKEND_COUNT" | tee -a $GITHUB_STEP_SUMMARY
+          else
+            echo "No backend artifacts found" | tee -a $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Frontend Artifacts:" >> $GITHUB_STEP_SUMMARY
+          if [ -d "frontend-artifacts" ]; then
+            ls -la frontend-artifacts/ | tee -a $GITHUB_STEP_SUMMARY
+            FRONTEND_COUNT=$(find frontend-artifacts -name '*-result.json' | wc -l)
+            echo "Frontend test results: $FRONTEND_COUNT" | tee -a $GITHUB_STEP_SUMMARY
+          else
+            echo "No frontend artifacts found" | tee -a $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Merge all Allure results
+        run: |
+          mkdir -p allure-results-unified
+          
+          echo "🔄 Merging backend service results..."
+          if [ -d "backend-artifacts" ]; then
+            find backend-artifacts -name '*-result.json' -o -name '*-container.json' -o -name '*-attachment.*' | while read file; do
+              cp "$file" allure-results-unified/ 2>/dev/null || true
+            done
+            echo "✅ Backend results merged"
+          fi
+          
+          echo "🔄 Merging frontend test results..."
+          if [ -d "frontend-artifacts" ]; then
+            find frontend-artifacts -name '*-result.json' -o -name '*-container.json' -o -name '*-attachment.*' | while read file; do
+              cp "$file" allure-results-unified/ 2>/dev/null || true
+            done
+            echo "✅ Frontend results merged"
+          fi
+          
+          # Count total merged results
+          TOTAL_RESULTS=$(find allure-results-unified -name '*-result.json' | wc -l)
+          TOTAL_CONTAINERS=$(find allure-results-unified -name '*-container.json' | wc -l)
+          TOTAL_ATTACHMENTS=$(find allure-results-unified -name '*-attachment.*' | wc -l)
+          
+          echo "📊 Merge Summary:" | tee -a $GITHUB_STEP_SUMMARY
+          echo "- Test results: $TOTAL_RESULTS" | tee -a $GITHUB_STEP_SUMMARY
+          echo "- Test containers: $TOTAL_CONTAINERS" | tee -a $GITHUB_STEP_SUMMARY
+          echo "- Attachments: $TOTAL_ATTACHMENTS" | tee -a $GITHUB_STEP_SUMMARY
+          
+          if [ "$TOTAL_RESULTS" -eq 0 ]; then
+            echo "::error::No Allure results found to merge"
+            exit 1
+          fi
+          
+          echo "::notice title=Unified Report::Merged $TOTAL_RESULTS test results from backend and frontend"
+      
+      - name: Restore history from gh-pages
+        continue-on-error: true
+        run: |
+          git fetch origin gh-pages:gh-pages 2>/dev/null || true
+          if git rev-parse --verify gh-pages >/dev/null 2>&1; then
+            git checkout gh-pages -- allure-report/history 2>/dev/null || true
+            if [ -d "allure-report/history" ]; then
+              cp -r allure-report/history allure-results-unified/history
+              echo "::notice::History restored for trend analysis"
+            fi
+          fi
+          git checkout ${{ github.ref_name }}
+      
+      - name: Install Allure CLI
+        run: |
+          wget -q https://github.com/allure-framework/allure2/releases/download/2.25.0/allure-2.25.0.tgz
+          tar -zxf allure-2.25.0.tgz
+          sudo mv allure-2.25.0 /opt/allure
+          sudo ln -s /opt/allure/bin/allure /usr/bin/allure
+          allure --version
+      
+      - name: Generate unified Allure report
+        run: |
+          allure generate allure-results-unified --clean -o allure-report
+          echo "::notice::Unified Allure HTML report generated"
+      
+      - name: Add comprehensive metadata
+        run: |
+          # Create metadata JSON
+          cat > allure-report/metadata.json << EOF
+          {
+            "projectName": "CDS Platform",
+            "buildNumber": "${{ github.run_number }}",
+            "commitSha": "${{ github.sha }}",
+            "commitShort": "${GITHUB_SHA:0:7}",
+            "branch": "${{ github.ref_name }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "repositoryUrl": "${{ github.server_url }}/${{ github.repository }}",
+            "runUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "services": {
+              "backend": ["backend-service", "gateway", "risk-engine"],
+              "frontend": ["unit-tests", "integration-tests", "e2e-tests"]
+            },
+            "reportType": "unified"
+          }
+          EOF
+          
+          # Create build info file
+          cat > allure-report/BUILD_INFO.txt << EOF
+          CDS Platform - Unified Test Report
+          =====================================
+          Build: #${{ github.run_number }}
+          Commit: ${GITHUB_SHA:0:7}
+          Branch: ${{ github.ref_name }}
+          Generated: $(date -u)
+          
+          Services Included:
+          - Backend Service
+          - Gateway Service  
+          - Risk Engine
+          - Frontend (Unit + Integration + E2E)
+          
+          Report URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+          EOF
+          
+          echo "✅ Metadata added to report"
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'allure-report'
+      
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+      
+      - name: Create deployment summary
+        run: |
+          echo "## 🚀 Unified Test Report Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📊 **Report URL**: ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Services Included:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Backend Service" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Gateway Service" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Risk Engine" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Frontend (Unit + Integration + E2E)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 **Commit**: \`${GITHUB_SHA:0:7}\`" >> $GITHUB_STEP_SUMMARY
+          echo "🏗️ **Build**: #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "🌿 **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
