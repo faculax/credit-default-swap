@@ -7,6 +7,21 @@ backend/target/
 gateway/target/
 risk-engine/target/
 
+# Test results and reports
+allure-results/
+allure-results-unified/
+allure-report/
+frontend/allure-results/
+frontend/allure-report/
+backend/allure-results/
+backend/allure-report/
+gateway/allure-results/
+gateway/allure-report/
+risk-engine/allure-results/
+risk-engine/allure-report/
+**/test-output.txt
+backend/test-results-*.json
+
 # IDE folders
 .vscode/
 .idea/
