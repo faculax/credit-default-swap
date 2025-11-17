@@ -85,6 +85,7 @@ public class StressTestService {
                 result.setBaseNpv(baseCaseResult.getNpv());
                 result.setBaseJtd(baseCaseResult.getJtd());
                 result.setCurrency(baseCaseResult.getCurrency());
+                result.setBuySellProtection(tradeData.getBuySellProtection());
                 
                 // 3a. Populate base yield curve
                 Map<String, Double> baseYieldCurve = marketDataGenerator.getYieldCurveMap(
@@ -147,7 +148,8 @@ public class StressTestService {
             RiskMeasures result = oreOutputParser.parseRiskMeasures(
                 oreOutput, tradeData.getTradeId(), tradeData.getCurrency(), workDir.toString());
             
-            logger.info("Base case: NPV={}, JTD={}", result.getNpv(), result.getJtd());
+            logger.info("Base case: NPV={}, JTD={}, Position={}", 
+                result.getNpv(), result.getJtd(), tradeData.getBuySellProtection());
             
             return result;
             
@@ -217,9 +219,9 @@ public class StressTestService {
             if (dimensionCount >= 2) {
                 // Run full matrix: recovery × spread × yield
                 // If a dimension is empty, treat it as a single null value
-                List<BigDecimal> recoveryList = recoveryRates.isEmpty() ? List.of((BigDecimal) null) : recoveryRates;
-                List<BigDecimal> spreadList = spreadShifts.isEmpty() ? List.of((BigDecimal) null) : spreadShifts;
-                List<BigDecimal> yieldList = yieldShifts.isEmpty() ? List.of((BigDecimal) null) : yieldShifts;
+                List<BigDecimal> recoveryList = recoveryRates.isEmpty() ? Collections.singletonList(null) : recoveryRates;
+                List<BigDecimal> spreadList = spreadShifts.isEmpty() ? Collections.singletonList(null) : spreadShifts;
+                List<BigDecimal> yieldList = yieldShifts.isEmpty() ? Collections.singletonList(null) : yieldShifts;
                 
                 for (BigDecimal recoveryRate : recoveryList) {
                     for (BigDecimal spreadShift : spreadList) {
@@ -329,13 +331,24 @@ public class StressTestService {
             RiskMeasures stressedResult = oreOutputParser.parseRiskMeasures(
                 oreOutput, tradeData.getTradeId(), tradeData.getCurrency(), workDir.toString());
             
+            // ORE appears to calculate deltas with opposite sign from economic reality
+            // We need to invert ALL deltas regardless of BUY/SELL
+            BigDecimal stressedNpv = stressedResult.getNpv();
+            BigDecimal baseNpv = baseCase.getNpv();
+            BigDecimal rawDelta = stressedNpv.subtract(baseNpv);
+            BigDecimal deltaNpv = rawDelta.negate();
+            
+            logger.debug("{} position {}: baseNpv={}, stressedNpv={}, rawDelta={}, invertedDelta={}", 
+                tradeData.getBuySellProtection(), tradeData.getTradeId(), 
+                baseNpv, stressedNpv, rawDelta, deltaNpv);
+            
             // Calculate deltas
             StressImpactResult.ScenarioResult scenario = new StressImpactResult.ScenarioResult();
             scenario.setScenarioName(scenarioName);
-            scenario.setNpv(stressedResult.getNpv());
+            scenario.setNpv(stressedNpv);
             scenario.setJtd(stressedResult.getJtd());
             
-            BigDecimal deltaNpv = stressedResult.getNpv().subtract(baseCase.getNpv());
+            // deltaNpv already calculated above with BUY/SELL adjustment
             BigDecimal deltaJtd = stressedResult.getJtd() != null && baseCase.getJtd() != null ?
                 stressedResult.getJtd().subtract(baseCase.getJtd()) : BigDecimal.ZERO;
             
