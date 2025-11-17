@@ -44,8 +44,15 @@ graph TB
         E[✅ Run Unit Tests]
         F[🔗 Run Integration Tests]
         G{Tests Passed?}
-        I[🔒 SAST Scanning]
-        J[📊 Send Results to DefectDojo]
+        I1[🔒 Security Scanning]
+        I2[🔍 OWASP Dependency Check]
+        I3[🐛 SpotBugs Analysis]
+        I4[📋 Checkstyle Validation]
+        I5[📦 npm audit]
+        I6[⚠️ ESLint Security Plugin]
+        I7[🔄 Retire.js Scan]
+        I8[🔑 Gitleaks Secret Scanning]
+        J[📊 Send All Results to DefectDojo]
         K{Security Check?}
         L[🐳 Build Docker Images]
         M[📤 Push to Container Registry]
@@ -79,9 +86,22 @@ graph TB
     D --> E
     E --> F
     F --> G
-    G -->|✅ Yes| I
+    G -->|✅ Yes| I1
     G -->|❌ No| H
-    I --> J
+    I1 --> I2
+    I1 --> I5
+    I1 --> I8
+    I2 --> I3
+    I3 --> I4
+    I5 --> I6
+    I6 --> I7
+    I2 --> J
+    I3 --> J
+    I4 --> J
+    I5 --> J
+    I6 --> J
+    I7 --> J
+    I8 --> J
     J --> K
     K -->|❌ Critical Issues| H
     K -->|✅ Passed| L
@@ -121,7 +141,11 @@ graph TB
 1. **Code Commit**: Developer pushes code to GitHub repository
 2. **Build**: GitHub Actions builds all four applications
 3. **Testing**: Executes unit and integration tests
-4. **Security Scanning**: SAST analysis with results sent to DefectDojo
+4. **Security Scanning**: Comprehensive security analysis with multiple tools:
+   - **Backend Services (Java/Maven)**: OWASP Dependency Check, SpotBugs, Checkstyle
+   - **Frontend (Node.js/npm)**: npm audit, ESLint Security Plugin, Retire.js
+   - **Secret Scanning**: Gitleaks for hardcoded credentials
+   - All results aggregated in DefectDojo
 5. **Containerization**: Builds Docker images for all services
 6. **Deployment**: Parallel deployment to Render platform
 7. **Validation**: Smoke tests verify deployment health
@@ -240,7 +264,10 @@ graph LR
 ### CI/CD & Security
 - **Version Control**: GitHub
 - **CI/CD**: GitHub Actions
-- **SAST**: Static Application Security Testing
+- **Security Scanning Tools**:
+  - **Java/Maven**: OWASP Dependency Check, SpotBugs, Checkstyle
+  - **Node.js/npm**: npm audit, ESLint Security Plugin, Retire.js
+  - **Secret Detection**: Gitleaks
 - **Vulnerability Management**: DefectDojo
 - **Deployment Platform**: Render
 
@@ -253,11 +280,71 @@ graph LR
 
 ## 🔐 Security Measures
 
-1. **SAST Scanning**: Automated security scanning on every build
-2. **DefectDojo Integration**: Centralized vulnerability management
-3. **Pipeline Gating**: Deployment blocked on critical security issues
-4. **HTTPS**: All external communication encrypted
-5. **Database Security**: Managed PostgreSQL with Render's security features
+### Comprehensive Security Scanning Pipeline
+
+All security scan results are integrated with **DefectDojo** for centralized vulnerability management and tracking.
+
+#### 🔧 Backend Services Security (Java/Maven)
+Applies to: API Gateway, Backend Core, Risk Engine
+
+| Tool | Purpose | Details |
+|------|---------|---------|
+| **OWASP Dependency Check** | CVE Detection | Scans Java dependencies against NVD database for known vulnerabilities. Supports NVD API key for faster scanning. |
+| **SpotBugs** | Static Code Analysis | Detects security bugs, code vulnerabilities, and potential issues in Java bytecode. |
+| **Checkstyle** | Code Quality & Security | Enforces coding standards and identifies risky patterns that could lead to security issues. |
+
+#### ⚛️ Frontend Security (Node.js/npm)
+
+| Tool | Purpose | Details |
+|------|---------|---------|
+| **npm audit** | Dependency Vulnerabilities | Checks for known security vulnerabilities in npm packages and dependencies. |
+| **ESLint Security Plugin** | Secure Coding Practices | Flags insecure coding patterns in JavaScript/TypeScript code. |
+| **Retire.js** | Library Vulnerability Detection | Identifies use of JavaScript libraries with known security vulnerabilities. |
+
+#### 🔑 Secret Scanning (All Repositories)
+
+| Tool | Purpose | Details |
+|------|---------|---------|
+| **Gitleaks** | Secret Detection | Scans entire codebase history for hardcoded secrets, credentials, API keys, tokens, and sensitive data. |
+
+### Security Workflow
+
+```
+Tests Pass → Security Scanning Initiated
+    │
+    ├─→ Java Services (parallel)
+    │   ├─→ OWASP Dependency Check (CVE scan)
+    │   ├─→ SpotBugs (static analysis)
+    │   └─→ Checkstyle (code quality)
+    │
+    ├─→ Frontend (parallel)
+    │   ├─→ npm audit (dependency check)
+    │   ├─→ ESLint Security Plugin (code analysis)
+    │   └─→ Retire.js (library scan)
+    │
+    └─→ Secret Scanning
+        └─→ Gitleaks (credential detection)
+    
+All Results → DefectDojo → Security Gate
+    │
+    ├─→ Critical Issues Found → Pipeline Fails
+    └─→ Acceptable Risk Level → Continue to Build
+```
+
+### DefectDojo Integration
+
+- **Centralized Dashboard**: All security findings aggregated in one platform
+- **Vulnerability Tracking**: Track remediation progress across all tools
+- **Risk Assessment**: Automated severity classification and prioritization
+- **Compliance Reporting**: Generate security compliance reports
+- **Trend Analysis**: Historical vulnerability trends and metrics
+
+### Pipeline Security Gates
+
+1. **Critical Vulnerabilities**: Pipeline fails immediately
+2. **High Severity Issues**: Requires approval to proceed (configurable)
+3. **Medium/Low Severity**: Logged for review, deployment continues
+4. **Zero Secrets Tolerance**: Any hardcoded secret blocks deployment
 
 ---
 
