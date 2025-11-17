@@ -21,23 +21,25 @@ This hierarchy enables filtering and grouping by test type in the Behaviors view
 This is the ONLY correct pattern. All tests MUST follow this approach:
 
 ```java
+import com.creditdefaultswap.unit.platform.testing.allure.EpicType;
+import com.creditdefaultswap.unit.platform.testing.allure.FeatureType;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
 import org.junit.jupiter.api.Test;
 
-@Epic("Unit Tests")  // ✅ CLASS level ONLY
+@Epic(EpicType.UNIT_TESTS)  // ✅ CLASS level ONLY - using constant
 class CreditEventServiceTest {
     
     @Test
-    @Feature("Backend Service")  // ✅ METHOD level
+    @Feature(FeatureType.BACKEND_SERVICE)  // ✅ METHOD level - using constant
     @Story("Credit Event Processing - Record New Event")  // ✅ METHOD level
     void testRecordCreditEvent_Success() {
         // Test implementation
     }
     
     @Test
-    @Feature("Backend Service")  // ✅ Each test gets its own labels
+    @Feature(FeatureType.BACKEND_SERVICE)  // ✅ Each test gets its own labels
     @Story("Credit Event Processing - Idempotent Existing Event")
     void testRecordCreditEvent_Idempotent() {
         // Test implementation
@@ -45,11 +47,17 @@ class CreditEventServiceTest {
 }
 ```
 
+**Constants Location:**
+- `EpicType.java` and `FeatureType.java` are in `com.creditdefaultswap.unit.platform.testing.allure` package
+- Available constants:
+  - **EpicType:** `UNIT_TESTS`, `INTEGRATION_TESTS`, `E2E_TESTS`
+  - **FeatureType:** `BACKEND_SERVICE`, `FRONTEND_SERVICE`, `GATEWAY_SERVICE`, `RISK_ENGINE_SERVICE`
+
 ### ❌ WRONG Pattern (DO NOT USE)
 
 ```java
-@Epic("Unit Tests")
-@Feature("Backend Service")  // ❌ Wrong - wastes Feature at class level
+@Epic(EpicType.UNIT_TESTS)  // ❌ Using string literal instead of constant
+@Feature(FeatureType.BACKEND_SERVICE)  // ❌ Wrong - wastes Feature at class level
 @Story("Credit Event Processing")  // ❌ Wrong - all methods share same story
 class CreditEventServiceTest {
     
@@ -64,25 +72,26 @@ class CreditEventServiceTest {
 - Putting @Feature/@Story at class level means ALL tests share the same labels
 - In Behaviors view, you can't distinguish individual test scenarios
 - Each test method MUST have its own @Feature and @Story for proper reporting
+- **Use constants** (EpicType, FeatureType) instead of string literals for consistency
 
 ### Annotation Guidelines
 
 **@Epic Annotation (CLASS LEVEL ONLY):**
 - Represents the test type categorization
-- Standard values:
-  - `"Unit Tests"` - Pure unit tests with mocked dependencies
-  - `"Integration Tests"` - Tests using Spring context or database
-  - `"E2E Tests"` - End-to-end tests across multiple services
+- **Use `EpicType` constants:**
+  - `EpicType.UNIT_TESTS` - Pure unit tests with mocked dependencies
+  - `EpicType.INTEGRATION_TESTS` - Tests using Spring context or database
+  - `EpicType.E2E_TESTS` - End-to-end tests across multiple services
 - Creates top-level grouping in Allure Behaviors view
 - **Place ONLY at class level**, never at method level
 
 **@Feature Annotation (METHOD LEVEL - EACH @Test):**
 - Represents the service or major feature area
-- Standard values:
-  - `"Backend Service"` - Core platform services (cds-platform)
-  - `"Gateway Service"` - API gateway services
-  - `"Risk Engine Service"` - Risk calculation services
-  - `"Frontend Service"` - UI components and pages
+- **Use `FeatureType` constants:**
+  - `FeatureType.BACKEND_SERVICE` - Core platform services (cds-platform)
+  - `FeatureType.GATEWAY_SERVICE` - API gateway services
+  - `FeatureType.RISK_ENGINE_SERVICE` - Risk calculation services
+  - `FeatureType.FRONTEND_SERVICE` - UI components and pages
 - Creates second-level grouping under Epic in Behaviors view
 - **MUST be added to EACH @Test method**
 
@@ -102,36 +111,36 @@ class CreditEventServiceTest {
 
 **Backend Platform - Unit Tests:**
 ```java
-@Epic("Unit Tests")  // Class level ONLY
+@Epic(EpicType.UNIT_TESTS)  // Class level ONLY
 class CDSTradeServiceTest {
     
     @Test
-    @Feature("Backend Service")  // Method level
+    @Feature(FeatureType.BACKEND_SERVICE)  // Method level
     @Story("CDS Trade Management - Save Trade")
     void testSaveTrade() {
         // Pure unit test with mocked dependencies
     }
     
     @Test
-    @Feature("Backend Service")  // Each method gets labels
+    @Feature(FeatureType.BACKEND_SERVICE)  // Each method gets labels
     @Story("CDS Trade Management - Get Trade By ID")
     void testGetTradeById() {
         // Another test scenario
     }
 }
 
-@Epic("Unit Tests")
+@Epic(EpicType.UNIT_TESTS)
 class CashSettlementServiceTest {
     
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Cash Settlement - New Calculation")
     void testCalculateCashSettlement_NewEvent() {
         // Unit test for settlement processing
     }
     
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Cash Settlement - Custom Recovery Rate")
     void testCalculateCashSettlement_CustomRecovery() {
         // Test with custom recovery
@@ -141,29 +150,29 @@ class CashSettlementServiceTest {
 
 **Backend Platform - Integration Tests:**
 ```java
-@Epic("Integration Tests")  // Class level ONLY
+@Epic(EpicType.INTEGRATION_TESTS)  // Class level ONLY
 class CDSTradeRepositoryExampleIntegrationTest {
     
     @Test
-    @Feature("Backend Service")  // Method level
+    @Feature(FeatureType.BACKEND_SERVICE)  // Method level
     @Story("CDS Trade Repository - Save And Retrieve")
     void shouldSaveAndRetrieveCDSTrade() {
         // Integration test with Spring context and database
     }
     
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("CDS Trade Repository - Find All Trades")
     void shouldFindAllTrades() {
         // Another integration scenario
     }
 }
 
-@Epic("Integration Tests")
+@Epic(EpicType.INTEGRATION_TESTS)
 class CouponScheduleServiceTest {
     
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Coupon Schedule Service - Generate IMM Schedule")
     void testGenerateImmSchedule() {
         // Integration test for schedule generation
@@ -173,29 +182,29 @@ class CouponScheduleServiceTest {
 
 **Gateway Service - Unit Tests:**
 ```java
-@Epic("Unit Tests")
+@Epic(EpicType.UNIT_TESTS)
 class VersionControllerTest {
     
     @Test
-    @Feature("Gateway Service")
+    @Feature(FeatureType.GATEWAY_SERVICE)
     @Story("Version API - Get Version Info")
     public void testGetVersionInfo() {
         // Test for version endpoint
     }
 }
 
-@Epic("Unit Tests")
+@Epic(EpicType.UNIT_TESTS)
 class AuthFilterTest {
     
     @Test
-    @Feature("Gateway Service")
+    @Feature(FeatureType.GATEWAY_SERVICE)
     @Story("Authentication - Valid Token")
     void testAuthWithValidToken() {
         // Test for auth handling
     }
     
     @Test
-    @Feature("Gateway Service")
+    @Feature(FeatureType.GATEWAY_SERVICE)
     @Story("Authentication - Invalid Token")
     void testAuthWithInvalidToken() {
         // Test rejection scenario
@@ -205,29 +214,29 @@ class AuthFilterTest {
 
 **Risk Engine Service - Unit Tests:**
 ```java
-@Epic("Unit Tests")
+@Epic(EpicType.UNIT_TESTS)
 class RiskCalculationServiceTest {
     
     @Test
-    @Feature("Risk Engine Service")
+    @Feature(FeatureType.RISK_ENGINE_SERVICE)
     @Story("Risk Calculation - ORE Success")
     void testCalculateRiskMeasures_OreSuccess() {
         // Test for successful risk calculation
     }
     
     @Test
-    @Feature("Risk Engine Service")
+    @Feature(FeatureType.RISK_ENGINE_SERVICE)
     @Story("Risk Calculation - ORE Invalid Output")
     void testCalculateRiskMeasures_OreInvalidOutput() {
         // Test error handling
     }
 }
 
-@Epic("Unit Tests")
+@Epic(EpicType.UNIT_TESTS)
 class OreProcessManagerTest {
     
     @Test
-    @Feature("Risk Engine Service")
+    @Feature(FeatureType.RISK_ENGINE_SERVICE)
     @Story("ORE Process Management - Execute With Valid Input")
     void testExecuteCalculation_WithValidInput() {
         // Test for ORE process handling
@@ -274,12 +283,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-@Epic("Unit Tests")  // 1. Epic at class level
+@Epic(EpicType.UNIT_TESTS)  // 1. Epic at class level
 @ExtendWith(MockitoExtension.class)  // 2. Other class annotations
 class MyServiceTest {  // 3. Class declaration
     
     @Test  // 1. Test marker
-    @Feature("Backend Service")  // 2. Feature at method level
+    @Feature(FeatureType.BACKEND_SERVICE)  // 2. Feature at method level
     @Story("My Service - Specific Scenario")  // 3. Story at method level
     void testSomething() {  // 4. Method declaration
         // Test implementation
@@ -438,11 +447,11 @@ import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
 
-@Epic("Unit Tests")  // Class level ONLY
+@Epic(EpicType.UNIT_TESTS)  // Class level ONLY
 class DateUtilsExampleTest {
     
     @Test
-    @Feature("Backend Service")  // Method level
+    @Feature(FeatureType.BACKEND_SERVICE)  // Method level
     @Story("Date Utilities - Calculate Days Between")  // Method level
     void testCalculateDaysBetween() {
         // Test implementation
@@ -463,11 +472,11 @@ class CDSTradeRepositoryExampleIntegrationTest {
 }
 
 // After (CORRECT)
-@Epic("Integration Tests")  // Class level ONLY
+@Epic(EpicType.INTEGRATION_TESTS)  // Class level ONLY
 class CDSTradeRepositoryExampleIntegrationTest {
     
     @Test
-    @Feature("Backend Service")  // Method level
+    @Feature(FeatureType.BACKEND_SERVICE)  // Method level
     @Story("CDS Trade Repository - Save And Retrieve")  // Method level
     void shouldSaveAndRetrieveCDSTrade() {
         // Test
@@ -478,8 +487,8 @@ class CDSTradeRepositoryExampleIntegrationTest {
 **Old Class-Level Pattern (ALSO WRONG - DO NOT USE):**
 ```java
 // This is WRONG even though it uses @Epic/@Feature/@Story
-@Epic("Unit Tests")
-@Feature("Backend Service")  // ❌ Wrong - at class level
+@Epic(EpicType.UNIT_TESTS)
+@Feature(FeatureType.BACKEND_SERVICE)  // ❌ Wrong - at class level
 @Story("Credit Event Processing")  // ❌ Wrong - at class level
 class CreditEventServiceTest {
     
@@ -492,11 +501,11 @@ class CreditEventServiceTest {
 
 **Correct Pattern:**
 ```java
-@Epic("Unit Tests")  // ✅ Class level ONLY
+@Epic(EpicType.UNIT_TESTS)  // ✅ Class level ONLY
 class CreditEventServiceTest {
     
     @Test
-    @Feature("Backend Service")  // ✅ Method level
+    @Feature(FeatureType.BACKEND_SERVICE)  // ✅ Method level
     @Story("Credit Event Processing - Specific Scenario")  // ✅ Method level
     void testMethod() {
         // ...
@@ -561,9 +570,9 @@ After running tests, verify 3-level Behaviors view hierarchy:
    - @Feature and @Story at METHOD level (each @Test)
    - Never put @Feature or @Story at class level
 2. **Test Type Classification**: Use correct Epic based on test type:
-   - Unit tests with mocks → `@Epic("Unit Tests")`
-   - Tests with Spring context/DB → `@Epic("Integration Tests")`
-   - Full system tests → `@Epic("E2E Tests")`
+   - Unit tests with mocks → `@Epic(EpicType.UNIT_TESTS)`
+   - Tests with Spring context/DB → `@Epic(EpicType.INTEGRATION_TESTS)`
+   - Full system tests → `@Epic(EpicType.E2E_TESTS)`
 3. **Unique Stories**: Each @Test method needs unique @Story describing its specific scenario
 4. **Story Format**: Use `"<Component> - <Specific Action>"` format for clarity
 5. **Consistency**: Use same Feature names across related tests
@@ -621,3 +630,4 @@ After running tests, verify 3-level Behaviors view hierarchy:
 - **CI Workflows**: `.github/workflows/unified-reports.yml`
 - **EpicType Enum**: `backend/src/test/java/.../testing/allure/EpicType.java`
 - **FeatureType Enum**: `backend/src/test/java/.../testing/allure/FeatureType.java`
+

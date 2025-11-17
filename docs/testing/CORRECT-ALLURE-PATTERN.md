@@ -4,17 +4,22 @@
 
 ### Class Level
 ```java
+import com.creditdefaultswap.unit.platform.testing.allure.EpicType;
 import io.qameta.allure.Epic;
 
-@Epic("Unit Tests")  // or "Integration Tests" or "E2E Tests"
+@Epic(EpicType.UNIT_TESTS)  // or INTEGRATION_TESTS or E2E_TESTS
 @ExtendWith(MockitoExtension.class)
 class MyServiceTest {
 ```
 
 ### Method Level
 ```java
+import com.creditdefaultswap.unit.platform.testing.allure.FeatureType;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+
 @Test
-@Feature("Backend Service")  // or "Frontend Service", "Gateway Service", "Risk Engine Service"
+@Feature(FeatureType.BACKEND_SERVICE)  // or FRONTEND_SERVICE, GATEWAY_SERVICE, RISK_ENGINE_SERVICE
 @Story("Specific scenario description")
 void testMethod() {
     // test code
@@ -23,12 +28,12 @@ void testMethod() {
 
 ## ❌ WRONG Pattern (Old)
 ```java
-@Epic("Unit Tests")
-@Feature("Backend Service")
-@Story("Specific scenario")  // <- WRONG: wastes Story at class level
+@Epic("Unit Tests")  // ❌ Using string literal instead of EpicType constant
+@Feature("Backend Service")  // ❌ WRONG: class level Feature wasted
+@Story("Specific scenario")  // ❌ WRONG: wastes Story at class level
 class MyServiceTest {
     
-    @Test  // <- WRONG: no Feature/Story at method level
+    @Test  // ❌ WRONG: no Feature/Story at method level
     void testMethod() {
     }
 }
@@ -65,22 +70,28 @@ Behaviors
 
 This creates a 3-level hierarchy: Epic → Feature → Story
 
-## 📝 Enums (Optional but Recommended)
+## 📝 Constants (REQUIRED)
+
+**Always use `EpicType` and `FeatureType` constants** for consistency and compile-time safety:
 
 ```java
-// Use EpicType enum for consistency
+// EpicType and FeatureType are constant classes (not enums)
 import com.creditdefaultswap.unit.platform.testing.allure.EpicType;
 import com.creditdefaultswap.unit.platform.testing.allure.FeatureType;
 
-@Epic(EpicType.UNIT_TESTS.getValue())
+@Epic(EpicType.UNIT_TESTS)  // EpicType.UNIT_TESTS, INTEGRATION_TESTS, E2E_TESTS
 class MyTest {
     
     @Test
-    @Feature(FeatureType.BACKEND_SERVICE.getValue())
+    @Feature(FeatureType.BACKEND_SERVICE)  // FeatureType.BACKEND_SERVICE, FRONTEND_SERVICE, GATEWAY_SERVICE, RISK_ENGINE_SERVICE
     @Story("Specific scenario")
     void test() {}
 }
 ```
+
+**Available Constants:**
+- **EpicType:** `UNIT_TESTS`, `INTEGRATION_TESTS`, `E2E_TESTS`
+- **FeatureType:** `BACKEND_SERVICE`, `FRONTEND_SERVICE`, `GATEWAY_SERVICE`, `RISK_ENGINE_SERVICE`
 
 ## Frontend Pattern
 

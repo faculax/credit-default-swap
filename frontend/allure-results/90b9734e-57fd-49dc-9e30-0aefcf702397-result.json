@@ -1,0 +1,39 @@
+{
+    "uuid":  "90b9734e-57fd-49dc-9e30-0aefcf702397",
+    "historyId":  "6a814581ae1f548d0948ff7e08ed4f72",
+    "name":  "should display lastRun date in title attribute [story:UTS-2.2] [testType:unit] [service:frontend] [feature:Frontend Service] [epic:risk-ui Tests] [microservice:risk-ui]",
+    "fullName":  "RegressionStatusBadge Unit Tests [story:UTS-2.2] [testType:unit] [service:frontend] [feature:Frontend Service] [epic:risk-ui Tests] [microservice:risk-ui] should display lastRun date in title attribute [story:UTS-2.2] [testType:unit] [service:frontend] [feature:Frontend Service] [epic:risk-ui Tests] [microservice:risk-ui]",
+    "start":  1763325637935,
+    "stop":  1763325637979,
+    "description":  "",
+    "descriptionHtml":  "",
+    "stage":  "finished",
+    "status":  "passed",
+    "labels":  [
+                   {
+                       "value":  "RegressionStatusBadge Unit Tests [story:UTS-2.2] [testType:unit] [service:frontend] [feature:Frontend Service] [epic:risk-ui Tests] [microservice:risk-ui]",
+                       "name":  "suite"
+                   },
+                   {
+                       "name":  "thread",
+                       "value":  "02"
+                   },
+                   {
+                       "value":  "Frontend Service",
+                       "name":  "feature"
+                   },
+                   {
+                       "value":  "risk-ui Tests",
+                       "name":  "story"
+                   }
+               ],
+    "links":  [
+
+              ],
+    "attachments":  [
+
+                    ],
+    "parameters":  [
+
+                   ]
+}

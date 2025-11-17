@@ -8,6 +8,8 @@ import com.creditdefaultswap.platform.service.NettingSetAssignmentService;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
+import com.creditdefaultswap.unit.platform.testing.allure.EpicType;
+import com.creditdefaultswap.unit.platform.testing.allure.FeatureType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,7 +26,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-@Epic("Unit Tests")
+@Epic(EpicType.UNIT_TESTS)
 @ExtendWith(MockitoExtension.class)
 public class CDSTradeServiceTest {
 
@@ -60,7 +62,7 @@ public class CDSTradeServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("CDS Trade Management - Save Trade")
     void testSaveTrade() {
         // Given
@@ -80,7 +82,7 @@ public class CDSTradeServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("CDS Trade Management - Get Trade By ID")
     void testGetTradeById() {
         // Given
@@ -96,7 +98,7 @@ public class CDSTradeServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("CDS Trade Management - Get Trade Not Found")
     void testGetTradeById_NotFound() {
         // Given
@@ -111,7 +113,7 @@ public class CDSTradeServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("CDS Trade Management - Delete Trade")
     void testDeleteTrade() {
         // When
@@ -122,7 +124,7 @@ public class CDSTradeServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("CDS Trade Management - Get Trade Count")
     void testGetTradeCount() {
         // Given

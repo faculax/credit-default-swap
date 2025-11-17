@@ -9,6 +9,8 @@ import com.creditdefaultswap.platform.repository.PhysicalSettlementRepository;
 import com.creditdefaultswap.platform.service.AuditService;
 import com.creditdefaultswap.platform.service.CashSettlementService;
 import com.creditdefaultswap.platform.service.CreditEventService;
+import com.creditdefaultswap.unit.platform.testing.allure.EpicType;
+import com.creditdefaultswap.unit.platform.testing.allure.FeatureType;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
@@ -31,7 +33,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-@Epic("Unit Tests")
+@Epic(EpicType.UNIT_TESTS)
 @ExtendWith(MockitoExtension.class)
 class CreditEventServiceTest {
 
@@ -74,7 +76,7 @@ class CreditEventServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Credit Event Processing - Record New Event")
     void recordCreditEvent_Success_NewEvent() {
         // Arrange
@@ -112,7 +114,7 @@ class CreditEventServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Credit Event Processing - Idempotent Existing Event")
     void recordCreditEvent_Success_ExistingEvent_Idempotent() {
         // Arrange
@@ -137,7 +139,7 @@ class CreditEventServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Credit Event Processing - Trade Not Found Error")
     void recordCreditEvent_TradeNotFound_ThrowsException() {
         // Arrange
@@ -153,7 +155,7 @@ class CreditEventServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Credit Event Processing - Inactive Trade Error")
     void recordCreditEvent_TradeNotActive_ThrowsException() {
         // Arrange
@@ -170,7 +172,7 @@ class CreditEventServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Credit Event Processing - Future Event Date Validation")
     void recordCreditEvent_InvalidEventDate_Future_ThrowsException() {
         // Arrange
@@ -186,7 +188,7 @@ class CreditEventServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Credit Event Processing - Notice Date Validation")
     void recordCreditEvent_InvalidNoticeDateBeforeEventDate_ThrowsException() {
         // Arrange
@@ -203,7 +205,7 @@ class CreditEventServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Credit Event Processing - Physical Settlement Creation")
     void recordCreditEvent_PhysicalSettlement_CreatesScaffold() {
         // Arrange
@@ -233,7 +235,7 @@ class CreditEventServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Credit Event Processing - Bankruptcy Propagation")
     void recordCreditEvent_BankruptcyEvent_PropagatesOtherActiveTrades() {
         // Arrange
@@ -287,7 +289,7 @@ class CreditEventServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Credit Event Processing - Restructuring Propagation")
     void recordCreditEvent_RestructuringEvent_PropagatesOtherActiveTrades() {
         // Arrange
@@ -333,7 +335,7 @@ class CreditEventServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Credit Event Processing - Non-Terminal Event Behavior")
     void recordCreditEvent_NonTerminalEvent_DoesNotPropagate() {
         // Arrange

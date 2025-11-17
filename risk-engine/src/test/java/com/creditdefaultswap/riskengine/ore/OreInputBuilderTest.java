@@ -5,6 +5,8 @@ import com.creditdefaultswap.riskengine.service.TradeDataService;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
+import com.creditdefaultswap.unit.platform.testing.allure.EpicType;
+import com.creditdefaultswap.unit.platform.testing.allure.FeatureType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -19,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@Epic("Unit Tests")
+@Epic(EpicType.UNIT_TESTS)
 class OreInputBuilderTest {
     
     private OreInputBuilder oreInputBuilder;
@@ -70,7 +72,7 @@ class OreInputBuilderTest {
     }
     
     @Test
-    @Feature("Risk Engine Service")
+    @Feature(FeatureType.RISK_ENGINE_SERVICE)
     @Story("ORE Input Building - Build Risk Calculation Input")
     void testBuildRiskCalculationInput() {
         ScenarioRequest request = new ScenarioRequest();
@@ -93,7 +95,7 @@ class OreInputBuilderTest {
     }
     
     @Test
-    @Feature("Risk Engine Service")
+    @Feature(FeatureType.RISK_ENGINE_SERVICE)
     @Story("ORE Input Building - Build Health Check Input")
     void testBuildHealthCheckInput() {
         String xml = oreInputBuilder.buildHealthCheckInput();
@@ -107,7 +109,7 @@ class OreInputBuilderTest {
     }
     
     @Test
-    @Feature("Risk Engine Service")
+    @Feature(FeatureType.RISK_ENGINE_SERVICE)
     @Story("ORE Input Building - Build With Null Date")
     void testBuildRiskCalculationInput_WithNullDate() {
         ScenarioRequest request = new ScenarioRequest();

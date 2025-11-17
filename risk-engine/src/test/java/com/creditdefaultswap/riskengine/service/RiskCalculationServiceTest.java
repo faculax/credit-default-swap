@@ -10,6 +10,8 @@ import com.creditdefaultswap.riskengine.ore.OrePortfolioGenerator;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
+import com.creditdefaultswap.unit.platform.testing.allure.EpicType;
+import com.creditdefaultswap.unit.platform.testing.allure.FeatureType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,7 +31,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-@Epic("Unit Tests")
+@Epic(EpicType.UNIT_TESTS)
 @ExtendWith(MockitoExtension.class)
 public class RiskCalculationServiceTest {
 
@@ -57,7 +59,7 @@ public class RiskCalculationServiceTest {
     }
 
     @Test
-    @Feature("Risk Engine Service")
+    @Feature(FeatureType.RISK_ENGINE_SERVICE)
     @Story("Risk Calculation - ORE Success")
     void testCalculateRiskMeasures_OreSuccess() {
         // Arrange
@@ -104,7 +106,7 @@ public class RiskCalculationServiceTest {
     }
     
     @Test
-    @Feature("Risk Engine Service")
+    @Feature(FeatureType.RISK_ENGINE_SERVICE)
     @Story("Risk Calculation - ORE Invalid Output")
     void testCalculateRiskMeasures_OreInvalidOutput() {
         // Arrange
@@ -133,7 +135,7 @@ public class RiskCalculationServiceTest {
     }
     
     @Test
-    @Feature("Risk Engine Service")
+    @Feature(FeatureType.RISK_ENGINE_SERVICE)
     @Story("Risk Calculation - ORE Execution Exception")
     void testCalculateRiskMeasures_OreExecutionException() {
         // Arrange
@@ -159,7 +161,7 @@ public class RiskCalculationServiceTest {
     }
     
     @Test
-    @Feature("Risk Engine Service")
+    @Feature(FeatureType.RISK_ENGINE_SERVICE)
     @Story("Risk Calculation - Get Engine Status")
     void testGetEngineStatus() {
         // Arrange
@@ -215,3 +217,4 @@ public class RiskCalculationServiceTest {
         return measures;
     }
 }
+

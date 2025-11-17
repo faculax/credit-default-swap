@@ -10,6 +10,8 @@ import com.creditdefaultswap.platform.service.CdsPortfolioService;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
+import com.creditdefaultswap.unit.platform.testing.allure.EpicType;
+import com.creditdefaultswap.unit.platform.testing.allure.FeatureType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@Epic("Unit Tests")
+@Epic(EpicType.UNIT_TESTS)
 @ExtendWith(MockitoExtension.class)
 class CdsPortfolioServiceTest {
 
@@ -60,7 +62,7 @@ class CdsPortfolioServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("CDS Portfolio Management - Create Portfolio Success")
     void testCreatePortfolio_Success() {
         when(portfolioRepository.existsByNameIgnoreCase(anyString())).thenReturn(false);
@@ -74,7 +76,7 @@ class CdsPortfolioServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("CDS Portfolio Management - Duplicate Name Error")
     void testCreatePortfolio_DuplicateName() {
         when(portfolioRepository.existsByNameIgnoreCase(anyString())).thenReturn(true);
@@ -85,7 +87,7 @@ class CdsPortfolioServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("CDS Portfolio Management - Attach Trades Notional Weights")
     void testAttachTrades_WithNotionalWeights() {
         ConstituentRequest req = new ConstituentRequest(1L, WeightType.NOTIONAL, new BigDecimal("10000000"));
@@ -104,7 +106,7 @@ class CdsPortfolioServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("CDS Portfolio Management - Attach Trades Percent Weights Valid")
     void testAttachTrades_WithPercentWeights_Valid() {
         ConstituentRequest req = new ConstituentRequest(1L, WeightType.PERCENT, new BigDecimal("1.0"));
@@ -122,7 +124,7 @@ class CdsPortfolioServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("CDS Portfolio Management - Attach Trades Percent Weights Invalid")
     void testAttachTrades_WithPercentWeights_Invalid() {
         ConstituentRequest req = new ConstituentRequest(1L, WeightType.PERCENT, new BigDecimal("0.5"));
@@ -136,7 +138,7 @@ class CdsPortfolioServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("CDS Portfolio Management - Detach Constituent")
     void testDetachConstituent() {
         CdsPortfolioConstituent constituent = new CdsPortfolioConstituent(testPortfolio, testTrade, WeightType.NOTIONAL, new BigDecimal("10000000"));
@@ -150,3 +152,4 @@ class CdsPortfolioServiceTest {
         verify(constituentRepository).save(argThat(c -> !c.getActive()));
     }
 }
+

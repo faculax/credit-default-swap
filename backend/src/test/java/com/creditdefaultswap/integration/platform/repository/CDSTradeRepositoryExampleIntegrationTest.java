@@ -8,6 +8,8 @@ import com.creditdefaultswap.platform.repository.CDSTradeRepository;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
+import com.creditdefaultswap.unit.platform.testing.allure.EpicType;
+import com.creditdefaultswap.unit.platform.testing.allure.FeatureType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * interactions with an embedded H2 database. Integration tests are slower but verify
  * that components work together correctly.
  */
-@Epic("Integration Tests")
+@Epic(EpicType.INTEGRATION_TESTS)
 @SpringBootTest(classes = CDSPlatformApplication.class)
 @ActiveProfiles("test")
 @Transactional
@@ -37,7 +39,7 @@ class CDSTradeRepositoryExampleIntegrationTest {
     private CDSTradeRepository tradeRepository;
     
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("CDS Trade Repository - Save And Retrieve")
     void shouldSaveAndRetrieveCDSTrade() {
         // Arrange
@@ -71,7 +73,7 @@ class CDSTradeRepositoryExampleIntegrationTest {
     }
     
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("CDS Trade Repository - Find All Trades")
     void shouldFindAllTrades() {
         // Arrange
@@ -91,7 +93,7 @@ class CDSTradeRepositoryExampleIntegrationTest {
     }
     
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("CDS Trade Repository - Delete By ID")
     void shouldDeleteTradeById() {
         // Arrange
@@ -127,3 +129,4 @@ class CDSTradeRepositoryExampleIntegrationTest {
         return trade;
     }
 }
+

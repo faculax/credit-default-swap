@@ -4,6 +4,8 @@ import com.creditdefaultswap.riskengine.config.RiskEngineConfigProperties;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
+import com.creditdefaultswap.unit.platform.testing.allure.EpicType;
+import com.creditdefaultswap.unit.platform.testing.allure.FeatureType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,7 +15,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@Epic("Unit Tests")
+@Epic(EpicType.UNIT_TESTS)
 @ExtendWith(MockitoExtension.class)
 class OreProcessManagerTest {
     
@@ -33,7 +35,7 @@ class OreProcessManagerTest {
     }
     
     @Test
-    @Feature("Risk Engine Service")
+    @Feature(FeatureType.RISK_ENGINE_SERVICE)
     @Story("ORE Process Management - Execute With Valid Input")
     void testExecuteCalculation_WithValidInput() {
         String testInput = "<test>input</test>";
@@ -46,7 +48,7 @@ class OreProcessManagerTest {
     }
     
     @Test
-    @Feature("Risk Engine Service")
+    @Feature(FeatureType.RISK_ENGINE_SERVICE)
     @Story("ORE Process Management - Execute With Null Input")
     void testExecuteCalculation_WithNullInput() {
         assertDoesNotThrow(() -> {
@@ -56,7 +58,7 @@ class OreProcessManagerTest {
     }
     
     @Test
-    @Feature("Risk Engine Service")
+    @Feature(FeatureType.RISK_ENGINE_SERVICE)
     @Story("ORE Process Management - Constructor With Valid Config")
     void testConstructor_WithValidConfig() {
         RiskEngineConfigProperties testConfig = new RiskEngineConfigProperties();
@@ -69,7 +71,7 @@ class OreProcessManagerTest {
     }
     
     @Test
-    @Feature("Risk Engine Service")
+    @Feature(FeatureType.RISK_ENGINE_SERVICE)
     @Story("ORE Process Management - Returns CompletableFuture")
     void testExecuteCalculation_ReturnsCompletableFuture() {
         String testInput = "<test>simple</test>";

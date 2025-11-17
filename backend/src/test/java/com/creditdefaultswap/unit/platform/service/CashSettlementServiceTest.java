@@ -8,6 +8,8 @@ import com.creditdefaultswap.platform.service.CashSettlementService;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
+import com.creditdefaultswap.unit.platform.testing.allure.EpicType;
+import com.creditdefaultswap.unit.platform.testing.allure.FeatureType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@Epic("Unit Tests")
+@Epic(EpicType.UNIT_TESTS)
 @ExtendWith(MockitoExtension.class)
 class CashSettlementServiceTest {
 
@@ -54,7 +56,7 @@ class CashSettlementServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Cash Settlement - New Calculation")
     void calculateCashSettlement_Success_NewCalculation() {
         // Arrange
@@ -86,7 +88,7 @@ class CashSettlementServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Cash Settlement - Idempotent Existing Calculation")
     void calculateCashSettlement_ExistingCalculation_Idempotent() {
         // Arrange
@@ -105,7 +107,7 @@ class CashSettlementServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Cash Settlement - Custom Recovery Rate")
     void calculateCashSettlement_WithRecoveryRateOverride() {
         // Arrange
@@ -128,7 +130,7 @@ class CashSettlementServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Cash Settlement - Decimal Precision")
     void calculateCashSettlement_PrecisionTest() {
         // Arrange
@@ -152,7 +154,7 @@ class CashSettlementServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Cash Settlement - Rounding Half Up")
     void calculateCashSettlement_RoundingHalfUp() {
         // Arrange
@@ -175,7 +177,7 @@ class CashSettlementServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Cash Settlement - Get Settlement Found")
     void getCashSettlement_Found() {
         // Arrange
@@ -192,7 +194,7 @@ class CashSettlementServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Cash Settlement - Get Settlement Not Found")
     void getCashSettlement_NotFound() {
         // Arrange

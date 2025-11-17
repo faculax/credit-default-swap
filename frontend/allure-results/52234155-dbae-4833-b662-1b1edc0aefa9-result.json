@@ -1,0 +1,39 @@
+{
+    "uuid":  "52234155-dbae-4833-b662-1b1edc0aefa9",
+    "historyId":  "45e3c77b6c59719bbfdcb38f19a6981d",
+    "name":  "should render UNKNOWN status with gray styling [story:UTS-2.2] [testType:unit] [service:frontend] [feature:Frontend Service] [epic:risk-ui Tests] [microservice:risk-ui]",
+    "fullName":  "RegressionStatusBadge Unit Tests [story:UTS-2.2] [testType:unit] [service:frontend] [feature:Frontend Service] [epic:risk-ui Tests] [microservice:risk-ui] should render UNKNOWN status with gray styling [story:UTS-2.2] [testType:unit] [service:frontend] [feature:Frontend Service] [epic:risk-ui Tests] [microservice:risk-ui]",
+    "start":  1763325637928,
+    "stop":  1763325637935,
+    "description":  "",
+    "descriptionHtml":  "",
+    "stage":  "finished",
+    "status":  "passed",
+    "labels":  [
+                   {
+                       "value":  "RegressionStatusBadge Unit Tests [story:UTS-2.2] [testType:unit] [service:frontend] [feature:Frontend Service] [epic:risk-ui Tests] [microservice:risk-ui]",
+                       "name":  "suite"
+                   },
+                   {
+                       "name":  "thread",
+                       "value":  "02"
+                   },
+                   {
+                       "value":  "Frontend Service",
+                       "name":  "feature"
+                   },
+                   {
+                       "value":  "risk-ui Tests",
+                       "name":  "story"
+                   }
+               ],
+    "links":  [
+
+              ],
+    "attachments":  [
+
+                    ],
+    "parameters":  [
+
+                   ]
+}

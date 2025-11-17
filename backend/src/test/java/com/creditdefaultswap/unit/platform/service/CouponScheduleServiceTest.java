@@ -11,6 +11,8 @@ import com.creditdefaultswap.platform.service.CouponScheduleService;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
+import com.creditdefaultswap.unit.platform.testing.allure.EpicType;
+import com.creditdefaultswap.unit.platform.testing.allure.FeatureType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Test class for CouponScheduleService - Epic 5 Story 5.1
  */
-@Epic("Integration Tests")
+@Epic(EpicType.INTEGRATION_TESTS)
 @SpringBootTest(classes = CDSPlatformApplication.class)
 @ActiveProfiles("test")
 @Transactional
@@ -69,7 +71,7 @@ public class CouponScheduleServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Coupon Schedule Service - Generate IMM Schedule")
     void testGenerateImmSchedule() {
         // Generate IMM schedule
@@ -100,7 +102,7 @@ public class CouponScheduleServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Coupon Schedule Service - Get Coupon Periods")
     void testGetCouponPeriods() {
         // First generate a schedule
@@ -114,7 +116,7 @@ public class CouponScheduleServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Coupon Schedule Service - Update Schedule For Notional Change")
     void testUpdateScheduleForNotionalChange() {
         // Generate initial schedule
@@ -139,7 +141,7 @@ public class CouponScheduleServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Coupon Schedule Service - Get Coupon Periods In Range")
     void testGetCouponPeriodsInRange() {
         // Generate schedule
@@ -164,7 +166,7 @@ public class CouponScheduleServiceTest {
     }
 
     @Test
-    @Feature("Backend Service")
+    @Feature(FeatureType.BACKEND_SERVICE)
     @Story("Coupon Schedule Service - Schedule Not Duplicated")
     void testScheduleNotDuplicated() {
         // Generate schedule twice
