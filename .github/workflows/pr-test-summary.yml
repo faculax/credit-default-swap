@@ -2,7 +2,7 @@ name: PR Test Summary
 
 on:
   workflow_run:
-    workflows: ["Backend Tests", "Frontend Tests"]
+    workflows: ["Unified Tests & Publish to Pages"]
     types: [completed]
 
 permissions:
@@ -26,7 +26,7 @@ jobs:
         uses: actions/download-artifact@v4
         continue-on-error: true
         with:
-          pattern: allure-results-backend-*
+          pattern: allure-results-backend
           path: backend-artifacts
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
@@ -35,7 +35,7 @@ jobs:
         uses: actions/download-artifact@v4
         continue-on-error: true
         with:
-          pattern: allure-results-gateway-*
+          pattern: allure-results-gateway
           path: backend-artifacts
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
@@ -44,34 +44,16 @@ jobs:
         uses: actions/download-artifact@v4
         continue-on-error: true
         with:
-          pattern: allure-results-risk-engine-*
+          pattern: allure-results-risk-engine
           path: backend-artifacts
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
       
-      - name: Download frontend unit artifacts
+      - name: Download frontend artifacts
         uses: actions/download-artifact@v4
         continue-on-error: true
         with:
-          pattern: allure-results-frontend-unit-*
-          path: frontend-artifacts
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.workflow_run.id }}
-      
-      - name: Download frontend integration artifacts
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          pattern: allure-results-frontend-integration-*
-          path: frontend-artifacts
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.workflow_run.id }}
-      
-      - name: Download frontend E2E artifacts
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          pattern: allure-results-frontend-e2e-*
+          pattern: allure-results-frontend
           path: frontend-artifacts
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}

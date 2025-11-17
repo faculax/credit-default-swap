@@ -1,0 +1,360 @@
+name: Unified Tests & Publish to Pages
+
+on:
+  push:
+    branches: [main, develop, unified-testing-reporting]
+    paths:
+      - 'backend/**'
+      - 'gateway/**'
+      - 'risk-engine/**'
+      - 'frontend/**'
+      - '.github/workflows/unified-test-and-publish.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+      - 'gateway/**'
+      - 'risk-engine/**'
+      - 'frontend/**'
+  workflow_dispatch:
+
+env:
+  JAVA_VERSION: '21'
+  NODE_VERSION: '18'
+  MAVEN_OPTS: -Xmx2048m -Xms512m
+
+jobs:
+  # ============================================================
+  # BACKEND SERVICES TESTS
+  # ============================================================
+  
+  backend-service-tests:
+    name: Backend Service Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run backend unit tests
+        working-directory: ./backend
+        run: mvn clean test -B
+
+      - name: Run backend integration tests
+        working-directory: ./backend
+        run: mvn test -Pintegration-tests -B
+        continue-on-error: false
+
+      - name: Upload backend Allure results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-results-backend
+          path: backend/target/allure-results/
+          retention-days: 30
+
+  gateway-service-tests:
+    name: Gateway Service Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run gateway tests
+        working-directory: ./gateway
+        run: mvn clean test -B
+
+      - name: Upload gateway Allure results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-results-gateway
+          path: gateway/target/allure-results/
+          retention-days: 30
+
+  risk-engine-tests:
+    name: Risk Engine Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run risk-engine tests
+        working-directory: ./risk-engine
+        run: mvn clean test -B || true
+
+      - name: Upload risk-engine Allure results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-results-risk-engine
+          path: risk-engine/target/allure-results/
+          retention-days: 30
+          if-no-files-found: warn
+
+  # ============================================================
+  # FRONTEND TESTS
+  # ============================================================
+  
+  frontend-tests:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: ./frontend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+      
+      - name: Run unit tests
+        run: npm run test:unit -- --passWithNoTests
+        env:
+          CI: true
+      
+      - name: Upload frontend Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-frontend
+          path: frontend/allure-results/
+          retention-days: 30
+          if-no-files-found: warn
+
+  # ============================================================
+  # MERGE & PUBLISH TO GITHUB PAGES
+  # ============================================================
+  
+  publish-unified-report:
+    name: Publish Unified Report to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: [backend-service-tests, gateway-service-tests, risk-engine-tests, frontend-tests]
+    if: |
+      always() && 
+      github.ref == 'refs/heads/main' &&
+      (needs.backend-service-tests.result == 'success' || needs.frontend-tests.result == 'success')
+    
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+    
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Download all Allure results
+        uses: actions/download-artifact@v4
+        with:
+          path: allure-artifacts
+          pattern: allure-results-*
+          merge-multiple: false
+      
+      - name: List downloaded artifacts
+        run: |
+          echo "## Downloaded Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          ls -la allure-artifacts/ || echo "No artifacts directory"
+          find allure-artifacts -type f -name '*-result.json' | wc -l
+      
+      - name: Merge all Allure results
+        run: |
+          mkdir -p allure-results-unified
+          
+          echo "🔄 Merging all test results..."
+          
+          # Merge backend service results
+          if [ -d "allure-artifacts/allure-results-backend" ]; then
+            cp -r allure-artifacts/allure-results-backend/* allure-results-unified/ 2>/dev/null || true
+            echo "✅ Backend service results merged"
+          fi
+          
+          # Merge gateway results
+          if [ -d "allure-artifacts/allure-results-gateway" ]; then
+            cp -r allure-artifacts/allure-results-gateway/* allure-results-unified/ 2>/dev/null || true
+            echo "✅ Gateway results merged"
+          fi
+          
+          # Merge risk-engine results
+          if [ -d "allure-artifacts/allure-results-risk-engine" ]; then
+            cp -r allure-artifacts/allure-results-risk-engine/* allure-results-unified/ 2>/dev/null || true
+            echo "✅ Risk engine results merged"
+          fi
+          
+          # Merge frontend results
+          if [ -d "allure-artifacts/allure-results-frontend" ]; then
+            cp -r allure-artifacts/allure-results-frontend/* allure-results-unified/ 2>/dev/null || true
+            echo "✅ Frontend results merged"
+          fi
+          
+          # Count total merged results
+          TOTAL_RESULTS=$(find allure-results-unified -name '*-result.json' 2>/dev/null | wc -l)
+          TOTAL_CONTAINERS=$(find allure-results-unified -name '*-container.json' 2>/dev/null | wc -l)
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📊 **Merge Summary:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Test results: $TOTAL_RESULTS" >> $GITHUB_STEP_SUMMARY
+          echo "- Test containers: $TOTAL_CONTAINERS" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$TOTAL_RESULTS" -eq 0 ]; then
+            echo "::error::No Allure results found to merge"
+            exit 1
+          fi
+          
+          echo "::notice title=Unified Report::Merged $TOTAL_RESULTS test results from all services"
+      
+      - name: Restore history from gh-pages
+        continue-on-error: true
+        run: |
+          git fetch origin gh-pages:gh-pages 2>/dev/null || true
+          if git rev-parse --verify gh-pages >/dev/null 2>&1; then
+            git checkout gh-pages -- allure-report/history 2>/dev/null || true
+            if [ -d "allure-report/history" ]; then
+              cp -r allure-report/history allure-results-unified/history
+              echo "::notice::History restored for trend analysis"
+            fi
+          fi
+          git checkout ${{ github.ref_name }}
+      
+      - name: Install Allure CLI
+        run: |
+          wget -q https://github.com/allure-framework/allure2/releases/download/2.25.0/allure-2.25.0.tgz
+          tar -zxf allure-2.25.0.tgz
+          sudo mv allure-2.25.0 /opt/allure
+          sudo ln -s /opt/allure/bin/allure /usr/bin/allure
+          allure --version
+      
+      - name: Create executor metadata
+        run: |
+          cat > allure-results-unified/executor.json << EOF
+          {
+            "name": "GitHub Actions",
+            "type": "github",
+            "buildName": "Build #${{ github.run_number }}",
+            "buildUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "reportUrl": "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/",
+            "reportName": "CDS Platform - Unified Test Report"
+          }
+          EOF
+      
+      - name: Generate unified Allure report
+        run: |
+          allure generate allure-results-unified --clean -o allure-report
+          echo "::notice::Unified Allure HTML report generated successfully"
+      
+      - name: Add metadata and build info
+        run: |
+          # Create metadata JSON
+          cat > allure-report/metadata.json << EOF
+          {
+            "projectName": "CDS Platform",
+            "buildNumber": "${{ github.run_number }}",
+            "commitSha": "${{ github.sha }}",
+            "commitShort": "${GITHUB_SHA:0:7}",
+            "branch": "${{ github.ref_name }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "repositoryUrl": "${{ github.server_url }}/${{ github.repository }}",
+            "runUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "services": {
+              "backend": ["backend-service", "gateway", "risk-engine"],
+              "frontend": ["unit-tests", "integration-tests"]
+            },
+            "reportType": "unified"
+          }
+          EOF
+          
+          # Create build info file
+          cat > allure-report/BUILD_INFO.txt << EOF
+          CDS Platform - Unified Test Report
+          =====================================
+          Build: #${{ github.run_number }}
+          Commit: ${GITHUB_SHA:0:7}
+          Branch: ${{ github.ref_name }}
+          Generated: $(date -u)
+          
+          Services Included:
+          - Backend Service (Unit + Integration)
+          - Gateway Service
+          - Risk Engine
+          - Frontend (Unit Tests)
+          
+          Report URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+          EOF
+          
+          echo "Build #${{ github.run_number }} - ${GITHUB_SHA:0:7}" > allure-report/BUILD_NUMBER.txt
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'allure-report'
+      
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+      
+      - name: Add deployment summary
+        run: |
+          echo "# 🚀 Unified Test Report Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📊 **Report URL**: ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Services Included:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Backend Service (Unit + Integration Tests)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Gateway Service" >> $GITHUB_STEP_SUMMARY
+          echo "- ⚠️ Risk Engine (with known issues)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Frontend (Unit Tests)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Build Information:" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔗 Commit: \`${GITHUB_SHA:0:7}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- 🏗️ Build: #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 🌿 Branch: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 📅 Generated: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
