@@ -1,0 +1,9 @@
+{
+  "endpoint": "http://localhost:8080",
+  "token": "cds_OggK_fa1TB2HvH1b7Ppmvynpq4hVdrjbJ3K8HwCApV7jHv-S5cCJd7BKUcABDyNN",
+  "project": "cds-platform-test-auto",
+  "launchName": "CDS Platform Test Evidence",
+  "launchDescription": "Testing automatic project creation",
+  "mode": "DEFAULT",
+  "debug": true
+}

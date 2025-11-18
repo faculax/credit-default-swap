@@ -10,9 +10,14 @@
     "dev": "tsc --watch",
     "test": "jest",
     "lint": "eslint src --ext .ts",
+    "generate-tests": "node dist/cli/generate-tests.js",
     "parse-stories": "node dist/cli/parse-stories.js",
     "plan-tests": "node dist/cli/plan-tests.js",
-    "generate-backend-tests": "node dist/cli/generate-backend-tests.js"
+    "generate-backend-tests": "node dist/cli/generate-backend-tests.js",
+    "validate-tests": "node dist/cli/validate-tests.js",
+    "upload-reportportal": "node dist/cli/upload-reportportal.js",
+    "upload-story-tests": "node dist/cli/upload-story-tests.js",
+    "export-evidence": "node dist/cli/export-evidence.js"
   },
   "keywords": [
     "test-evidence",

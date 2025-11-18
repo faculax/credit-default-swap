@@ -1,0 +1,94 @@
+{
+  "id": "ff92eda7-7f86-47eb-b8ce-f0a428f753aa",
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-18T16:56:15.414Z",
+  "tests": {
+    "test-samples\\valid-test.spec.ts": {
+      "id": "a87424ca-0704-488d-a08a-eb61d789349c",
+      "filePath": "test-samples\\valid-test.spec.ts",
+      "framework": "playwright",
+      "testType": "unit",
+      "storyId": "story-03-001",
+      "status": "crystallized",
+      "review": {
+        "id": "06901fae-2130-4b8b-b4c2-29c29a9cfb42",
+        "filePath": "test-samples\\valid-test.spec.ts",
+        "status": "crystallized",
+        "reviewers": [
+          {
+            "name": "auto-validator",
+            "timestamp": "2025-11-18T16:56:15.419Z",
+            "decision": "approve",
+            "comments": "Auto-approved after validation"
+          }
+        ],
+        "createdAt": "2025-11-18T16:56:15.417Z",
+        "lastModifiedAt": "2025-11-18T16:56:15.419Z",
+        "validationResult": {
+          "filePath": "test-samples\\valid-test.spec.ts",
+          "framework": "playwright",
+          "testType": "unit",
+          "valid": true,
+          "issues": [],
+          "metrics": {
+            "linesOfCode": 43,
+            "testCaseCount": 2,
+            "assertionCount": 9,
+            "assertionsPerTest": 4.5,
+            "hasSetup": true,
+            "hasTeardown": false,
+            "incompleteCommentCount": 0,
+            "mockCount": 0
+          },
+          "timestamp": "2025-11-18T16:56:15.417Z",
+          "duration": 1
+        },
+        "qualityScore": 95
+      },
+      "contentHash": "a4048298587f65af308d99bf6632defba42b1bed365a4ae2c850d80f37fb5702",
+      "locked": true,
+      "version": 1,
+      "crystallizedAt": "2025-11-18T16:56:15.420Z",
+      "lockReason": "Automatically locked after crystallization"
+    }
+  },
+  "byStatus": {
+    "generated": [],
+    "approved": [],
+    "crystallized": [
+      "test-samples\\valid-test.spec.ts"
+    ]
+  },
+  "byStory": {
+    "story-03-001": [
+      "test-samples\\valid-test.spec.ts"
+    ]
+  },
+  "byFramework": {
+    "playwright": [
+      "test-samples\\valid-test.spec.ts"
+    ]
+  },
+  "byType": {
+    "unit": [
+      "test-samples\\valid-test.spec.ts"
+    ]
+  },
+  "stats": {
+    "total": 1,
+    "byStatus": {
+      "generated": 0,
+      "under-review": 0,
+      "needs-changes": 0,
+      "approved": 0,
+      "crystallized": 1,
+      "deprecated": 0
+    },
+    "averageQualityScore": 95,
+    "crystallizedToday": 1,
+    "underReview": 0,
+    "needingChanges": 0,
+    "locked": 1,
+    "crystallizationRate": 0
+  }
+}

@@ -33,3 +33,14 @@ yarn-debug.log*
 *.tmp
 tmp/
 temp/
+
+# ReportPortal configuration (contains API tokens)
+test-evidence-framework/reportportal.json
+reportportal.json
+
+# Allure results and reports
+allure-results/
+allure-results-unified/
+allure-report/
+backend/target/allure-results/
+frontend/allure-results/

@@ -1,0 +1,129 @@
+{
+  "id": "60faa3bc-6c44-41fa-b5fa-7c31a5453aa6",
+  "title": "Test Validation Report",
+  "timestamp": "2025-11-18T16:56:30.607Z",
+  "results": [
+    {
+      "filePath": "test-samples\\invalid-test.spec.ts",
+      "framework": "playwright",
+      "testType": "unit",
+      "valid": false,
+      "issues": [
+        {
+          "ruleId": "syntax-error",
+          "severity": "error",
+          "message": "Mismatched parentheses: 10 opening, 9 closing",
+          "filePath": "test-samples\\invalid-test.spec.ts",
+          "autoFixable": false
+        },
+        {
+          "ruleId": "missing-assertions",
+          "severity": "error",
+          "message": "Test has no assertions",
+          "filePath": "test-samples\\invalid-test.spec.ts",
+          "autoFixable": false
+        },
+        {
+          "ruleId": "hardcoded-urls",
+          "severity": "warning",
+          "message": "Avoid hardcoded URLs/IPs; use configuration",
+          "filePath": "",
+          "autoFixable": false
+        },
+        {
+          "ruleId": "debug-statements",
+          "severity": "info",
+          "message": "Remove debug statements (console.log/System.out)",
+          "filePath": "",
+          "autoFixable": true
+        },
+        {
+          "ruleId": "incomplete-implementation",
+          "severity": "warning",
+          "message": "Test has 1 incomplete task comments",
+          "filePath": "",
+          "autoFixable": false
+        }
+      ],
+      "metrics": {
+        "linesOfCode": 15,
+        "testCaseCount": 2,
+        "assertionCount": 0,
+        "assertionsPerTest": 0,
+        "hasSetup": false,
+        "hasTeardown": false,
+        "incompleteCommentCount": 1,
+        "mockCount": 0
+      },
+      "timestamp": "2025-11-18T16:56:30.605Z",
+      "duration": 3
+    },
+    {
+      "filePath": "test-samples\\valid-test.spec.ts",
+      "framework": "playwright",
+      "testType": "unit",
+      "valid": true,
+      "issues": [],
+      "metrics": {
+        "linesOfCode": 43,
+        "testCaseCount": 2,
+        "assertionCount": 9,
+        "assertionsPerTest": 4.5,
+        "hasSetup": true,
+        "hasTeardown": false,
+        "incompleteCommentCount": 0,
+        "mockCount": 0
+      },
+      "timestamp": "2025-11-18T16:56:30.606Z",
+      "duration": 1
+    }
+  ],
+  "summary": {
+    "totalTests": 2,
+    "validTests": 1,
+    "invalidTests": 1,
+    "totalIssues": 5,
+    "issuesBySeverity": {
+      "error": 2,
+      "warning": 2,
+      "info": 1,
+      "suggestion": 0
+    },
+    "issuesByType": {
+      "syntax": 1,
+      "assertion": 1,
+      "best-practice": 3
+    },
+    "averageQualityScore": 75,
+    "testsByFramework": {
+      "playwright": 2
+    },
+    "testsByType": {
+      "unit": 2
+    }
+  },
+  "quality": {
+    "score": 93,
+    "grade": "A",
+    "breakdown": {
+      "syntax": 95,
+      "structure": 100,
+      "assertions": 95,
+      "coverage": 75,
+      "bestPractices": 100
+    },
+    "recommendations": [
+      "Increase test coverage of requirements"
+    ]
+  },
+  "metadata": {
+    "totalFiles": 2,
+    "validFiles": 1,
+    "invalidFiles": 1,
+    "totalIssues": 5,
+    "errorCount": 2,
+    "warningCount": 2,
+    "infoCount": 1,
+    "suggestionCount": 0
+  }
+}

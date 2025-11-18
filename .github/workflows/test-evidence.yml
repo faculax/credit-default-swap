@@ -1,0 +1,507 @@
+# CI/CD Integration for Test Evidence
+#
+# Unified workflow that runs tests across all services, uploads evidence to ReportPortal,
+# and deploys the static dashboard to GitHub Pages.
+#
+# This workflow handles both PR builds and main branch builds:
+# - PR builds: Run tests for changed services, upload to PR-specific launch, post comment
+# - Main builds: Run all tests, export evidence, regenerate dashboard, deploy to Pages
+#
+# Story 20.10: CI/CD Integration
+
+name: Test Evidence Pipeline
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'gateway/**'
+      - 'risk-engine/**'
+      - 'test-evidence-framework/**'
+      - '.github/workflows/test-evidence.yml'
+  
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'gateway/**'
+      - 'risk-engine/**'
+      - 'test-evidence-framework/**'
+      - '.github/workflows/test-evidence.yml'
+  
+  workflow_dispatch:
+    inputs:
+      services:
+        description: 'Services to test (comma-separated: backend,frontend,gateway,risk-engine)'
+        required: false
+        default: 'all'
+      upload_to_reportportal:
+        description: 'Upload results to ReportPortal'
+        required: false
+        type: boolean
+        default: true
+      deploy_dashboard:
+        description: 'Deploy dashboard to GitHub Pages'
+        required: false
+        type: boolean
+        default: true
+
+env:
+  REPORTPORTAL_ENDPOINT: ${{ secrets.REPORTPORTAL_ENDPOINT }}
+  REPORTPORTAL_TOKEN: ${{ secrets.REPORTPORTAL_TOKEN }}
+  REPORTPORTAL_PROJECT: ${{ secrets.REPORTPORTAL_PROJECT }}
+  NODE_VERSION: '20'
+  JAVA_VERSION: '21'
+
+jobs:
+  # Detect which services changed
+  detect-changes:
+    name: Detect Changed Services
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      gateway: ${{ steps.filter.outputs.gateway }}
+      risk-engine: ${{ steps.filter.outputs.risk-engine }}
+      framework: ${{ steps.filter.outputs.framework }}
+      run-all: ${{ steps.determine.outputs.run-all }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Check path filters
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+            gateway:
+              - 'gateway/**'
+            risk-engine:
+              - 'risk-engine/**'
+            framework:
+              - 'test-evidence-framework/**'
+      
+      - name: Determine if should run all
+        id: determine
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.services }}" == "all" ]]; then
+            echo "run-all=true" >> $GITHUB_OUTPUT
+          else
+            echo "run-all=false" >> $GITHUB_OUTPUT
+          fi
+
+  # Build test-evidence-framework
+  build-framework:
+    name: Build Test Evidence Framework
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.framework == 'true' || needs.detect-changes.outputs.run-all == 'true'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: test-evidence-framework/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: test-evidence-framework
+        run: npm ci
+      
+      - name: Build framework
+        working-directory: test-evidence-framework
+        run: npm run build
+      
+      - name: Upload framework artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-evidence-framework
+          path: test-evidence-framework/dist
+
+  # Backend tests
+  test-backend:
+    name: Test Backend Service
+    runs-on: ubuntu-latest
+    needs: [detect-changes, build-framework]
+    if: needs.detect-changes.outputs.backend == 'true' || needs.detect-changes.outputs.run-all == 'true'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+      
+      - name: Setup PostgreSQL
+        uses: ikalnytskyi/action-setup-postgres@v6
+        with:
+          username: cds_user
+          password: cds_pass
+          database: cds_test
+          port: 5432
+      
+      - name: Run backend tests
+        working-directory: backend
+        run: |
+          mvn clean test \
+            -Dreportportal.enabled=false \
+            -Dspring.datasource.url=jdbc:postgresql://localhost:5432/cds_test \
+            -Dspring.datasource.username=cds_user \
+            -Dspring.datasource.password=cds_pass
+      
+      - name: Generate Allure report
+        if: always()
+        working-directory: backend
+        run: |
+          mvn allure:report
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: |
+            backend/target/allure-results
+            backend/target/allure-report
+            backend/target/surefire-reports
+
+  # Frontend tests
+  test-frontend:
+    name: Test Frontend Service
+    runs-on: ubuntu-latest
+    needs: [detect-changes, build-framework]
+    if: needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.run-all == 'true'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+      
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm run test:unit -- --passWithNoTests
+        env:
+          CI: true
+      
+      - name: Generate Allure report
+        if: always()
+        working-directory: frontend
+        run: |
+          npx allure generate allure-results --clean -o allure-report || true
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-results
+          path: |
+            frontend/allure-results
+            frontend/allure-report
+            frontend/coverage
+
+  # Gateway tests
+  test-gateway:
+    name: Test Gateway Service
+    runs-on: ubuntu-latest
+    needs: [detect-changes, build-framework]
+    if: needs.detect-changes.outputs.gateway == 'true' || needs.detect-changes.outputs.run-all == 'true'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+      
+      - name: Run gateway tests
+        working-directory: gateway
+        run: |
+          mvn clean test -Dreportportal.enabled=false
+      
+      - name: Generate Allure report
+        if: always()
+        working-directory: gateway
+        run: |
+          mvn allure:report
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gateway-test-results
+          path: |
+            gateway/target/allure-results
+            gateway/target/allure-report
+            gateway/target/surefire-reports
+
+  # Risk Engine tests
+  test-risk-engine:
+    name: Test Risk Engine Service
+    runs-on: ubuntu-latest
+    needs: [detect-changes, build-framework]
+    if: needs.detect-changes.outputs.risk-engine == 'true' || needs.detect-changes.outputs.run-all == 'true'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+      
+      - name: Run risk-engine tests
+        working-directory: risk-engine
+        run: |
+          mvn clean test -Dreportportal.enabled=false
+      
+      - name: Generate Allure report
+        if: always()
+        working-directory: risk-engine
+        run: |
+          mvn allure:report
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: risk-engine-test-results
+          path: |
+            risk-engine/target/allure-results
+            risk-engine/target/allure-report
+            risk-engine/target/surefire-reports
+
+  # Upload to ReportPortal
+  upload-to-reportportal:
+    name: Upload Evidence to ReportPortal
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend, test-gateway, test-risk-engine]
+    if: |
+      always() &&
+      (needs.test-backend.result != 'cancelled' || 
+       needs.test-frontend.result != 'cancelled' || 
+       needs.test-gateway.result != 'cancelled' || 
+       needs.test-risk-engine.result != 'cancelled') &&
+      (github.event.inputs.upload_to_reportportal != 'false')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Download all test results
+        uses: actions/download-artifact@v4
+        with:
+          path: test-results
+      
+      - name: Install test-evidence-framework
+        working-directory: test-evidence-framework
+        run: |
+          npm ci
+          npm run build
+      
+      - name: Create ReportPortal config
+        run: |
+          cat > reportportal.json <<EOF
+          {
+            "endpoint": "${{ env.REPORTPORTAL_ENDPOINT }}",
+            "token": "${{ env.REPORTPORTAL_TOKEN }}",
+            "project": "${{ env.REPORTPORTAL_PROJECT }}",
+            "launchName": "CDS Platform Tests - ${{ github.event_name == 'pull_request' && format('PR #{0}', github.event.pull_request.number) || 'Main Branch' }}",
+            "launchDescription": "Automated test run from GitHub Actions",
+            "launchAttributes": [
+              { "key": "branch", "value": "${{ github.ref_name }}" },
+              { "key": "commit", "value": "${{ github.sha }}" },
+              { "key": "environment", "value": "ci" },
+              { "key": "buildType", "value": "${{ github.event_name }}" }
+            ]
+          }
+          EOF
+      
+      - name: Upload backend results
+        if: needs.test-backend.result == 'success' || needs.test-backend.result == 'failure'
+        working-directory: test-evidence-framework
+        run: |
+          npm run upload-reportportal -- \
+            --config ../reportportal.json \
+            --batch ../test-results/backend-test-results/target/allure-results \
+            --verbose || echo "Backend upload failed"
+      
+      - name: Upload frontend results
+        if: needs.test-frontend.result == 'success' || needs.test-frontend.result == 'failure'
+        working-directory: test-evidence-framework
+        run: |
+          npm run upload-reportportal -- \
+            --config ../reportportal.json \
+            --batch ../test-results/frontend-test-results/allure-results \
+            --verbose || echo "Frontend upload failed"
+      
+      - name: Upload gateway results
+        if: needs.test-gateway.result == 'success' || needs.test-gateway.result == 'failure'
+        working-directory: test-evidence-framework
+        run: |
+          npm run upload-reportportal -- \
+            --config ../reportportal.json \
+            --batch ../test-results/gateway-test-results/target/allure-results \
+            --verbose || echo "Gateway upload failed"
+      
+      - name: Upload risk-engine results
+        if: needs.test-risk-engine.result == 'success' || needs.test-risk-engine.result == 'failure'
+        working-directory: test-evidence-framework
+        run: |
+          npm run upload-reportportal -- \
+            --config ../reportportal.json \
+            --batch ../test-results/risk-engine-test-results/target/allure-results \
+            --verbose || echo "Risk-engine upload failed"
+
+  # Comment on PR with results
+  comment-on-pr:
+    name: Comment on PR
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend, test-gateway, test-risk-engine, upload-to-reportportal]
+    if: github.event_name == 'pull_request' && always()
+    permissions:
+      pull-requests: write
+    
+    steps:
+      - name: Generate PR comment
+        id: generate-comment
+        run: |
+          COMMENT="## 🧪 Test Evidence Pipeline Results\n\n"
+          COMMENT+="**Branch:** \`${{ github.head_ref }}\`\n"
+          COMMENT+="**Commit:** \`${{ github.event.pull_request.head.sha }}\`\n\n"
+          COMMENT+="### Test Results\n\n"
+          COMMENT+="| Service | Status |\n"
+          COMMENT+="|---------|--------|\n"
+          COMMENT+="| Backend | ${{ needs.test-backend.result == 'success' && '✅ Passed' || needs.test-backend.result == 'failure' && '❌ Failed' || needs.test-backend.result == 'skipped' && '⏭️ Skipped' || '⚪ Not Run' }} |\n"
+          COMMENT+="| Frontend | ${{ needs.test-frontend.result == 'success' && '✅ Passed' || needs.test-frontend.result == 'failure' && '❌ Failed' || needs.test-frontend.result == 'skipped' && '⏭️ Skipped' || '⚪ Not Run' }} |\n"
+          COMMENT+="| Gateway | ${{ needs.test-gateway.result == 'success' && '✅ Passed' || needs.test-gateway.result == 'failure' && '❌ Failed' || needs.test-gateway.result == 'skipped' && '⏭️ Skipped' || '⚪ Not Run' }} |\n"
+          COMMENT+="| Risk Engine | ${{ needs.test-risk-engine.result == 'success' && '✅ Passed' || needs.test-risk-engine.result == 'failure' && '❌ Failed' || needs.test-risk-engine.result == 'skipped' && '⏭️ Skipped' || '⚪ Not Run' }} |\n\n"
+          
+          if [[ "${{ needs.upload-to-reportportal.result }}" == "success" ]]; then
+            COMMENT+="### 📊 ReportPortal\n\n"
+            COMMENT+="Evidence uploaded to ReportPortal. View launch: [${{ env.REPORTPORTAL_ENDPOINT }}/ui/#${{ env.REPORTPORTAL_PROJECT }}/launches/all](https://your-reportportal-url)\n\n"
+          fi
+          
+          COMMENT+="---\n"
+          COMMENT+="*Automated by Test Evidence Framework*"
+          
+          echo "comment<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$COMMENT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Post comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `${{ steps.generate-comment.outputs.comment }}`
+            })
+
+  # Deploy dashboard (main branch only)
+  deploy-dashboard:
+    name: Deploy Test Evidence Dashboard
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend, test-gateway, test-risk-engine, upload-to-reportportal]
+    if: |
+      github.ref == 'refs/heads/main' &&
+      (github.event.inputs.deploy_dashboard != 'false') &&
+      always()
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Install test-evidence-framework
+        working-directory: test-evidence-framework
+        run: |
+          npm ci
+          npm run build
+      
+      - name: Export evidence from ReportPortal
+        working-directory: test-evidence-framework
+        run: |
+          npm run export-evidence -- \
+            --output-dir ../evidence \
+            --project-name 'CDS Platform' \
+            --base-url /${{ github.event.repository.name }}/ \
+            --limit 100 \
+            --verbose
+      
+      - name: Copy CSS to output
+        run: |
+          cp test-evidence-framework/dashboard.css evidence/html/dashboard.css
+      
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v4
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: evidence/html
+      
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+      
+      - name: Summary
+        run: |
+          echo "## Test Evidence Dashboard Deployed 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Dashboard URL: ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          STORY_COUNT=$(find evidence/json -name "story-*.json" | wc -l)
+          echo "- **Stories Exported**: $STORY_COUNT" >> $GITHUB_STEP_SUMMARY

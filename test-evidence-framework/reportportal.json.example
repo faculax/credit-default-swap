@@ -1,0 +1,27 @@
+{
+  "endpoint": "https://reportportal.example.com",
+  "token": "YOUR_API_TOKEN_HERE",
+  "project": "test-evidence-framework",
+  "launchName": "Test Evidence Framework",
+  "launchDescription": "Automated test validation and evidence collection",
+  "launchAttributes": [
+    {
+      "key": "project",
+      "value": "cds-platform"
+    },
+    {
+      "key": "environment",
+      "value": "development"
+    },
+    {
+      "key": "framework",
+      "value": "test-evidence-framework"
+    }
+  ],
+  "mode": "DEFAULT",
+  "debug": false,
+  "timeout": 30000,
+  "maxRetries": 3,
+  "uploadAttachments": true,
+  "maxAttachmentSize": 10485760
+}

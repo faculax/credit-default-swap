@@ -1,0 +1,135 @@
+# GitHub Pages Deployment Workflow
+#
+# This workflow exports test evidence from ReportPortal and deploys
+# a static dashboard to GitHub Pages.
+#
+# Triggers:
+# - Manual workflow dispatch
+# - Scheduled: daily at 00:00 UTC
+# - Push to main branch (optional)
+#
+# Story 20.9: Evidence Export & Static Dashboard
+
+name: Deploy Test Evidence Dashboard
+
+on:
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      story_id:
+        description: 'Filter by story ID (optional)'
+        required: false
+        type: string
+      services:
+        description: 'Comma-separated list of services (optional)'
+        required: false
+        type: string
+      limit:
+        description: 'Maximum number of launches to query'
+        required: false
+        type: number
+        default: 100
+
+  # Schedule: daily at 00:00 UTC
+  schedule:
+    - cron: '0 0 * * *'
+
+  # Uncomment to trigger on push to main
+  # push:
+  #   branches:
+  #     - main
+
+# Sets permissions for GitHub Pages deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  export-and-deploy:
+    name: Export Evidence and Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: test-evidence-framework/package-lock.json
+
+      - name: Install dependencies
+        working-directory: test-evidence-framework
+        run: npm ci
+
+      - name: Build framework
+        working-directory: test-evidence-framework
+        run: npm run build
+
+      - name: Export evidence from ReportPortal
+        working-directory: test-evidence-framework
+        env:
+          REPORTPORTAL_ENDPOINT: ${{ secrets.REPORTPORTAL_ENDPOINT }}
+          REPORTPORTAL_TOKEN: ${{ secrets.REPORTPORTAL_TOKEN }}
+          REPORTPORTAL_PROJECT: ${{ secrets.REPORTPORTAL_PROJECT }}
+        run: |
+          # Build export-evidence command with optional filters
+          COMMAND="npm run export-evidence -- --output-dir ../evidence --project-name 'CDS Platform' --base-url /${{ github.event.repository.name }}/ --verbose"
+          
+          if [ -n "${{ github.event.inputs.story_id }}" ]; then
+            COMMAND="$COMMAND --story-id ${{ github.event.inputs.story_id }}"
+          fi
+          
+          if [ -n "${{ github.event.inputs.services }}" ]; then
+            COMMAND="$COMMAND --services ${{ github.event.inputs.services }}"
+          fi
+          
+          if [ -n "${{ github.event.inputs.limit }}" ]; then
+            COMMAND="$COMMAND --limit ${{ github.event.inputs.limit }}"
+          fi
+          
+          echo "Running: $COMMAND"
+          eval "$COMMAND"
+
+      - name: Copy CSS to output
+        run: |
+          cp test-evidence-framework/dashboard.css evidence/html/dashboard.css
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: evidence/html
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Summary
+        run: |
+          echo "## Test Evidence Dashboard Deployed :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Dashboard URL: ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Export Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Story ID Filter**: ${{ github.event.inputs.story_id || 'None' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Services Filter**: ${{ github.event.inputs.services || 'None' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Launch Limit**: ${{ github.event.inputs.limit || '100' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Count exported stories
+          STORY_COUNT=$(find evidence/json -name "story-*.json" | wc -l)
+          echo "- **Stories Exported**: $STORY_COUNT" >> $GITHUB_STEP_SUMMARY
