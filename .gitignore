@@ -1,11 +1,21 @@
 # Dependency directories
 frontend/node_modules/
+test-evidence-framework/node_modules/
+
 # Frontend build artifacts
 frontend/build/
+test-evidence-framework/dist/
+test-evidence-framework/build/
+
 # Backend and gateway build targets
 backend/target/
 gateway/target/
 risk-engine/target/
+
+# Test coverage
+test-evidence-framework/coverage/
+frontend/coverage/
+backend/coverage/
 
 # IDE folders
 .vscode/
@@ -13,3 +23,13 @@ risk-engine/target/
 
 # OS files
 .DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Temporary files
+*.tmp
+tmp/
+temp/

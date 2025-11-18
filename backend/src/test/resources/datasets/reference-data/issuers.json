@@ -1,0 +1,110 @@
+{
+  "version": "1.0.0",
+  "checksum": "sha256:to-be-calculated",
+  "lastUpdated": "2025-01-15",
+  "description": "Reference data for corporate issuers/reference entities",
+  "assumptions": [
+    "Active issuers only",
+    "Current ratings as of valuation date",
+    "Standard recovery rates by seniority"
+  ],
+  "usedBy": [
+    "IssuerServiceTest",
+    "ReferenceDataServiceTest",
+    "CDSTradeValidationTest"
+  ],
+  "data": {
+    "issuers": [
+      {
+        "issuerId": "ISS-001",
+        "legalName": "Test Corporation",
+        "ticker": "TEST",
+        "redCode": "9AB456",
+        "lei": "LEI0000000001",
+        "sector": "FINANCIALS",
+        "industry": "Banking",
+        "country": "US",
+        "rating": {
+          "sp": "BBB",
+          "moody": "Baa2",
+          "fitch": "BBB"
+        },
+        "seniority": "SENIOR_UNSECURED",
+        "defaultRecoveryRate": 0.40,
+        "active": true
+      },
+      {
+        "issuerId": "ISS-002",
+        "legalName": "Sample Industries Inc",
+        "ticker": "SAMPLE",
+        "redCode": "9BC123",
+        "lei": "LEI0000000002",
+        "sector": "INDUSTRIALS",
+        "industry": "Manufacturing",
+        "country": "US",
+        "rating": {
+          "sp": "A",
+          "moody": "A2",
+          "fitch": "A"
+        },
+        "seniority": "SENIOR_UNSECURED",
+        "defaultRecoveryRate": 0.40,
+        "active": true
+      },
+      {
+        "issuerId": "ISS-003",
+        "legalName": "European Test AG",
+        "ticker": "EURO",
+        "redCode": "9CD789",
+        "lei": "LEI0000000003",
+        "sector": "TECHNOLOGY",
+        "industry": "Software",
+        "country": "DE",
+        "rating": {
+          "sp": "BBB+",
+          "moody": "Baa1",
+          "fitch": "BBB+"
+        },
+        "seniority": "SENIOR_UNSECURED",
+        "defaultRecoveryRate": 0.40,
+        "active": true
+      },
+      {
+        "issuerId": "ISS-004",
+        "legalName": "Energy Corp Ltd",
+        "ticker": "ENERGY",
+        "redCode": "9DE012",
+        "lei": "LEI0000000004",
+        "sector": "ENERGY",
+        "industry": "Oil & Gas",
+        "country": "US",
+        "rating": {
+          "sp": "BB+",
+          "moody": "Ba1",
+          "fitch": "BB+"
+        },
+        "seniority": "SENIOR_UNSECURED",
+        "defaultRecoveryRate": 0.35,
+        "active": true
+      },
+      {
+        "issuerId": "ISS-005",
+        "legalName": "Telecom Holdings Inc",
+        "ticker": "TELECOM",
+        "redCode": "9EF345",
+        "lei": "LEI0000000005",
+        "sector": "TELECOMMUNICATIONS",
+        "industry": "Wireless",
+        "country": "US",
+        "rating": {
+          "sp": "BBB-",
+          "moody": "Baa3",
+          "fitch": "BBB-"
+        },
+        "seniority": "SENIOR_UNSECURED",
+        "defaultRecoveryRate": 0.40,
+        "active": true
+      }
+    ]
+  }
+}

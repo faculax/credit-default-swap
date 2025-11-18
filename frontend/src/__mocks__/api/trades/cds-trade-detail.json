@@ -1,0 +1,89 @@
+{
+  "version": "1.0.0",
+  "checksum": "sha256:to-be-calculated",
+  "lastUpdated": "2025-01-15",
+  "endpoint": "GET /api/trades/:tradeId",
+  "description": "CDS trade detail response for a single trade",
+  "usedBy": [
+    "CDSTradeDetail.test.tsx",
+    "TradeForm.test.tsx",
+    "useTradeDetail.test.tsx"
+  ],
+  "data": {
+    "trade": {
+      "tradeId": "TEST-CDS-001",
+      "tradeDate": "2025-01-15",
+      "effectiveDate": "2025-01-16",
+      "maturityDate": "2030-03-20",
+      "notionalAmount": 10000000.00,
+      "currency": "USD",
+      "buySellProtection": "BUY",
+      "spread": 150.0,
+      "upfrontPayment": 0.0,
+      "referenceEntity": {
+        "entityName": "Test Corporation",
+        "ticker": "TEST",
+        "redCode": "9AB456",
+        "sector": "FINANCIALS",
+        "seniority": "SENIOR_UNSECURED",
+        "rating": "BBB"
+      },
+      "counterparty": {
+        "legalEntityId": "LEI1111111111",
+        "name": "Test Counterparty LLC",
+        "creditRating": "A"
+      },
+      "tradingBook": "CREDIT_TRADING",
+      "trader": "trader@test.com",
+      "premiumFrequency": "QUARTERLY",
+      "dayCountConvention": "ACT_360",
+      "businessDayConvention": "FOLLOWING",
+      "calendar": "NYC",
+      "tradeStatus": "ACTIVE",
+      "valuationMetrics": {
+        "presentValue": -125000.50,
+        "upfrontAmount": 350000.00,
+        "dv01": 4350.25,
+        "creditDv01": 4350.25,
+        "duration": 4.35,
+        "asOfDate": "2025-01-15"
+      },
+      "paymentSchedule": [
+        {
+          "paymentDate": "2025-03-20",
+          "paymentAmount": 37500.00,
+          "status": "SCHEDULED"
+        },
+        {
+          "paymentDate": "2025-06-20",
+          "paymentAmount": 37500.00,
+          "status": "SCHEDULED"
+        },
+        {
+          "paymentDate": "2025-09-20",
+          "paymentAmount": 37500.00,
+          "status": "SCHEDULED"
+        },
+        {
+          "paymentDate": "2025-12-20",
+          "paymentAmount": 37500.00,
+          "status": "SCHEDULED"
+        }
+      ],
+      "auditTrail": [
+        {
+          "timestamp": "2025-01-15T09:15:30Z",
+          "action": "CREATED",
+          "user": "trader@test.com"
+        }
+      ],
+      "createdAt": "2025-01-15T09:15:30Z",
+      "updatedAt": "2025-01-15T09:15:30Z"
+    },
+    "metadata": {
+      "timestamp": "2025-01-15T10:30:00Z",
+      "requestId": "req-detail-001",
+      "executionTime": 35
+    }
+  }
+}

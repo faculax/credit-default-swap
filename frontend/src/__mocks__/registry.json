@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-18T00:00:00Z",
+  "description": "Frontend Mocks Registry - API response mocks and test fixtures",
+  "mocks": [
+    {
+      "id": "api/trades/cds-trade-list",
+      "path": "api/trades/cds-trade-list.json",
+      "version": "1.0.0",
+      "checksum": "sha256:pending",
+      "endpoint": "GET /api/trades",
+      "description": "List of CDS trades with pagination",
+      "tags": ["trades", "list", "pagination"],
+      "usedBy": [
+        "CDSTradeList.test.tsx",
+        "TradeTable.test.tsx"
+      ],
+      "dependencies": [],
+      "responseStatus": 200
+    },
+    {
+      "id": "api/trades/cds-trade-detail",
+      "path": "api/trades/cds-trade-detail.json",
+      "version": "1.0.0",
+      "checksum": "sha256:pending",
+      "endpoint": "GET /api/trades/:tradeId",
+      "description": "Single CDS trade detail",
+      "tags": ["trades", "detail", "single"],
+      "usedBy": [
+        "CDSTradeDetail.test.tsx",
+        "TradeForm.test.tsx"
+      ],
+      "dependencies": [],
+      "responseStatus": 200
+    },
+    {
+      "id": "api/trades/create-trade-response",
+      "path": "api/trades/create-trade-response.json",
+      "version": "1.0.0",
+      "checksum": "sha256:pending",
+      "endpoint": "POST /api/trades",
+      "description": "Successful trade creation response",
+      "tags": ["trades", "create", "success"],
+      "usedBy": [
+        "CDSTradeForm.test.tsx",
+        "useTradeSubmit.test.tsx"
+      ],
+      "dependencies": [],
+      "responseStatus": 201
+    },
+    {
+      "id": "api/pricing/pricing-result",
+      "path": "api/pricing/pricing-result.json",
+      "version": "1.0.0",
+      "checksum": "sha256:pending",
+      "endpoint": "POST /api/pricing/calculate",
+      "description": "CDS pricing calculation result",
+      "tags": ["pricing", "calculation", "risk"],
+      "usedBy": [
+        "PricingPanel.test.tsx",
+        "usePricing.test.tsx"
+      ],
+      "dependencies": ["api/trades/cds-trade-detail"],
+      "responseStatus": 200
+    },
+    {
+      "id": "api/reference-data/issuers",
+      "path": "api/reference-data/issuers.json",
+      "version": "1.0.0",
+      "checksum": "sha256:pending",
+      "endpoint": "GET /api/reference/issuers",
+      "description": "List of reference entity issuers",
+      "tags": ["reference", "issuers", "dropdown"],
+      "usedBy": [
+        "IssuerSelect.test.tsx",
+        "TradeForm.test.tsx"
+      ],
+      "dependencies": [],
+      "responseStatus": 200
+    },
+    {
+      "id": "fixtures/form-data/cds-form-valid",
+      "path": "fixtures/form-data/cds-form-valid.json",
+      "version": "1.0.0",
+      "checksum": "sha256:pending",
+      "endpoint": null,
+      "description": "Valid CDS trade form data for testing",
+      "tags": ["fixture", "form", "valid"],
+      "usedBy": [
+        "CDSTradeForm.test.tsx",
+        "useFormValidation.test.tsx"
+      ],
+      "dependencies": [],
+      "responseStatus": null
+    }
+  ],
+  "handlers": [
+    {
+      "file": "handlers/trades.ts",
+      "description": "MSW handlers for trade API endpoints",
+      "endpoints": [
+        "GET /api/trades",
+        "GET /api/trades/:tradeId",
+        "POST /api/trades",
+        "PUT /api/trades/:tradeId",
+        "DELETE /api/trades/:tradeId"
+      ]
+    },
+    {
+      "file": "handlers/pricing.ts",
+      "description": "MSW handlers for pricing API endpoints",
+      "endpoints": [
+        "POST /api/pricing/calculate",
+        "POST /api/pricing/sensitivity"
+      ]
+    },
+    {
+      "file": "handlers/market-data.ts",
+      "description": "MSW handlers for market data endpoints",
+      "endpoints": [
+        "GET /api/market-data/curves",
+        "GET /api/market-data/spreads"
+      ]
+    }
+  ],
+  "metadata": {
+    "totalMocks": 6,
+    "categories": {
+      "api-mocks": 5,
+      "fixtures": 1
+    },
+    "endpoints": 6,
+    "handlers": 3
+  }
+}

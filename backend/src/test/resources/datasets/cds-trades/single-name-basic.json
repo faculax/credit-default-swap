@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "checksum": "sha256:to-be-calculated",
+  "lastUpdated": "2025-11-18T00:00:00Z",
+  "description": "Basic single-name CDS trade with standard terms - Buy protection on a reference entity",
+  "assumptions": [
+    "Standard North American terms (SNAC)",
+    "Quarterly premium payments",
+    "ACT/360 day count",
+    "Following business day convention",
+    "NYC calendar"
+  ],
+  "usedBy": [
+    "CDSTradeControllerIntegrationTest",
+    "CDSTradeServiceTest",
+    "CDSValidationTest"
+  ],
+  "data": {
+    "tradeId": "TEST-CDS-001",
+    "tradeDate": "2025-01-15",
+    "effectiveDate": "2025-01-16",
+    "maturityDate": "2030-03-20",
+    "notionalAmount": 10000000.00,
+    "currency": "USD",
+    "buySellProtection": "BUY",
+    "spread": 150.0,
+    "premiumFrequency": "QUARTERLY",
+    "dayCountConvention": "ACT_360",
+    "businessDayConvention": "FOLLOWING",
+    "paymentCalendar": "NYC",
+    "accrualStartDate": "2024-12-20",
+    "referenceEntity": {
+      "entityId": "RE-TEST-001",
+      "entityName": "Test Corporation",
+      "redCode": "TEST01",
+      "ticker": "TEST",
+      "sector": "FINANCIALS",
+      "seniority": "SENIOR_UNSECURED",
+      "restructuringClause": null
+    },
+    "counterparty": {
+      "counterpartyId": "CP-TEST-001",
+      "counterpartyName": "Test Bank NA",
+      "lei": "TEST000000000000001"
+    },
+    "tradingBook": "CREDIT_DERIVATIVES",
+    "trader": "trader@test.com",
+    "tradeStatus": "PENDING",
+    "upfrontPayment": null,
+    "recoveryRate": 0.40,
+    "indexDetails": null,
+    "metadata": {
+      "source": "TEST_DATA_REGISTRY",
+      "created": "2025-11-18T00:00:00Z",
+      "scenario": "basic-buy-protection"
+    }
+  }
+}

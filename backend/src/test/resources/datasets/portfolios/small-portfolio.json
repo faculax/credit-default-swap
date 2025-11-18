@@ -1,0 +1,84 @@
+{
+  "version": "1.0.0",
+  "checksum": "sha256:to-be-calculated",
+  "lastUpdated": "2025-01-15",
+  "description": "Small CDS portfolio with 3 trades for integration testing",
+  "assumptions": [
+    "All trades are SNAC",
+    "USD denominated",
+    "Active status",
+    "Mixed buy/sell protection"
+  ],
+  "usedBy": [
+    "PortfolioServiceTest",
+    "PortfolioRiskCalculationTest",
+    "PortfolioIntegrationTest"
+  ],
+  "data": {
+    "portfolioId": "PORT-001",
+    "portfolioName": "Test CDS Portfolio",
+    "tradingBook": "CREDIT_TRADING",
+    "asOfDate": "2025-01-15",
+    "trades": [
+      {
+        "tradeId": "TEST-CDS-001",
+        "tradeDate": "2025-01-15",
+        "effectiveDate": "2025-01-16",
+        "maturityDate": "2030-03-20",
+        "notionalAmount": 10000000.00,
+        "currency": "USD",
+        "buySellProtection": "BUY",
+        "spread": 150.0,
+        "referenceEntity": {
+          "entityName": "Test Corporation",
+          "ticker": "TEST",
+          "sector": "FINANCIALS"
+        },
+        "tradeStatus": "ACTIVE"
+      },
+      {
+        "tradeId": "TEST-CDS-002",
+        "tradeDate": "2025-01-15",
+        "effectiveDate": "2025-01-16",
+        "maturityDate": "2030-06-20",
+        "notionalAmount": 5000000.00,
+        "currency": "USD",
+        "buySellProtection": "SELL",
+        "spread": 200.0,
+        "referenceEntity": {
+          "entityName": "Sample Industries Inc",
+          "ticker": "SAMPLE",
+          "sector": "INDUSTRIALS"
+        },
+        "tradeStatus": "ACTIVE"
+      },
+      {
+        "tradeId": "TEST-CDS-003",
+        "tradeDate": "2025-01-14",
+        "effectiveDate": "2025-01-15",
+        "maturityDate": "2029-12-20",
+        "notionalAmount": 2000000.00,
+        "currency": "EUR",
+        "buySellProtection": "BUY",
+        "spread": 175.0,
+        "referenceEntity": {
+          "entityName": "European Test AG",
+          "ticker": "EURO",
+          "sector": "TECHNOLOGY"
+        },
+        "tradeStatus": "ACTIVE"
+      }
+    ],
+    "summary": {
+      "totalTrades": 3,
+      "totalNotionalUSD": 17000000.00,
+      "netNotionalUSD": 7000000.00,
+      "averageSpread": 175.0,
+      "sectorsExposure": {
+        "FINANCIALS": 10000000.00,
+        "INDUSTRIALS": -5000000.00,
+        "TECHNOLOGY": 2000000.00
+      }
+    }
+  }
+}

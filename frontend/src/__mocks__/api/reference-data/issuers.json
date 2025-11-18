@@ -1,0 +1,107 @@
+{
+  "version": "1.0.0",
+  "checksum": "sha256:to-be-calculated",
+  "lastUpdated": "2025-01-15",
+  "endpoint": "GET /api/reference/issuers",
+  "description": "List of reference entities/issuers for trade form selection",
+  "usedBy": [
+    "IssuerSelect.test.tsx",
+    "TradeForm.test.tsx",
+    "useIssuers.test.tsx"
+  ],
+  "data": {
+    "issuers": [
+      {
+        "issuerId": "ISS-001",
+        "legalName": "Test Corporation",
+        "ticker": "TEST",
+        "redCode": "9AB456",
+        "sector": "FINANCIALS",
+        "industry": "Banking",
+        "country": "US",
+        "rating": {
+          "sp": "BBB",
+          "moody": "Baa2",
+          "fitch": "BBB"
+        },
+        "seniority": "SENIOR_UNSECURED",
+        "active": true
+      },
+      {
+        "issuerId": "ISS-002",
+        "legalName": "Sample Industries Inc",
+        "ticker": "SAMPLE",
+        "redCode": "9BC123",
+        "sector": "INDUSTRIALS",
+        "industry": "Manufacturing",
+        "country": "US",
+        "rating": {
+          "sp": "A",
+          "moody": "A2",
+          "fitch": "A"
+        },
+        "seniority": "SENIOR_UNSECURED",
+        "active": true
+      },
+      {
+        "issuerId": "ISS-003",
+        "legalName": "European Test AG",
+        "ticker": "EURO",
+        "redCode": "9CD789",
+        "sector": "TECHNOLOGY",
+        "industry": "Software",
+        "country": "DE",
+        "rating": {
+          "sp": "BBB+",
+          "moody": "Baa1",
+          "fitch": "BBB+"
+        },
+        "seniority": "SENIOR_UNSECURED",
+        "active": true
+      },
+      {
+        "issuerId": "ISS-004",
+        "legalName": "Energy Corp Ltd",
+        "ticker": "ENERGY",
+        "redCode": "9DE012",
+        "sector": "ENERGY",
+        "industry": "Oil & Gas",
+        "country": "US",
+        "rating": {
+          "sp": "BB+",
+          "moody": "Ba1",
+          "fitch": "BB+"
+        },
+        "seniority": "SENIOR_UNSECURED",
+        "active": true
+      },
+      {
+        "issuerId": "ISS-005",
+        "legalName": "Telecom Holdings Inc",
+        "ticker": "TELECOM",
+        "redCode": "9EF345",
+        "sector": "TELECOMMUNICATIONS",
+        "industry": "Wireless",
+        "country": "US",
+        "rating": {
+          "sp": "BBB-",
+          "moody": "Baa3",
+          "fitch": "BBB-"
+        },
+        "seniority": "SENIOR_UNSECURED",
+        "active": true
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "pageSize": 50,
+      "totalPages": 1,
+      "totalItems": 5
+    },
+    "metadata": {
+      "timestamp": "2025-01-15T10:30:00Z",
+      "requestId": "req-issuers-001",
+      "executionTime": 25
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "version": "1.0.0",
+  "checksum": "sha256:to-be-calculated",
+  "lastUpdated": "2025-01-15",
+  "description": "Credit event (bankruptcy) scenario for testing event processing",
+  "assumptions": [
+    "Bankruptcy filing event",
+    "Standard ISDA definitions",
+    "ISDA auction process",
+    "Final recovery rate determined"
+  ],
+  "usedBy": [
+    "CreditEventProcessorTest",
+    "CreditEventServiceTest",
+    "SettlementCalculationTest"
+  ],
+  "data": {
+    "eventId": "CE-001",
+    "referenceEntity": {
+      "entityName": "Defaulted Corp Inc",
+      "ticker": "DEFAULT",
+      "redCode": "9ZZ999",
+      "lei": "LEI9999999999"
+    },
+    "eventType": "BANKRUPTCY",
+    "eventDate": "2025-01-10",
+    "announcementDate": "2025-01-11",
+    "determiningCommittee": "AMERICAS_DC",
+    "creditEventNoticeDate": "2025-01-11",
+    "noticeOfPubliclyAvailableInformation": true,
+    "auctionDetails": {
+      "auctionDate": "2025-01-20",
+      "finalPrice": 35.50,
+      "recoveryRate": 0.355,
+      "auctionSettlementDate": "2025-01-25"
+    },
+    "affectedTrades": [
+      {
+        "tradeId": "TEST-CDS-999",
+        "notionalAmount": 10000000.00,
+        "buySellProtection": "BUY",
+        "settlementAmount": 6450000.00,
+        "settlementDate": "2025-01-25",
+        "settlementStatus": "SETTLED"
+      }
+    ],
+    "sources": [
+      {
+        "type": "ISDA_DC_DETERMINATION",
+        "url": "https://dc.isda.org/test-event",
+        "publicationDate": "2025-01-11"
+      },
+      {
+        "type": "AUCTION_RESULTS",
+        "url": "https://dc.isda.org/test-auction",
+        "publicationDate": "2025-01-20"
+      }
+    ],
+    "status": "CONFIRMED",
+    "lastUpdatedAt": "2025-01-25T16:00:00Z"
+  }
+}

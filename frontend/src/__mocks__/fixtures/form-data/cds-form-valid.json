@@ -1,0 +1,41 @@
+{
+  "version": "1.0.0",
+  "checksum": "sha256:to-be-calculated",
+  "lastUpdated": "2025-01-15",
+  "description": "Valid CDS trade form data for validation and submission tests",
+  "usedBy": [
+    "CDSTradeForm.test.tsx",
+    "useFormValidation.test.tsx",
+    "TradeSubmission.test.tsx"
+  ],
+  "data": {
+    "tradeDate": "2025-01-15",
+    "effectiveDate": "2025-01-16",
+    "maturityDate": "2030-03-20",
+    "notionalAmount": "10000000",
+    "currency": "USD",
+    "buySellProtection": "BUY",
+    "spread": "150",
+    "upfrontPayment": "0",
+    "referenceEntity": {
+      "issuerId": "ISS-001",
+      "entityName": "Test Corporation",
+      "ticker": "TEST",
+      "redCode": "9AB456",
+      "sector": "FINANCIALS",
+      "seniority": "SENIOR_UNSECURED"
+    },
+    "counterparty": {
+      "legalEntityId": "LEI1111111111",
+      "name": "Test Counterparty LLC"
+    },
+    "tradingBook": "CREDIT_TRADING",
+    "trader": "trader@test.com",
+    "premiumFrequency": "QUARTERLY",
+    "dayCountConvention": "ACT_360",
+    "businessDayConvention": "FOLLOWING",
+    "calendar": "NYC",
+    "restructuringClause": "NO_R",
+    "comments": "Test trade for validation"
+  }
+}

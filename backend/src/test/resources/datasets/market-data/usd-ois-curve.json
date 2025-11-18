@@ -1,0 +1,101 @@
+{
+  "version": "1.0.0",
+  "checksum": "sha256:to-be-calculated",
+  "lastUpdated": "2025-11-18T00:00:00Z",
+  "description": "USD OIS discount curve for 2025 - Standard market conditions",
+  "assumptions": [
+    "USD OIS swap rates",
+    "Daily compounding",
+    "ACT/360 day count",
+    "Normal market conditions (no stress)"
+  ],
+  "usedBy": [
+    "CDSPricingServiceTest",
+    "RiskMeasuresEngineTest",
+    "OREIntegrationTest"
+  ],
+  "data": {
+    "curveId": "USD-OIS-2025",
+    "curveName": "USD OIS Discount Curve",
+    "currency": "USD",
+    "asOfDate": "2025-01-15",
+    "curveType": "DISCOUNT",
+    "interpolationMethod": "LOG_LINEAR",
+    "dayCountConvention": "ACT_360",
+    "compoundingFrequency": "DAILY",
+    "points": [
+      {
+        "tenor": "1D",
+        "maturityDate": "2025-01-16",
+        "rate": 0.0450,
+        "discountFactor": 0.999875
+      },
+      {
+        "tenor": "1W",
+        "maturityDate": "2025-01-22",
+        "rate": 0.0451,
+        "discountFactor": 0.999125
+      },
+      {
+        "tenor": "1M",
+        "maturityDate": "2025-02-15",
+        "rate": 0.0453,
+        "discountFactor": 0.996235
+      },
+      {
+        "tenor": "3M",
+        "maturityDate": "2025-04-15",
+        "rate": 0.0458,
+        "discountFactor": 0.988654
+      },
+      {
+        "tenor": "6M",
+        "maturityDate": "2025-07-15",
+        "rate": 0.0465,
+        "discountFactor": 0.977012
+      },
+      {
+        "tenor": "1Y",
+        "maturityDate": "2026-01-15",
+        "rate": 0.0475,
+        "discountFactor": 0.953678
+      },
+      {
+        "tenor": "2Y",
+        "maturityDate": "2027-01-15",
+        "rate": 0.0490,
+        "discountFactor": 0.907234
+      },
+      {
+        "tenor": "3Y",
+        "maturityDate": "2028-01-15",
+        "rate": 0.0500,
+        "discountFactor": 0.861789
+      },
+      {
+        "tenor": "5Y",
+        "maturityDate": "2030-01-15",
+        "rate": 0.0515,
+        "discountFactor": 0.772345
+      },
+      {
+        "tenor": "7Y",
+        "maturityDate": "2032-01-15",
+        "rate": 0.0525,
+        "discountFactor": 0.688901
+      },
+      {
+        "tenor": "10Y",
+        "maturityDate": "2035-01-15",
+        "rate": 0.0535,
+        "discountFactor": 0.582456
+      }
+    ],
+    "metadata": {
+      "source": "TEST_DATA_REGISTRY",
+      "marketDataProvider": "SIMULATED",
+      "created": "2025-11-18T00:00:00Z",
+      "scenario": "normal-market-conditions"
+    }
+  }
+}

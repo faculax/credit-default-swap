@@ -1,0 +1,49 @@
+{
+  "version": "1.0.0",
+  "checksum": "sha256:to-be-calculated",
+  "lastUpdated": "2025-01-15",
+  "description": "Single-name CDS trade with Modified Restructuring (MR) clause",
+  "assumptions": [
+    "Modified Restructuring (MR) terms",
+    "Quarterly premium payments",
+    "ACT/360 day count convention",
+    "Following business day convention",
+    "NYC calendar"
+  ],
+  "usedBy": [
+    "CDSRestructuringTest",
+    "CDSTradeServiceTest",
+    "RestructuringEventTest"
+  ],
+  "data": {
+    "tradeId": "TEST-CDS-002",
+    "tradeDate": "2025-01-15",
+    "effectiveDate": "2025-01-16",
+    "maturityDate": "2030-06-20",
+    "notionalAmount": 5000000.00,
+    "currency": "USD",
+    "buySellProtection": "SELL",
+    "spread": 200.0,
+    "upfrontPayment": 0.0,
+    "referenceEntity": {
+      "entityName": "Sample Industries Inc",
+      "ticker": "SAMPLE",
+      "redCode": "9BC123",
+      "sector": "INDUSTRIALS",
+      "seniority": "SENIOR_UNSECURED",
+      "restructuringClause": "MR"
+    },
+    "counterparty": {
+      "legalEntityId": "LEI2222222222",
+      "name": "Test Bank Corp"
+    },
+    "tradingBook": "CREDIT_TRADING",
+    "trader": "trader2@test.com",
+    "premiumFrequency": "QUARTERLY",
+    "dayCountConvention": "ACT_360",
+    "businessDayConvention": "FOLLOWING",
+    "calendar": "NYC",
+    "createdAt": "2025-01-15T10:30:00Z",
+    "updatedAt": "2025-01-15T10:30:00Z"
+  }
+}

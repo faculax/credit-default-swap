@@ -1,0 +1,100 @@
+{
+  "version": "1.0.0",
+  "checksum": "sha256:to-be-calculated",
+  "lastUpdated": "2025-01-15",
+  "description": "CDS spread curves for multiple reference entities",
+  "assumptions": [
+    "Mid-market spreads",
+    "Standard SNAC terms",
+    "USD denominated",
+    "Normal market conditions"
+  ],
+  "usedBy": [
+    "CDSPricingServiceTest",
+    "SpreadInterpolationTest",
+    "MarketDataServiceTest"
+  ],
+  "data": {
+    "asOfDate": "2025-01-15",
+    "spreads": [
+      {
+        "ticker": "TEST",
+        "entityName": "Test Corporation",
+        "sector": "FINANCIALS",
+        "rating": "BBB",
+        "currency": "USD",
+        "terms": [
+          {
+            "tenor": "1Y",
+            "maturityDate": "2026-01-15",
+            "spread": 120.5,
+            "recoveryRate": 0.40
+          },
+          {
+            "tenor": "3Y",
+            "maturityDate": "2028-01-15",
+            "spread": 135.0,
+            "recoveryRate": 0.40
+          },
+          {
+            "tenor": "5Y",
+            "maturityDate": "2030-01-15",
+            "spread": 150.0,
+            "recoveryRate": 0.40
+          },
+          {
+            "tenor": "7Y",
+            "maturityDate": "2032-01-15",
+            "spread": 162.5,
+            "recoveryRate": 0.40
+          },
+          {
+            "tenor": "10Y",
+            "maturityDate": "2035-01-15",
+            "spread": 175.0,
+            "recoveryRate": 0.40
+          }
+        ]
+      },
+      {
+        "ticker": "SAMPLE",
+        "entityName": "Sample Industries Inc",
+        "sector": "INDUSTRIALS",
+        "rating": "A",
+        "currency": "USD",
+        "terms": [
+          {
+            "tenor": "1Y",
+            "maturityDate": "2026-01-15",
+            "spread": 85.0,
+            "recoveryRate": 0.40
+          },
+          {
+            "tenor": "3Y",
+            "maturityDate": "2028-01-15",
+            "spread": 95.0,
+            "recoveryRate": 0.40
+          },
+          {
+            "tenor": "5Y",
+            "maturityDate": "2030-01-15",
+            "spread": 105.0,
+            "recoveryRate": 0.40
+          },
+          {
+            "tenor": "7Y",
+            "maturityDate": "2032-01-15",
+            "spread": 115.0,
+            "recoveryRate": 0.40
+          },
+          {
+            "tenor": "10Y",
+            "maturityDate": "2035-01-15",
+            "spread": 125.0,
+            "recoveryRate": 0.40
+          }
+        ]
+      }
+    ]
+  }
+}

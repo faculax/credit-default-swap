@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-18T00:00:00Z",
+  "description": "Test Data Registry - Centralized catalog of backend test datasets",
+  "datasets": [
+    {
+      "id": "cds-trades/single-name-basic",
+      "path": "cds-trades/single-name-basic.json",
+      "version": "1.0.0",
+      "checksum": "sha256:pending",
+      "type": "CDSTrade",
+      "description": "Basic single-name CDS trade with standard terms",
+      "tags": ["single-name", "basic", "buy-protection"],
+      "usedBy": [
+        "Story 3.1: CDS Trade Capture UI",
+        "Story 3.3: CDS Trade Persist"
+      ],
+      "dependencies": [],
+      "validFrom": "2025-01-01",
+      "validTo": null
+    },
+    {
+      "id": "cds-trades/single-name-restructuring",
+      "path": "cds-trades/single-name-restructuring.json",
+      "version": "1.0.0",
+      "checksum": "sha256:pending",
+      "type": "CDSTrade",
+      "description": "Single-name CDS with restructuring clause",
+      "tags": ["single-name", "restructuring", "mr-xr"],
+      "usedBy": [
+        "Story 3.2: CDS Validation Rules"
+      ],
+      "dependencies": [],
+      "validFrom": "2025-01-01",
+      "validTo": null
+    },
+    {
+      "id": "market-data/usd-ois-curve",
+      "path": "market-data/usd-ois-curve.json",
+      "version": "1.0.0",
+      "checksum": "sha256:pending",
+      "type": "DiscountCurve",
+      "description": "USD OIS discount curve for 2025",
+      "tags": ["curve", "ois", "usd", "discount"],
+      "usedBy": [
+        "Story 7.1: ISDA Standard Model Integration",
+        "Story 7.2: Core Risk Measures Engine"
+      ],
+      "dependencies": [],
+      "validFrom": "2025-01-01",
+      "validTo": "2025-12-31"
+    },
+    {
+      "id": "market-data/credit-spreads",
+      "path": "market-data/credit-spreads.json",
+      "version": "1.0.0",
+      "checksum": "sha256:pending",
+      "type": "CreditSpreads",
+      "description": "Sample credit spreads for major issuers",
+      "tags": ["spreads", "credit", "par"],
+      "usedBy": [
+        "Story 7.1: ISDA Standard Model Integration",
+        "Story 7.2: Core Risk Measures Engine"
+      ],
+      "dependencies": [],
+      "validFrom": "2025-01-01",
+      "validTo": null
+    },
+    {
+      "id": "reference-data/issuers",
+      "path": "reference-data/issuers.json",
+      "version": "1.0.0",
+      "checksum": "sha256:pending",
+      "type": "Issuer[]",
+      "description": "Sample reference entity issuers",
+      "tags": ["reference", "issuer", "entity"],
+      "usedBy": [
+        "Story 3.1: CDS Trade Capture UI",
+        "Story 9.1: Reference Entity Master"
+      ],
+      "dependencies": [],
+      "validFrom": "2025-01-01",
+      "validTo": null
+    },
+    {
+      "id": "credit-events/default-event",
+      "path": "credit-events/default-event.json",
+      "version": "1.0.0",
+      "checksum": "sha256:pending",
+      "type": "CreditEvent",
+      "description": "Default credit event with full recovery scenario",
+      "tags": ["credit-event", "default", "recovery"],
+      "usedBy": [
+        "Story 4.1: Record Credit Event",
+        "Story 4.3: Cash Settlement Calculation"
+      ],
+      "dependencies": ["reference-data/issuers"],
+      "validFrom": "2025-01-01",
+      "validTo": null
+    },
+    {
+      "id": "portfolios/small-portfolio",
+      "path": "portfolios/small-portfolio.json",
+      "version": "1.0.0",
+      "checksum": "sha256:pending",
+      "type": "Portfolio",
+      "description": "Small portfolio with 5 CDS trades for testing aggregation",
+      "tags": ["portfolio", "small", "aggregation"],
+      "usedBy": [
+        "Story 12.1: Portfolio Aggregation",
+        "Story 13.1: Correlated Simulation"
+      ],
+      "dependencies": ["cds-trades/single-name-basic"],
+      "validFrom": "2025-01-01",
+      "validTo": null
+    }
+  ],
+  "metadata": {
+    "totalDatasets": 7,
+    "categories": {
+      "cds-trades": 2,
+      "market-data": 2,
+      "reference-data": 1,
+      "credit-events": 1,
+      "portfolios": 1
+    },
+    "dataTypes": [
+      "CDSTrade",
+      "DiscountCurve",
+      "CreditSpreads",
+      "Issuer[]",
+      "CreditEvent",
+      "Portfolio"
+    ]
+  }
+}

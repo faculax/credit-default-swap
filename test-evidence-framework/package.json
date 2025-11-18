@@ -1,0 +1,44 @@
+{
+  "name": "@cds/test-evidence-framework",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI-assisted story-driven test and evidence framework for CDS Platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "lint": "eslint src --ext .ts",
+    "parse-stories": "node dist/cli/parse-stories.js",
+    "plan-tests": "node dist/cli/plan-tests.js",
+    "generate-backend-tests": "node dist/cli/generate-backend-tests.js"
+  },
+  "keywords": [
+    "test-evidence",
+    "story-parser",
+    "test-generation"
+  ],
+  "author": "CDS Platform Team",
+  "license": "MIT",
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "marked": "^11.1.1",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.11",
+    "@types/node": "^20.10.6",
+    "@types/yargs": "^17.0.32",
+    "@typescript-eslint/eslint-plugin": "^6.17.0",
+    "@typescript-eslint/parser": "^6.17.0",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

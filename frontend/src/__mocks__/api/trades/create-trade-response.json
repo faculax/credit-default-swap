@@ -1,0 +1,56 @@
+{
+  "version": "1.0.0",
+  "checksum": "sha256:to-be-calculated",
+  "lastUpdated": "2025-01-15",
+  "endpoint": "POST /api/trades",
+  "description": "Successful trade creation response",
+  "usedBy": [
+    "CDSTradeForm.test.tsx",
+    "useTradeSubmit.test.tsx",
+    "TradeCreation.test.tsx"
+  ],
+  "data": {
+    "trade": {
+      "tradeId": "TEST-CDS-NEW-001",
+      "tradeDate": "2025-01-15",
+      "effectiveDate": "2025-01-16",
+      "maturityDate": "2030-03-20",
+      "notionalAmount": 10000000.00,
+      "currency": "USD",
+      "buySellProtection": "BUY",
+      "spread": 150.0,
+      "upfrontPayment": 0.0,
+      "referenceEntity": {
+        "entityName": "Test Corporation",
+        "ticker": "TEST",
+        "redCode": "9AB456",
+        "sector": "FINANCIALS",
+        "seniority": "SENIOR_UNSECURED"
+      },
+      "counterparty": {
+        "legalEntityId": "LEI1111111111",
+        "name": "Test Counterparty LLC"
+      },
+      "tradingBook": "CREDIT_TRADING",
+      "trader": "trader@test.com",
+      "premiumFrequency": "QUARTERLY",
+      "dayCountConvention": "ACT_360",
+      "businessDayConvention": "FOLLOWING",
+      "calendar": "NYC",
+      "tradeStatus": "PENDING",
+      "createdAt": "2025-01-15T10:30:00Z",
+      "updatedAt": "2025-01-15T10:30:00Z"
+    },
+    "message": "Trade created successfully. Pending approval.",
+    "validationResults": {
+      "passed": true,
+      "warnings": [],
+      "errors": []
+    },
+    "metadata": {
+      "timestamp": "2025-01-15T10:30:00Z",
+      "requestId": "req-create-001",
+      "executionTime": 125
+    }
+  }
+}

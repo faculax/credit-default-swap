@@ -1,0 +1,90 @@
+{
+  "version": "1.0.0",
+  "checksum": "sha256:to-be-calculated",
+  "lastUpdated": "2025-11-18T00:00:00Z",
+  "endpoint": "GET /api/trades",
+  "description": "List of CDS trades with pagination metadata",
+  "usedBy": [
+    "CDSTradeList.test.tsx",
+    "TradeTable.test.tsx",
+    "useTradeList.test.tsx"
+  ],
+  "data": {
+    "trades": [
+      {
+        "tradeId": "TEST-CDS-001",
+        "tradeDate": "2025-01-15",
+        "effectiveDate": "2025-01-16",
+        "maturityDate": "2030-03-20",
+        "notionalAmount": 10000000.00,
+        "currency": "USD",
+        "buySellProtection": "BUY",
+        "spread": 150.0,
+        "referenceEntity": {
+          "entityName": "Test Corporation",
+          "ticker": "TEST",
+          "sector": "FINANCIALS"
+        },
+        "counterparty": {
+          "counterpartyName": "Test Bank NA"
+        },
+        "tradeStatus": "ACTIVE",
+        "trader": "trader@test.com",
+        "createdAt": "2025-01-15T10:30:00Z"
+      },
+      {
+        "tradeId": "TEST-CDS-002",
+        "tradeDate": "2025-01-14",
+        "effectiveDate": "2025-01-15",
+        "maturityDate": "2029-12-20",
+        "notionalAmount": 5000000.00,
+        "currency": "USD",
+        "buySellProtection": "SELL",
+        "spread": 200.0,
+        "referenceEntity": {
+          "entityName": "Sample Industries Inc",
+          "ticker": "SMPL",
+          "sector": "INDUSTRIALS"
+        },
+        "counterparty": {
+          "counterpartyName": "Sample Capital"
+        },
+        "tradeStatus": "ACTIVE",
+        "trader": "trader@test.com",
+        "createdAt": "2025-01-14T14:20:00Z"
+      },
+      {
+        "tradeId": "TEST-CDS-003",
+        "tradeDate": "2025-01-13",
+        "effectiveDate": "2025-01-14",
+        "maturityDate": "2028-06-20",
+        "notionalAmount": 2000000.00,
+        "currency": "EUR",
+        "buySellProtection": "BUY",
+        "spread": 175.0,
+        "referenceEntity": {
+          "entityName": "European Test AG",
+          "ticker": "EURT",
+          "sector": "TECHNOLOGY"
+        },
+        "counterparty": {
+          "counterpartyName": "Euro Bank AG"
+        },
+        "tradeStatus": "PENDING",
+        "trader": "trader@test.com",
+        "createdAt": "2025-01-13T09:15:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "pageSize": 20,
+      "totalPages": 1,
+      "totalItems": 3
+    },
+    "metadata": {
+      "timestamp": "2025-11-18T00:00:00Z",
+      "requestId": "req-mock-001",
+      "executionTime": 45
+    }
+  }
+}
