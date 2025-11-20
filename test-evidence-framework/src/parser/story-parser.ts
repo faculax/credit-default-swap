@@ -51,16 +51,16 @@ export class StoryParser {
     const capability = userStoryMatch ? userStoryMatch[2].trim() : undefined;
     const benefit = userStoryMatch ? userStoryMatch[3].trim() : undefined;
     
-    // Extract Acceptance Criteria
-    const acceptanceCriteria = this.extractBulletList(content, /##\s+✅\s*Acceptance Criteria/i);
+    // Extract Acceptance Criteria (flexible emoji matching)
+    const acceptanceCriteria = this.extractBulletList(content, /##[^#\n]*Acceptance Criteria/i);
     
-    // Extract Test Scenarios
-    const testScenarios = this.extractNumberedList(content, /##\s+🧪\s*Test Scenarios/i);
+    // Extract Test Scenarios (flexible emoji matching)
+    const testScenarios = this.extractNumberedList(content, /##[^#\n]*Test Scenarios/i);
     
-    // Extract optional sections
-    const implementationGuidance = this.extractBulletList(content, /##\s+🛠\s*Implementation Guidance/i);
-    const deliverables = this.extractBulletList(content, /##\s+📦\s*Deliverables/i);
-    const dependencies = this.extractBulletList(content, /##\s+⏭\s*Dependencies/i);
+    // Extract optional sections (flexible emoji matching)
+    const implementationGuidance = this.extractBulletList(content, /##[^#\n]*Implementation Guidance/i);
+    const deliverables = this.extractBulletList(content, /##[^#\n]*Deliverables/i);
+    const dependencies = this.extractBulletList(content, /##[^#\n]*Dependencies/i);
     
     // Extract Services Involved (with inference fallback if enabled)
     const { services, status } = this.extractServicesInvolved(
@@ -159,7 +159,9 @@ export class StoryParser {
     
     const lines = sectionContent.split('\n');
     for (const line of lines) {
-      const bulletMatch = line.match(/^[-*]\s+(.+)$/);
+      // Trim line to handle both Unix (\n) and Windows (\r\n) line endings
+      const trimmedLine = line.trim();
+      const bulletMatch = trimmedLine.match(/^[-*]\s+(.+)$/);
       if (bulletMatch) {
         bullets.push(bulletMatch[1].trim());
       }
@@ -182,14 +184,16 @@ export class StoryParser {
     let currentItem = '';
     
     for (const line of lines) {
-      const numberMatch = line.match(/^\d+\.\s+(.+)$/);
+      // Trim line to handle both Unix (\n) and Windows (\r\n) line endings
+      const trimmedLine = line.trim();
+      const numberMatch = trimmedLine.match(/^\d+\.\s+(.+)$/);
       if (numberMatch) {
         if (currentItem) {
           items.push(currentItem.trim());
         }
         currentItem = numberMatch[1];
-      } else if (currentItem && line.trim()) {
-        currentItem += ' ' + line.trim();
+      } else if (currentItem && trimmedLine) {
+        currentItem += ' ' + trimmedLine;
       }
     }
     

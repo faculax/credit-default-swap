@@ -22,13 +22,16 @@ import {
   TestField,
   GeneratedTestMethod
 } from '../models/backend-test-model';
+import { WorkspaceContext, BackendClass } from '../models/workspace-context-model';
 
 export class BackendTestGenerator {
   private config: BackendTestGenerationConfig;
   private datasetRegistry: any;
+  private workspaceContext?: WorkspaceContext;
 
-  constructor(config: BackendTestGenerationConfig) {
+  constructor(config: BackendTestGenerationConfig, workspaceContext?: WorkspaceContext) {
     this.config = config;
+    this.workspaceContext = workspaceContext;
     this.loadDatasetRegistry();
   }
 
@@ -140,7 +143,16 @@ export class BackendTestGenerator {
    * Build test class name
    */
   private buildClassName(story: StoryModel, template: BackendTestTemplate): string {
-    // Extract main entity from story title
+    // If workspace context is available, try to find actual class
+    if (this.workspaceContext) {
+      const relevantClasses = this.findRelevantClasses(story, template);
+      if (relevantClasses.length > 0) {
+        // Use actual class name + Test suffix
+        return `${relevantClasses[0].className}Test`;
+      }
+    }
+    
+    // Fallback: Extract main entity from story title
     const entity = this.extractEntityName(story.title);
     
     switch (template) {
@@ -163,6 +175,16 @@ export class BackendTestGenerator {
    * Build package name
    */
   private buildPackageName(story: StoryModel, template: BackendTestTemplate): string {
+    // If workspace context is available, try to find actual package
+    if (this.workspaceContext) {
+      const relevantClasses = this.findRelevantClasses(story, template);
+      if (relevantClasses.length > 0) {
+        // Use actual package name from discovered class
+        return relevantClasses[0].packageName;
+      }
+    }
+    
+    // Fallback to base package
     const basePackage = this.config.basePackage;
     
     // Map template to package structure
@@ -173,6 +195,57 @@ export class BackendTestGenerator {
       : 'service';
     
     return `${basePackage}.${subPackage}`;
+  }
+  
+  /**
+   * Find relevant backend classes from workspace context
+   */
+  private findRelevantClasses(story: StoryModel, template: BackendTestTemplate): BackendClass[] {
+    if (!this.workspaceContext) {
+      return [];
+    }
+    
+    const storyText = `${story.title} ${story.acceptanceCriteria.join(' ')}`.toLowerCase();
+    const relevant: BackendClass[] = [];
+    
+    // Filter by template type
+    let targetType: BackendClass['type'];
+    switch (template) {
+      case 'service':
+        targetType = 'Service';
+        break;
+      case 'repository':
+        targetType = 'Repository';
+        break;
+      case 'controller':
+        targetType = 'Controller';
+        break;
+      default:
+        // For integration/unit tests, consider all types
+        return this.workspaceContext.backendClasses.filter(cls => {
+          return storyText.includes(cls.className.toLowerCase()) ||
+                 storyText.includes(cls.className.replace(/Service|Repository|Controller$/, '').toLowerCase());
+        });
+    }
+    
+    // Find classes of the target type
+    const candidates = this.workspaceContext.backendClasses.filter(cls => cls.type === targetType);
+    
+    for (const cls of candidates) {
+      // Check if class name appears in story
+      if (storyText.includes(cls.className.toLowerCase())) {
+        relevant.push(cls);
+        continue;
+      }
+      
+      // Check if domain entity name appears in story
+      const domainName = cls.className.replace(/Service|Repository|Controller$/, '').toLowerCase();
+      if (storyText.includes(domainName)) {
+        relevant.push(cls);
+      }
+    }
+    
+    return relevant;
   }
 
   /**

@@ -15,11 +15,13 @@ import type {
   GeneratedFrontendTest,
   AllureSeverity
 } from '../models/frontend-test-model.js';
+import type { WorkspaceContext, FrontendComponent } from '../models/workspace-context-model.js';
 
 export class FrontendTestGenerator {
   private readonly outputDir: string;
   private readonly testUtilsPath: string;
   private readonly mswServerPath: string;
+  private readonly workspaceContext?: WorkspaceContext;
 
   // Performance: Cache compiled regex patterns
   private readonly componentNameRegex = /\b([A-Z][a-zA-Z]+(?:Form|Page|Modal|Button|Input|Table|List|Card|Panel))\b/;
@@ -43,11 +45,13 @@ export class FrontendTestGenerator {
   constructor(
     outputDir: string = 'frontend/src/__tests__',
     testUtilsPath: string = '../test-utils',
-    mswServerPath: string = '../mocks/server'
+    mswServerPath: string = '../mocks/server',
+    workspaceContext?: WorkspaceContext
   ) {
     this.outputDir = outputDir;
     this.testUtilsPath = testUtilsPath;
     this.mswServerPath = mswServerPath;
+    this.workspaceContext = workspaceContext;
   }
 
   /**
@@ -122,7 +126,17 @@ export class FrontendTestGenerator {
       return cached;
     }
 
-    // Look for component name in title
+    // If workspace context is available, find actual component
+    if (this.workspaceContext) {
+      const relevantComponents = this.findRelevantComponents(story);
+      if (relevantComponents.length > 0) {
+        const componentName = relevantComponents[0].componentName;
+        this.componentNameCache.set(story.storyId, componentName);
+        return componentName;
+      }
+    }
+
+    // Fallback: Look for component name in title
     const titleMatch = this.componentNameRegex.exec(story.title);
     if (titleMatch) {
       const componentName = titleMatch[1];
@@ -143,7 +157,16 @@ export class FrontendTestGenerator {
    * Performance: Optimized string operations
    */
   private inferComponentPath(componentName: string, story: StoryModel): string {
-    // Convert PascalCase to kebab-case using split (faster than regex replace)
+    // If workspace context is available, use actual path
+    if (this.workspaceContext) {
+      const relevantComponents = this.findRelevantComponents(story);
+      if (relevantComponents.length > 0) {
+        // Return relative path from frontend/src
+        return relevantComponents[0].relativePath.replace(/\.(tsx|jsx)$/, '');
+      }
+    }
+    
+    // Fallback: Convert PascalCase to kebab-case using split (faster than regex replace)
     const kebabName = componentName
       .split(/(?=[A-Z])/)
       .join('-')
@@ -162,6 +185,36 @@ export class FrontendTestGenerator {
     }
 
     return `src/${directory}/${kebabName}`;
+  }
+  
+  /**
+   * Find relevant frontend components from workspace context
+   */
+  private findRelevantComponents(story: StoryModel): FrontendComponent[] {
+    if (!this.workspaceContext) {
+      return [];
+    }
+    
+    const storyText = `${story.title} ${story.acceptanceCriteria.join(' ')}`.toLowerCase();
+    const relevant: FrontendComponent[] = [];
+    
+    for (const component of this.workspaceContext.frontendComponents) {
+      // Check if component name appears in story (case-insensitive)
+      if (storyText.includes(component.componentName.toLowerCase())) {
+        relevant.push(component);
+        continue;
+      }
+      
+      // Check if component name without suffix matches
+      const baseName = component.componentName
+        .replace(/(Form|Page|Modal|Button|Input|Table|List|Card|Panel)$/, '')
+        .toLowerCase();
+      if (baseName.length > 3 && storyText.includes(baseName)) {
+        relevant.push(component);
+      }
+    }
+    
+    return relevant;
   }
 
   /**
